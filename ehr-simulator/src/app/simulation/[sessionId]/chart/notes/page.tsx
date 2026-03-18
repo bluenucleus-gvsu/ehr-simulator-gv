@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { ClinicalNote, sampleNotes } from "./components/notesData"; // Assuming sampleNotes is exported from here
 import NursingNoteEntry from "./components/nursingNoteEntry";
 import NoteDisplay from "./components/noteDisplay";
@@ -13,32 +13,17 @@ import { Label } from "@/components/ui/label";
 import FilterBadges from "./components/filterBadges";
 import { Skeleton } from "@/components/ui/skeleton";
 import { differenceInMinutes, format } from "date-fns";
+import { EditableStudentNoteUpsert, submitStudentNote } from "@/actions/studentSim";
 
 const NotePage = () => {
+  // query both clinical_documents table and editable_clinical_documents
+  // 
   const [notesData, setNotesData] = useState<ClinicalNote[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
   const [sessionStartTime] = useState(new Date().getTime())
 
   const [filteredSpecialties, setFilteredSpecialties] = useState<string[]>([]);
 
-  useEffect(() => {
-    const fetchNotes = async () => {
-      setIsLoading(true);
-      try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const sortedNotes = sampleNotes.sort((a, b) => a.timeOffset - b.timeOffset) // Simulate network
-        setNotesData(sortedNotes as ClinicalNote[]);
-      } catch (err) {
-        console.error(err);
-        setIsError(true);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchNotes();
-  }, []);
+  setNotesData(sampleNotes)
 
   const specialties = useMemo(() => {
     return [...new Set(notesData.map((note) => note.specialty))];
@@ -65,33 +50,32 @@ const NotePage = () => {
     setFilteredSpecialties([]);
   };
 
-
-
   const onSubmitNote = async (noteContent: string) => {
     const now = differenceInMinutes(new Date(), sessionStartTime)
 
-    const newNote: ClinicalNote = {
-      title: "Student Note",
-      author: "Current User, RN BSN",
+    const newNote: EditableStudentNoteUpsert = {
+      // groupId: 
+      // userId: 
+      // caseSessionId
+      author: "User's name",
+      category: 'Nursing',
       specialty: "Nursing",
       timeOffset: now,
       content: noteContent,
       excludedFromPresim: true
     }
 
-    const previousNotes = [...notesData];
     setNotesData(prev => [newNote, ...prev]);
-
-    try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+    const result = await submitStudentNote(newNote);
+    if (result.success) {
       toast.success(`Nursing note submitted at ${format(now, 'HH:mm')}`);
-    } catch (err) {
-      setNotesData(previousNotes);
-      toast.error(`Failed to submit note: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    else if (!result.success) {
+      toast.error(result.message)
     }
   };
 
-  if (isLoading) {
+  /* if (isLoading) {
     return (
       <div className="flex flex-col h-full w-full pt-16 bg-gray-100 justify-start items-center gap-6">
         <Skeleton className="w-5/6 h-16 rounded-xl bg-gray-200" />
@@ -101,15 +85,15 @@ const NotePage = () => {
         <Skeleton className="w-5/6 h-8 rounded-xl bg-gray-200" />
       </div>
     );
-  }
+  } */
 
-  if (isError) {
+  /* if (isError) {
     return (
       <div className="w-full h-full flex flex-col px-4 gap-3 bg-gray-100 justify-center items-center">
         <p className="text-red-600">Error loading notes.</p>
       </div>
     );
-  }
+  } */
 
   return (
     <div className="w-full h-[calc(100vh-4rem)] flex flex-col px-4  gap-3 bg-gray-100">

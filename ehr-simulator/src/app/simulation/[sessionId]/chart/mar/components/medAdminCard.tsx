@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { renderMedTitleRow, renderMedCardDetails, isSlidingScaleInsulin } from "./marHelpers";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, X } from "lucide-react";
+import { DoseInput } from "./doseInput";
 
 interface MedAdminCardProps {
   medication: AllMedicationTypes;
@@ -57,15 +58,6 @@ const MedAdminCard = ({
 
   const handleCommentChange = (comment: string) => {
     onCommentChange(comment)
-  }
-
-  const handleDoseChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    const regex = /^[0-9]*\.?[0-9]*$/;
-
-    if (value === '' || regex.test(value)) {
-      onDoseChange(Number(e.target.value))
-    }
   }
 
   const handleOrderRemove = (id: string) => {
@@ -170,11 +162,7 @@ const MedAdminCard = ({
         <div className={`w-full space-y-1 `}>
           <Label>Dose</Label>
           <div className="flex group items-end h-9">
-            <Input
-              onChange={(e) => handleDoseChange(e)}
-              value={currentDose}
-              className={`text-sm w-16 border px-3 py-2 rounded-r-none shadow-xs ${isOverdose ? "ring-2 ring-red-700 focus-visible:ring-red-700 focus-visible:ring-2" : "focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:border-gray-200"} `}
-            />
+            <DoseInput isOverdose={isOverdose} onDoseChange={onDoseChange} dose={currentDose} />
             <div className={`h-9 bg-gray-50  border-l-0 rounded-r-lg p-2 shadow-xs ${isOverdose ? "outline-2 outline-red-700 group-focus-within:outline-2 bg-red-50" : "border border-gray-200 group-focus-within:outline-2"}`}>
               <p className="text-sm">{medication.strengthUnit}</p>
             </div>
