@@ -312,7 +312,7 @@ export async function getCourseCaseAssignments() {
 
 // extracts type of data from ActionResponse for use in frontend
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ExtractData<T extends (...args: any) => Promise<ActionResponse<any>>> =
+export type ExtractData<T extends (...args: any) => Promise<ActionResponse<any>>> =
   NonNullable<Awaited<ReturnType<T>>['data']>;
 
 export type SectionSimulationsData = ExtractData<typeof getSectionCaseAssignments>;

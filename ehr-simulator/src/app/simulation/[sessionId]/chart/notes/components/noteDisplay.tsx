@@ -15,27 +15,30 @@ import {
   ClipboardList
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import type { ClinicalNote } from "./notesData"
 import { format, subMinutes } from "date-fns"
 import DOMPurify from "dompurify"
-const displayDate = (startTime: number, offset: number) => {
+import { ClinicalDocumentView } from "@/actions/studentSimActions"
+
+const displayDate = (startTime: number | null, offset: number) => {
+  if (!startTime) {
+    return 'Unknown'
+  }
   return format(subMinutes(startTime, offset), "Pp")
 
 };
 
 interface NoteDisplayProps {
-  note: ClinicalNote;
-  startTime: number;
+  note: ClinicalDocumentView;
+  startTime: number | null;
 }
 
 export default function NoteDisplay({ note, startTime }: NoteDisplayProps) {
   const [isOpen, setIsOpen] = useState(false);
-  console.log(note.content);
-  const sanitizedContent = DOMPurify.sanitize(note.content)
+  const sanitizedContent = DOMPurify.sanitize(note.doc_text)
 
   // Determine icon based on note type
-  const NoteIcon = (note.title === "Nursing Note" || note.title === "Student Note") ? Stethoscope : ClipboardList;
-  const iconColor = (note.title === "Nursing Note" || note.title === "Student Note") ? "text-blue-600 bg-blue-50" : "text-orange-600 bg-orange-50";
+  const NoteIcon = (note.specialty === "Nursing Note" || note.specialty === "Student Note") ? Stethoscope : ClipboardList;
+  const iconColor = (note.specialty === "Nursing Note" || note.specialty === "Student Note") ? "text-blue-600 bg-blue-50" : "text-orange-600 bg-orange-50";
 
   return (
     <Collapsible
@@ -54,8 +57,8 @@ export default function NoteDisplay({ note, startTime }: NoteDisplayProps) {
 
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-slate-900 truncate">{note.title}</h3>
-              {note.title === "Student Note" && <Badge variant="outline" className="text-[10px] h-5 px-1.5 text-blue-600 border-blue-200 bg-blue-50">Student</Badge>}
+              <h3 className="text-sm font-bold text-slate-900 truncate">{note.specialty} Note</h3>
+              {note.specialty === "Student Note" && <Badge variant="outline" className="text-[10px] h-5 px-1.5 text-blue-600 border-blue-200 bg-blue-50">Student</Badge>}
             </div>
 
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 mt-0.5">
@@ -72,7 +75,7 @@ export default function NoteDisplay({ note, startTime }: NoteDisplayProps) {
         <div className="flex items-center justify-between w-full sm:w-auto gap-4 pl-[3.25rem] sm:pl-0">
           <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
             <Clock size={12} className="text-slate-400" />
-            {displayDate(startTime, note.timeOffset)}
+            {displayDate(startTime, note.time_offset)}
           </div>
 
           <CollapsibleTrigger asChild>

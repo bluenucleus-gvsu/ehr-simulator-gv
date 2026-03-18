@@ -110,10 +110,53 @@ VALUES ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9b', 'c3d4e5f6-a7b8-4c5d-0e1f-2a3b4c5
        ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9e', 'd4e5f6a7-b8c9-4d5e-1f2a-3b4c5d6e7f2e', true),
        ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9d', 'd4e5f6a7-b8c9-4d5e-1f2a-3b4c5d6e7f2e', true);
 
--- INSERT INTO public.cases (id, name, description, admitting_diagnosis) 
--- VALUES('e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 'Wallace Peterson', 'This will be a brief case description providing basic details of the case, perhaps mentioning events leading up to admission, current symptoms, and an area of focus for the simulation.', 'Acute CHF Exacerbation'),
---     ('e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', 'Melody Dix', 'This will be a brief case description providing basic details of the case, perhaps mentioning events leading up to admission, current symptoms, and an area of focus for the simulation.', 'Acute Pancreatitis'),
---         ('e5f6a7b8-c9a0-4e5f-9c1f-4c5d6e7f8a9d', 'Jimmy Houston', 'This will be a brief case description providing basic details of the case, perhaps mentioning events leading up to admission, current symptoms, and an area of focus for the simulation.', 'Acute EtOH withdrawal');
+
+INSERT INTO public.cases (
+  id, 
+  name, 
+  description, 
+  first_name, 
+  last_name, 
+  code_status, 
+  admitting_diagnosis
+) 
+VALUES
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    'Wallace Peterson', 
+    'This will be a brief case description providing basic details of the case, perhaps mentioning events leading up to admission, current symptoms, and an area of focus for the simulation.', 
+    'Wallace', 
+    'Peterson', 
+    'Full', 
+    'Acute CHF Exacerbation'
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', 
+    'Melody Dix', 
+    'This will be a brief case description providing basic details of the case, perhaps mentioning events leading up to admission, current symptoms, and an area of focus for the simulation.', 
+    'Melody', 
+    'Dix', 
+    'Full', 
+    'Acute Pancreatitis'
+  ),
+  (
+    'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d', 
+    'Robert Chen', 
+    'Patient presents with shortness of breath, productive cough, and a fever of 102.4F that began two days ago. Simulation focus on respiratory assessment and antibiotic administration.', 
+    'Robert', 
+    'Chen', 
+    'DNR',       
+    'Community Acquired Pneumonia'
+  ),
+  (
+    '5a6b7c8d-9e0f-1a2b-3c4d-5e6f7a8b9c0d', 
+    'Sarah Jenkins', 
+    'Patient brought in by EMS with altered mental status and a fruity odor to her breath. Blood glucose on arrival is 450 mg/dL. Simulation focus on fluid resuscitation and insulin drip protocols.', 
+    'Sarah', 
+    'Jenkins', 
+    'Full', 
+    'Diabetic Ketoacidosis (DKA)'
+  );
 
 -- INSERT INTO public.section_assignments (section_id, case_id, sim_time, presim_time) 
 -- VALUES  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 01:00:00+00', '2026-02-02 01:00:00+00'),

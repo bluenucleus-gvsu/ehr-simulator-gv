@@ -348,6 +348,185 @@ export type Database = {
           },
         ]
       }
+      cases: {
+        Row: {
+          admitting_diagnosis: string | null
+          allergies: string[] | null
+          attending_provider: string | null
+          case_creation_complete: boolean
+          code_status: Database["public"]["Enums"]["code_status_type"]
+          created_at: string | null
+          date_of_birth: string | null
+          description: string | null
+          employment: string | null
+          first_name: string
+          height_ft: number | null
+          height_in: number | null
+          id: string
+          inpatient_duration_days: number | null
+          insurance: Database["public"]["Enums"]["insurance_type"] | null
+          isolation_precautions_id: string | null
+          language: string | null
+          last_name: string
+          living_situation: string[] | null
+          medical_history: string[] | null
+          name: string
+          relationship_status_id: string | null
+          religion: string | null
+          requires_interpreter: boolean
+          social_habits: string[] | null
+          surgical_history: string[] | null
+          time_of_admission: string | null
+          updated_at: string
+          weight_kg: number | null
+        }
+        Insert: {
+          admitting_diagnosis?: string | null
+          allergies?: string[] | null
+          attending_provider?: string | null
+          case_creation_complete?: boolean
+          code_status: Database["public"]["Enums"]["code_status_type"]
+          created_at?: string | null
+          date_of_birth?: string | null
+          description?: string | null
+          employment?: string | null
+          first_name: string
+          height_ft?: number | null
+          height_in?: number | null
+          id?: string
+          inpatient_duration_days?: number | null
+          insurance?: Database["public"]["Enums"]["insurance_type"] | null
+          isolation_precautions_id?: string | null
+          language?: string | null
+          last_name: string
+          living_situation?: string[] | null
+          medical_history?: string[] | null
+          name: string
+          relationship_status_id?: string | null
+          religion?: string | null
+          requires_interpreter?: boolean
+          social_habits?: string[] | null
+          surgical_history?: string[] | null
+          time_of_admission?: string | null
+          updated_at?: string
+          weight_kg?: number | null
+        }
+        Update: {
+          admitting_diagnosis?: string | null
+          allergies?: string[] | null
+          attending_provider?: string | null
+          case_creation_complete?: boolean
+          code_status?: Database["public"]["Enums"]["code_status_type"]
+          created_at?: string | null
+          date_of_birth?: string | null
+          description?: string | null
+          employment?: string | null
+          first_name?: string
+          height_ft?: number | null
+          height_in?: number | null
+          id?: string
+          inpatient_duration_days?: number | null
+          insurance?: Database["public"]["Enums"]["insurance_type"] | null
+          isolation_precautions_id?: string | null
+          language?: string | null
+          last_name?: string
+          living_situation?: string[] | null
+          medical_history?: string[] | null
+          name?: string
+          relationship_status_id?: string | null
+          religion?: string | null
+          requires_interpreter?: boolean
+          social_habits?: string[] | null
+          surgical_history?: string[] | null
+          time_of_admission?: string | null
+          updated_at?: string
+          weight_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cases_isolation_precautions_id_fkey"
+            columns: ["isolation_precautions_id"]
+            isOneToOne: false
+            referencedRelation: "isolation_precautions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cases_relationship_status_id_fkey"
+            columns: ["relationship_status_id"]
+            isOneToOne: false
+            referencedRelation: "relationship_statuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cases_json_blobs: {
+        Row: {
+          created_at: string
+          id: string
+          payload: Json
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      clinical_documents: {
+        Row: {
+          author: string
+          case_id: string
+          category: Database["public"]["Enums"]["clinical_doc_category_type"]
+          created_at: string | null
+          doc_text: string
+          id: string
+          is_in_presim: boolean
+          specialty: string
+          time_offset: number
+        }
+        Insert: {
+          author: string
+          case_id: string
+          category: Database["public"]["Enums"]["clinical_doc_category_type"]
+          created_at?: string | null
+          doc_text: string
+          id?: string
+          is_in_presim?: boolean
+          specialty: string
+          time_offset: number
+        }
+        Update: {
+          author?: string
+          case_id?: string
+          category?: Database["public"]["Enums"]["clinical_doc_category_type"]
+          created_at?: string | null
+          doc_text?: string
+          id?: string
+          is_in_presim?: boolean
+          specialty?: string
+          time_offset?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_documents_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_cases: {
         Row: {
           case_id: string | null
@@ -667,6 +846,80 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      editable_clinical_documents: {
+        Row: {
+          author: string
+          case_id: string
+          case_session_id: string
+          category: Database["public"]["Enums"]["clinical_doc_category_type"]
+          created_at: string | null
+          doc_text: string
+          group_id: string
+          id: string
+          is_in_presim: boolean
+          specialty: string
+          time_offset: number
+          user_id: string
+        }
+        Insert: {
+          author: string
+          case_id: string
+          case_session_id: string
+          category: Database["public"]["Enums"]["clinical_doc_category_type"]
+          created_at?: string | null
+          doc_text: string
+          group_id: string
+          id?: string
+          is_in_presim?: boolean
+          specialty: string
+          time_offset: number
+          user_id: string
+        }
+        Update: {
+          author?: string
+          case_id?: string
+          case_session_id?: string
+          category?: Database["public"]["Enums"]["clinical_doc_category_type"]
+          created_at?: string | null
+          doc_text?: string
+          group_id?: string
+          id?: string
+          is_in_presim?: boolean
+          specialty?: string
+          time_offset?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "editable_clinical_documents_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "editable_clinical_documents_case_session_id_fkey"
+            columns: ["case_session_id"]
+            isOneToOne: false
+            referencedRelation: "case_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "editable_clinical_documents_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "editable_clinical_documents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
