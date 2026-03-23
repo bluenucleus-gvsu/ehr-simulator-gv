@@ -1,5 +1,5 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clipboard, NotebookText, Pill, TestTubeDiagonal } from "lucide-react";
+import { Clipboard, NotebookText, Pill, TestTubeDiagonal, User } from "lucide-react";
 // import MultiPtSelector from "./multiPtSelector";
 import Link from "next/link";
 import { useParams } from "next/navigation"
@@ -7,50 +7,50 @@ import { useParams } from "next/navigation"
 
 export default function ChartTabs() {
   const params = useParams()
-  const { sessionId } = params
+  const { sessionId, caseId } = params
   const tabs = [
     {
       name: "Overview",
       value: "Overview",
-      path: `/simulation/${sessionId}/chart/overview`,
+      path: `/simulation/${caseId}/${caseId}/${sessionId}/chart/overview`,
       icon: ''
     },
     {
       name: "Labs",
       value: "Labs",
       icon: <TestTubeDiagonal />,
-      path: `/simulation/${sessionId}/chart/labs`,
+      path: `/simulation/${caseId}/${sessionId}/chart/labs`,
     },
-    // {
-    //   name: "Avatar",
-    //   value: "Avatar",
-    //   icon: <User />,
-    //   path: `/simulation/${sessionId}/chart/overview`,
-    // },
+    {
+      name: "Avatar",
+      value: "Avatar",
+      icon: <User />,
+      path: `/simulation/${caseId}/${sessionId}/chart/overview`,
+    },
     {
       name: "Orders",
       value: "Orders",
       icon: <Clipboard />,
-      path: `/simulation/${sessionId}/chart/orders`,
+      path: `/simulation/${caseId}/${sessionId}/chart/orders`,
     },
     {
       name: "MAR",
       value: "MAR",
       icon: <Pill />,
-      path: `/simulation/${sessionId}/chart/mar`,
+      path: `/simulation/${caseId}/${sessionId}/chart/mar`,
     },
     {
       name: "Notes",
       value: "Notes",
       icon: <NotebookText />,
-      path: `/simulation/${sessionId}/chart/notes`,
+      path: `/simulation/${caseId}/${sessionId}/chart/notes`,
 
     },
     {
       name: "FlexSheets",
       value: "FlexSheets",
       icon: "",
-      path: `/simulation/${sessionId}/chart/charting`,
+      path: `/simulation/${caseId}/${sessionId}/chart/charting`,
     },
   ];
   return (

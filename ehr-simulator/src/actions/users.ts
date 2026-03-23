@@ -126,7 +126,7 @@ export async function getUsersGroupId(userId: string) {
     .from('users')
     .select(`id,
       full_name,
-      group_members(group_id)
+      group_members!inner(group_id)
       `)
     .eq('id', userId)
     .single();
@@ -139,14 +139,14 @@ export async function getUsersGroupId(userId: string) {
     };
     return response;
   }
-  const extractedGroupId = Array.isArray(data.group_members)
-    ? data.group_members[0]
-    : data.group_members
+  const extractedGroupId = data.group_members[0]?.group_id
+
+  console.log(data.group_members)
 
   const cleanData = {
     id: data.id,
     full_name: data.full_name,
-    group_id: extractedGroupId.group_id,
+    group_id: extractedGroupId,
   };
   return {
     success: true,

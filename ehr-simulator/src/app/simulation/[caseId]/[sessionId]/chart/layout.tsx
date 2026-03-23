@@ -2,8 +2,8 @@
 
 import ChartTabs from "./components/chartTabs"
 import { Toaster } from "sonner"
-import ChartSidebar from "@/app/simulation/[sessionId]/chart/components/chartSidebar"
-import Header from "@/app/simulation/[sessionId]/chart/components/header"
+import ChartSidebar from "@/app/simulation/[caseId]/[sessionId]/chart/components/chartSidebar"
+import Header from "@/app/simulation/[caseId]/[sessionId]/chart/components/header"
 import { SimSessionProvider } from "@/context/SimSessionContext";
 
 type ChartLayoutProps = {

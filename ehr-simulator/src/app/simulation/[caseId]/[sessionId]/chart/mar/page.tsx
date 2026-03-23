@@ -1,7 +1,7 @@
 'use client'
 
 import { addMinutes, differenceInMinutes } from 'date-fns'
-import MedCard from "@/app/simulation/[sessionId]/chart/mar/components/medCard";
+import MedCard from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/medCard";
 import { useEffect, useMemo, useState } from "react";
 import type { AllMedicationTypes, MedAdministrationInstance, MedicationOrder } from "./components/marData";
 import MedAdministrationPanel from "./components/medAdministrationPanel";
@@ -16,7 +16,7 @@ import { useSymbologyScanner } from '@use-symbology-scanner/react';
 import { MultiMedPopover } from './components/multiMedPopover';
 import { toast } from 'sonner';
 import WrongPatientAlert from './components/wrongPatientAlert';
-import { createColumns } from '@/app/simulation/[sessionId]/chart/mar/components/marHelpers';
+import { createColumns } from '@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers';
 import { PatientStatusBadge } from './components/marHelpers';
 import ColumnShiftControl from './components/columnShiftControl';
 
@@ -133,7 +133,7 @@ export default function Mar() {
         administratorId: "currentUser",
         adminTimeMinuteOffset: 0,
         administeredDose: order.dose,
-        visibleInPresim: false, // doesn't matter - this entry will not affect case template
+        visibleInPresim: false,
         notes: '',
       }
     }))
@@ -186,7 +186,6 @@ export default function Mar() {
           visibleInPresim: false // doesn't matter - this entry will not affect case template
         }
       }));
-      console.log(selectedOrders)
     } else {
       setSelectedOrders(prev => prev.filter(existingOrder => existingOrder.id !== order.id));
 

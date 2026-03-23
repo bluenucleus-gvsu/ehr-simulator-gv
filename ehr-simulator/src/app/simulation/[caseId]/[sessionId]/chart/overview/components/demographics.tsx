@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import StyledTitle from "./styledTitle"
 // import CardSkeleton from "./cardSkeleton"
-import { jamesAllen, type ChartData } from "@/app/simulation/[sessionId]/chart/components/chartData"
+import { jamesAllen, type ChartData } from "@/app/simulation/[caseId]/[sessionId]/chart/components/chartData"
 
 const Demographics = () => {
   // const { data, isLoading, isError, isFetching, error } = useGetChartQuery()

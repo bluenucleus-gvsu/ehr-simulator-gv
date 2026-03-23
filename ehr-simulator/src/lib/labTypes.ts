@@ -1,6 +1,6 @@
-import { ImagingData } from "@/app/simulation/[sessionId]/chart/labs/components/labsData";
-import { LabTableData } from '@/app/simulation/[sessionId]/chart/labs/components/labsData';
-import { MicrobiologyReportData } from "@/app/simulation/[sessionId]/chart/labs/components/labsData";
+import { ImagingData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
+import { LabTableData } from '@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData';
+import { MicrobiologyReportData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
 
 export type LabResultInsert = {
   case_id: string

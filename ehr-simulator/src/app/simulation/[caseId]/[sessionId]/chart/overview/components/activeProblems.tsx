@@ -3,9 +3,9 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import StyledTitle from "./styledTitle"
-import { jamesAllen } from "@/app/simulation/[sessionId]/chart/components/chartData"
+import { jamesAllen } from "@/app/simulation/[caseId]/[sessionId]/chart/components/chartData"
 // import CardSkeleton from "./cardSkeleton"
-import type { ChartData } from "@/app/simulation/[sessionId]/chart/components/chartData";
+import type { ChartData } from "@/app/simulation/[caseId]/[sessionId]/chart/components/chartData";
 
 const ActiveProblems = () => {
   // if (isLoading || isFetching) {

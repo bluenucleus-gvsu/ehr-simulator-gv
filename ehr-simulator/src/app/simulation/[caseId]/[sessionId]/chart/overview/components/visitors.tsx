@@ -4,7 +4,7 @@ import { Phone } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import StyledTitle from "./styledTitle"
 // import CardSkeleton from "./cardSkeleton"
-import { jamesAllen, type ChartData } from "@/app/simulation/[sessionId]/chart/components/chartData"
+import { jamesAllen, type ChartData } from "@/app/simulation/[caseId]/[sessionId]/chart/components/chartData"
 
 const Visitors = () => {
 

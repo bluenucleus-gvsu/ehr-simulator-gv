@@ -17,7 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { format, subMinutes } from "date-fns"
 import DOMPurify from "dompurify"
-import { ClinicalDocumentView } from "@/actions/studentSimActions"
+import { ClinicalDocumentView } from "@/actions/simulation"
 
 const displayDate = (startTime: number | null, offset: number) => {
   if (!startTime) {

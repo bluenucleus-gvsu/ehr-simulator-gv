@@ -1,6 +1,6 @@
-import AssessmentSelect from "@/app/simulation/[sessionId]/chart/charting/components/assessmentSelector";
-import { chartingOptions, FlexSheetData } from "@/app/simulation/[sessionId]/chart/charting/components/flexSheetData";
-import { getAlertFlag } from "@/app/simulation/[sessionId]/chart/charting/components/flexSheetHelpers";
+import AssessmentSelect from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/assessmentSelector";
+import { chartingOptions, FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
+import { getAlertFlag } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetHelpers";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import {

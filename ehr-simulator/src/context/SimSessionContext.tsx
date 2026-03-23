@@ -17,6 +17,7 @@ export interface SimSessionContextType {
   loading: boolean;
   simStartTime: number | null;
   groupId: string | null;
+  // is_Presim: boolean;
 }
 
 const SimContext = createContext<SimSessionContextType>({
@@ -31,9 +32,9 @@ const SimContext = createContext<SimSessionContextType>({
 
 export function SimSessionProvider({ children }: { children: React.ReactNode }) {
   const [userName, setUserName] = useState<string | null>(null)
-  const [userId, setUserId] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9b')
   const [caseId, setCaseId] = useState<string | null>(null)
-  const [groupId, setGroupId] = useState<string | null>(null)
+  const [groupId, setGroupId] = useState<string | null>('c3d4e5f6-a7b8-4c5d-0e1f-2a3b4c5d6e7f')
   const [caseSessionId, setCaseSessionId] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true);
   const [simStartTime, setSimStartTime] = useState<number | null>(null)

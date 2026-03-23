@@ -1,6 +1,6 @@
-import { AllMedicationTypes, MedAdministrationInstance, MedicationOrder } from "@/app/simulation/[sessionId]/chart/mar/components/marData";
-import { renderMedCardDetails, renderMedTitleRow } from "@/app/simulation/[sessionId]/chart/mar/components/marHelpers";
-import { MedCardColumn } from "@/app/simulation/[sessionId]/chart/mar/components/marHelpers";
+import { AllMedicationTypes, MedAdministrationInstance, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
+import { renderMedCardDetails, renderMedTitleRow } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers";
+import { MedCardColumn } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { Check, Trash2, X } from "lucide-react";

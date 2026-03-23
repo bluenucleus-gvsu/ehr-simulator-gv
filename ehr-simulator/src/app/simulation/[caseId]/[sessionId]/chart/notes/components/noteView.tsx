@@ -10,9 +10,8 @@ import { Filter } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import FilterBadges from "./filterBadges";
-// import { Skeleton } from "@/components/ui/skeleton";
 import { differenceInMinutes, format } from "date-fns";
-import { ClinicalDocumentView, EditableStudentNoteUpsert, submitStudentNote } from "@/actions/studentSimActions";
+import { ClinicalDocumentView, EditableStudentNoteUpsert, submitStudentNote } from "@/actions/simulation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -20,15 +19,20 @@ export interface NoteViewProps {
   isError: boolean;
   isLoading: boolean;
   clinicalDocuments: ClinicalDocumentView[];
+  caseId: string;
+  sessionId: string;
 }
 
 const NoteView = ({
   isError = false,
   isLoading,
-  clinicalDocuments
+  clinicalDocuments,
+  caseId,
+  sessionId
 }: NoteViewProps) => {
-  const { simStartTime, userName, userId, caseId, caseSessionId, groupId } = useSimSessionContext();
+  const { simStartTime, userName, userId, groupId } = useSimSessionContext();
   const [filteredSpecialties, setFilteredSpecialties] = useState<string[]>([]);
+  console.log(`${userId}`)
 
   const specialties = useMemo(() => {
     return [...new Set(clinicalDocuments.map((note) => note.specialty))];
@@ -57,13 +61,18 @@ const NoteView = ({
 
   const onSubmitNote = async (noteContent: string) => {
     const now = differenceInMinutes(new Date(), simStartTime || 0)
-    // better ways to handle potential nulls?
+    if (!groupId || !userId || !caseId || !sessionId) {
+      toast.error("Still loading session data. Please try again in a moment.");
+      // console.error("Missing IDs:", { groupId, userId, caseId, sessionId });
+      return;
+    }
+
     const newNote: EditableStudentNoteUpsert = {
-      group_id: groupId || '',
-      user_id: userId || '',
-      case_id: caseId || '',
-      case_session_id: caseSessionId || '',
-      author: userName || '',
+      group_id: groupId,
+      user_id: userId,
+      case_id: caseId,
+      case_session_id: sessionId,
+      author: userName || 'Unknown Student',
       category: 'Nursing',
       specialty: 'Nursing',
       time_offset: now,

@@ -11,7 +11,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger
 } from "@/components/ui/collapsible";
-import { ClinicalNote } from "@/app/simulation/[sessionId]/chart/notes/components/notesData";
+import { ClinicalNote } from "@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData";
 import { Badge } from "@/components/ui/badge";
 import DOMPurify from "dompurify";
 

@@ -1,0 +1,1 @@
+delete from editable_clinical_documents;

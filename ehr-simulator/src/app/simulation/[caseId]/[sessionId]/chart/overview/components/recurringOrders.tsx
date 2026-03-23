@@ -7,7 +7,7 @@ import { Info } from "lucide-react"
 import { TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import StyledTitle from "./styledTitle"
 // import CardSkeleton from "./cardSkeleton"
-import { nursingOrders, laboratoryOrders } from "@/app/simulation/[sessionId]/chart/orders/components/orderData"
+import { nursingOrders, laboratoryOrders } from "@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData"
 const RecurringOrders = () => {
 
   // if (isLoading || (isFetching && !data)) {

@@ -17,10 +17,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Card } from "@/components/ui/card"
-import type { FlexSheetData } from "@/app/simulation/[sessionId]/chart/charting/components/flexSheetData"
+import type { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData"
 import { useMemo, useState } from "react"
 import StyledTitle from "./styledTitle"
-import { generateInitialChartingData, getAllTimeOffsets } from "@/app/simulation/[sessionId]/chart/charting/components/flexSheetData"
+import { generateInitialChartingData, getAllTimeOffsets } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData"
 import { formatTimeFromOffset } from "../../charting/page"
 
 export type vitalsOverviewTable = {

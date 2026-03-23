@@ -2,7 +2,7 @@
 
 import { SupabaseClient } from "@supabase/supabase-js";
 import { MedicationAdministrationInsert, transformMedicationOrdersToSchema } from "@/lib/medicationTypes";
-import { MedAdministrationInstance } from "@/app/simulation/[sessionId]/chart/mar/components/marData";
+import { MedAdministrationInstance } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
 
 export async function updateMedications(
   supabase: SupabaseClient,

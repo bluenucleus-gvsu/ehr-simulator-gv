@@ -1,5 +1,5 @@
 import { addMinutes, format, isWithinInterval } from "date-fns";
-import type { MedCardColumn } from "../components/marHelpers";
+import type { MedCardColumn } from "./marHelpers";
 import type { AllMedicationTypes, MedAdministrationInstance, MedicationOrder } from "./marData.jsx"
 import { Checkbox } from "@/components/ui/checkbox";
 import { findLastAdminTime, renderMedCardDetails, renderMedTitleRow } from "./marHelpers";

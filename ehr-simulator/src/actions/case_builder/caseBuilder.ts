@@ -10,7 +10,7 @@ import { updateLabs } from "@/actions/case_builder/updateLabs";
 import { updateDocumentationResults } from "@/actions/case_builder/updateDocumentationResults";
 import { updateMedications } from "@/actions/case_builder/updateMedications";
 
-import { MedAdministrationInstance } from "@/app/simulation/[sessionId]/chart/mar/components/marData";
+import { MedAdministrationInstance } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
 
 // TODO: Narrow type definitions for each section & enforce at runtime.
 type SaveCaseArgs =

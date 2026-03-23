@@ -110,7 +110,6 @@ VALUES ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9b', 'c3d4e5f6-a7b8-4c5d-0e1f-2a3b4c5
        ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9e', 'd4e5f6a7-b8c9-4d5e-1f2a-3b4c5d6e7f2e', true),
        ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9d', 'd4e5f6a7-b8c9-4d5e-1f2a-3b4c5d6e7f2e', true);
 
-
 INSERT INTO public.cases (
   id, 
   name, 
@@ -184,8 +183,11 @@ VALUES
 --         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7f', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 16:00:00+00', '2026-02-02 01:00:00+00');
 
 
--- INSERT INTO public.course_cases (course_id, case_id) 
--- VALUES  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c6a', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d' ),
---         ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c6a', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d'),
---         ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5e', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d'),
---         ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5e', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d')
+
+INSERT INTO public.course_cases (course_id, case_id) 
+VALUES  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c6a', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d' ),
+        ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c6a', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d'),
+        ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5e', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d'),
+        ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5e', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d');
+
+INSERT INTO public.case_sessions (id, case_id, group_id) VALUES ('a5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9a', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 'c3d4e5f6-a7b8-4c5d-0e1f-2a3b4c5d6e7f');
