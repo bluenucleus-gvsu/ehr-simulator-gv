@@ -24,7 +24,7 @@ export default async function CoursesPage() {
             <h1 className="text-5xl font-bold tracking-tight">COURSES</h1>
             <p className="text-xs text-gray-500">Manage all simulation courses</p>
           </div>
-          <Link href='#'>
+          <Link href='/admin/courses/new'>
             <Button>Create Course</Button>
           </Link>
         </div>
