@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS student_medication_administrations (
 
 -- Both pre-existing and student medication administrations
 CREATE VIEW all_medication_administrations AS 
-  SELECT (
+  SELECT 
     case_id,
     NULL::uuid as case_session_id,
     medication_id,
@@ -77,11 +77,11 @@ CREATE VIEW all_medication_administrations AS
     administered_dose,
     is_in_presim,
     'case_administration' as source_type    
-  ) FROM medication_administrations
+  FROM medication_administrations
 
   UNION ALL
 
-  SELECT (
+  SELECT
     case_id,
     case_session_id,
     medication_id,
@@ -92,7 +92,7 @@ CREATE VIEW all_medication_administrations AS
     administered_dose,
     is_in_presim,
     'student_administrations' as source_type  
-  ) FROM student_medication_administrations;
+  FROM student_medication_administrations;
 
 
 CREATE table if NOT EXISTS editable_documentation_results (

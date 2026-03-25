@@ -5,6 +5,7 @@ import { Database } from "../../database.types";
 import { ActionResponse } from "./cases";
 import { UUID } from "crypto";
 import { revalidatePath } from "next/cache";
+import { supabase } from "@/lib/supabaseClient";
 
 export type EditableStudentNoteUpsert = Database['public']['Tables']['editable_clinical_documents']['Insert'];
 export type EditableStudentNote = Database['public']['Tables']['editable_clinical_documents'];
@@ -36,8 +37,6 @@ export async function submitStudentNote(note: EditableStudentNoteUpsert): Promis
 
 
   if (error) {
-    console.log(error.message)
-
     return {
       success: false,
       message: 'Failed to submit note, please try again',
@@ -91,7 +90,24 @@ export async function getMedicationOrders(caseId: string, sessionId: string) {
 
   const { data, error } = await supabase
     .from('medication_orders')
-    .select('*')
+    .select(`
+    *,
+    medication:medications (
+      id,
+      generic_name,
+      brand_name,
+      route,
+      strength,
+      strength_unit,
+      dispense_unit:dispense_units (
+        name
+      ),
+      infusion_rate_unit,
+      diluent,
+      total_volume,
+      is_continuous 
+    )
+  `)
     .eq('case_id', caseId);
 
   if (error) {
@@ -125,7 +141,7 @@ export async function getMedicationAdministrations(caseId: string, sessionId: st
   if (error) {
     return {
       success: false,
-      message: 'Failed to retrieve medication orders',
+      message: 'Failed to retrieve medication administrations',
       error
     }
   }
@@ -135,7 +151,7 @@ export async function getMedicationAdministrations(caseId: string, sessionId: st
   return {
     success: true,
     data,
-    message: 'Successfully retrieved medication orders'
+    message: 'Successfully retrieved medication administrations'
   }
 }
 
@@ -166,4 +182,38 @@ export async function getMedicationAdministrations(caseId: string, sessionId: st
 //     data,
 //     message: 'Successfully retrieved medication administration data'
 //   }
+// }
+
+// export async function submitMedicationAdministration(
+//   medAdministrations: StudentMedicationAdministrationUpsert,
+//   caseId: string,
+//   sessionId: string
+// ) {
+//   const supabase = createClient(
+//     process.env.NEXT_PUBLIC_SUPABASE_URL!,
+//     process.env.SUPABASE_SERVICE_ROLE_KEY!
+//   );
+//   const { error, data } = supabase
+//     .from('student_medication_administrations')
+//     .upsert(medAdministrations)
+//     .select()
+//     .single()
+
+//   if (error) {
+//     return {
+//       success: false,
+//       message: 'Failed to document medications',
+//       error
+//     }
+//   }
+
+
+//   revalidatePath(`/simulation/${caseId}/${sessionId}/chart/mar`);
+
+//   return {
+//     success: true,
+//     data,
+//     message: 'Medications successfully documented'
+//   }
+
 // }

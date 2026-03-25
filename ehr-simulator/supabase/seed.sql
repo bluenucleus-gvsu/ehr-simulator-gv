@@ -191,3 +191,36 @@ VALUES  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c6a', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e
         ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5e', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d');
 
 INSERT INTO public.case_sessions (id, case_id, group_id) VALUES ('a5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9a', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 'c3d4e5f6-a7b8-4c5d-0e1f-2a3b4c5d6e7f');
+
+INSERT INTO clinical_documents (case_id, is_in_presim, category, specialty, author, time_offset, doc_text)
+VALUES (
+  'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+  TRUE, 
+  'Admission', 
+  'Internal Medicine', 
+  'Dr. Aris Thorne', 
+  5, 
+  '<p>1</p>'
+);
+
+INSERT INTO clinical_documents (case_id, is_in_presim, category, specialty, author, time_offset, doc_text)
+VALUES (
+  'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+  TRUE, 
+  'Progress', 
+  'Nursing', 
+  'Nurse Jamie Lee', 
+  10, 
+  '<p>2</p>'
+);
+
+INSERT INTO clinical_documents (case_id, is_in_presim, category, specialty, author, time_offset, doc_text)
+VALUES (
+  'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+  TRUE, 
+  'Consult', 
+  'Cardiology', 
+  'Dr. Sarah Chen', 
+  15, 
+  '<p>3</p>'
+);

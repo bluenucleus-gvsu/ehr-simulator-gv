@@ -230,7 +230,7 @@ export default function Mar() {
     });
   };
 
-  const handleClearAll = () => {
+  const handleClearAllSelections = () => {
     setSelectedOrders([]);
     setNewAdministrations({});
     setOrderFilter('')
@@ -243,24 +243,55 @@ export default function Mar() {
   };
 
 
-  const handleAdministerMeds = (medAdmins: MedAdministrationInstance[]) => {
-    const newAdminTimes = new Map(medAdmins.map(admin => [admin.medicationOrderId, admin.adminTimeMinuteOffset]))
+  const handleAdministerMeds = (newAdministrations: NewAdministrationData) => {
+    // Update administration time
+    const payload = Object.keys(newAdministrations).map(orderId => {
+      const currentAdmin = newAdministrations[orderId]
+      return {
+        ...currentAdmin,
+        adminTimeMinuteOffset: elapsedMinutes,
+      };
+    });
+    const administration = newAdministrations;
 
-    setAdministrations(prev => {
-      const filteredAdministrations = prev.filter(existingAdmin => {
-        if (existingAdmin.status !== 'Due') {
-          return true
-        }
-        const newAdminTime = newAdminTimes.get(existingAdmin.medicationOrderId)
-        if (newAdminTime === undefined) {
-          return true
-        }
-        const minuteDifference = Math.abs(differenceInMinutes(newAdminTime, existingAdmin.adminTimeMinuteOffset))
-        return minuteDifference > 60
-      })
-      return [...filteredAdministrations, ...medAdmins]
-    })
-    handleClearAll()
+
+
+    // const { error } = submitMedicationAdministrations(payload)
+    // if (error) {
+    //toast.error("Failed to save administrations");
+    // return
+    //}
+    //  handlePopoverClose(false);
+    //   toast.success("Medications successfully documented");
+    // handleClearAllSelections()
+
+    return administration
+    // return {
+    //   ...currentAdmin,
+    //   medicationOrderId: orderId,
+    //   administratorId: "StudentID",
+    //   adminTimeMinuteOffset: elapsedMinutes,
+    //   status: currentAdmin.status     // status always initialized as 'given' by default 
+    // };
+    // });
+    // const newAdminTimes = new Map(payload.map(admin => [admin.medicationOrderId, admin.adminTimeMinuteOffset]))
+
+    // * Filter administrations that are a 'Due' with a student administration within 60min
+    // setAdministrations(prev => {
+    //   const filteredAdministrations = prev.filter(existingAdmin => {
+    //     // if (existingAdmin.status !== 'Due') {
+    //     //   return true
+    //     // }
+    //     const newAdminTime = newAdminTimes.get(existingAdmin.medicationOrderId)
+    //     if (newAdminTime === undefined) {
+    //       return true
+    //     }
+    //     // const minuteDifference = Math.abs(differenceInMinutes(newAdminTime, existingAdmin.adminTimeMinuteOffset))
+    //     // return minuteDifference > 60
+    //     return true
+    //   })
+    //   return [...filteredAdministrations, ...payload]
+    // })
   }
 
 
@@ -285,12 +316,12 @@ export default function Mar() {
     if (!orderFilter && !isDue) return medicationOrders;
 
     return medicationOrders.filter((order) => {
-      if (isDue) {
-        const orderAdmins = groupedAdministrationsByOrder[order.id];
-        if (!orderAdmins?.some((admin) => admin.status === 'Due')) {
-          return false;
-        }
+      const orderAdmins = groupedAdministrationsByOrder[order.id];
+
+      if (isDue && !orderAdmins?.some((admin) => admin.status === 'Due')) {
+        return false;
       }
+
 
       if (!orderFilter) return true;
 
@@ -403,7 +434,7 @@ export default function Mar() {
             selectedOrders={selectedOrders}
             newAdministrations={newAdministrations}
             onUpdateAdministration={handleUpdateAdministration}
-            onClearAll={handleClearAll}
+            onClearAll={handleClearAllSelections}
             medicationLookup={medsById}
             administrationsLookup={groupedAdministrationsByOrder}
             sessionStart={anchorDate}

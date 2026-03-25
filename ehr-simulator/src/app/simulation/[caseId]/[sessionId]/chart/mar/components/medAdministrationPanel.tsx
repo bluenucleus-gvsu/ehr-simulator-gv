@@ -35,7 +35,7 @@ interface MedAdministrationProps {
   onPtScan: (scan: boolean) => void;
   newAdministrations: NewAdministrationData;
   onUpdateAdministration: (orderId: string, field: keyof MedAdministrationInstance, value: string | number) => void;
-  onAdministerMeds: (meds: MedAdministrationInstance[]) => void;
+  onAdministerMeds: (meds: NewAdministrationData) => void;
   onClearAll: () => void;
   handlePopoverClose: (x: boolean) => void;
   isOpen: boolean;
@@ -67,29 +67,8 @@ const MedAdministrationPanel = ({
     onPtScan(scan)
   }
 
-  const handleSubmit = async () => {
-    const payload = Object.keys(newAdministrations).map(orderId => {
-      const currentAdmin = newAdministrations[orderId];
-
-      return {
-        ...currentAdmin,
-        medicationOrderId: orderId,
-        administratorId: "StudentID",
-        adminTimeMinuteOffset: elapsedMinutes,
-        status: currentAdmin.status     // status always initialized as 'given' by default 
-      };
-    });
-
-    try {
-      handleAdministerMeds(payload)
-      console.log(payload)
-      handlePopoverClose(false);
-      toast.success("Medications successfully documented");
-
-    } catch (err) {
-      console.error("Failed to save administrations", err);
-      toast.error("Failed to save administrations");
-    }
+  const handleSubmit = async (newAdministrations: NewAdministrationData) => {
+    handleAdministerMeds(newAdministrations)
   };
 
   return (
@@ -197,7 +176,7 @@ const MedAdministrationPanel = ({
             </DialogClose>
             <Button
               disabled={isLoading || !isScanned || hasOverdose}
-              onClick={handleSubmit}
+              onClick={() => handleSubmit(newAdministrations)}
               className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm min-w-[120px]"
             >
               {isLoading ? "Signing..." : "Sign & Accept"}
