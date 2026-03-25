@@ -1,5 +1,4 @@
 import { getCourseById } from "@/actions/courses";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getSectionCaseAssignments } from "@/actions/cases";
 import CaseAssignment from "./components/caseAssignment";
