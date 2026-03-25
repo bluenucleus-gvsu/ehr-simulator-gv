@@ -87,7 +87,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
             </h1>
             <p className="text-xs text-gray-500">Manage assigned for cases this course.</p>
           </div>
-          <Button>Edit Course</Button>
+          {/* <Button>Edit Course</Button> No course edibility feature yet */}
         </div>
       </header>
 
