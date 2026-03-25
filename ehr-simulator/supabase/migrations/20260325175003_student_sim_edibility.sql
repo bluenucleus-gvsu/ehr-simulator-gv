@@ -1,8 +1,7 @@
 -- Student-written clinical notes
 CREATE table if NOT exists editable_clinical_documents (
   id uuid primary key DEFAULT gen_random_uuid(),
-  -- remove change back to cases before commit
-  case_id uuid NOT NULL references case_data(id) ON DELETE CASCADE,
+  case_id uuid NOT NULL references cases(id) ON DELETE CASCADE,
   case_session_id uuid NOT NULL references case_sessions(id) ON DELETE CASCADE,
   user_id uuid NOT NULL references users(id) ON DELETE SET NULL,
   group_id uuid NOT NULL references groups(id) ON DELETE CASCADE,
@@ -186,12 +185,3 @@ CREATE table if NOT EXISTS editable_documentation_results (
   consolability smallint CHECK (consolability IN (0, 1, 2)),
   created_at timestamptz NOT NULL DEFAULT now()
 );
-
-
--- remove before commit
-alter table case_data add column if not exists description TEXT;
-alter table case_data add column if not exists age INTEGER;
-alter table case_data add column if not exists first_name TEXT;
-alter table case_data add column if not exists last_name TEXT;
-alter table case_data add column if not exists code_status TEXT;
-alter table case_data add column if not exists admitting_diagnosis TEXT;
