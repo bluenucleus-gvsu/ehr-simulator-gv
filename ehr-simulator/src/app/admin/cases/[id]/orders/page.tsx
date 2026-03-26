@@ -162,6 +162,7 @@ export default function EditOrdersPage() {
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-slate-50/50">
+
       {/* Header */}
       <header className="sticky top-0 flex items-center justify-between px-4 sm:px-8 py-3 bg-white border-b z-10 shadow gap-3 flex-wrap">
         <div>
@@ -176,7 +177,7 @@ export default function EditOrdersPage() {
             variant="outline"
             onClick={() => router.push(`/admin/cases/${caseId}`)}
           >
-            <ArrowLeft className="w-4 h-4 mr-1" />Back
+            <ArrowLeft className="w-4 h-4 mr-1" />Leave Without Saving
           </Button>
           <Button
             className="cursor-pointer"
@@ -396,7 +397,6 @@ export default function EditOrdersPage() {
                 })}
               </div>
             </div>
-
           </div>
         </div>
       </div>

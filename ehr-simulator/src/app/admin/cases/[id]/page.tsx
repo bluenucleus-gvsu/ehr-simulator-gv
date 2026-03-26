@@ -566,7 +566,7 @@ export default function CasePage() {
 
           <Card className="border-slate-200 shadow-sm">
             <div className="flex items-baseline gap-3 px-4 py-0">
-              <p className="text-sm font-semibold text-slate-800">Edit More...</p>
+              <p className="text-sm font-semibold text-slate-800">View & Edit More...</p>
             </div>
             <CardContent className="px-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
               {editPageRoutes.map(({ label, href }) => (

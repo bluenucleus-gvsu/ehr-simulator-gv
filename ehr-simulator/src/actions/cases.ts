@@ -432,6 +432,7 @@ export async function getCourseCaseAssignments() {
   };
 }
 
+// For warning admin when editing a case that is used by multiple courses 
 export async function getCoursesForCase(caseId: string): Promise<ActionResponse<{ courseCount: number; courseNames: string[] }>> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
