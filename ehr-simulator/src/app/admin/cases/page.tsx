@@ -10,16 +10,17 @@ export default async function CasesPage() {
     getCourseCaseAssignments()
   ]);
 
-  if (!courseResults || !caseAssignmentResults.success) {
+  if (!courseResults.success || !caseAssignmentResults.success) {
     return (
-      <div>Failed to fetch simulation cases</div>
+      <div>Failed to fetch simulation cases or corresponding courses.</div>
     )
   }
   const assignments = caseAssignmentResults.data || [];
+  const courses = courseResults.data || [];
 
   return (
     <CasesClient
-      courses={courseResults}
+      courses={courses}
       caseAssignments={assignments}
     />
   );

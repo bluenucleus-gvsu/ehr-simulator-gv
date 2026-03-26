@@ -5,21 +5,19 @@ interface BaseMedication {
   route: "PO" | "IV" | "SC" | "Topical" | "Inhalation" | "IM" | "SL" | "Otic" | "Ophthalmic";     // Route will be a literal type for discrimination
   strength: number; // e.g., 25, 100
   strengthUnit: string; // e.g., "mg", "units/mL"
-  orderableUnit: string; // e.g., "Tablet", "Solution", "Cream", "Vial", "Syringe"
+  dispenseUnit: string; // e.g., "Tablet", "Solution", "Cream", "Vial", "Syringe"
   administrationFrequencies: string[];
 }
 
 
 export interface OralMedication extends BaseMedication {
   route: "PO";
-  form: "tablet" | "capsule" | "dissolvable tab" | "chewable";
   canBeCrushedOrSplit: boolean;
   takeWithFood?: boolean;
 }
 
 export interface SublingualMedication extends BaseMedication {
   route: "SL";
-  form: "tablet" | "tab";
 }
 
 export interface IvMedication extends BaseMedication {
@@ -44,7 +42,6 @@ interface InjectableMedication extends BaseMedication {
 interface TopicalMedication extends BaseMedication {
   route: "Topical";
   applicationArea: string;
-  form: "cream" | "ointment" | "gel" | "patch" | "lotion";
   patchApplicationFrequency?: string;
   patchChangeInstructions?: string;
 }
@@ -107,10 +104,9 @@ export const allMedications: AllMedicationTypes[] = [
     route: "PO", // This matches the discriminator for OralMedication
     strength: 25,
     strengthUnit: "mg",
-    orderableUnit: "Tablet",
+    dispenseUnit: "Tablet",
     administrationFrequencies: ["QD", "BID"],
     // Properties specific to OralMedication:
-    form: "tablet",
     canBeCrushedOrSplit: false,
     takeWithFood: true,
   },
@@ -121,7 +117,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "IV",
     strength: 500,
     strengthUnit: "mg",
-    orderableUnit: "Vial",
+    dispenseUnit: "Vial",
     administrationFrequencies: ["Q6H", "Q8H"],
     // --- IVMedication specific properties ---
     infusionRateUnit: 'mL/hr',
@@ -137,7 +133,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "IV",
     strength: 1000,
     strengthUnit: "mg",
-    orderableUnit: "Vial",
+    dispenseUnit: "Vial",
     administrationFrequencies: ["Q6H", "Q8H"],
     // --- IVMedication specific properties ---
     infusionRateUnit: 'mL/hr',
@@ -152,7 +148,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "IV",
     strength: 1000,
     strengthUnit: "mL",
-    orderableUnit: "Bag",
+    dispenseUnit: "Bag",
     administrationFrequencies: ["Q6H", "Q8H"],
     infusionRateUnit: 'mL/hr',
     totalVolume: 1000,
@@ -165,7 +161,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "IV",
     strength: 1000,
     strengthUnit: "mL",
-    orderableUnit: "Bag",
+    dispenseUnit: "Bag",
     administrationFrequencies: ["Q6H", "Q8H"],
     infusionRateUnit: 'mL/hr',
     totalVolume: 1000,
@@ -178,7 +174,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "IV",
     strength: 3.375,
     strengthUnit: "g",
-    orderableUnit: "Vial",
+    dispenseUnit: "Vial",
     administrationFrequencies: ["Q6H", "Q8H"],
     infusionRateUnit: 'mL/hr',
     diluent: 'normal saline 0.9%',
@@ -193,9 +189,8 @@ export const allMedications: AllMedicationTypes[] = [
     route: "PO",
     strength: 10,
     strengthUnit: "mg",
-    orderableUnit: "Tablet",
+    dispenseUnit: "Tablet",
     administrationFrequencies: ["QD"], // Once daily
-    form: "tablet",
     canBeCrushedOrSplit: true,
     takeWithFood: false,
   },
@@ -206,7 +201,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "IV",
     strength: 1000, // 1000mg per dose/vial
     strengthUnit: "mg",
-    orderableUnit: "Bag",
+    dispenseUnit: "Bag",
     administrationFrequencies: ["Q12H", "Q24H"],
     infusionRateUnit: 'mL/hr',
     diluent: "sodium chloride 0.9%",
@@ -221,9 +216,8 @@ export const allMedications: AllMedicationTypes[] = [
     route: "PO",
     strength: 40,
     strengthUnit: "mg",
-    orderableUnit: "Tablet",
+    dispenseUnit: "Tablet",
     administrationFrequencies: ["QD"],
-    form: "tablet",
     canBeCrushedOrSplit: false,
     takeWithFood: false,
   },
@@ -234,9 +228,8 @@ export const allMedications: AllMedicationTypes[] = [
     route: "PO",
     strength: 650,
     strengthUnit: "mg",
-    orderableUnit: "Tablet",
+    dispenseUnit: "Tablet",
     administrationFrequencies: ["PRN"], // As needed
-    form: "tablet",
     canBeCrushedOrSplit: true,
     takeWithFood: false,
   },
@@ -247,7 +240,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "SC",
     strength: 1,
     strengthUnit: "units",
-    orderableUnit: "Unit",
+    dispenseUnit: "Unit",
     administrationFrequencies: ["QD"],
   },
   {
@@ -257,7 +250,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "SC",
     strength: 1,
     strengthUnit: "units",
-    orderableUnit: "Unit",
+    dispenseUnit: "Unit",
     administrationFrequencies: ["QD"],
     bgDosing: [
       { bgRange: "<70", units: "0" },
@@ -277,9 +270,8 @@ export const allMedications: AllMedicationTypes[] = [
     route: "PO",
     strength: 20,
     strengthUnit: "mg",
-    orderableUnit: "Tablet",
+    dispenseUnit: "Tablet",
     administrationFrequencies: ["QD", "BID"],
-    form: "tablet",
     canBeCrushedOrSplit: true,
     takeWithFood: false,
   },
@@ -290,7 +282,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "IV",
     strength: 40,
     strengthUnit: "mg",
-    orderableUnit: "Vial",
+    dispenseUnit: "Vial",
     administrationFrequencies: ["QD"],
     infusionRateUnit: "mL/hr",
     diluent: "D5W",
@@ -305,7 +297,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "SC",
     strength: 40,
     strengthUnit: "mg",
-    orderableUnit: "Pre-filled Syringe",
+    dispenseUnit: "Pre-filled Syringe",
     administrationFrequencies: ["QD", "BID"],
     recommendedInjectionSites: ["Abdomen"],
     needleGauge: "30G",
@@ -319,7 +311,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "IV",
     strength: 4,
     strengthUnit: "mg",
-    orderableUnit: "Ampule",
+    dispenseUnit: "Ampule",
     administrationFrequencies: ["PRN", "Q4H"],
     infusionDurationHours: 1,
     isContinuous: false,
@@ -331,26 +323,12 @@ export const allMedications: AllMedicationTypes[] = [
     route: "Inhalation",
     strength: 30,
     strengthUnit: "mcg",
-    orderableUnit: "puff",
+    dispenseUnit: "puff",
     administrationFrequencies: ["Q4H", "PRN"],
     deviceType: "MDI",
     requiresSpacer: false,
     inhalationsPerDose: 2,
   },
-  // {
-  //   id: "medNitroPatchTd",
-  //   genericName: "nitroglycerin",
-  //   brandName: "Minitran",
-  //   route: "Topical",
-  //   strength: 0.4,
-  //   strengthUnit: "mg/hr",
-  //   orderableUnit: "Patch",
-  //   administrationFrequencies: ["Daily"],
-  //   applicationArea: "Chest wall or upper arm",
-  //   form: "patch",
-  //   patchApplicationFrequency: "daily",
-  //   patchChangeInstructions: "Replace every 24 hours; remove old patch before applying new one",
-  // },
   {
     id: "medOndansetronIv4",
     genericName: "ondansetron",
@@ -358,7 +336,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "IV",
     strength: 4,
     strengthUnit: "mg",
-    orderableUnit: "Vial",
+    dispenseUnit: "Vial",
     administrationFrequencies: ["Q8H", "PRN"],
     isContinuous: false,
   },
@@ -369,7 +347,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "IM",
     strength: 250,
     strengthUnit: "mg",
-    orderableUnit: "Vial",
+    dispenseUnit: "Vial",
     administrationFrequencies: ["Once"],
     recommendedInjectionSites: ["Gluteal muscle", "Vastus lateralis"],
     needleGauge: "22G",
@@ -384,7 +362,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "IV",
     strength: 1,
     strengthUnit: "g",
-    orderableUnit: "Syringe",
+    dispenseUnit: "Syringe",
     administrationFrequencies: ["Once"],
     isContinuous: false
   },
@@ -395,7 +373,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "IM",
     strength: 1,
     strengthUnit: "mg",
-    orderableUnit: "Auto-Injector",
+    dispenseUnit: "Auto-Injector",
     administrationFrequencies: ["PRN"],
     recommendedInjectionSites: ["Anterolateral thigh"],
     needleGauge: "23G",
@@ -409,7 +387,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "IV",
     strength: 125,
     strengthUnit: "mg",
-    orderableUnit: "Vial",
+    dispenseUnit: "Vial",
     administrationFrequencies: ["Once", "Q6H"],
     infusionRateUnit: "mL/hr",
     diluent: "NS 0.9%",
@@ -424,7 +402,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "IV",
     strength: 10,
     strengthUnit: "mg",
-    orderableUnit: "Vial",
+    dispenseUnit: "Vial",
     administrationFrequencies: ["Once", "Q6H"],
     isContinuous: false,
   },
@@ -435,9 +413,8 @@ export const allMedications: AllMedicationTypes[] = [
     route: "SL",
     strength: 0.4,
     strengthUnit: "mg",
-    orderableUnit: "Tab",
+    dispenseUnit: "Tab",
     administrationFrequencies: ["PRN"],
-    form: "tab",
   },
   {
     id: 'medLidocaineInDex5',
@@ -445,7 +422,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: 'IV',
     strength: 2,
     strengthUnit: 'mg',
-    orderableUnit: "Bag",
+    dispenseUnit: "Bag",
     administrationFrequencies: ["Q6H", "Q8H"],
     infusionRateUnit: 'mL/hr',
     diluent: "dextrose 5.0%",
@@ -459,7 +436,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: 'IV',
     strength: 400,
     strengthUnit: 'mg',
-    orderableUnit: "Bag",
+    dispenseUnit: "Bag",
     infusionRateUnit: "mL/hr",
     diluent: "dextrose 5.0%",
     totalVolume: 250,
@@ -472,7 +449,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "IV",
     strength: 0.5,
     strengthUnit: "mg",
-    orderableUnit: "Syringe",
+    dispenseUnit: "Syringe",
     administrationFrequencies: ["Once", "Q6H"],
     isContinuous: false,
   },
@@ -482,7 +459,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "IV",
     strength: 1000,
     strengthUnit: 'mL',
-    orderableUnit: 'Bag',
+    dispenseUnit: 'Bag',
     infusionRateUnit: 'mL/hr',
     isContinuous: true,
     administrationFrequencies: []
@@ -494,9 +471,8 @@ export const allMedications: AllMedicationTypes[] = [
     route: "PO",
     strength: 325,
     strengthUnit: "mg",
-    orderableUnit: "Tablet",
+    dispenseUnit: "Tablet",
     administrationFrequencies: ["PRN"], // As needed
-    form: "tablet",
     canBeCrushedOrSplit: true,
     takeWithFood: false,
   },
@@ -507,7 +483,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "IV",
     strength: 1000,
     strengthUnit: "mg",
-    orderableUnit: 'Vial',
+    dispenseUnit: 'Vial',
     administrationFrequencies: [],
     isContinuous: false,
     infusionRateUnit: 'mL/hr'
@@ -518,147 +494,12 @@ export const allMedications: AllMedicationTypes[] = [
     route: "PO",
     strength: 1,
     strengthUnit: "g",
-    orderableUnit: 'Tablet',
-    form: 'tablet',
+    dispenseUnit: 'Tablet',
     administrationFrequencies: [],
     canBeCrushedOrSplit: true
   }
 ];
 
-// const pilotSimMeds: AllMedicationTypes[] = [
-//   {
-//     id: "medNormalSaline09Iv",
-//     genericName: "normal saline 0.9%",
-//     route: "IV",
-//     strength: 1000,
-//     strengthUnit: "mL",
-//     orderableUnit: "Bag",
-//     administrationFrequencies: ["Q6H", "Q8H"],
-//     infusionRateUnit: 'mL/hr',
-//     totalVolume: 1000,
-//     infusionDurationHours: 10,
-//     isContinuous: true,
-//   },
-//   {
-//     id: "medMetoprololIvPush",
-//     genericName: "metoprolol tartate",
-//     brandName: "Lopressor",
-//     route: "IV",
-//     strength: 10,
-//     strengthUnit: "mg",
-//     orderableUnit: "Vial",
-//     administrationFrequencies: ["Once", "Q6H"],
-//     isContinuous: false,
-//   },
-//   {
-//     id: "medAcetaminophenOral650",
-//     genericName: "acetaminophen",
-//     brandName: "Tylenol",
-//     route: "PO",
-//     strength: 650,
-//     strengthUnit: "mg",
-//     orderableUnit: "Tablet",
-//     administrationFrequencies: ["PRN"], // As needed
-//     form: "tablet",
-//     canBeCrushedOrSplit: true,
-//     takeWithFood: false,
-//   },
-//   {
-//     id: "medNitroglycerin04mgSl",
-//     genericName: "nitroglycerin",
-//     brandName: 'Nitrostat',
-//     route: "SL",
-//     strength: 0.4,
-//     strengthUnit: "mg",
-//     orderableUnit: "Tab",
-//     administrationFrequencies: ["PRN"],
-//     form: "tab",
-//   },
-//   {
-//     id: "medMorphineIv10",
-//     genericName: "morphine sulfate",
-//     brandName: "Morphine IV",
-//     route: "IV",
-//     strength: 4,
-//     strengthUnit: "mg",
-//     orderableUnit: "Ampule",
-//     administrationFrequencies: ["PRN", "Q4H"],
-//     infusionDurationHours: 1,
-//     isContinuous: false,
-//   },
-//   {
-//     id: 'medLidocaineInDex5',
-//     genericName: "lidocaine",
-//     route: 'IV',
-//     strength: 2,
-//     strengthUnit: 'mg',
-//     orderableUnit: "Bag",
-//     administrationFrequencies: ["Q6H", "Q8H"],
-//     infusionRateUnit: 'mL/hr',
-//     diluent: "dextrose 5.0%",
-//     totalVolume: 500,
-//     infusionDurationHours: 10,
-//     isContinuous: false,
-//   },
-//   {
-//     id: "medDopamine400InDex5",
-//     genericName: 'dopamine',
-//     route: 'IV',
-//     strength: 400,
-//     strengthUnit: 'mg',
-//     orderableUnit: "Bag",
-//     infusionRateUnit: "mL/hr",
-//     diluent: "dextrose 5.0%",
-//     totalVolume: 250,
-//     isContinuous: false,
-//     administrationFrequencies: []
-//   },
-//   {
-//     id: "medAtropinePush",
-//     genericName: "atropine sulfate",
-//     route: "IV",
-//     strength: 0.5,
-//     strengthUnit: "mg",
-//     orderableUnit: "Syringe",
-//     administrationFrequencies: ["Once", "Q6H"],
-//     isContinuous: false,
-//   },
-//   {
-//     id: "medDextrose5inNS45",
-//     genericName: "dextrose 5% in NS 0.45%",
-//     route: "IV",
-//     strength: 1000,
-//     strengthUnit: 'mL',
-//     orderableUnit: 'Bag',
-//     infusionRateUnit: 'mL/hr',
-//     isContinuous: true,
-//     administrationFrequencies: []
-//   },
-//   {
-//     id: "medAcetaminophenOral325",
-//     genericName: "acetaminophen",
-//     brandName: "Tylenol",
-//     route: "PO",
-//     strength: 325,
-//     strengthUnit: "mg",
-//     orderableUnit: "Tablet",
-//     administrationFrequencies: ["PRN"], // As needed
-//     form: "tablet",
-//     canBeCrushedOrSplit: true,
-//     takeWithFood: false,
-//   },
-//   {
-//     id: "medCefazolin1000",
-//     genericName: "cefazolin",
-//     brandName: "Ancef",
-//     route: "IV",
-//     strength: 1000,
-//     strengthUnit: "mg",
-//     orderableUnit: 'Vial',
-//     administrationFrequencies: [],
-//     isContinuous: false
-//   }
-// ]
 
 export const medicationOrders: MedicationOrder[] = [
   {

@@ -8,13 +8,25 @@ import CreateCaseButton from "./CreateCaseButton";
 export function AdminQuickActionsList() {
   const router = useRouter();
   return (
-    <div className="flex flex-row gap-2">
+    <div className="grid grid-cols-2 w-160 gap-2">
       <CreateCaseButton />
       <Button
         onClick={() => { router.push("/admin/cases") }}
         className="cursor-pointer"
         variant="default">
         View All Cases
+      </Button>
+      <Button
+        onClick={() => { router.push("/admin/courses") }}
+        className="cursor-pointer"
+        variant="default">
+        Create Course
+      </Button>
+      <Button
+        onClick={() => { router.push("/admin/courses") }}
+        className="cursor-pointer"
+        variant="default">
+        View All Courses
       </Button>
     </div>
   );

@@ -70,7 +70,7 @@ export const renderMedFormDetails = (
           <span className="text-nowrap">{medication.route}</span>
           <Separator className="bg-gray-300" orientation="vertical" />
           <span className="text-nowrap">
-            {orderedUnits} {pluralize(orderedUnits, medication.orderableUnit)}
+            {orderedUnits} {pluralize(orderedUnits, medication.dispenseUnit)}
           </span>
           <Separator className="bg-gray-300" orientation="vertical" />
           <span className="text-nowrap">{freq}</span>
@@ -88,7 +88,7 @@ export const renderMedFormDetails = (
           <span className="text-nowrap">{medication.route}</span>
           <Separator className="bg-gray-300" orientation="vertical" />
           <span className="text-nowrap">
-            {orderedUnits} {pluralize(orderedUnits, medication.orderableUnit)}
+            {orderedUnits} {pluralize(orderedUnits, medication.dispenseUnit)}
           </span>
           {/* Only show rate if it's relevant (unit exists and rate is set) */}
           {medication.infusionRateUnit && rate > 0 && (
@@ -132,7 +132,7 @@ export const renderMedFormDetails = (
             <span className="text-nowrap">{medication.route}</span>
             <Separator className="bg-gray-300" orientation="vertical" />
             <span className="text-nowrap">
-              {orderedUnits} {pluralize(orderedUnits, medication.orderableUnit)}
+              {orderedUnits} {pluralize(orderedUnits, medication.dispenseUnit)}
             </span>
             <Separator className="bg-gray-300" orientation="vertical" />
             <span className="text-nowrap">{freq}</span>
@@ -151,7 +151,7 @@ export const renderMedFormDetails = (
           <span className="text-nowrap">{medication.route}</span>
           <Separator className="bg-gray-300" orientation="vertical" />
           <span className="text-nowrap">
-            {orderedUnits} {pluralize(orderedUnits, medication.orderableUnit)}
+            {orderedUnits} {pluralize(orderedUnits, medication.dispenseUnit)}
           </span>
           <Separator className="bg-gray-300" orientation="vertical" />
           <span className="text-nowrap">{freq}</span>

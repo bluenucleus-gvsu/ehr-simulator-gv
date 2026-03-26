@@ -7,19 +7,41 @@ import Link from "next/link";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CaseCourseAssignments } from "@/actions/cases";
 import { Course } from "../courses/[id]/page";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
 interface CaseClientProps {
   courses: Course[];
   caseAssignments: CaseCourseAssignments;
 }
 
-export default function CasesClient({ courses, caseAssignments }: CaseClientProps) {
-  const [selectedCourse, setSelectedCourse] = useState<string>("all");
+function filterCases(
+  cases: CaseCourseAssignments,
+  filterText: string,
+  selectedCourse: string,
+  // selectedSpecialty: string
+) {
+  return cases.filter((item) => {
+    const matchesCourse = selectedCourse === "all" || item.courseId === selectedCourse || selectedCourse == 'unassigned' && item.courseCode === null;
+    // const matchesSpecialty = selectedSpecialty === "all" || item.specialty === selectedSpecialty;
+    const matchesText = filterText === "" || item.caseName.toLowerCase().includes(filterText.toLowerCase());
 
-  const filteredAssignments = selectedCourse && selectedCourse !== "all"
-    ? caseAssignments.filter(item => item.courseId === selectedCourse)
-    : caseAssignments;
+    return matchesCourse && matchesText
+    // && matchesSpecialty;
+  });
+}
+
+// const specialties = [{ id: 'OB', value: 'OB' }, { id: 'Med-Surg', value: 'Med-Surg' }, { id: 'Mental Health', value: 'Mental Health' }, { id: 'Home Health', value: 'Home Health' }]
+
+export default function CasesClient({ courses, caseAssignments }: CaseClientProps) {
+  const [filterText, setFilterText] = useState('');
+  const [selectedCourse, setSelectedCourse] = useState<string>("all");
+  // const [selectedSpecialty, setSelectedSpecialty] = useState<string>("all");
+
+  const handleFilterTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFilterText(e.target.value);
+  };
+  const filteredAssignments = filterCases(caseAssignments, filterText, selectedCourse);
 
   return (
     <div className="w-full">
@@ -36,16 +58,17 @@ export default function CasesClient({ courses, caseAssignments }: CaseClientProp
         </div>
       </header>
 
-      <div className="pt-2 px-2">
-        <Select onValueChange={setSelectedCourse} value={selectedCourse} defaultValue="">
+      <div className="flex gap-4 pt-2 px-2">
+        <Select onValueChange={setSelectedCourse} value={selectedCourse}>
           <SelectTrigger className="w-fit">
-            <SelectValue placeholder="Select a fruit" />
+            <SelectValue placeholder="Select a course" />
             <ChevronDown />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Courses</SelectLabel>
               <SelectItem value="all">All Courses</SelectItem>
+              <SelectItem value='unassigned'>Unassigned</SelectItem>
               {
                 courses.map(course => (
                   <SelectItem
@@ -59,9 +82,36 @@ export default function CasesClient({ courses, caseAssignments }: CaseClientProp
             </SelectGroup>
           </SelectContent>
         </Select>
+        {/* <Select onValueChange={setSelectedSpecialty} value={selectedSpecialty}>
+          <SelectTrigger className="w-fit">
+            <SelectValue placeholder="Select a specialty" />
+            <ChevronDown />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Specialties</SelectLabel>
+              <SelectItem value="all">All Specialties</SelectItem>
+              {
+                specialties.map(item => (
+                  <SelectItem
+                    key={item.id}
+                    value={item.id}
+                  >
+                    {item.value}
+                  </SelectItem>
+                ))
+              }
+            </SelectGroup>
+          </SelectContent>
+        </Select> */}
+        <InputGroup className="max-w-50">
+          <InputGroupInput value={filterText} onChange={handleFilterTextChange} placeholder="Search case name..." />
+          <InputGroupAddon>
+            <Search />
+          </InputGroupAddon>
+          <InputGroupAddon align="inline-end"></InputGroupAddon>
+        </InputGroup>
       </div>
-
-
       <div className="flex flex-col gap-4 p-4">
         {
           filteredAssignments.length > 0 ? (

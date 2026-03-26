@@ -84,7 +84,7 @@ export const renderMedCardDetails = (medication: AllMedicationTypes, order: Medi
           <div className="h-5">
             <Separator className="bg-gray-300" orientation="vertical" />
           </div>
-          <span className="text-nowrap">{order.dose / medication.strength} {pluralize(order.dose / medication.strength, medication.orderableUnit)}</span>
+          <span className="text-nowrap">{order.dose / medication.strength} {pluralize(order.dose / medication.strength, medication.dispenseUnit)}</span>
           <div className="h-5">
             <Separator className="bg-gray-300" orientation="vertical" />
           </div>
@@ -106,7 +106,7 @@ export const renderMedCardDetails = (medication: AllMedicationTypes, order: Medi
           <div className="h-5">
             <Separator className="bg-gray-300" orientation="vertical" />
           </div>
-          <span className="text-nowrap">{order.dose / medication.strength} {pluralize(order.dose / medication.strength, medication.orderableUnit)}</span>
+          <span className="text-nowrap">{order.dose / medication.strength} {pluralize(order.dose / medication.strength, medication.dispenseUnit)}</span>
           {order.infusionRate && medication.infusionRateUnit &&
             <>
               <div className="h-5">
@@ -162,7 +162,7 @@ export const renderMedCardDetails = (medication: AllMedicationTypes, order: Medi
           <div className="h-5">
             <Separator className="bg-gray-300" orientation="vertical" />
           </div>
-          <span className="text-nowrap">{order.dose / medication.strength} {pluralize(order.dose / medication.strength, medication.orderableUnit)}</span>
+          <span className="text-nowrap">{order.dose / medication.strength} {pluralize(order.dose / medication.strength, medication.dispenseUnit)}</span>
           <div className="h-5">
             <Separator className="bg-gray-300" orientation="vertical" />
           </div>

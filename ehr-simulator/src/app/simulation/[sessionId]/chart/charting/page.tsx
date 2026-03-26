@@ -153,7 +153,6 @@ export function FlexSheet() {
     );
   }, []);
 
-  // Replaces 'setFieldSelection' reducer
   const handleSubsetSelection = useCallback((rowId: string, columnId: string, selectedIdsForField: string[]) => {
     const selectionKey = `${rowId}-${columnId}`;
 
@@ -167,7 +166,6 @@ export function FlexSheet() {
     setData(prevData => {
       return prevData.map(row => {
         if (row.id === rowId) {
-          // Store as string or array depending on your backend requirement
           return { ...row, [columnId]: selectedIdsForField };
         }
         return row;

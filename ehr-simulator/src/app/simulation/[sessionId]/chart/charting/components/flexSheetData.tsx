@@ -115,7 +115,7 @@ export const predefinedVitalsData2: PredefinedDataByTime = {
     "heartSoundsInput": "S1, S2. No mumur noted",
     "extremitiesInput": "+2 pitting edema in BLE"
   },
-  5: { // Data from 90 minutes ago
+  5: { // Data from 5 minutes ago
     "hrInput": "121",
     "hrSourceSelect": "Monitor",
     "bpInput": "92/58",

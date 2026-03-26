@@ -20,12 +20,32 @@ export type StudentInfo = {
   email: string
   cohort: string
   classes: string[]
+  role?: string
 }
+
+import Link from "next/link"
 
 export const columns: ColumnDef<StudentInfo>[] = [
   {
     accessorKey: "full_name",
     header: "Full Name",
+    cell: ({ row }) => {
+      const original = row.original as StudentInfo
+      const id = original.id
+      const name = row.getValue("full_name") as string
+      const role = original.role
+
+      // Only students have profile pages. Render a link for students only.
+      if (role === "student") {
+        return (
+          <Link href={`/user/profile/${id}`} className="text-blue-600 underline">
+            {name}
+          </Link>
+        )
+      }
+
+      return <span>{name}</span>
+    },
   },
   {
     accessorKey: "email",

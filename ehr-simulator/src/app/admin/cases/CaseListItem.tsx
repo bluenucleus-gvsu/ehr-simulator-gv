@@ -16,7 +16,7 @@ export default function CaseListItem({ courseCaseAssignment }: CaseListItemProps
         <div className="flex gap-2 items-end">
           <h2 className="text-xl font-semibold">{caseName}</h2>
           <div className="rounded-full bg-gray-100 px-2 py-1">
-            <p className="text-xs font-semibold">{courseCode}</p>
+            <p className="text-xs font-semibold">{courseCode || 'Unassigned'}</p>
           </div>
         </div>
         <p className="text-md text-gray-700">{admitting_diagnosis}</p>

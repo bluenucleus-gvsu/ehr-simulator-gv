@@ -65,7 +65,6 @@ CREATE TABLE IF NOT EXISTS public.case_sessions (
     status text CHECK(status in ('completed', 'in progress', 'unassigned', 'assigned', 'archived')),
     group_id UUID references public.groups(id) ON DELETE SET NULL,
     student_ids text, 
-    --case_session_data_id UUID references public.case_data(id) ON DELETE SET NULL,
     case_id UUID REFERENCES public.case_data(id) ON DELETE SET NULL,
     feedback text,
     started_at TIMESTAMPTZ,

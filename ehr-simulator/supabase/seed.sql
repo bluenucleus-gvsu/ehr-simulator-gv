@@ -110,111 +110,39 @@ VALUES ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9b', 'c3d4e5f6-a7b8-4c5d-0e1f-2a3b4c5
        ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9e', 'd4e5f6a7-b8c9-4d5e-1f2a-3b4c5d6e7f2e', true),
        ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9d', 'd4e5f6a7-b8c9-4d5e-1f2a-3b4c5d6e7f2e', true);
 
--- cases must be inserted before course_cases and section_assignments
-INSERT INTO public.cases (id, name, first_name, last_name, date_of_birth, code_status, description, admitting_diagnosis, attending_provider, inpatient_duration_days, time_of_admission, language, requires_interpreter, medical_history, surgical_history, allergies, social_habits, living_situation, case_creation_complete, updated_at)
-VALUES
-  (
-    'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9c',
-    'Margaret Collins',
-    'Margaret', 'Collins',
-    '1953-04-12',
-    'Full',
-    'A 72-year-old female presenting with shortness of breath, bilateral leg edema, and fatigue following a recent upper respiratory infection.',
-    'Pneumonia with Sepsis',
-    'Dr. Patricia Osei MD',
-    3, '08:30:00',
-    'English', false,
-    ARRAY['HTN', 'Type 2 Diabetes', 'CKD Stage 2'],
-    ARRAY['Appendectomy (1998)'],
-    ARRAY['Sulfa'],
-    ARRAY['Former smoker'],
-    ARRAY['Lives with spouse'],
-    true, now()
-  ),
-  (
-    'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9d',
-    'James Okafor',
-    'James', 'Okafor',
-    '1966-09-23',
-    'Full',
-    'A 58-year-old male with a history of type 2 diabetes presenting with altered mental status, polyuria, and dehydration.',
-    'Diabetic Ketoacidosis',
-    'Dr. Samuel Park MD',
-    2, '14:15:00',
-    'English', false,
-    ARRAY['Type 2 Diabetes', 'Hypertension', 'Obesity'],
-    ARRAY[]::text[],
-    ARRAY['Penicillin', 'Latex'],
-    ARRAY['Occasional alcohol use'],
-    ARRAY['Lives alone'],
-    true, now()
-  ),
-  (
-    'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9e',
-    'Sandra Nguyen',
-    'Sandra', 'Nguyen',
-    '1990-11-05',
-    'Full',
-    'A 34-year-old female at 36 weeks gestation presenting with severe headache, visual disturbances, and elevated blood pressure.',
-    'Preeclampsia with Severe Features',
-    'Dr. Linda Marsh MD',
-    1, '22:45:00',
-    'English', false,
-    ARRAY['Gestational hypertension (prior pregnancy)'],
-    ARRAY[]::text[],
-    ARRAY['NKDA'],
-    ARRAY[]::text[],
-    ARRAY['Lives with partner'],
-    true, now()
-  ),
-  (
-    'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9f',
-    'Derek Hollis',
-    'Derek', 'Hollis',
-    '1979-06-17',
-    'Full',
-    'A 45-year-old male presenting after intentional overdose of acetaminophen. Focus on therapeutic communication, safety assessment, and toxicology management.',
-    'Acetaminophen Overdose / Psychiatric Crisis',
-    'Dr. Angela Torres MD',
-    2, '03:20:00',
-    'English', false,
-    ARRAY['Major Depressive Disorder', 'Anxiety'],
-    ARRAY[]::text[],
-    ARRAY['NKDA'],
-    ARRAY['Alcohol use disorder'],
-    ARRAY['Lives alone'],
-    true, now()
-  )
-ON CONFLICT DO NOTHING;
+-- INSERT INTO public.cases (id, name, description, admitting_diagnosis) 
+-- VALUES('e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 'Wallace Peterson', 'This will be a brief case description providing basic details of the case, perhaps mentioning events leading up to admission, current symptoms, and an area of focus for the simulation.', 'Acute CHF Exacerbation'),
+--     ('e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', 'Melody Dix', 'This will be a brief case description providing basic details of the case, perhaps mentioning events leading up to admission, current symptoms, and an area of focus for the simulation.', 'Acute Pancreatitis'),
+--         ('e5f6a7b8-c9a0-4e5f-9c1f-4c5d6e7f8a9d', 'Jimmy Houston', 'This will be a brief case description providing basic details of the case, perhaps mentioning events leading up to admission, current symptoms, and an area of focus for the simulation.', 'Acute EtOH withdrawal');
 
--- course_cases now references cases.id
-INSERT INTO public.course_cases (course_id, case_id)
-VALUES
-  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d', 'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9c'), -- NUR 320 - Margaret Collins
-  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d', 'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9d'), -- NUR 320 - James Okafor
-  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5e', 'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9c'), -- NUR 420 - Margaret Collins
-  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5e', 'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9d'), -- NUR 420 - James Okafor
-  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5f', 'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9e'), -- NUR 360 - Sandra Nguyen
-  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c6a', 'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9f')  -- NUR 380 - Derek Hollis
-ON CONFLICT DO NOTHING;
+-- INSERT INTO public.section_assignments (section_id, case_id, sim_time, presim_time) 
+-- VALUES  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 01:00:00+00', '2026-02-02 01:00:00+00'),
+--         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 02:00:00+00', '2026-02-02 01:00:00+00'),
 
--- section_assignments now references cases.id
-INSERT INTO public.section_assignments (section_id, case_id, sim_time, presim_time)
-VALUES
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e', 'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9c', '2026-02-05 01:00:00+00', '2026-02-02 01:00:00+00'),
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e', 'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9d', '2026-02-05 02:00:00+00', '2026-02-02 01:00:00+00'),
+--         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6f', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 03:00:00+00', '2026-02-02 01:00:00+00'),
+--         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6f', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 04:00:00+00', '2026-02-02 01:00:00+00'),
 
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6f', 'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9c', '2026-02-05 03:00:00+00', '2026-02-02 01:00:00+00'),
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6f', 'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9d', '2026-02-05 04:00:00+00', '2026-02-02 01:00:00+00'),
+--         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7a', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 05:00:00+00', '2026-02-02 01:00:00+00'),
+--         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7a', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 06:00:00+00', '2026-02-02 01:00:00+00'),
 
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7a', 'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9c', '2026-02-05 05:00:00+00', '2026-02-02 01:00:00+00'),
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7a', 'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9d', '2026-02-05 06:00:00+00', '2026-02-02 01:00:00+00'),
+--         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7b', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 07:00:00+00', '2026-02-02 01:00:00+00'),
+--         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7b', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 08:00:00+00', '2026-02-02 01:00:00+00'),
 
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7b', 'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9c', '2026-02-05 07:00:00+00', '2026-02-02 01:00:00+00'),
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7b', 'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9d', '2026-02-05 08:00:00+00', '2026-02-02 01:00:00+00'),
+--         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7c', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 09:00:00+00', '2026-02-02 01:00:00+00'),
+--         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7c', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 10:00:00+00', '2026-02-02 01:00:00+00'),
 
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7c', 'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9e', '2026-02-05 09:00:00+00', '2026-02-02 01:00:00+00'),
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7d', 'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9e', '2026-02-05 10:00:00+00', '2026-02-02 01:00:00+00'),
+--         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7d', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 11:00:00+00', '2026-02-02 01:00:00+00'),
+--         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7d', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 12:00:00+00', '2026-02-02 01:00:00+00'),
 
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7e', 'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9f', '2026-02-05 11:00:00+00', '2026-02-02 01:00:00+00'),
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7f', 'f1a2b3c4-d5e6-4f1a-2b3c-4d5e6f7a8b9f', '2026-02-05 12:00:00+00', '2026-02-02 01:00:00+00');
+--         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7e', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-01-05 13:00:00+00', '2026-02-02 01:00:00+00'),
+--         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7e', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-01-05 14:00:00+00', '2026-02-02 01:00:00+00'),
+
+--         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7f', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 15:00:00+00', '2026-02-02 01:00:00+00'),
+--         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7f', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 16:00:00+00', '2026-02-02 01:00:00+00');
+
+
+-- INSERT INTO public.course_cases (course_id, case_id) 
+-- VALUES  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c6a', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d' ),
+--         ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c6a', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d'),
+--         ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5e', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d'),
+--         ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5e', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d')
