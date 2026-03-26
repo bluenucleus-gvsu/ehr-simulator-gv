@@ -111,9 +111,9 @@ const MultiTextInput = forwardRef<MultiTextInputHandle, MultiTextInputProps>(({
             <Badge
               key={index}
               variant="outline"
-              className="pl-2.5 pr-1 py-1 h-7 text-sm font-normal bg-slate-50 text-slate-700 border-slate-200 flex items-center gap-1 hover:bg-slate-100 transition-colors"
+              className="pl-2.5 pr-1 py-1 h-7 text-sm font-normal bg-slate-50 text-slate-700 border-slate-200 flex items-center gap-1 hover:bg-slate-100 transition-colors max-w-[16rem]"
             >
-              {item}
+              <span className="truncate">{item}</span>
               <button
                 className="h-5 w-5 flex items-center justify-center rounded-full hover:bg-red-100 hover:text-red-600 transition-colors cursor-pointer"
                 type="button"
