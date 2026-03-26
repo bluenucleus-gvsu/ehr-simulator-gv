@@ -85,13 +85,20 @@ export default function CasePage() {
   const livingSituationRef = useRef<MultiTextInputHandle>(null)
 
   const editPageRoutes: { label: string, href: string }[] = [
-    { label: "Note Entries", href: "notes" },
+    // { label: "Note Entries", href: "notes" },
+    // { label: "Order Entries", href: "orders" },
+    // { label: "Lab Results", href: "labs" },
+    // { label: "Charts", href: "charting" },
+    // { label: "Intake & Output", href: "intake-output" },
+    // { label: "Medications", href: "medications" },
+    // { label: "Medication Administrations", href: "medication-administrations" },
+    { label: "Note Entries", href: "#" },
     { label: "Order Entries", href: "orders" },
-    { label: "Lab Results", href: "labs" },
-    { label: "Charts", href: "charting" },
-    { label: "Intake & Output", href: "intake-output" },
-    { label: "Medications", href: "medications" },
-    { label: "Medication Administrations", href: "medication-administrations" },
+    { label: "Lab Results", href: "#" },
+    { label: "Charts", href: "#" },
+    { label: "Intake & Output", href: "#" },
+    { label: "Medications", href: "#" },
+    { label: "Medication Administrations", href: "#" },
   ]
 
   useEffect(() => {
@@ -569,8 +576,8 @@ export default function CasePage() {
               <p className="text-sm font-semibold text-slate-800">View & Edit More...</p>
             </div>
             <CardContent className="px-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-              {editPageRoutes.map(({ label, href }) => (
-                <Link key={href} href={`/admin/cases/${caseId}/${href}`}>
+              {editPageRoutes.map(({ label, href }, key) => (
+                <Link key={key} href={`/admin/cases/${caseId}/${href}`}>
                   <Button variant="outline" className="w-full cursor-pointer">
                     {label}
                   </Button>
