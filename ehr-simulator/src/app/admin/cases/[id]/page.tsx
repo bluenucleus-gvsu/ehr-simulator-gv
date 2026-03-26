@@ -5,14 +5,14 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowRight, FolderPen } from "lucide-react"
+import { ArrowRight, FolderPen, TriangleAlert } from "lucide-react"
 import { useRouter, useParams } from "next/navigation"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { type CaseDataRow, type CaseDataScalarUpdate, type CaseFamilyHistoryRow, type CodeStatusType, type InsuranceType } from "../types"
 import {
   getSimCaseById, updateSimCase,
   getIsolationPrecautions, getRelationshipStatuses, getRelationshipTypes, getSafetyAlerts,
-  replaceFamilyHistory,
+  replaceFamilyHistory, getCoursesForCase,
   addSafetyAlert, removeSafetyAlert,
   type LookupRow,
 } from "@/actions/cases"
@@ -41,7 +41,29 @@ const FormSection = ({
   </Card>
 )
 
+// Warning that editing the case affects any course that it is assigned to
+const MultipleCourseWarning = ({ courses }: { courses: string[] }) => (
+  <Card className="border-red-400 bg-red-50 shadow-sm">
+    <CardContent className="px-4 py-1 flex items-center gap-3">
+      <TriangleAlert color="#9f0712" />
+      <div>
+        <p className="text-sm font-semibold text-red-800">
+          This case is assigned to multiple courses. Editing it will affect all of them.
+        </p>
+        <p className="text-xs text-red-700 mt-0.5">
+          This case is assigned to the following courses:{' '}
+          <span className="font-bold">{courses.join(', ')}</span>.
+          To edit the case without affecting those courses, make a copy of this case and edit the copy instead.
+        </p>
+      </div>
+    </CardContent>
+  </Card>
+)
+
 export default function CasePage() {
+  // Editing the patient's demographics and history are handled on this main page
+  // Editing the more complex parts of the case (eg. notes, labs, meds) are handled in subpages 
+
   const router = useRouter()
   const params = useParams()
   const caseId = params.id as string
@@ -49,6 +71,7 @@ export default function CasePage() {
   const [formData, setFormData] = useState<CaseDataRow | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const initialRow = useRef<CaseDataRow | null>(null)
+  const [assignedCourses, setAssignedCourses] = useState<string[]>([])
 
   const [isolationOptions, setIsolationOptions] = useState<LookupRow[]>([])
   const [relationshipStatusOptions, setRelationshipStatusOptions] = useState<LookupRow[]>([])
@@ -73,12 +96,12 @@ export default function CasePage() {
 
   useEffect(() => {
     const fetchAll = async () => {
-      const [caseResult, isolationResult, relStatusResult, relTypeResult, safetyResult] = await Promise.all([
-        getSimCaseById(caseId),
-        getIsolationPrecautions(),
-        getRelationshipStatuses(),
-        getRelationshipTypes(),
-        getSafetyAlerts(),
+      const [caseResult, isolationResult, relStatusResult, relTypeResult, safetyResult, coursesResult] = await Promise.all([getSimCaseById(caseId),
+      getIsolationPrecautions(),
+      getRelationshipStatuses(),
+      getRelationshipTypes(),
+      getSafetyAlerts(),
+      getCoursesForCase(caseId),
       ])
 
       if (caseResult.success && caseResult.data) {
@@ -94,6 +117,10 @@ export default function CasePage() {
       if (relStatusResult.success && relStatusResult.data) setRelationshipStatusOptions(relStatusResult.data)
       if (relTypeResult.success && relTypeResult.data) setRelationshipTypeOptions(relTypeResult.data)
       if (safetyResult.success && safetyResult.data) setSafetyAlertOptions(safetyResult.data)
+
+      if (coursesResult.success && coursesResult.data) {
+        setAssignedCourses(coursesResult.data.courseNames)
+      }
     }
     fetchAll()
   }, [caseId])
@@ -185,6 +212,8 @@ export default function CasePage() {
     }
   }
 
+
+
   if (loadError) return <div className="p-8 text-red-500">{loadError}</div>
   if (!formData) return <div className="p-8 text-slate-500">Loading...</div>
 
@@ -208,6 +237,8 @@ export default function CasePage() {
 
       <div className="flex-1 p-3 sm:p-4 md:px-6 lg:px-12 bg-slate-50/50">
         <div className="max-w-7xl mx-auto space-y-3 pb-10">
+
+          {assignedCourses.length > 1 && <MultipleCourseWarning courses={assignedCourses} />}
 
           {/* Case Info */}
           <FormSection title="Case Info" subtitle="General case identifiers and clinical context">

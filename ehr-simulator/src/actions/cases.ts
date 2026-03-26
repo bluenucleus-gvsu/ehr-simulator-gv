@@ -389,6 +389,8 @@ export async function getCourseCaseAssignments() {
     };
   }
 
+
+
   const assignments = data?.flatMap((caseItem) => {
     // Handle unassigned cases (Left Join equivalent)
     if (!caseItem.course_cases || caseItem.course_cases.length === 0) {
@@ -427,6 +429,36 @@ export async function getCourseCaseAssignments() {
     success: true,
     message: 'Successfully retrieved sim cases.',
     data: assignments,
+  };
+}
+
+export async function getCoursesForCase(caseId: string): Promise<ActionResponse<{ courseCount: number; courseNames: string[] }>> {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { data, error } = await supabase
+    .from('course_cases')
+    .select(`
+      course_id,
+      courses (
+        name
+      )
+    `)
+    .eq('case_id', caseId);
+
+  if (error) return { success: false, message: 'Failed to fetch courses for case.', error };
+
+  const courseNames = data?.map((row) => {
+    const course = Array.isArray(row.courses) ? row.courses[0] : row.courses;
+    return course?.name ?? 'Unknown';
+  }) ?? [];
+
+  return {
+    success: true,
+    message: 'ok',
+    data: { courseCount: courseNames.length, courseNames },
   };
 }
 
