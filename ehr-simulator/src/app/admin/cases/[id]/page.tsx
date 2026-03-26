@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowRight, FolderPen, TriangleAlert } from "lucide-react"
+import { ArrowLeft, FolderPen, TriangleAlert } from "lucide-react"
 import { useRouter, useParams } from "next/navigation"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { type CaseDataRow, type CaseDataScalarUpdate, type CaseFamilyHistoryRow, type CodeStatusType, type InsuranceType } from "../types"
@@ -230,7 +230,7 @@ export default function CasePage() {
         </div>
         <div className="flex gap-2 flex-shrink-0">
           <Button className="cursor-pointer" onClick={() => { router.push("/admin/cases") }}>
-            Return to Cases <ArrowRight />
+            <ArrowLeft />Return to Cases
           </Button>
         </div>
       </header>
