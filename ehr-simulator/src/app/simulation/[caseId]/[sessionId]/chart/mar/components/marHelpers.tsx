@@ -1,8 +1,9 @@
 import { addHours, addMinutes, format, isSameDay, startOfHour } from "date-fns";
-import type { AllMedicationTypes, InsulinMedication, MedAdministrationInstance, MedicationOrder } from "./marData";
+import type { AllMedicationTypes, InjectableMedication, InsulinMedication, IvMedication, MedAdministrationInstance, MedicationOrder, OralMedication } from "./marData";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { UserCheck, UserX } from "lucide-react";
+import { DatabaseMedication } from "@/actions/simulation";
 
 export interface MedCardColumn {
   startTime: Date;
@@ -15,7 +16,7 @@ export const pluralize = (unitsOrdered: number, unitName: string) => {
   return unitsOrdered > 1 ? unitName + 's' : unitName
 };
 
-export const isSlidingScaleInsulin = (medication: AllMedicationTypes): medication is InsulinMedication => {
+export const isSlidingScaleInsulin = (medication: AllMedicationTypes | DatabaseMedication): medication is InsulinMedication => {
   return (
     medication.route === "SC" &&
     'bgDosing' in medication &&
@@ -31,7 +32,6 @@ export function getMedDose(medication: AllMedicationTypes, order: MedicationOrde
     return `${(order.dose / medication.strength) * medication.strength}${medication.strengthUnit}`
   }
 }
-
 
 export const renderMedTitleRow = (medication: AllMedicationTypes, order: MedicationOrder) => {
   const brandNameDisplay = `(${medication.brandName})`
@@ -266,3 +266,53 @@ export const createColumns = (currentTime: Date, offsetHours: number, futureColC
 
   return displayColumns;
 };
+
+export function mapDatabaseMedToFrontend(dbMed: DatabaseMedication): AllMedicationTypes {
+  // 1. Extract the base properties common to ALL medications
+  const baseMed = {
+    id: dbMed.id,
+    genericName: dbMed.generic_name,
+    brandName: dbMed.brand_name || undefined,
+    route: dbMed.route,
+    strength: dbMed.strength,
+    strengthUnit: dbMed.strength_unit,
+    dispenseUnit: dbMed.dispense_units.name || "Unknown",
+  };
+
+  // 2. Narrow based on the route and cast to your strict interfaces
+  switch (dbMed.route) {
+    case "IV":
+      return {
+        ...baseMed,
+        route: "IV",
+        infusionRateUnit: (dbMed.infusion_rate_unit as "mL/hr" | "mg/hr" | "units/hr") || undefined,
+        diluent: dbMed.diluent || undefined,
+        totalVolume: dbMed.total_volume || undefined,
+        isContinuous: dbMed.is_continuous,
+      } as IvMedication;
+
+    case "PO":
+      return {
+        ...baseMed,
+        route: "PO",
+        dispenseUnit: dbMed.dispense_units.name,
+      } as OralMedication;
+
+    case "SC":
+      if (isSlidingScaleInsulin(dbMed)) {
+        return {
+          ...baseMed,
+          bgDosing: dbMed.bgDosing
+        } as InsulinMedication;
+      }
+      return {
+        ...baseMed,
+        route: "SC",
+      } as InjectableMedication;
+
+    // Additional med types to handle in future
+
+    default:
+      return baseMed as AllMedicationTypes;
+  }
+}

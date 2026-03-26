@@ -1,6 +1,5 @@
 import { getAllClinicalDocuments } from "@/actions/simulation";
 import NoteView from "./components/noteView";
-// import { SimSessionContextType, useSimSessionContext } from "@/context/SimSessionContext";
 
 interface PageProps {
   params: Promise<{

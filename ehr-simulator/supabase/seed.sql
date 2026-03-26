@@ -157,30 +157,30 @@ VALUES
     'Diabetic Ketoacidosis (DKA)'
   );
 
--- INSERT INTO public.section_assignments (section_id, case_id, sim_time, presim_time) 
--- VALUES  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 01:00:00+00', '2026-02-02 01:00:00+00'),
---         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 02:00:00+00', '2026-02-02 01:00:00+00'),
+INSERT INTO public.section_assignments (section_id, case_id, sim_time, presim_time) 
+VALUES  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 01:00:00+00', '2026-02-02 01:00:00+00'),
+        ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 02:00:00+00', '2026-02-02 01:00:00+00'),
 
---         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6f', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 03:00:00+00', '2026-02-02 01:00:00+00'),
---         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6f', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 04:00:00+00', '2026-02-02 01:00:00+00'),
+        ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6f', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 03:00:00+00', '2026-02-02 01:00:00+00'),
+        ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6f', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 04:00:00+00', '2026-02-02 01:00:00+00'),
 
---         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7a', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 05:00:00+00', '2026-02-02 01:00:00+00'),
---         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7a', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 06:00:00+00', '2026-02-02 01:00:00+00'),
+        ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7a', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 05:00:00+00', '2026-02-02 01:00:00+00'),
+        ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7a', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 06:00:00+00', '2026-02-02 01:00:00+00'),
 
---         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7b', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 07:00:00+00', '2026-02-02 01:00:00+00'),
---         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7b', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 08:00:00+00', '2026-02-02 01:00:00+00'),
+        ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7b', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 07:00:00+00', '2026-02-02 01:00:00+00'),
+        ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7b', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 08:00:00+00', '2026-02-02 01:00:00+00'),
 
---         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7c', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 09:00:00+00', '2026-02-02 01:00:00+00'),
---         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7c', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 10:00:00+00', '2026-02-02 01:00:00+00'),
+        ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7c', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 09:00:00+00', '2026-02-02 01:00:00+00'),
+        ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7c', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 10:00:00+00', '2026-02-02 01:00:00+00'),
 
---         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7d', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 11:00:00+00', '2026-02-02 01:00:00+00'),
---         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7d', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 12:00:00+00', '2026-02-02 01:00:00+00'),
+        ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7d', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 11:00:00+00', '2026-02-02 01:00:00+00'),
+        ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7d', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 12:00:00+00', '2026-02-02 01:00:00+00'),
 
---         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7e', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-01-05 13:00:00+00', '2026-02-02 01:00:00+00'),
---         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7e', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-01-05 14:00:00+00', '2026-02-02 01:00:00+00'),
+        ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7e', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-01-05 13:00:00+00', '2026-02-02 01:00:00+00'),
+        ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7e', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-01-05 14:00:00+00', '2026-02-02 01:00:00+00'),
 
---         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7f', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 15:00:00+00', '2026-02-02 01:00:00+00'),
---         ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7f', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 16:00:00+00', '2026-02-02 01:00:00+00');
+        ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7f', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', '2026-02-05 15:00:00+00', '2026-02-02 01:00:00+00'),
+        ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7f', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', '2026-02-05 16:00:00+00', '2026-02-02 01:00:00+00');
 
 
 
@@ -224,3 +224,52 @@ VALUES (
   15, 
   '<p>3</p>'
 );
+
+
+INSERT INTO medication_orders (
+  case_id, 
+  medication_id, 
+  dose, 
+  frequency, 
+  priority, 
+  instructions, 
+  indication, 
+  ordering_provider
+) 
+VALUES 
+  -- Acetaminophen 500mg PO Q6H PRN for Pain
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'acetaminophen' AND route = 'PO' AND strength = 650 AND strength_unit = 'mg' LIMIT 1),
+    500, 
+    'Q6H', 
+    'PRN', 
+    'Do not exceed 4000mg per 24 hours.', 
+    'Mild pain or fever', 
+    'Dr. Gregory House'
+  ),
+
+  -- Metoprolol tartrate 10mg IV NOW
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'metoprolol tartate' AND route = 'IV' AND strength = 10 AND strength_unit = 'mg' LIMIT 1),
+    10, 
+    'ONCE', 
+    'NOW', 
+    'Administer slow IV push over 2 minutes. Monitor HR and BP.', 
+    'Rate control', 
+    'Dr. Gregory House'
+  ),
+
+  -- Atorvastatin 40mg PO DAILY Routine
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'atorvastatin' AND route = 'PO' AND strength = 40 AND strength_unit = 'mg' LIMIT 1),
+    40, 
+    'DAILY', 
+    'Routine', 
+    'Take in the evening.', 
+    'Hyperlipidemia', 
+    'Dr. Gregory House'
+  );
+

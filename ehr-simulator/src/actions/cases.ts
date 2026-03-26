@@ -6,7 +6,6 @@ import { revalidatePath } from "next/cache";
 
 export type SectionAssignment = Database['public']['Tables']['section_assignments']['Row'];
 export type SectionAssignmentInsert = Database['public']['Tables']['section_assignments']['Insert'];
-
 export type ActionResponse<T = null> = {
   success: boolean;
   message: string;
@@ -15,7 +14,7 @@ export type ActionResponse<T = null> = {
 };
 
 export async function getAllSimCases() {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
@@ -42,7 +41,7 @@ export async function getAllSimCases() {
 }
 
 export async function getSimCaseById(id: string) {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
@@ -70,7 +69,7 @@ export async function getSimCaseById(id: string) {
 
 
 export async function getCaseByCourseId(id: string) {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
@@ -117,7 +116,7 @@ export async function getCaseByCourseId(id: string) {
 }
 
 export async function getSectionCaseAssignments(courseId: string) {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );

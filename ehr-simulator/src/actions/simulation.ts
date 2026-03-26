@@ -1,15 +1,15 @@
 'use server'
 
 import { createClient } from "@supabase/supabase-js";
-import { Database } from "../../database.types";
-import { ActionResponse } from "./cases";
+import { Database, Tables } from "../../database.types";
+import { ActionResponse, ExtractData } from "./cases";
 import { UUID } from "crypto";
 import { revalidatePath } from "next/cache";
-import { supabase } from "@/lib/supabaseClient";
 
 export type EditableStudentNoteUpsert = Database['public']['Tables']['editable_clinical_documents']['Insert'];
 export type EditableStudentNote = Database['public']['Tables']['editable_clinical_documents'];
 export type ClinicalDocument = Database['public']['Tables']['clinical_documents'];
+export type DatabaseMedicationOrder = Database['public']['Tables']['medication_orders'];
 export type ClinicalDocumentView = {
   id: UUID,
   case_id: UUID,
@@ -22,7 +22,12 @@ export type ClinicalDocumentView = {
   doc_text: string
   source_type: string
 }
-
+// export type MedicationOrderWithDetails = Tables<'medication_orders'> & {
+//   medications: (Tables<'medications'> & {
+//     dispense_units: Pick<Tables<'dispense_units'>, 'name'> | null;
+//   }) | null;
+// };
+// export type Medications = Database['public'][]
 export async function submitStudentNote(note: EditableStudentNoteUpsert): Promise<ActionResponse<EditableStudentNote>> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -83,7 +88,7 @@ export async function getAllClinicalDocuments(caseId: string, caseSessionId: str
 }
 
 export async function getMedicationOrders(caseId: string, sessionId: string) {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
@@ -91,15 +96,16 @@ export async function getMedicationOrders(caseId: string, sessionId: string) {
   const { data, error } = await supabase
     .from('medication_orders')
     .select(`
+
     *,
-    medication:medications (
+    medications (
       id,
       generic_name,
       brand_name,
       route,
       strength,
       strength_unit,
-      dispense_unit:dispense_units (
+      dispense_units (
         name
       ),
       infusion_rate_unit,
@@ -118,7 +124,7 @@ export async function getMedicationOrders(caseId: string, sessionId: string) {
     }
   }
 
-  revalidatePath(`/simulation/${caseId}/${sessionId}/chart/mar`);
+  // revalidatePath(`/simulation/${caseId}/${sessionId}/chart/mar`);
 
   return {
     success: true,
@@ -154,6 +160,9 @@ export async function getMedicationAdministrations(caseId: string, sessionId: st
     message: 'Successfully retrieved medication administrations'
   }
 }
+
+type OrderAndMedicationType = ExtractData<typeof getMedicationOrders>;
+export type DatabaseMedication = OrderAndMedicationType[number]["medications"]
 
 // export async function getAllMedicationAdministrations(caseId: string, sessionId: string) {
 //   const supabase = createClient(

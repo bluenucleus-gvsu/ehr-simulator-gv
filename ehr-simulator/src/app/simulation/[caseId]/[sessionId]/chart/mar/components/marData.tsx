@@ -2,18 +2,18 @@ interface BaseMedication {
   id: string;
   genericName: string;
   brandName?: string;
-  route: "PO" | "IV" | "SC" | "Topical" | "Inhalation" | "IM" | "SL" | "Otic" | "Ophthalmic";     // Route will be a literal type for discrimination
-  strength: number; // e.g., 25, 100
-  strengthUnit: string; // e.g., "mg", "units/mL"
+  route: 'PO' | 'IV' | 'SC' | 'Topical' | 'Inhalation' | 'IM' | 'SL' | 'Otic' | 'Ophthalmic';     // Route will be a literal type for discrimination
+  strength: number;
+  strengthUnit: string;
   dispenseUnit: string; // e.g., "Tablet", "Solution", "Cream", "Vial", "Syringe"
-  administrationFrequencies: string[];
+  // administrationFrequencies: string[];
 }
 
 
 export interface OralMedication extends BaseMedication {
   route: "PO";
-  canBeCrushedOrSplit: boolean;
-  takeWithFood?: boolean;
+  // canBeCrushedOrSplit: boolean;
+  // takeWithFood: boolean;
 }
 
 export interface SublingualMedication extends BaseMedication {
@@ -22,7 +22,6 @@ export interface SublingualMedication extends BaseMedication {
 
 export interface IvMedication extends BaseMedication {
   route: "IV";
-  // infusionRate?: number;
   infusionRateUnit?: "mL/hr" | "mg/hr" | "units/hr";
   diluent?: string;
   totalVolume?: number;
@@ -30,7 +29,7 @@ export interface IvMedication extends BaseMedication {
   isContinuous: boolean;
 }
 
-interface InjectableMedication extends BaseMedication {
+export interface InjectableMedication extends BaseMedication {
   route: "SC" | "IM";
   recommendedInjectionSites?: string[];
   needleGauge?: string;
@@ -71,12 +70,11 @@ export type AllMedicationTypes =     // route property acts as discriminator
 export interface MedicationOrder {
   id: string;
   medicationId: string;
-  unitsOrdered: number; // deprecated, using dose to represented amount of strengthUnits of medication ordered
   frequency: string;
   priority: "STAT" | "NOW" | "Routine" | 'PRN' | '';
   instructions?: string;
   indication: string;
-  status: "active" | "completed" | "Held" | "cancelled";
+  // status: "active" | "completed" | "Held" | "cancelled";
   orderingProvider: string;
   infusionRate?: number
   dose: number,
@@ -105,10 +103,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 25,
     strengthUnit: "mg",
     dispenseUnit: "Tablet",
-    administrationFrequencies: ["QD", "BID"],
-    // Properties specific to OralMedication:
-    canBeCrushedOrSplit: false,
-    takeWithFood: true,
   },
   {
     id: "medPantoprazoleIv40",
@@ -118,8 +112,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 40,
     strengthUnit: "mg",
     dispenseUnit: "Tablet",
-    administrationFrequencies: [],
-    canBeCrushedOrSplit: false
   },
 
   {
@@ -130,7 +122,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 500,
     strengthUnit: "mg",
     dispenseUnit: "Vial",
-    administrationFrequencies: ["Q6H", "Q8H"],
     // --- IVMedication specific properties ---
     infusionRateUnit: 'mL/hr',
     diluent: "normal saline 0.9%",
@@ -146,10 +137,8 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 1000,
     strengthUnit: "mg",
     dispenseUnit: "Vial",
-    administrationFrequencies: ["Q6H", "Q8H"],
     // --- IVMedication specific properties ---
     infusionRateUnit: 'mL/hr',
-    // diluent: "normal saline 0.9%",
     totalVolume: 50,
     infusionDurationHours: 0.5,
     isContinuous: false,
@@ -161,7 +150,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 1000,
     strengthUnit: "mL",
     dispenseUnit: "Bag",
-    administrationFrequencies: ["Q6H", "Q8H"],
     infusionRateUnit: 'mL/hr',
     totalVolume: 1000,
     infusionDurationHours: 10,
@@ -174,7 +162,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 1000,
     strengthUnit: "mL",
     dispenseUnit: "Bag",
-    administrationFrequencies: ["Q6H", "Q8H"],
     infusionRateUnit: 'mL/hr',
     totalVolume: 1000,
     infusionDurationHours: 10,
@@ -187,7 +174,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 3.375,
     strengthUnit: "g",
     dispenseUnit: "Vial",
-    administrationFrequencies: ["Q6H", "Q8H"],
     infusionRateUnit: 'mL/hr',
     diluent: 'normal saline 0.9%',
     totalVolume: 100,
@@ -202,9 +188,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 10,
     strengthUnit: "mg",
     dispenseUnit: "Tablet",
-    administrationFrequencies: ["QD"], // Once daily
-    canBeCrushedOrSplit: true,
-    takeWithFood: false,
   },
   {
     id: "medVancomycinIv1000",
@@ -214,7 +197,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 1000, // 1000mg per dose/vial
     strengthUnit: "mg",
     dispenseUnit: "Bag",
-    administrationFrequencies: ["Q12H", "Q24H"],
     infusionRateUnit: 'mL/hr',
     diluent: "sodium chloride 0.9%",
     totalVolume: 250,
@@ -229,9 +211,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 40,
     strengthUnit: "mg",
     dispenseUnit: "Tablet",
-    administrationFrequencies: ["QD"],
-    canBeCrushedOrSplit: false,
-    takeWithFood: false,
   },
   {
     id: "medAcetaminophenOral650",
@@ -241,9 +220,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 650,
     strengthUnit: "mg",
     dispenseUnit: "Tablet",
-    administrationFrequencies: ["PRN"], // As needed
-    canBeCrushedOrSplit: true,
-    takeWithFood: false,
   },
   {
     id: "medInsulinGlargineSc",
@@ -253,7 +229,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 1,
     strengthUnit: "units",
     dispenseUnit: "Unit",
-    administrationFrequencies: ["QD"],
   },
   {
     id: "medInsulinAspartHum",
@@ -263,7 +238,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 1,
     strengthUnit: "units",
     dispenseUnit: "Unit",
-    administrationFrequencies: ["QD"],
     bgDosing: [
       { bgRange: "<70", units: "0" },
       { bgRange: "70-150", units: "6" },
@@ -283,9 +257,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 20,
     strengthUnit: "mg",
     dispenseUnit: "Tablet",
-    administrationFrequencies: ["QD", "BID"],
-    canBeCrushedOrSplit: true,
-    takeWithFood: false,
   },
   // {
   //   id: "medPantoprazoleIv40",
@@ -310,7 +281,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 40,
     strengthUnit: "mg",
     dispenseUnit: "Pre-filled Syringe",
-    administrationFrequencies: ["QD", "BID"],
     recommendedInjectionSites: ["Abdomen"],
     needleGauge: "30G",
     needleLength: "5/16 inch",
@@ -324,7 +294,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 4,
     strengthUnit: "mg",
     dispenseUnit: "Ampule",
-    administrationFrequencies: ["PRN", "Q4H"],
     infusionDurationHours: 1,
     isContinuous: false,
   },
@@ -336,7 +305,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 30,
     strengthUnit: "mcg",
     dispenseUnit: "puff",
-    administrationFrequencies: ["Q4H", "PRN"],
     deviceType: "MDI",
     requiresSpacer: false,
     inhalationsPerDose: 2,
@@ -349,7 +317,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 4,
     strengthUnit: "mg",
     dispenseUnit: "Vial",
-    administrationFrequencies: ["Q8H", "PRN"],
     isContinuous: false,
   },
   {
@@ -360,7 +327,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 250,
     strengthUnit: "mg",
     dispenseUnit: "Vial",
-    administrationFrequencies: ["Once"],
     recommendedInjectionSites: ["Gluteal muscle", "Vastus lateralis"],
     needleGauge: "22G",
     needleLength: "1.5 inches",
@@ -375,7 +341,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 1,
     strengthUnit: "g",
     dispenseUnit: "Syringe",
-    administrationFrequencies: ["Once"],
     isContinuous: false
   },
   {
@@ -386,7 +351,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 1,
     strengthUnit: "mg",
     dispenseUnit: "Auto-Injector",
-    administrationFrequencies: ["PRN"],
     recommendedInjectionSites: ["Anterolateral thigh"],
     needleGauge: "23G",
     needleLength: "0.5 inches",
@@ -400,7 +364,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 125,
     strengthUnit: "mg",
     dispenseUnit: "Vial",
-    administrationFrequencies: ["Once", "Q6H"],
     infusionRateUnit: "mL/hr",
     diluent: "NS 0.9%",
     totalVolume: 100,
@@ -415,7 +378,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 10,
     strengthUnit: "mg",
     dispenseUnit: "Vial",
-    administrationFrequencies: ["Once", "Q6H"],
     isContinuous: false,
   },
   {
@@ -426,7 +388,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 0.4,
     strengthUnit: "mg",
     dispenseUnit: "Tab",
-    administrationFrequencies: ["PRN"],
   },
   {
     id: 'medLidocaineInDex5',
@@ -435,7 +396,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 2,
     strengthUnit: 'mg',
     dispenseUnit: "Bag",
-    administrationFrequencies: ["Q6H", "Q8H"],
     infusionRateUnit: 'mL/hr',
     diluent: "dextrose 5.0%",
     totalVolume: 500,
@@ -453,7 +413,6 @@ export const allMedications: AllMedicationTypes[] = [
     diluent: "dextrose 5.0%",
     totalVolume: 250,
     isContinuous: false,
-    administrationFrequencies: []
   },
   {
     id: "medAtropinePush",
@@ -462,7 +421,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 0.5,
     strengthUnit: "mg",
     dispenseUnit: "Syringe",
-    administrationFrequencies: ["Once", "Q6H"],
     isContinuous: false,
   },
   {
@@ -474,7 +432,6 @@ export const allMedications: AllMedicationTypes[] = [
     dispenseUnit: 'Bag',
     infusionRateUnit: 'mL/hr',
     isContinuous: true,
-    administrationFrequencies: []
   },
   {
     id: "medAcetaminophenOral325",
@@ -484,9 +441,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 325,
     strengthUnit: "mg",
     dispenseUnit: "Tablet",
-    administrationFrequencies: ["PRN"], // As needed
-    canBeCrushedOrSplit: true,
-    takeWithFood: false,
   },
   {
     id: "medCefazolin1000",
@@ -496,7 +450,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 1000,
     strengthUnit: "mg",
     dispenseUnit: 'Vial',
-    administrationFrequencies: [],
     isContinuous: false,
     infusionRateUnit: 'mL/hr'
   },
@@ -507,8 +460,6 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 1,
     strengthUnit: "g",
     dispenseUnit: 'Tablet',
-    administrationFrequencies: [],
-    canBeCrushedOrSplit: true
   }
 ];
 
@@ -543,95 +494,168 @@ export const medicationOrders: MedicationOrder[] = [
   {
     id: "orderOndansetronIv4",
     medicationId: "medOndansetronIv4",
-    unitsOrdered: 0,
     frequency: "Q6H",
     priority: "PRN",
     indication: "Nausea",
     orderingProvider: "Dr. Chen",
     dose: 4,
     visibleInPresim: true,
-    status: "active",
     instructions: "Administer over 2 minutes."
   },
   {
     id: "orderLisinoprilOral10",
     medicationId: "medLisinoprilOral10",
-    unitsOrdered: 0,
     frequency: "QD",
     priority: "Routine",
     indication: "HTN",
     orderingProvider: "Dr. Chen",
     dose: 10,
     visibleInPresim: true,
-    status: "active",
     instructions: "Hold if BP < 100/60. Notify provider if held. "
   },
   {
     id: "orderPantoprazolePo40",
     medicationId: "medPantoprazoleIv40",
-    unitsOrdered: 0,
     frequency: "QD",
     priority: "Routine",
     indication: "GERD",
     orderingProvider: "Dr. Chen",
     dose: 40,
     visibleInPresim: true,
-    status: "active",
     instructions: " "
   },
   {
     id: "orderSodiumChloride",
     medicationId: "medSodiumChloride",
-    unitsOrdered: 0,
     frequency: "BID",
     priority: "Routine",
     indication: "Hyponatremia",
     orderingProvider: "Dr. Chen",
     dose: 1,
     visibleInPresim: true,
-    status: "active",
     instructions: "Hold if serum sodium greater than 135."
   },
   {
     id: "orderAcetaminophenIV",
     medicationId: "medAcetaminophenIv",
-    unitsOrdered: 0,
     frequency: "Q8H",
     priority: "PRN",
     indication: "Pain/Fever",
     orderingProvider: "Dr. Chen",
     dose: 1000,
     visibleInPresim: true,
-    status: "active",
     instructions: "For mild pain (1-3) or temperature greater than 38.0. If unable to take PO.",
     infusionRate: 400
   },
   {
     id: "orderAcetaminophenOral650",
     medicationId: "medAcetaminophenOral650",
-    unitsOrdered: 0,
     frequency: "Q6H",
     priority: "PRN",
     indication: "Pain/Fever",
     orderingProvider: "Dr. Chen",
     dose: 650,
     visibleInPresim: true,
-    status: "active",
     instructions: "For mild pain (1-3) or temperature greater than 38.0"
   },
   {
     id: "orderNormalSaline09",
     medicationId: "medNormalSaline09Iv",
-    unitsOrdered: 0,
     frequency: "CONTINUOUS",
     priority: "Routine",
     indication: "Hydration",
     orderingProvider: "Dr. Chen",
     dose: 1000,
     visibleInPresim: true,
-    status: "active",
     infusionRate: 75,
     instructions: " "
+  },
+  {
+    id: "orderFurosemideOral20",
+    medicationId: "medFurosemideOral20",
+    dose: 20,
+    frequency: "BID",
+    priority: "Routine",
+    indication: "Edema",
+    instructions: "Monitor daily weight and I/O.",
+    orderingProvider: "Dr. Rahul Gupta",
+    visibleInPresim: true
+  },
+  {
+    id: "orderPantoprazoleIv40",
+    medicationId: "medPantoprazoleIv40",
+    dose: 40,
+    frequency: "QD",
+    priority: "Routine",
+    infusionRate: 100, // 50mL over 0.5hr = 100mL/hr
+    indication: "GERD",
+    orderingProvider: "Dr. Rahul Gupta",
+    visibleInPresim: true
+  },
+  {
+    id: "orderEnoxaparinSc40",
+    medicationId: "medEnoxaparinSc40",
+    dose: 40,
+    frequency: "QD",
+    priority: "Routine",
+    indication: "DVT Prophylaxis",
+    instructions: "Administer to abdomen, 2 inches from umbilicus. Do not expel air bubble.",
+    orderingProvider: "Dr. Rahul Gupta",
+    visibleInPresim: true
+  },
+  {
+    id: "orderMorphineIv",
+    medicationId: "medMorphineIv10",
+    dose: 2,
+    frequency: "Q3hr",
+    priority: "PRN",
+    indication: "Severe Pain",
+    instructions: "For pain 7-10. Reassess pain in 30 minutes.",
+    orderingProvider: "Dr. Rahul Gupta",
+    visibleInPresim: true
+  },
+  {
+    id: "orderCeftriaxoneIm250",
+    medicationId: "medCeftriaxoneIm250",
+    dose: 250,
+    frequency: "Once",
+    priority: "STAT",
+    indication: "Bacterial Infection",
+    instructions: "Reconstitute with 1.8 mL sterile water and administer IM.",
+    orderingProvider: "Dr. Rahul Gupta",
+    visibleInPresim: true
+  },
+  {
+    id: "orderEpinephrineIm1mg",
+    medicationId: "medEpinephrineIm1mg",
+    dose: 1,
+    frequency: "Q12hr",
+    priority: "PRN",
+    indication: "Anaphylaxis",
+    instructions: "Administer immediately for signs of severe allergic reaction (wheezing, hives, swelling).",
+    orderingProvider: "Dr. Rahul Gupta",
+    visibleInPresim: true
+  },
+  {
+    id: "orderMethylprednisoloneIv125",
+    medicationId: "medMethylprednisoloneIv125",
+    dose: 125,
+    frequency: "Once",
+    priority: "STAT",
+    infusionRate: 100, // 100mL over 1hr = 100mL/hr
+    indication: "Severe Inflammation",
+    orderingProvider: "Dr. Rahul Gupta",
+    visibleInPresim: true
+  },
+  {
+    id: "orderNitroglycerin04mgSl",
+    medicationId: "medNitroglycerin04mgSl",
+    dose: 0.4,
+    frequency: "Q5min",
+    priority: "PRN",
+    indication: "Angina",
+    orderingProvider: "Dr. Rahul Gupta",
+    visibleInPresim: true
   }
 ]
 

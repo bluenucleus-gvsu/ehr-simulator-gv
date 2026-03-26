@@ -22,7 +22,7 @@ import { useState } from "react"
 import { type AllMedicationTypes, type MedAdministrationInstance, type MedicationOrder } from "./marData";
 import MedAdminCard from "./medAdminCard";
 import { toast } from "sonner";
-import type { NewAdministrationData } from "../page";
+import type { NewAdministrationData } from "./marView";
 import { Badge } from "@/components/ui/badge"
 import { PatientStatusBadge } from "./marHelpers"
 

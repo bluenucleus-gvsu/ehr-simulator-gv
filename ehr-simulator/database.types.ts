@@ -144,7 +144,7 @@ export type Database = {
             foreignKeyName: "case_sessions_case_id_fkey"
             columns: ["case_id"]
             isOneToOne: false
-            referencedRelation: "case_data"
+            referencedRelation: "cases"
             referencedColumns: ["id"]
           },
           {
@@ -348,185 +348,6 @@ export type Database = {
           },
         ]
       }
-      cases: {
-        Row: {
-          admitting_diagnosis: string | null
-          allergies: string[] | null
-          attending_provider: string | null
-          case_creation_complete: boolean
-          code_status: Database["public"]["Enums"]["code_status_type"]
-          created_at: string | null
-          date_of_birth: string | null
-          description: string | null
-          employment: string | null
-          first_name: string
-          height_ft: number | null
-          height_in: number | null
-          id: string
-          inpatient_duration_days: number | null
-          insurance: Database["public"]["Enums"]["insurance_type"] | null
-          isolation_precautions_id: string | null
-          language: string | null
-          last_name: string
-          living_situation: string[] | null
-          medical_history: string[] | null
-          name: string
-          relationship_status_id: string | null
-          religion: string | null
-          requires_interpreter: boolean
-          social_habits: string[] | null
-          surgical_history: string[] | null
-          time_of_admission: string | null
-          updated_at: string
-          weight_kg: number | null
-        }
-        Insert: {
-          admitting_diagnosis?: string | null
-          allergies?: string[] | null
-          attending_provider?: string | null
-          case_creation_complete?: boolean
-          code_status: Database["public"]["Enums"]["code_status_type"]
-          created_at?: string | null
-          date_of_birth?: string | null
-          description?: string | null
-          employment?: string | null
-          first_name: string
-          height_ft?: number | null
-          height_in?: number | null
-          id?: string
-          inpatient_duration_days?: number | null
-          insurance?: Database["public"]["Enums"]["insurance_type"] | null
-          isolation_precautions_id?: string | null
-          language?: string | null
-          last_name: string
-          living_situation?: string[] | null
-          medical_history?: string[] | null
-          name: string
-          relationship_status_id?: string | null
-          religion?: string | null
-          requires_interpreter?: boolean
-          social_habits?: string[] | null
-          surgical_history?: string[] | null
-          time_of_admission?: string | null
-          updated_at?: string
-          weight_kg?: number | null
-        }
-        Update: {
-          admitting_diagnosis?: string | null
-          allergies?: string[] | null
-          attending_provider?: string | null
-          case_creation_complete?: boolean
-          code_status?: Database["public"]["Enums"]["code_status_type"]
-          created_at?: string | null
-          date_of_birth?: string | null
-          description?: string | null
-          employment?: string | null
-          first_name?: string
-          height_ft?: number | null
-          height_in?: number | null
-          id?: string
-          inpatient_duration_days?: number | null
-          insurance?: Database["public"]["Enums"]["insurance_type"] | null
-          isolation_precautions_id?: string | null
-          language?: string | null
-          last_name?: string
-          living_situation?: string[] | null
-          medical_history?: string[] | null
-          name?: string
-          relationship_status_id?: string | null
-          religion?: string | null
-          requires_interpreter?: boolean
-          social_habits?: string[] | null
-          surgical_history?: string[] | null
-          time_of_admission?: string | null
-          updated_at?: string
-          weight_kg?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "cases_isolation_precautions_id_fkey"
-            columns: ["isolation_precautions_id"]
-            isOneToOne: false
-            referencedRelation: "isolation_precautions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "cases_relationship_status_id_fkey"
-            columns: ["relationship_status_id"]
-            isOneToOne: false
-            referencedRelation: "relationship_statuses"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      cases_json_blobs: {
-        Row: {
-          created_at: string
-          id: string
-          payload: Json
-          title: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          payload?: Json
-          title?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          payload?: Json
-          title?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      clinical_documents: {
-        Row: {
-          author: string
-          case_id: string
-          category: Database["public"]["Enums"]["clinical_doc_category_type"]
-          created_at: string | null
-          doc_text: string
-          id: string
-          is_in_presim: boolean
-          specialty: string
-          time_offset: number
-        }
-        Insert: {
-          author: string
-          case_id: string
-          category: Database["public"]["Enums"]["clinical_doc_category_type"]
-          created_at?: string | null
-          doc_text: string
-          id?: string
-          is_in_presim?: boolean
-          specialty: string
-          time_offset: number
-        }
-        Update: {
-          author?: string
-          case_id?: string
-          category?: Database["public"]["Enums"]["clinical_doc_category_type"]
-          created_at?: string | null
-          doc_text?: string
-          id?: string
-          is_in_presim?: boolean
-          specialty?: string
-          time_offset?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "clinical_documents_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       course_cases: {
         Row: {
           case_id: string | null
@@ -551,7 +372,7 @@ export type Database = {
             foreignKeyName: "course_cases_case_id_fkey"
             columns: ["case_id"]
             isOneToOne: false
-            referencedRelation: "case_data"
+            referencedRelation: "cases"
             referencedColumns: ["id"]
           },
           {
@@ -587,6 +408,24 @@ export type Database = {
           id?: string
           name?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      dispense_units: {
+        Row: {
+          description: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          description?: string | null
+          id?: number
+          name: string
+        }
+        Update: {
+          description?: string | null
+          id?: number
+          name?: string
         }
         Relationships: []
       }
@@ -917,6 +756,296 @@ export type Database = {
           },
           {
             foreignKeyName: "editable_clinical_documents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      editable_documentation_results: {
+        Row: {
+          abdomen: string | null
+          activity: number | null
+          agitation: number | null
+          ambulatory_aid: number | null
+          anxiety: number | null
+          appearance: string | null
+          body_language: number | null
+          bowel_sounds: string | null
+          bp: string | null
+          bp_source: string | null
+          breathing_independent_of_vocalization: number | null
+          case_id: string
+          case_session_id: string
+          chest_appearance: string | null
+          consolability: number | null
+          created_at: string
+          ears: string | null
+          emesis: string | null
+          enteral_nutrition: string | null
+          enteral_output: string | null
+          extremities: string | null
+          extremity_rom: string | null
+          eyes: string | null
+          facial_expression: number | null
+          fall_risk_gait: number | null
+          friction_and_shear: number | null
+          gait: string | null
+          group_id: string
+          hair_and_nails: string | null
+          head_and_scalp: string | null
+          headache: number | null
+          heart_sounds: string | null
+          history_of_falling: number | null
+          hr: string | null
+          hr_source: string | null
+          id: string
+          integument_status: string | null
+          intravenous: string | null
+          is_in_presim: boolean
+          iv_location: string | null
+          iv_site: string | null
+          iv_therapy_heparin_lock: number | null
+          iv_type: string | null
+          jugular_distention: string | null
+          lung_sounds: string | null
+          mental_status: number | null
+          mobility: number | null
+          moisture: number | null
+          mood_and_affect: string | null
+          motor_function: string | null
+          mouth_and_throat: string | null
+          nausea: string | null
+          nausea_vomiting: number | null
+          negative_vocalization: number | null
+          nose: string | null
+          nursing_care_provided: string | null
+          nutrition: number | null
+          oral: string | null
+          orientation: string | null
+          orientation2: number | null
+          pain: string | null
+          parenteral_nutrition: string | null
+          paroxysmal_sweats: number | null
+          rr: string | null
+          safety_check: string | null
+          secondary_diagnosis: number | null
+          sensory_perception: number | null
+          skin: string | null
+          speech: string | null
+          spo2: string | null
+          stool: string | null
+          tactile_disturbances: number | null
+          temp: string | null
+          temp_source: string | null
+          time_offset: number
+          tremor: number | null
+          turgor: string | null
+          urine: string | null
+          user_id: string
+          visual_disturbances: number | null
+          voiding: string | null
+          weight_kg: string | null
+          wound: string | null
+          wound_drainage: string | null
+        }
+        Insert: {
+          abdomen?: string | null
+          activity?: number | null
+          agitation?: number | null
+          ambulatory_aid?: number | null
+          anxiety?: number | null
+          appearance?: string | null
+          body_language?: number | null
+          bowel_sounds?: string | null
+          bp?: string | null
+          bp_source?: string | null
+          breathing_independent_of_vocalization?: number | null
+          case_id: string
+          case_session_id: string
+          chest_appearance?: string | null
+          consolability?: number | null
+          created_at?: string
+          ears?: string | null
+          emesis?: string | null
+          enteral_nutrition?: string | null
+          enteral_output?: string | null
+          extremities?: string | null
+          extremity_rom?: string | null
+          eyes?: string | null
+          facial_expression?: number | null
+          fall_risk_gait?: number | null
+          friction_and_shear?: number | null
+          gait?: string | null
+          group_id: string
+          hair_and_nails?: string | null
+          head_and_scalp?: string | null
+          headache?: number | null
+          heart_sounds?: string | null
+          history_of_falling?: number | null
+          hr?: string | null
+          hr_source?: string | null
+          id?: string
+          integument_status?: string | null
+          intravenous?: string | null
+          is_in_presim?: boolean
+          iv_location?: string | null
+          iv_site?: string | null
+          iv_therapy_heparin_lock?: number | null
+          iv_type?: string | null
+          jugular_distention?: string | null
+          lung_sounds?: string | null
+          mental_status?: number | null
+          mobility?: number | null
+          moisture?: number | null
+          mood_and_affect?: string | null
+          motor_function?: string | null
+          mouth_and_throat?: string | null
+          nausea?: string | null
+          nausea_vomiting?: number | null
+          negative_vocalization?: number | null
+          nose?: string | null
+          nursing_care_provided?: string | null
+          nutrition?: number | null
+          oral?: string | null
+          orientation?: string | null
+          orientation2?: number | null
+          pain?: string | null
+          parenteral_nutrition?: string | null
+          paroxysmal_sweats?: number | null
+          rr?: string | null
+          safety_check?: string | null
+          secondary_diagnosis?: number | null
+          sensory_perception?: number | null
+          skin?: string | null
+          speech?: string | null
+          spo2?: string | null
+          stool?: string | null
+          tactile_disturbances?: number | null
+          temp?: string | null
+          temp_source?: string | null
+          time_offset: number
+          tremor?: number | null
+          turgor?: string | null
+          urine?: string | null
+          user_id: string
+          visual_disturbances?: number | null
+          voiding?: string | null
+          weight_kg?: string | null
+          wound?: string | null
+          wound_drainage?: string | null
+        }
+        Update: {
+          abdomen?: string | null
+          activity?: number | null
+          agitation?: number | null
+          ambulatory_aid?: number | null
+          anxiety?: number | null
+          appearance?: string | null
+          body_language?: number | null
+          bowel_sounds?: string | null
+          bp?: string | null
+          bp_source?: string | null
+          breathing_independent_of_vocalization?: number | null
+          case_id?: string
+          case_session_id?: string
+          chest_appearance?: string | null
+          consolability?: number | null
+          created_at?: string
+          ears?: string | null
+          emesis?: string | null
+          enteral_nutrition?: string | null
+          enteral_output?: string | null
+          extremities?: string | null
+          extremity_rom?: string | null
+          eyes?: string | null
+          facial_expression?: number | null
+          fall_risk_gait?: number | null
+          friction_and_shear?: number | null
+          gait?: string | null
+          group_id?: string
+          hair_and_nails?: string | null
+          head_and_scalp?: string | null
+          headache?: number | null
+          heart_sounds?: string | null
+          history_of_falling?: number | null
+          hr?: string | null
+          hr_source?: string | null
+          id?: string
+          integument_status?: string | null
+          intravenous?: string | null
+          is_in_presim?: boolean
+          iv_location?: string | null
+          iv_site?: string | null
+          iv_therapy_heparin_lock?: number | null
+          iv_type?: string | null
+          jugular_distention?: string | null
+          lung_sounds?: string | null
+          mental_status?: number | null
+          mobility?: number | null
+          moisture?: number | null
+          mood_and_affect?: string | null
+          motor_function?: string | null
+          mouth_and_throat?: string | null
+          nausea?: string | null
+          nausea_vomiting?: number | null
+          negative_vocalization?: number | null
+          nose?: string | null
+          nursing_care_provided?: string | null
+          nutrition?: number | null
+          oral?: string | null
+          orientation?: string | null
+          orientation2?: number | null
+          pain?: string | null
+          parenteral_nutrition?: string | null
+          paroxysmal_sweats?: number | null
+          rr?: string | null
+          safety_check?: string | null
+          secondary_diagnosis?: number | null
+          sensory_perception?: number | null
+          skin?: string | null
+          speech?: string | null
+          spo2?: string | null
+          stool?: string | null
+          tactile_disturbances?: number | null
+          temp?: string | null
+          temp_source?: string | null
+          time_offset?: number
+          tremor?: number | null
+          turgor?: string | null
+          urine?: string | null
+          user_id?: string
+          visual_disturbances?: number | null
+          voiding?: string | null
+          weight_kg?: string | null
+          wound?: string | null
+          wound_drainage?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "editable_documentation_results_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "editable_documentation_results_case_session_id_fkey"
+            columns: ["case_session_id"]
+            isOneToOne: false
+            referencedRelation: "case_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "editable_documentation_results_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "editable_documentation_results_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -1311,6 +1440,7 @@ export type Database = {
           created_at: string
           is_in_presim: boolean
           medication_id: string | null
+          medication_order_id: string | null
           notes: string | null
           status: string | null
           time_offset: number
@@ -1322,6 +1452,7 @@ export type Database = {
           created_at?: string
           is_in_presim?: boolean
           medication_id?: string | null
+          medication_order_id?: string | null
           notes?: string | null
           status?: string | null
           time_offset: number
@@ -1333,6 +1464,7 @@ export type Database = {
           created_at?: string
           is_in_presim?: boolean
           medication_id?: string | null
+          medication_order_id?: string | null
           notes?: string | null
           status?: string | null
           time_offset?: number
@@ -1343,6 +1475,126 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_administrations_medication_order_id_fkey"
+            columns: ["medication_order_id"]
+            isOneToOne: false
+            referencedRelation: "medication_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medication_orders: {
+        Row: {
+          case_id: string
+          dose: number
+          frequency: Database["public"]["Enums"]["medication_frequencies"]
+          id: string
+          indication: string | null
+          infusion_rate: string | null
+          instructions: string | null
+          is_in_presim: boolean
+          medication_id: string
+          ordering_provider: string | null
+          priority: Database["public"]["Enums"]["medication_priorities"]
+        }
+        Insert: {
+          case_id: string
+          dose: number
+          frequency: Database["public"]["Enums"]["medication_frequencies"]
+          id?: string
+          indication?: string | null
+          infusion_rate?: string | null
+          instructions?: string | null
+          is_in_presim?: boolean
+          medication_id: string
+          ordering_provider?: string | null
+          priority: Database["public"]["Enums"]["medication_priorities"]
+        }
+        Update: {
+          case_id?: string
+          dose?: number
+          frequency?: Database["public"]["Enums"]["medication_frequencies"]
+          id?: string
+          indication?: string | null
+          infusion_rate?: string | null
+          instructions?: string | null
+          is_in_presim?: boolean
+          medication_id?: string
+          ordering_provider?: string | null
+          priority?: Database["public"]["Enums"]["medication_priorities"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_orders_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_orders_medication_id_fkey"
+            columns: ["medication_id"]
+            isOneToOne: false
+            referencedRelation: "medications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      medications: {
+        Row: {
+          brand_name: string | null
+          diluent: string | null
+          dispense_unit_id: number
+          generic_name: string
+          id: string
+          infusion_rate_unit:
+            | Database["public"]["Enums"]["iv_infusion_rate_type"]
+            | null
+          is_continuous: boolean
+          route: Database["public"]["Enums"]["medication_route_type"]
+          strength: number
+          strength_unit: string
+          total_volume: number | null
+        }
+        Insert: {
+          brand_name?: string | null
+          diluent?: string | null
+          dispense_unit_id: number
+          generic_name: string
+          id?: string
+          infusion_rate_unit?:
+            | Database["public"]["Enums"]["iv_infusion_rate_type"]
+            | null
+          is_continuous?: boolean
+          route: Database["public"]["Enums"]["medication_route_type"]
+          strength: number
+          strength_unit: string
+          total_volume?: number | null
+        }
+        Update: {
+          brand_name?: string | null
+          diluent?: string | null
+          dispense_unit_id?: number
+          generic_name?: string
+          id?: string
+          infusion_rate_unit?:
+            | Database["public"]["Enums"]["iv_infusion_rate_type"]
+            | null
+          is_continuous?: boolean
+          route?: Database["public"]["Enums"]["medication_route_type"]
+          strength?: number
+          strength_unit?: string
+          total_volume?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medications_dispense_unit_id_fkey"
+            columns: ["dispense_unit_id"]
+            isOneToOne: false
+            referencedRelation: "dispense_units"
             referencedColumns: ["id"]
           },
         ]
@@ -1553,7 +1805,7 @@ export type Database = {
             foreignKeyName: "section_assignments_case_id_fkey"
             columns: ["case_id"]
             isOneToOne: false
-            referencedRelation: "case_data"
+            referencedRelation: "cases"
             referencedColumns: ["id"]
           },
           {
@@ -1609,6 +1861,80 @@ export type Database = {
           },
         ]
       }
+      student_medication_administrations: {
+        Row: {
+          administered_dose: number | null
+          administrator: string | null
+          case_id: string
+          case_session_id: string
+          created_at: string
+          group_id: string
+          is_in_presim: boolean
+          medication_id: string | null
+          notes: string | null
+          status: string | null
+          time_offset: number
+          user_id: string
+        }
+        Insert: {
+          administered_dose?: number | null
+          administrator?: string | null
+          case_id: string
+          case_session_id: string
+          created_at?: string
+          group_id: string
+          is_in_presim?: boolean
+          medication_id?: string | null
+          notes?: string | null
+          status?: string | null
+          time_offset: number
+          user_id: string
+        }
+        Update: {
+          administered_dose?: number | null
+          administrator?: string | null
+          case_id?: string
+          case_session_id?: string
+          created_at?: string
+          group_id?: string
+          is_in_presim?: boolean
+          medication_id?: string | null
+          notes?: string | null
+          status?: string | null
+          time_offset?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_medication_administrations_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_medication_administrations_case_session_id_fkey"
+            columns: ["case_session_id"]
+            isOneToOne: false
+            referencedRelation: "case_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_medication_administrations_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_medication_administrations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string | null
@@ -1644,27 +1970,87 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      all_clinical_documents: {
+        Row: {
+          author: string | null
+          case_id: string | null
+          case_session_id: string | null
+          category:
+            | Database["public"]["Enums"]["clinical_doc_category_type"]
+            | null
+          doc_text: string | null
+          id: string | null
+          is_in_presim: boolean | null
+          source_type: string | null
+          specialty: string | null
+          time_offset: number | null
+        }
+        Relationships: []
+      }
+      all_medication_administrations: {
+        Row: {
+          administered_dose: number | null
+          administrator: string | null
+          case_id: string | null
+          case_session_id: string | null
+          is_in_presim: boolean | null
+          medication_id: string | null
+          notes: string | null
+          source_type: string | null
+          status: string | null
+          time_offset: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
     }
     Enums: {
       clinical_doc_category_type:
-      | "Admission"
-      | "Consent"
-      | "Consult"
-      | "Discharge"
-      | "History & Physical"
-      | "Nursing"
-      | "Post-op"
-      | "Pre-op"
-      | "Progress"
-      | "Rapid Response"
-      | "Telehealth"
-      | "Student"
+        | "Admission"
+        | "Consent"
+        | "Consult"
+        | "Discharge"
+        | "History & Physical"
+        | "Nursing"
+        | "Post-op"
+        | "Pre-op"
+        | "Progress"
+        | "Rapid Response"
+        | "Telehealth"
+        | "Student"
       code_status_type: "Full" | "DNR" | "Partial"
       insurance_type: "Medicare" | "Medicaid" | "Private"
+      iv_infusion_rate_type: "mL/hr" | "mg/hr" | "units/hr"
+      medication_frequencies:
+        | "QD"
+        | "BID"
+        | "TID"
+        | "QID"
+        | "Q1H"
+        | "Q2H"
+        | "Q3H"
+        | "Q4H"
+        | "Q6H"
+        | "Q8H"
+        | "Q12H"
+        | "Q24H"
+        | "ACHS"
+        | "DAILY"
+        | "ONCE"
+        | "CONTINUOUS"
+      medication_priorities: "STAT" | "NOW" | "Routine" | "PRN"
+      medication_route_type:
+        | "PO"
+        | "IV"
+        | "SC"
+        | "IM"
+        | "SL"
+        | "Topical"
+        | "Otic"
+        | "Ophthalmic"
+        | "Inhalation"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1678,116 +2064,116 @@ type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-  | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-  : never = never,
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
-  ? R
-  : never
+    ? R
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-    DefaultSchema["Views"])
-  ? (DefaultSchema["Tables"] &
-    DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-      Row: infer R
-    }
-  ? R
-  : never
-  : never
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema["Tables"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
+      Insert: infer I
+    }
+    ? I
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
-  : never
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema["Tables"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-    Update: infer U
-  }
-  ? U
-  : never
+      Update: infer U
+    }
+    ? U
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-    Update: infer U
-  }
-  ? U
-  : never
-  : never
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-  | keyof DefaultSchema["Enums"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-  : never
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-  | keyof DefaultSchema["CompositeTypes"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-  : never
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
 
 export const Constants = {
   public: {
@@ -1808,6 +2194,37 @@ export const Constants = {
       ],
       code_status_type: ["Full", "DNR", "Partial"],
       insurance_type: ["Medicare", "Medicaid", "Private"],
+      iv_infusion_rate_type: ["mL/hr", "mg/hr", "units/hr"],
+      medication_frequencies: [
+        "QD",
+        "BID",
+        "TID",
+        "QID",
+        "Q1H",
+        "Q2H",
+        "Q3H",
+        "Q4H",
+        "Q6H",
+        "Q8H",
+        "Q12H",
+        "Q24H",
+        "ACHS",
+        "DAILY",
+        "ONCE",
+        "CONTINUOUS",
+      ],
+      medication_priorities: ["STAT", "NOW", "Routine", "PRN"],
+      medication_route_type: [
+        "PO",
+        "IV",
+        "SC",
+        "IM",
+        "SL",
+        "Topical",
+        "Otic",
+        "Ophthalmic",
+        "Inhalation",
+      ],
     },
   },
 } as const
