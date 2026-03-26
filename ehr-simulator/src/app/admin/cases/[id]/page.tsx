@@ -18,6 +18,7 @@ import {
 } from "@/actions/cases"
 import MultiTextInput, { type MultiTextInputHandle } from "../../case-builder/components/multiTextInput"
 import { EditFamilyHistory } from "../components/EditFamilyHistory"
+import Link from "next/link"
 
 // Section wrapper
 const FormSection = ({
@@ -59,6 +60,16 @@ export default function CasePage() {
   const allergiesRef = useRef<MultiTextInputHandle>(null)
   const socialHabitsRef = useRef<MultiTextInputHandle>(null)
   const livingSituationRef = useRef<MultiTextInputHandle>(null)
+
+  const editPageRoutes: { label: string, href: string }[] = [
+    { label: "Note Entries", href: "notes" },
+    { label: "Order Entries", href: "orders" },
+    { label: "Lab Results", href: "labs" },
+    { label: "Charts", href: "charting" },
+    { label: "Intake & Output", href: "intake-output" },
+    { label: "Medications", href: "medications" },
+    { label: "Medication Administrations", href: "medication-administrations" },
+  ]
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -522,6 +533,20 @@ export default function CasePage() {
             </div>
           </FormSection>
 
+          <Card className="border-slate-200 shadow-sm">
+            <div className="flex items-baseline gap-3 px-4 py-0">
+              <p className="text-sm font-semibold text-slate-800">Edit More...</p>
+            </div>
+            <CardContent className="px-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+              {editPageRoutes.map(({ label, href }) => (
+                <Link key={href} href={`/admin/cases/${caseId}/${href}`}>
+                  <Button variant="outline" className="w-full cursor-pointer">
+                    {label}
+                  </Button>
+                </Link>
+              ))}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
