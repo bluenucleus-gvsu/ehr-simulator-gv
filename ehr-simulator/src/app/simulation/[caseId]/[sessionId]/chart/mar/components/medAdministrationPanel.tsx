@@ -19,27 +19,28 @@ import {
   PillBottle,
 } from "lucide-react"
 import { useState } from "react"
-import { type AllMedicationTypes, type MedAdministrationInstance, type MedicationOrder } from "./marData";
+import { type AllMedicationTypes, type MedicationOrder } from "./marData";
 import MedAdminCard from "./medAdminCard";
-import { toast } from "sonner";
 import type { NewAdministrationData } from "./marView";
 import { Badge } from "@/components/ui/badge"
 import { PatientStatusBadge } from "./marHelpers"
+import { DatabaseMedAdministration, StudentMedicationAdministration } from "@/actions/simulation"
 
 interface MedAdministrationProps {
   selectedOrders: MedicationOrder[];
-  administrationsLookup: { [key: string]: MedAdministrationInstance[] };
+  administrationsLookup: { [key: string]: DatabaseMedAdministration[] };
   medicationLookup: { [key: string]: AllMedicationTypes };
   sessionStart: Date;
   isScanned: boolean;
   onPtScan: (scan: boolean) => void;
   newAdministrations: NewAdministrationData;
-  onUpdateAdministration: (orderId: string, field: keyof MedAdministrationInstance, value: string | number) => void;
+  onUpdateAdministration: (orderId: string, field: keyof StudentMedicationAdministration, value: string | number) => void;
   onAdministerMeds: (meds: NewAdministrationData) => void;
   onClearAll: () => void;
   handlePopoverClose: (x: boolean) => void;
   isOpen: boolean;
   onOrderRemove: (id: string) => void;
+  isPresim: boolean;
   elapsedMinutes: number;
 }
 
@@ -58,11 +59,18 @@ const MedAdministrationPanel = ({
   onAdministerMeds: handleAdministerMeds,
   isOpen,
   handlePopoverClose,
+  isPresim,
   onOrderRemove
 }: MedAdministrationProps) => {
   const [isLoading] = useState(false)
   const hasSelections = selectedOrders.length > 0;
-  const hasOverdose = selectedOrders.some(order => order.dose < newAdministrations[order.id].administeredDose)
+  const hasOverdose = selectedOrders.some(order => {
+    const administeredDose = newAdministrations[order.id]?.administered_dose
+    if (!administeredDose) {
+      return false
+    }
+    return order.dose < administeredDose
+  })
   const handleFakeScan = (scan: boolean) => {
     onPtScan(scan)
   }
@@ -78,7 +86,7 @@ const MedAdministrationPanel = ({
         <Button
           onClick={() => handlePopoverClose(true)}
           className="h-9 bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-2 px-4"
-          disabled={!hasSelections}
+          disabled={!hasSelections || isPresim}
         >
           <PencilLine className="w-4 h-4" />
           <span className="">Document</span>
@@ -126,7 +134,7 @@ const MedAdministrationPanel = ({
           )}
           <div className="grid gap-6 pb-10">
             {selectedOrders.map(order => {
-              const currentAdminData = newAdministrations[order.id] || { status: "Given", administeredDose: 0 };
+              const currentAdminData = newAdministrations[order.id] || { status: "Given", administered_dose: 666 };
 
               return (
                 <MedAdminCard
@@ -144,9 +152,9 @@ const MedAdministrationPanel = ({
                   currentStatus={currentAdminData.status ?? "Given"}
 
                   onDoseChange={(value) => {
-                    onUpdateAdministration(order.id, "administeredDose", value);
+                    onUpdateAdministration(order.id, "administered_dose", value);
                   }}
-                  currentDose={currentAdminData.administeredDose}
+                  currentDose={currentAdminData.administered_dose || 0}
                   onCommentChange={(value) => {
                     onUpdateAdministration(order.id, 'notes', value)
                   }}

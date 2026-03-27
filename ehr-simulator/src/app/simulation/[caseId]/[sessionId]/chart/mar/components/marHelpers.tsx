@@ -3,7 +3,7 @@ import type { AllMedicationTypes, InjectableMedication, InsulinMedication, IvMed
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { UserCheck, UserX } from "lucide-react";
-import { DatabaseMedication } from "@/actions/simulation";
+import { DatabaseMedAdministration, DatabaseMedication } from "@/actions/simulation";
 
 export interface MedCardColumn {
   startTime: Date;
@@ -182,7 +182,7 @@ export const renderMedCardDetails = (medication: AllMedicationTypes, order: Medi
   }
 }
 
-export function findLastAdminTime(administrations: MedAdministrationInstance[], sessionStartTime: Date) {
+export function findLastAdminTime(administrations: DatabaseMedAdministration[], sessionStartTime: Date) {
   if (!administrations || administrations.length === 0) {
     return (
       <div className="flex w-full justify-end gap-2 pr-4">
@@ -191,33 +191,42 @@ export function findLastAdminTime(administrations: MedAdministrationInstance[], 
       </div>
     )
   }
-  const filteredAdmins = administrations.filter((admin: MedAdministrationInstance) => admin.status === "Given")
 
-  if (filteredAdmins.length !== 0) {
-    const lastAdmin = filteredAdmins.reduce((latest, current) => {
-      return current.adminTimeMinuteOffset > latest.adminTimeMinuteOffset ? current : latest;
-    })
-    const lastAdminDate = addMinutes(sessionStartTime, lastAdmin.adminTimeMinuteOffset);
-    const lastAdminTime = format(lastAdminDate, 'HHmm')
-    const lastAdminDay = format(lastAdminDate, 'LL/dd')
+  const validAdmins = administrations.filter(
+    (admin: DatabaseMedAdministration) => admin.status === "Given" && admin.time_offset != null
+  )
+
+  if (validAdmins.length === 0) {
     return (
-      <div className="flex w-full justify-end items-end gap-2 pr-4">
+      <div className="flex w-full justify-end gap-2 pr-4">
         <p className="text-sm">Last Administered:</p>
-        <div className="grid place-items-center">
-          <p className="text-xs font-medium underline">{lastAdminDay}</p>
-          <p className="text-sm font-mono tracking-tight">{lastAdminTime}</p>
-        </div>
+        <p className="text-sm font-light">Never</p>
       </div>
-
     )
   }
+
+  const lastAdmin = validAdmins.reduce((latest, current) => {
+    const currentOffset = current.time_offset ?? -1;
+    const latestOffset = latest.time_offset ?? -1;
+
+    return currentOffset > latestOffset ? current : latest;
+  })
+
+  const lastAdminDate = addMinutes(sessionStartTime, lastAdmin.time_offset ?? 0);
+  const lastAdminTime = format(lastAdminDate, 'HHmm')
+  const lastAdminDay = format(lastAdminDate, 'LL/dd')
+
   return (
-    <div className="flex w-full justify-end gap-2 pr-4">
+    <div className="flex w-full justify-end items-end gap-2 pr-4">
       <p className="text-sm">Last Administered:</p>
-      <p className="text-sm font-light">Never</p>
+      <div className="grid place-items-center">
+        <p className="text-xs font-medium underline">{lastAdminDay}</p>
+        <p className="text-sm font-mono tracking-tight">{lastAdminTime}</p>
+      </div>
     </div>
   )
 }
+
 
 // Helper for wristband scan badge
 export const PatientStatusBadge = ({ isScanned }: { isScanned: boolean }) => {
@@ -279,7 +288,7 @@ export function mapDatabaseMedToFrontend(dbMed: DatabaseMedication): AllMedicati
     dispenseUnit: dbMed.dispense_units.name || "Unknown",
   };
 
-  // 2. Narrow based on the route and cast to your strict interfaces
+  // 2. Narrow based on the route
   switch (dbMed.route) {
     case "IV":
       return {

@@ -1,3 +1,5 @@
+-- Case Id and Session Id for testing
+-- http://127.0.0.1:3000/simulation/e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d/a5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9a/chart/mar
 INSERT INTO public.courses (id, name, code, active)
 VALUES 
   ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d', 'Medical Surgical Nursing I', 'NUR 320', TRUE),
@@ -234,10 +236,11 @@ INSERT INTO medication_orders (
   priority, 
   instructions, 
   indication, 
-  ordering_provider
+  ordering_provider,
+  infusion_rate,
+  is_in_presim
 ) 
 VALUES 
-  -- Acetaminophen 500mg PO Q6H PRN for Pain
   (
     'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
     (SELECT id FROM medications WHERE generic_name = 'acetaminophen' AND route = 'PO' AND strength = 650 AND strength_unit = 'mg' LIMIT 1),
@@ -246,10 +249,10 @@ VALUES
     'PRN', 
     'Do not exceed 4000mg per 24 hours.', 
     'Mild pain or fever', 
-    'Dr. Gregory House'
+    'Dr. Gregory House',
+    NULL,
+    TRUE
   ),
-
-  -- Metoprolol tartrate 10mg IV NOW
   (
     'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
     (SELECT id FROM medications WHERE generic_name = 'metoprolol tartate' AND route = 'IV' AND strength = 10 AND strength_unit = 'mg' LIMIT 1),
@@ -258,10 +261,10 @@ VALUES
     'NOW', 
     'Administer slow IV push over 2 minutes. Monitor HR and BP.', 
     'Rate control', 
-    'Dr. Gregory House'
+    'Dr. Gregory House',
+    NULL,
+    TRUE
   ),
-
-  -- Atorvastatin 40mg PO DAILY Routine
   (
     'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
     (SELECT id FROM medications WHERE generic_name = 'atorvastatin' AND route = 'PO' AND strength = 40 AND strength_unit = 'mg' LIMIT 1),
@@ -270,6 +273,213 @@ VALUES
     'Routine', 
     'Take in the evening.', 
     'Hyperlipidemia', 
-    'Dr. Gregory House'
+    'Dr. Gregory House',
+    NULL,
+    TRUE
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'normal saline 0.9%' AND route = 'IV' AND strength = 1000 AND strength_unit = 'mL' LIMIT 1), 
+    1000, 
+    'CONTINUOUS', 
+    'Routine', 
+    'Maintenance fluids', 
+    'Hydration', 
+    'Dr. Gregory House',
+    125,
+    TRUE
+  ),
+
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'cefazolin' AND route = 'IV' AND strength = 1000 AND strength_unit = 'mg' LIMIT 1), 
+    1000, 
+    'Q8H', 
+    'Routine', 
+    'Administer over 30 minutes.', 
+    'Prophylaxis', 
+    'Dr. Gregory House',
+    150,
+    TRUE
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'pantoprazole' AND route = 'PO' AND strength = 40 AND strength_unit = 'mg' LIMIT 1), 
+    40, 
+    'DAILY', 
+    'Routine', 
+    'Take 30 minutes before breakfast.', 
+    'GERD', 
+    'Dr. Gregory House',
+    NULL,
+    TRUE
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'insulin glargine' AND route = 'SC' AND strength = 1 AND strength_unit = 'units' LIMIT 1), 
+    15,
+    'DAILY', 
+    'Routine', 
+    'Give at bedtime. Rotate injection sites.', 
+    'T2DM', 
+    'Dr. Gregory House',
+    NULL,
+    TRUE
+  ),
+  -- not in presim
+  (
+  'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'cefazolin' AND route = 'IV' AND strength = 1000 AND strength_unit = 'mg' LIMIT 1), 
+    1000, 
+    'Q2H', 
+    'Routine', 
+    'Not in Presim Test.', 
+    'Prophylaxis', 
+    'Dr. Pepper',
+    999,
+    FALSE
+  ),
+-- not in presim
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'pantoprazole' AND route = 'PO' AND strength = 40 AND strength_unit = 'mg' LIMIT 1), 
+    60, 
+    'DAILY', 
+    'Routine', 
+    'Not in Presim Test.', 
+    'GERD', 
+    'Dr. Oops',
+    NULL,
+    FALSE
+  ),
+  -- not in presim
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'insulin glargine' AND route = 'SC' AND strength = 1 AND strength_unit = 'units' LIMIT 1), 
+    999, 
+    'DAILY', 
+    'Routine', 
+    'Not in Presim Test.', 
+    'T2DM', 
+    'Dr. Huh',
+    NULL,
+    FALSE
   );
 
+INSERT INTO medication_administrations (
+  case_id,
+  medication_order_id,
+  administrator,
+  time_offset,
+  status,
+  notes,
+  administered_dose
+)
+VALUES
+  -- 1. Acetaminophen (Given 60 minutes ago)
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d',
+    (SELECT id FROM medication_orders WHERE case_id = 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d' AND medication_id = (SELECT id FROM medications WHERE generic_name = 'acetaminophen' AND route = 'PO' AND strength = 650 AND strength_unit = 'mg' LIMIT 1) LIMIT 1),
+    'Nurse Jackie, RN',
+    -60,
+    'Given',
+    'Patient reported mild headache (3/10).',
+    650
+  ),
+
+  -- 2. Acetaminophen (Scheduled 60 minutes from now for next PRN dose)
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d',
+    (SELECT id FROM medication_orders WHERE case_id = 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d' AND medication_id = (SELECT id FROM medications WHERE generic_name = 'acetaminophen' AND route = 'PO' AND strength = 650 AND strength_unit = 'mg' LIMIT 1) LIMIT 1),
+    NULL,
+    60,
+    'Due',
+    NULL,
+    NULL
+  ),
+
+  -- 3. Metoprolol tartrate (Given 15 minutes ago)
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d',
+    (SELECT id FROM medication_orders WHERE case_id = 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d' AND medication_id = (SELECT id FROM medications WHERE generic_name = 'metoprolol tartate' AND route = 'IV' AND strength = 10 AND strength_unit = 'mg' LIMIT 1) LIMIT 1),
+    'Nurse Jackie, RN',
+    -15,
+    'Given',
+    'IV pushed slowly over 2 minutes. Heart rate stable at 82 bpm.',
+    10
+  ),
+
+  -- 4. Atorvastatin (Given 90 minutes ago)
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d',
+    (SELECT id FROM medication_orders WHERE case_id = 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d' AND medication_id = (SELECT id FROM medications WHERE generic_name = 'atorvastatin' AND route = 'PO' AND strength = 40 AND strength_unit = 'mg' LIMIT 1) LIMIT 1),
+    'Nurse Jackie, RN',
+    -90,
+    'Given',
+    'Taken with sips of water.',
+    40
+  ),
+
+  -- 5. Atorvastatin (Missed dose 100 minutes ago - demonstrating a different status)
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d',
+    (SELECT id FROM medication_orders WHERE case_id = 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d' AND medication_id = (SELECT id FROM medications WHERE generic_name = 'atorvastatin' AND route = 'PO' AND strength = 40 AND strength_unit = 'mg' LIMIT 1) LIMIT 1),
+    'Nurse Jackie, RN',
+    -100,
+    'Missed',
+    'Patient was off unit for imaging.',
+    0
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d',
+    (SELECT id FROM medication_orders WHERE case_id = 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d' AND medication_id = (SELECT id FROM medications WHERE generic_name = 'normal saline 0.9%' AND route = 'IV' AND strength = 1000 AND strength_unit = 'mL' LIMIT 1) LIMIT 1),
+    'Nurse Jackie, RN',
+    -170,
+    'Given',
+    'IV infusing well via right forearm, no redness or swelling.',
+    1000
+  ),
+
+  -- 2. Cefazolin (Given 2 hours ago / -120 mins)
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d',
+    (SELECT id FROM medication_orders WHERE case_id = 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d' AND medication_id = (SELECT id FROM medications WHERE generic_name = 'cefazolin' AND route = 'IV' AND strength = 1000 AND strength_unit = 'mg' LIMIT 1) LIMIT 1),
+    'Nurse Jackie, RN',
+    -120,
+    'Given',
+    'Infused via IV pump over 30 mins. Tolerated well.',
+    1000
+  ),
+
+  -- 3. Cefazolin (Next dose due in 6 hours / +360 mins)
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d',
+    (SELECT id FROM medication_orders WHERE case_id = 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d' AND medication_id = (SELECT id FROM medications WHERE generic_name = 'cefazolin' AND route = 'IV' AND strength = 1000 AND strength_unit = 'mg' LIMIT 1) LIMIT 1),
+    NULL,
+    40,
+    'Due',
+    NULL,
+    NULL
+  ),
+
+  -- 4. Pantoprazole (Given this morning, 5 hours ago / -300 mins)
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d',
+    (SELECT id FROM medication_orders WHERE case_id = 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d' AND medication_id = (SELECT id FROM medications WHERE generic_name = 'pantoprazole' AND route = 'PO' AND strength = 40 AND strength_unit = 'mg' LIMIT 1) LIMIT 1),
+    'Nurse Jackie, RN',
+    -130,
+    'Given',
+    'Taken with water.',
+    40
+  ),
+
+  -- 5. Insulin glargine (Due tonight in 4 hours / +240 mins)
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d',
+    (SELECT id FROM medication_orders WHERE case_id = 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d' AND medication_id = (SELECT id FROM medications WHERE generic_name = 'insulin glargine' AND route = 'SC' AND strength = 1 AND strength_unit = 'units' LIMIT 1) LIMIT 1),
+    NULL,
+    30,
+    'Due',
+    NULL,
+    NULL
+  );

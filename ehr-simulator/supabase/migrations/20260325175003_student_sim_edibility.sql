@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS student_medication_administrations (
   case_session_id uuid NOT NULL references case_sessions(id) ON DELETE CASCADE,
   user_id uuid NOT NULL references users(id) ON DELETE SET NULL,
   group_id uuid NOT NULL references groups(id) ON DELETE CASCADE,
+  medication_order_id UUID references medication_orders(id) ON DELETE CASCADE,
 
   medication_id text,
   administrator text,
@@ -68,7 +69,7 @@ CREATE VIEW all_medication_administrations AS
   SELECT 
     case_id,
     NULL::uuid as case_session_id,
-    medication_id,
+    medication_order_id,
     administrator,
     time_offset,
     status,
@@ -83,14 +84,14 @@ CREATE VIEW all_medication_administrations AS
   SELECT
     case_id,
     case_session_id,
-    medication_id,
+    medication_order_id,
     administrator,
     time_offset,
     status,
     notes,
     administered_dose,
     is_in_presim,
-    'student_administrations' as source_type  
+    'student_administration' as source_type  
   FROM student_medication_administrations;
 
 
@@ -185,3 +186,8 @@ CREATE table if NOT EXISTS editable_documentation_results (
   consolability smallint CHECK (consolability IN (0, 1, 2)),
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- infusion_rate represent IV pump rate for a specific order, must be numeric
+ALTER TABLE IF EXISTS medication_orders ALTER COLUMN infusion_rate TYPE numeric USING infusion_rate::integer;
+
+

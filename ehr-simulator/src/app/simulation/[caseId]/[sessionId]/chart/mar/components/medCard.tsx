@@ -1,18 +1,20 @@
 import { addMinutes, format, isWithinInterval } from "date-fns";
 import type { MedCardColumn } from "./marHelpers";
-import type { AllMedicationTypes, MedAdministrationInstance, MedicationOrder } from "./marData.jsx"
+import type { AllMedicationTypes, MedicationOrder } from "./marData.jsx"
 import { Checkbox } from "@/components/ui/checkbox";
 import { findLastAdminTime, renderMedCardDetails, renderMedTitleRow } from "./marHelpers";
+import { DatabaseMedAdministration } from "@/actions/simulation";
 
 interface MedCardProps {
   medication: AllMedicationTypes;
-  administrations: MedAdministrationInstance[];
+  administrations: DatabaseMedAdministration[];
   order: MedicationOrder;
   columns: MedCardColumn[];
   sessionStart: Date;
   isSelected: boolean;
   onSelectionChange: (order: MedicationOrder, checked: boolean) => void;
   isHighlightableColumn: boolean;
+  isPresim: boolean;
 }
 
 const MedCard = ({
@@ -23,17 +25,37 @@ const MedCard = ({
   sessionStart,
   onSelectionChange,
   isSelected,
-  isHighlightableColumn
+  isHighlightableColumn,
+  isPresim
 }: MedCardProps) => {
 
   const handleCheckboxChange = (checked: boolean) => {
     onSelectionChange(order, checked);
   };
 
+  const visibleAdministrations = administrations.filter(currentAdmin => {
+    if (isPresim && !currentAdmin.is_in_presim) {
+      return false
+    }
+
+    if (currentAdmin.status !== "Due") return true;
+
+    const successfullAdministration = administrations.some(otherAdmin => {
+      const isStudentAdmin = otherAdmin.source_type === 'student_administration';
+      const isGiven = otherAdmin.status === 'Given' || otherAdmin.status === 'Patient Administered';
+
+      if (!isStudentAdmin || !isGiven) return false;
+
+      const timeDiff = Math.abs((otherAdmin.time_offset ?? 0) - (currentAdmin.time_offset ?? 0));
+      return timeDiff <= 60;
+    });
+    return !successfullAdministration;
+  });
+
   // using columns passed from main mar component, add relevant administration data (given, held, refused...)
   const processedColumns = columns.map(col => {
-    const administrationsInColumn = administrations.filter(admin => {
-      const adminTime = addMinutes(sessionStart || 0, admin.adminTimeMinuteOffset);
+    const administrationsInColumn = visibleAdministrations.filter(admin => {
+      const adminTime = addMinutes(sessionStart || 0, admin.time_offset ?? 0);
 
       // Check if that time falls inside this column
       return isWithinInterval(adminTime, {
@@ -93,7 +115,7 @@ const MedCard = ({
 
               <div className="flex-1 p-2 space-y-2 flex flex-col items-center justify-center min-h-[80px]">
                 {col.associatedAdministrations?.map((admin, index) => {
-                  const adminTime = addMinutes(sessionStart, admin.adminTimeMinuteOffset);
+                  const adminTime = addMinutes(sessionStart, admin.time_offset ?? 0);
 
                   // Status Colors
                   let statusStyle = "bg-slate-100 text-slate-600 border-slate-200";
@@ -103,7 +125,7 @@ const MedCard = ({
                   else if (admin.status === "Missed") statusStyle = "bg-red-100 text-red-700 border-red-200";
 
                   return (
-                    <div key={`${admin.id}-${index}`} className={`w-fit text-center p-1 rounded border text-xs ${statusStyle}`}>
+                    <div key={`${admin.medication_order_id}-${index}`} className={`w-fit text-center p-1 rounded border text-xs ${statusStyle}`}>
                       <div className="font-bold font-mono">{format(adminTime, 'HHmm')}</div>
                       <div className="text-xs">{admin.status}</div>
                     </div>

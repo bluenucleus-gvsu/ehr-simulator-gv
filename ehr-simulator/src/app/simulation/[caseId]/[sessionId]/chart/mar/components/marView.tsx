@@ -3,9 +3,8 @@
 import { addMinutes, differenceInMinutes } from 'date-fns'
 import MedCard from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/medCard";
 import { useEffect, useMemo, useState } from "react";
-import type { AllMedicationTypes, MedAdministrationInstance, MedicationOrder } from "./marData";
+import type { AllMedicationTypes, MedicationOrder } from "./marData";
 import MedAdministrationPanel from "./medAdministrationPanel";
-import { medAdministrations } from './marData';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from '@/components/ui/button';
 import { ClipboardClock, Filter, PillBottle } from 'lucide-react';
@@ -19,24 +18,36 @@ import WrongPatientAlert from './wrongPatientAlert';
 import { createColumns } from '@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers';
 import { PatientStatusBadge } from './marHelpers';
 import ColumnShiftControl from './columnShiftControl';
+import { DatabaseMedAdministration, StudentMedicationAdministration, submitMedicationAdministrations } from '@/actions/simulation';
+import { useSimSessionContext } from '@/context/SimSessionContext';
 
 
 export interface NewAdministrationData {
-  [medOrderId: string]: MedAdministrationInstance;
+  [medOrderId: string]: StudentMedicationAdministration;
 }
 
 interface MarViewData {
   medications: AllMedicationTypes[];
   medicationOrders: MedicationOrder[];
+  medicationAdministrations: DatabaseMedAdministration[];
+  params: {
+    caseId: string;
+    sessionId: string;
+  }
 }
 
 const patientMRN = 'pt12345678'
 
 const filterOptions = ["Scheduled", "Continuous", "PRN"]
-export default function MarView({ medications, medicationOrders }: MarViewData) {
+export default function MarView({
+  medications,
+  medicationOrders,
+  medicationAdministrations,
+  params
+}: MarViewData) {
   // data
   const [selectedOrders, setSelectedOrders] = useState<MedicationOrder[]>([]);
-  const [administrations, setAdministrations] = useState<MedAdministrationInstance[]>(medAdministrations)
+  // const [administrations, setAdministrations] = useState<DatabaseMedAdministration[]>(medicationAdministrations)
   const [newAdministrations, setNewAdministrations] = useState<NewAdministrationData>({});
   const [associatedOrders, setAssociatedOrders] = useState<MedicationOrder[]>([])
   // filters
@@ -52,6 +63,9 @@ export default function MarView({ medications, medicationOrders }: MarViewData) 
   const [anchorDate] = useState<Date>(new Date());
   const [elapsedMinutes, setElapsedMinutes] = useState(0);
   const [timeColumnOffset, setTimeColumnOffset] = useState(0)
+  // user data
+  const { userId, groupId, isPresim, userName } = useSimSessionContext();
+  // Scanner debugging
   // const [scannedSymbol, setScannedSymbol] = useState('')
 
   const handleScan = (symbol: string) => {
@@ -106,22 +120,31 @@ export default function MarView({ medications, medicationOrders }: MarViewData) 
           ...prev,
           [targetOrder.id]: {
             ...currentAdmin,
-            administeredDose: currentAdmin.administeredDose + targetOrder.dose
+            administered_dose: (currentAdmin.administered_dose || 0) + targetOrder.dose
           }
         };
       })
     } else {
+      if (!userId || !groupId) {
+        toast.error("Missing user or group session data.");
+        return;
+      }
       setSelectedOrders(prev => [...prev, targetOrder])
 
       setNewAdministrations(prev => ({
         ...prev,
         [targetOrder.id]: {
-          medicationOrderId: targetOrder.id,
+          case_id: params.caseId,
+          case_session_id: params.sessionId,
+          medication_order_id: targetOrder.id,
+          user_id: userId,
+          group_id: groupId,
+
           status: "Given",
-          administratorId: "currentUser",
-          adminTimeMinuteOffset: 0,
-          administeredDose: targetOrder.dose,
-          visibleInPresim: false, // doesn't matter - this entry will not affect case template
+          administrator: userName,
+          time_offset: 0,
+          administered_dose: targetOrder.dose,
+          is_in_presim: false,
           notes: '',
         }
       }));
@@ -129,16 +152,25 @@ export default function MarView({ medications, medicationOrders }: MarViewData) 
   }
 
   const handleMultiOrderPopoverChoice = (order: MedicationOrder) => {
+    if (!userId || !groupId) {
+      toast.error("Missing user or group session data.");
+      return;
+    }
     setSelectedOrders(prev => [...prev, order])
     setNewAdministrations(prev => ({
       ...prev,
       [order.id]: {
-        medicationOrderId: order.id,
+        case_id: params.caseId,
+        case_session_id: params.sessionId,
+        medication_order_id: order.id,
+        user_id: userId,
+        group_id: groupId,
+
         status: "Given",
-        administratorId: "currentUser",
-        adminTimeMinuteOffset: 0,
-        administeredDose: order.dose,
-        visibleInPresim: false,
+        administrator: userName,
+        time_offset: 0,
+        administered_dose: order.dose,
+        is_in_presim: false,
         notes: '',
       }
     }))
@@ -168,7 +200,6 @@ export default function MarView({ medications, medicationOrders }: MarViewData) 
     })
   }
 
-
   useSymbologyScanner(handleScan,
     {
       scannerOptions: { prefix: '~', suffix: '', maxDelay: 20 },
@@ -177,18 +208,28 @@ export default function MarView({ medications, medicationOrders }: MarViewData) 
   )
 
   const handleMedCheckboxChange = (order: MedicationOrder, checked: boolean) => {
+    if (!groupId || !userId) {
+      toast.error('missing an id')
+      return
+    }
     if (checked) {
       setSelectedOrders(prev => [...prev, order]);
 
       setNewAdministrations(prev => ({
         ...prev,
         [order.id]: {
-          medicationOrderId: order.id,
+          case_id: params.caseId,
+          case_session_id: params.sessionId,
+          medication_order_id: order.id,
+          user_id: userId,
+          group_id: groupId,
+
           status: "Given",
-          administratorId: "currentUser",
-          adminTimeMinuteOffset: 0,
-          administeredDose: order.dose,
-          visibleInPresim: false // doesn't matter - this entry will not affect case template
+          administrator: userName,
+          time_offset: 0,
+          administered_dose: order.dose,
+          is_in_presim: false,
+          notes: '',
         }
       }));
     } else {
@@ -220,7 +261,7 @@ export default function MarView({ medications, medicationOrders }: MarViewData) 
     });
   };
 
-  const handleUpdateAdministration = (medicationOrderId: string, field: keyof MedAdministrationInstance, value: number | string) => {
+  const handleUpdateAdministration = (medicationOrderId: string, field: keyof StudentMedicationAdministration, value: number | string) => {
     setNewAdministrations(prev => {
       const currentInstance = prev[medicationOrderId];
       if (!currentInstance) return prev;
@@ -248,67 +289,37 @@ export default function MarView({ medications, medicationOrders }: MarViewData) 
   };
 
 
-  const handleAdministerMeds = (newAdministrations: NewAdministrationData) => {
+  const handleAdministerMeds = async (newAdministrations: NewAdministrationData) => {
     // Update administration time
     const payload = Object.keys(newAdministrations).map(orderId => {
       const currentAdmin = newAdministrations[orderId]
       return {
         ...currentAdmin,
-        adminTimeMinuteOffset: elapsedMinutes,
+        time_offset: elapsedMinutes,
       };
     });
-    const administration = newAdministrations;
 
+    const { error } = await submitMedicationAdministrations(payload, params.caseId, params.sessionId)
 
-
-    // const { error } = submitMedicationAdministrations(payload)
-    // if (error) {
-    //toast.error("Failed to save administrations");
-    // return
-    //}
-    //  handlePopoverClose(false);
-    //   toast.success("Medications successfully documented");
-    // handleClearAllSelections()
-
-    return administration
-    // return {
-    //   ...currentAdmin,
-    //   medicationOrderId: orderId,
-    //   administratorId: "StudentID",
-    //   adminTimeMinuteOffset: elapsedMinutes,
-    //   status: currentAdmin.status     // status always initialized as 'given' by default 
-    // };
-    // });
-    // const newAdminTimes = new Map(payload.map(admin => [admin.medicationOrderId, admin.adminTimeMinuteOffset]))
-
-    // * Filter administrations that are a 'Due' with a student administration within 60min
-    // setAdministrations(prev => {
-    //   const filteredAdministrations = prev.filter(existingAdmin => {
-    //     // if (existingAdmin.status !== 'Due') {
-    //     //   return true
-    //     // }
-    //     const newAdminTime = newAdminTimes.get(existingAdmin.medicationOrderId)
-    //     if (newAdminTime === undefined) {
-    //       return true
-    //     }
-    //     // const minuteDifference = Math.abs(differenceInMinutes(newAdminTime, existingAdmin.adminTimeMinuteOffset))
-    //     // return minuteDifference > 60
-    //     return true
-    //   })
-    //   return [...filteredAdministrations, ...payload]
-    // })
+    if (error) {
+      toast.error("Failed to save administrations");
+      return
+    }
+    setIsMedAdminPanelOpen(false);
+    toast.success("Medications successfully documented");
+    handleClearAllSelections()
   }
 
 
   const groupedAdministrationsByOrder = useMemo(() => {
-    return administrations.reduce((acc, admin) => {
-      if (!acc[admin.medicationOrderId]) {
-        acc[admin.medicationOrderId] = [];
+    return medicationAdministrations.reduce((acc, admin) => {
+      if (!acc[admin.medication_order_id || 'no_associated_order']) {
+        acc[admin.medication_order_id || 'no_associated_order'] = [];
       }
-      acc[admin.medicationOrderId].push(admin)
+      acc[admin.medication_order_id || 'no_associated_order'].push(admin)
       return acc
-    }, {} as { [orderId: string]: MedAdministrationInstance[] })
-  }, [administrations]);
+    }, {} as { [orderId: string]: DatabaseMedAdministration[] })
+  }, [medicationAdministrations]);
 
   const medsById = useMemo(() => {
     return medications.reduce((acc, med) => {
@@ -318,15 +329,19 @@ export default function MarView({ medications, medicationOrders }: MarViewData) 
   }, [medications]);
 
   const filteredMedOrders = useMemo(() => {
-    if (!orderFilter && !isDue) return medicationOrders;
-
     return medicationOrders.filter((order) => {
-      const orderAdmins = groupedAdministrationsByOrder[order.id];
+      if (isPresim && !order.visibleInPresim) {
+        return false
+      }
 
+      if (!orderFilter && !isDue) {
+        return true
+      }
+
+      const orderAdmins = groupedAdministrationsByOrder[order.id];
       if (isDue && !orderAdmins?.some((admin) => admin.status === 'Due')) {
         return false;
       }
-
 
       if (!orderFilter) return true;
 
@@ -334,14 +349,14 @@ export default function MarView({ medications, medicationOrders }: MarViewData) 
         case "PRN":
           return order.priority === "PRN";
         case "Continuous":
-          return order.frequency === "Continuous";
+          return order.frequency === "CONTINUOUS";
         case "Scheduled":
-          return order.priority !== "PRN" && order.frequency !== "Continuous";
+          return order.priority !== "PRN" && order.frequency !== "CONTINUOUS";
         default:
           return true;
       }
     });
-  }, [orderFilter, isDue, medicationOrders, groupedAdministrationsByOrder]);
+  }, [orderFilter, isDue, medicationOrders, groupedAdministrationsByOrder, isPresim]);
 
 
   useEffect(() => {
@@ -449,6 +464,7 @@ export default function MarView({ medications, medicationOrders }: MarViewData) 
             isOpen={isMedAdminPanelOpen}
             handlePopoverClose={setIsMedAdminPanelOpen}
             onOrderRemove={handleRemoveOrder}
+            isPresim={isPresim ?? true}
             elapsedMinutes={elapsedMinutes}
           />
         </div>
@@ -483,6 +499,7 @@ export default function MarView({ medications, medicationOrders }: MarViewData) 
               onSelectionChange={handleMedCheckboxChange}
               isSelected={isSelected}
               isHighlightableColumn={timeColumnOffset === 0}
+              isPresim={isPresim ?? false}
             />
           )
         })}

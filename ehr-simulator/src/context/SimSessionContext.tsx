@@ -12,32 +12,35 @@ const supabase = createBrowserClient(
 export interface SimSessionContextType {
   userName: string | null;
   userId: string | null;
-  caseId: string | null;
-  caseSessionId: string | null;
+  // caseId: string | null;
+  // caseSessionId: string | null;
   loading: boolean;
   simStartTime: number | null;
   groupId: string | null;
-  // is_Presim: boolean;
+  isPresim: boolean | null;
 }
 
 const SimContext = createContext<SimSessionContextType>({
   userName: null,
   userId: null,
   groupId: null,
-  caseId: null,
-  caseSessionId: null,
+  // caseId: null,
+  // caseSessionId: null,
   loading: true,
   simStartTime: null,
+  isPresim: null
 })
 
 export function SimSessionProvider({ children }: { children: React.ReactNode }) {
   const [userName, setUserName] = useState<string | null>(null)
-  const [userId, setUserId] = useState<string | null>('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9b')
-  const [caseId, setCaseId] = useState<string | null>(null)
-  const [groupId, setGroupId] = useState<string | null>('c3d4e5f6-a7b8-4c5d-0e1f-2a3b4c5d6e7f')
-  const [caseSessionId, setCaseSessionId] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+  // const [caseId, setCaseId] = useState<string | null>(null)
+  const [groupId, setGroupId] = useState<string | null>(null)
+  // const [caseSessionId, setCaseSessionId] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true);
   const [simStartTime, setSimStartTime] = useState<number | null>(null)
+  const [isPresim, setIsPresim] = useState<boolean | null>(false)
+
 
   useEffect(() => {
     async function loadUser() {
@@ -56,24 +59,27 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
   }, [userId])
 
   const startSimSession = (
-    newCaseId: string,
-    newCaseSessionId: string,
-    startTime: number
+    // newCaseId: string,
+    // newCaseSessionId: string,
+    startTime: number,
+    isPresim: boolean
   ) => {
-    setCaseId(newCaseId);
-    setCaseSessionId(newCaseSessionId);
-    setSimStartTime(startTime)
+    // setCaseId(newCaseId);
+    // setCaseSessionId(newCaseSessionId);
+    setSimStartTime(startTime);
+    setIsPresim(isPresim);
   }
 
   const value = {
     userName,
     userId,
-    caseId,
-    caseSessionId,
+    // caseId,
+    // caseSessionId,
     loading,
     startSimSession,
     simStartTime,
-    groupId
+    groupId,
+    isPresim
   }
 
   return <SimContext.Provider value={value}>{children}</SimContext.Provider>

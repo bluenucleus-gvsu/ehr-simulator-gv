@@ -1493,7 +1493,7 @@ export type Database = {
           frequency: Database["public"]["Enums"]["medication_frequencies"]
           id: string
           indication: string | null
-          infusion_rate: string | null
+          infusion_rate: number | null
           instructions: string | null
           is_in_presim: boolean
           medication_id: string
@@ -1506,7 +1506,7 @@ export type Database = {
           frequency: Database["public"]["Enums"]["medication_frequencies"]
           id?: string
           indication?: string | null
-          infusion_rate?: string | null
+          infusion_rate?: number | null
           instructions?: string | null
           is_in_presim?: boolean
           medication_id: string
@@ -1519,7 +1519,7 @@ export type Database = {
           frequency?: Database["public"]["Enums"]["medication_frequencies"]
           id?: string
           indication?: string | null
-          infusion_rate?: string | null
+          infusion_rate?: number | null
           instructions?: string | null
           is_in_presim?: boolean
           medication_id?: string
@@ -1871,6 +1871,7 @@ export type Database = {
           group_id: string
           is_in_presim: boolean
           medication_id: string | null
+          medication_order_id: string | null
           notes: string | null
           status: string | null
           time_offset: number
@@ -1885,6 +1886,7 @@ export type Database = {
           group_id: string
           is_in_presim?: boolean
           medication_id?: string | null
+          medication_order_id?: string | null
           notes?: string | null
           status?: string | null
           time_offset: number
@@ -1899,6 +1901,7 @@ export type Database = {
           group_id?: string
           is_in_presim?: boolean
           medication_id?: string | null
+          medication_order_id?: string | null
           notes?: string | null
           status?: string | null
           time_offset?: number
@@ -1924,6 +1927,13 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_medication_administrations_medication_order_id_fkey"
+            columns: ["medication_order_id"]
+            isOneToOne: false
+            referencedRelation: "medication_orders"
             referencedColumns: ["id"]
           },
           {
@@ -1994,7 +2004,7 @@ export type Database = {
           case_id: string | null
           case_session_id: string | null
           is_in_presim: boolean | null
-          medication_id: string | null
+          medication_order_id: string | null
           notes: string | null
           source_type: string | null
           status: string | null
@@ -2004,7 +2014,7 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      get_user_courses: { Args: { p_user_id: string }; Returns: Json }
     }
     Enums: {
       clinical_doc_category_type:

@@ -1,5 +1,5 @@
 import { addMinutes, format } from "date-fns";
-import { medActionSelections, type AllMedicationTypes, type MedAdministrationInstance, type MedicationOrder } from "./marData"
+import { medActionSelections, type AllMedicationTypes, type MedicationOrder } from "./marData"
 import MedAdminCardSelector from "./medAdminCardSelector";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,16 +7,17 @@ import { renderMedTitleRow, renderMedCardDetails, isSlidingScaleInsulin } from "
 import { Button } from "@/components/ui/button";
 import { AlertCircle, X } from "lucide-react";
 import { DoseInput } from "./doseInput";
+import { DatabaseMedAdministration, StudentMedicationAdministration } from "@/actions/simulation";
 
 interface MedAdminCardProps {
   medication: AllMedicationTypes;
-  administrations: MedAdministrationInstance[];
+  administrations: DatabaseMedAdministration[];
   order: MedicationOrder;
   sessionStart: Date;
   elapsedMinutes: number;
   onStatusChange: (status: string) => void;
   currentStatus: string
-  onDoseChange: (administeredDose: number) => void;
+  onDoseChange: (administered_dose: number) => void;
   currentDose: number;
   onCommentChange: (comment: string) => void;
   currentComment: string;
@@ -24,16 +25,17 @@ interface MedAdminCardProps {
 }
 
 // helper function to get the last few times the med was given
-const getPreviousAdministrations = (administrations: MedAdministrationInstance[], prevAdmins: number) => {
+const getPreviousAdministrations = (administrations: DatabaseMedAdministration[], prevAdmins: number) => {
   if (!administrations || administrations.length === 0) {
-    return [{ medicationOrderId: "", administratorId: "", adminTimeMinuteOffset: 0, status: "Held" } as MedAdministrationInstance];
+    // intentionally return empty med administration object to indicate no previous administrations
+    return [{ medication_order_id: "", administrator: "", time_offset: 0, status: "Held" } as StudentMedicationAdministration];
   }
-  const filteredAdmins = administrations.filter(admin => admin.status === "Given")
+  const filteredAdmins = administrations.filter(admin => admin.status === "Given" && admin.time_offset !== null)
 
   if (filteredAdmins.length === 0) {
-    return [{ medicationOrderId: "", administratorId: "", adminTimeMinuteOffset: 0, status: "Held" } as MedAdministrationInstance]
+    return [{ medication_order_id: "", administrator: "", time_offset: 0, status: "Held" } as StudentMedicationAdministration]
   }
-  filteredAdmins.sort((a, b) => a.adminTimeMinuteOffset - b.adminTimeMinuteOffset);
+  filteredAdmins.sort((a, b) => (a.time_offset ?? 0) - (b.time_offset ?? 0));
   return filteredAdmins.slice(-prevAdmins)
 }
 
@@ -114,21 +116,16 @@ const MedAdminCard = ({
           <div className="flex gap-4 pl-2">
             {threePrevAdministrations.map((admin, index) => {
               // if no administrations recorded for this medication
-              if (!admin.medicationOrderId) {
+              if (!admin.medication_order_id) {
                 return (
                   <p key={index} className="px-2 py-1 bg-gray-100 rounded-lg border border-gray-300 text-gray-700 text-xs">Never</p>
                 )
               }
-              const adminTime = addMinutes(sessionStart, admin.adminTimeMinuteOffset);
-
-              // Status Colors
-              let statusStyle = "bg-slate-100 text-slate-600 border-slate-200";
-              if (admin.status === "Given") statusStyle = "bg-green-100 text-green-700 border-green-200";
-              // if (admin.status === "Held") statusStyle = "bg-amber-100 text-amber-700 border-amber-200";
-              // if (admin.status === "Refused") statusStyle = "bg-red-100 text-red-700 border-red-200";
+              const adminTime = addMinutes(sessionStart, admin.time_offset ?? 0);
+              const statusStyle = "bg-green-100 text-green-700 border-green-200";
 
               return (
-                <div key={`${admin.id}-${index}`} className={`w-fit text-center p-1 rounded border text-xs ${statusStyle}`}>
+                <div key={`${admin.medication_order_id}-${index}`} className={`w-fit text-center p-1 rounded border text-xs ${statusStyle}`}>
                   <div className="font-bold">{format(adminTime, 'HH:mm')}</div>
                   <div className="text-xs">{admin.status}</div>
 

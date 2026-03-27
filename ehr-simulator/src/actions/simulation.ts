@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from "@supabase/supabase-js";
-import { Database, Tables } from "../../database.types";
+import { Database } from "../../database.types";
 import { ActionResponse, ExtractData } from "./cases";
 import { UUID } from "crypto";
 import { revalidatePath } from "next/cache";
@@ -10,6 +10,9 @@ export type EditableStudentNoteUpsert = Database['public']['Tables']['editable_c
 export type EditableStudentNote = Database['public']['Tables']['editable_clinical_documents'];
 export type ClinicalDocument = Database['public']['Tables']['clinical_documents'];
 export type DatabaseMedicationOrder = Database['public']['Tables']['medication_orders'];
+export type DatabaseMedAdministration = Database['public']['Views']['all_medication_administrations']['Row'];
+
+export type StudentMedicationAdministration = Database['public']['Tables']['student_medication_administrations']['Insert'];
 export type ClinicalDocumentView = {
   id: UUID,
   case_id: UUID,
@@ -22,12 +25,7 @@ export type ClinicalDocumentView = {
   doc_text: string
   source_type: string
 }
-// export type MedicationOrderWithDetails = Tables<'medication_orders'> & {
-//   medications: (Tables<'medications'> & {
-//     dispense_units: Pick<Tables<'dispense_units'>, 'name'> | null;
-//   }) | null;
-// };
-// export type Medications = Database['public'][]
+
 export async function submitStudentNote(note: EditableStudentNoteUpsert): Promise<ActionResponse<EditableStudentNote>> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -78,8 +76,6 @@ export async function getAllClinicalDocuments(caseId: string, caseSessionId: str
     }
   }
 
-  // revalidatePath(`/simulation/${caseSessionId}/chart/notes`);
-
   return {
     success: true,
     data,
@@ -87,7 +83,7 @@ export async function getAllClinicalDocuments(caseId: string, caseSessionId: str
   }
 }
 
-export async function getMedicationOrders(caseId: string, sessionId: string) {
+export async function getMedicationOrders(caseId: string) {
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -124,8 +120,6 @@ export async function getMedicationOrders(caseId: string, sessionId: string) {
     }
   }
 
-  // revalidatePath(`/simulation/${caseId}/${sessionId}/chart/mar`);
-
   return {
     success: true,
     data,
@@ -142,7 +136,9 @@ export async function getMedicationAdministrations(caseId: string, sessionId: st
   const { data, error } = await supabase
     .from('all_medication_administrations')
     .select('*')
-    .eq('case_id', caseId);
+    .eq('case_id', caseId)
+    .or(`case_session_id.eq.${sessionId},case_session_id.is.null`);
+  ;
 
   if (error) {
     return {
@@ -151,8 +147,6 @@ export async function getMedicationAdministrations(caseId: string, sessionId: st
       error
     }
   }
-
-  revalidatePath(`/simulation/${caseId}/${sessionId}/chart/mar`);
 
   return {
     success: true,
@@ -193,36 +187,34 @@ export type DatabaseMedication = OrderAndMedicationType[number]["medications"]
 //   }
 // }
 
-// export async function submitMedicationAdministration(
-//   medAdministrations: StudentMedicationAdministrationUpsert,
-//   caseId: string,
-//   sessionId: string
-// ) {
-//   const supabase = createClient(
-//     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-//     process.env.SUPABASE_SERVICE_ROLE_KEY!
-//   );
-//   const { error, data } = supabase
-//     .from('student_medication_administrations')
-//     .upsert(medAdministrations)
-//     .select()
-//     .single()
+export async function submitMedicationAdministrations(
+  medAdministrations: StudentMedicationAdministration[],
+  caseId: string,
+  sessionId: string
+) {
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const { data, error } = await supabase
+    .from('student_medication_administrations')
+    .upsert(medAdministrations)
+    .select()
 
-//   if (error) {
-//     return {
-//       success: false,
-//       message: 'Failed to document medications',
-//       error
-//     }
-//   }
+  if (error) {
+    return {
+      success: false,
+      message: 'Failed to document medications',
+      error
+    }
+  }
 
+  revalidatePath(`/simulation/${caseId}/${sessionId}/chart/mar`);
 
-//   revalidatePath(`/simulation/${caseId}/${sessionId}/chart/mar`);
+  return {
+    success: true,
+    data,
+    message: 'Medications successfully documented'
+  }
 
-//   return {
-//     success: true,
-//     data,
-//     message: 'Medications successfully documented'
-//   }
-
-// }
+}
