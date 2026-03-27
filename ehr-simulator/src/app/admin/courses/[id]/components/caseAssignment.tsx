@@ -167,6 +167,9 @@ const CaseAssignment = ({ sections, cases, isEditMode, existing_id, initialData 
                   {
                     cases.length > 0 ? (
                       cases.map((c, index) => {
+                        if (!c.case_id) {
+                          return null
+                        }
                         return (
                           <SelectItem key={`${index}`} value={c.case_id}>{c.cases.name || "Unknown Sim"}</SelectItem>
                         )

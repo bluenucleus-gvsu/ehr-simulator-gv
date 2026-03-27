@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 
 export type SectionAssignment = Database['public']['Tables']['section_assignments']['Row'];
 export type SectionAssignmentInsert = Database['public']['Tables']['section_assignments']['Insert'];
+export type SimCase = Database['public']['Tables']['cases']['Row']
 export type ActionResponse<T = null> = {
   success: boolean;
   message: string;

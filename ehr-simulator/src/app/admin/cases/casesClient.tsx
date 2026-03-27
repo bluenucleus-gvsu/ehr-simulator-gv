@@ -4,44 +4,42 @@ import { useState } from "react";
 import CaseListItem from "./CaseListItem";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CaseCourseAssignments } from "@/actions/cases";
-import { Course } from "../courses/[id]/page";
-import { ChevronDown, Search } from "lucide-react";
+// import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { SimCase } from "@/actions/cases";
+import { Search } from "lucide-react";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
 interface CaseClientProps {
-  courses: Course[];
-  caseAssignments: CaseCourseAssignments;
+  cases: SimCase[];
 }
 
 function filterCases(
-  cases: CaseCourseAssignments,
+  cases: SimCase[],
   filterText: string,
-  selectedCourse: string,
+  // selectedCourse: string,
   // selectedSpecialty: string
 ) {
   return cases.filter((item) => {
-    const matchesCourse = selectedCourse === "all" || item.courseId === selectedCourse || selectedCourse == 'unassigned' && item.courseCode === null;
+    // const matchesCourse = selectedCourse === "all" || item.courseId === selectedCourse || selectedCourse == 'unassigned' && item.courseCode === null;
     // const matchesSpecialty = selectedSpecialty === "all" || item.specialty === selectedSpecialty;
-    const matchesText = filterText === "" || item.caseName.toLowerCase().includes(filterText.toLowerCase());
+    const matchesText = filterText === "" || item.name.toLowerCase().includes(filterText.toLowerCase());
 
-    return matchesCourse && matchesText
+    return matchesText
     // && matchesSpecialty;
   });
 }
 
 // const specialties = [{ id: 'OB', value: 'OB' }, { id: 'Med-Surg', value: 'Med-Surg' }, { id: 'Mental Health', value: 'Mental Health' }, { id: 'Home Health', value: 'Home Health' }]
 
-export default function CasesClient({ courses, caseAssignments }: CaseClientProps) {
+export default function CasesClient({ cases }: CaseClientProps) {
   const [filterText, setFilterText] = useState('');
-  const [selectedCourse, setSelectedCourse] = useState<string>("all");
+  // const [selectedCourse, setSelectedCourse] = useState<string>("all");
   // const [selectedSpecialty, setSelectedSpecialty] = useState<string>("all");
 
   const handleFilterTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilterText(e.target.value);
   };
-  const filteredAssignments = filterCases(caseAssignments, filterText, selectedCourse);
+  const filteredAssignments = filterCases(cases, filterText);
 
   return (
     <div className="w-full">
@@ -59,7 +57,7 @@ export default function CasesClient({ courses, caseAssignments }: CaseClientProp
       </header>
 
       <div className="flex gap-4 pt-2 px-2">
-        <Select onValueChange={setSelectedCourse} value={selectedCourse}>
+        {/* <Select onValueChange={setSelectedCourse} value={selectedCourse}>
           <SelectTrigger className="w-fit">
             <SelectValue placeholder="Select a course" />
             <ChevronDown />
@@ -70,7 +68,7 @@ export default function CasesClient({ courses, caseAssignments }: CaseClientProp
               <SelectItem value="all">All Courses</SelectItem>
               <SelectItem value='unassigned'>Unassigned</SelectItem>
               {
-                courses.map(course => (
+                cases.map(course => (
                   <SelectItem
                     key={course.id}
                     value={course.id}
@@ -81,7 +79,7 @@ export default function CasesClient({ courses, caseAssignments }: CaseClientProp
               }
             </SelectGroup>
           </SelectContent>
-        </Select>
+        </Select> */}
         {/* <Select onValueChange={setSelectedSpecialty} value={selectedSpecialty}>
           <SelectTrigger className="w-fit">
             <SelectValue placeholder="Select a specialty" />
@@ -115,7 +113,7 @@ export default function CasesClient({ courses, caseAssignments }: CaseClientProp
       <div className="flex flex-col gap-4 p-4">
         {
           filteredAssignments.length > 0 ? (
-            filteredAssignments.map((simCase) => <CaseListItem key={simCase.id} courseCaseAssignment={simCase} />)
+            cases.map((simCase) => <CaseListItem key={simCase.id} courseCaseAssignment={simCase} />)
 
           ) : (
             <div className="flex justify-center items-center border border-dashed border-gray-300 rounded-md h-20">

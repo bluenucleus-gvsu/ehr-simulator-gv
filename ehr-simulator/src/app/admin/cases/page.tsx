@@ -1,27 +1,25 @@
-import { getCourseCaseAssignments } from "@/actions/cases";
-import { getAllCourses } from "@/actions/courses";
+import { getAllSimCases } from "@/actions/cases";
 import CasesClient from "./casesClient";
 
 
 
 export default async function CasesPage() {
-  const [courseResults, caseAssignmentResults] = await Promise.all([
-    getAllCourses(),
-    getCourseCaseAssignments()
-  ]);
+  const caseData = await getAllSimCases();
+  // const [courseResults, caseAssignmentResults] = await Promise.all([
+  //   getAllCourses(),
+  //   getCourseCaseAssignments()
+  // ]);
 
-  if (!courseResults.success || !caseAssignmentResults.success) {
+  if (!caseData.success || !caseData.data) {
     return (
-      <div>Failed to fetch simulation cases or corresponding courses.</div>
+      <div>Failed to fetch sim cases.</div>
     )
   }
-  const assignments = caseAssignmentResults.data || [];
-  const courses = courseResults.data || [];
+  const cases = caseData.data || [];
 
   return (
     <CasesClient
-      courses={courses}
-      caseAssignments={assignments}
+      cases={cases}
     />
   );
 }
