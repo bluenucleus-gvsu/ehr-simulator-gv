@@ -104,7 +104,7 @@ export const sampleNotes: ClinicalNote[] = [
     excludedFromPresim: false
   },
   {
-    title: "Progress Note",
+    title: "Nursing Note",
     author: "Jane Smith RN",
     specialty: "Nursing",
     timeOffset: 2520,
@@ -188,7 +188,7 @@ export const sampleNotes: ClinicalNote[] = [
     excludedFromPresim: false
   },
   {
-    title: "Progress Note",
+    title: "Nursing Note",
     author: "Derrick Williams, RN",
     specialty: "Nursing",
     timeOffset: 960,

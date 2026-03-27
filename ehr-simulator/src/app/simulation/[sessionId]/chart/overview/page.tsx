@@ -6,7 +6,7 @@ import ActiveProblems from "./components/activeProblems"
 import Alerts from "./components/alerts"
 import CareTeam from "./components/careTeam"
 import { SelectedLabs } from "./components/selectedLabs"
-import MarSnapshot from "./components/marSnapshot"
+// import MarSnapshot from "./components/marSnapshot"
 import Demographics from "./components/demographics"
 import FamilyHistory from "./components/familyHistory"
 
@@ -23,7 +23,7 @@ const OverviewPage = () => {
           <Nutrition />
           <CareTeam />
           <SelectedLabs />
-          <MarSnapshot />
+          {/* <MarSnapshot /> */}
           <Demographics />
           <FamilyHistory />
         </div>

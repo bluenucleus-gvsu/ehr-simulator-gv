@@ -113,13 +113,13 @@ export const generateInitialLabData = (
     if (templateRow.rowType === "imaging") {
       allTimesColumns.forEach(timePoint => {
         const labValue = labResultsLookup.get(timePoint.dateKey)?.get(templateRow.field);
-        newRow[timePoint.dateKey] = labValue ? labValue.value : {};
+        newRow[timePoint.dateKey] = labValue ? labValue.value : undefined;
       });
     }
     if (templateRow.rowType === "microbiology") {
       allTimesColumns.forEach(timePoint => {
         const labValue = labResultsLookup.get(timePoint.dateKey)?.get(templateRow.field);
-        newRow[timePoint.dateKey] = labValue ? labValue.value : {};
+        newRow[timePoint.dateKey] = labValue ? labValue.value : undefined;
       });
     }
     generatedData.push(newRow)

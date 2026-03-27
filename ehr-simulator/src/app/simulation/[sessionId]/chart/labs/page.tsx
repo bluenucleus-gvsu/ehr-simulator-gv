@@ -52,6 +52,7 @@ function getPinnedStyles(column: Column<LabTableData>): React.CSSProperties {
     position: 'sticky',
     [side]: `${column.getStart(side)}px`,
     zIndex: side === 'left' ? 2 : 1,
+    width: '240px'
   };
 }
 

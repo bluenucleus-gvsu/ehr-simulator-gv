@@ -51,7 +51,7 @@ function mostRecentVitals(
     });
   });
 
-  activeOffsets.sort((a, b) => b - a);
+  activeOffsets.sort((a, b) => a - b);
 
   return activeOffsets.slice(0, limit);
 }

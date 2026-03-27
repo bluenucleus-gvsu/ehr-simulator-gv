@@ -83,7 +83,7 @@ export const jamesAllen: ChartData = {
   sexAtBirth: { id: 'sexAtBirth', label: "Sex Assigned at Birth", value: "Male" },
   genderIdentity: { id: 'genderIdentity', label: "Gender Identity", value: "Male" },
   ethnicity: { id: "ethnicity", label: "Ethnicity", value: "" },
-  location: { id: "location", label: "Location", value: "" },
+  location: { id: "location", label: "Location", value: "CHS Sim Lab" },
 
   isolation: { id: 'isolation', label: "Isolation", value: "MRSA", tooltip: 'Contact Precautions: Use gloves and gown when entering the patient’s room' }, // TODO: Come back to this
   allergies: { id: 'allergies', label: "Allergies", value: ["Seasonal Allergy"] },

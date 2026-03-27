@@ -26,8 +26,9 @@ const NotePage = () => {
     const fetchNotes = async () => {
       setIsLoading(true);
       try {
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network
-        setNotesData(sampleNotes as ClinicalNote[]);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const sortedNotes = sampleNotes.sort((a, b) => a.timeOffset - b.timeOffset) // Simulate network
+        setNotesData(sortedNotes as ClinicalNote[]);
       } catch (err) {
         console.error(err);
         setIsError(true);

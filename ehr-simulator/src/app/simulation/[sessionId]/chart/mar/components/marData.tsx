@@ -501,33 +501,33 @@ export const allMedications: AllMedicationTypes[] = [
 ];
 
 export const medicationOrders: MedicationOrder[] = [
-  {
-    id: "orderCeftriaxoneIv1g",
-    medicationId: "medCeftriaxoneIv1g",
-    unitsOrdered: 0,
-    frequency: "Q8H",
-    priority: "PRN",
-    indication: "Infection",
-    orderingProvider: "Dr. Adler",
-    dose: 1,
-    visibleInPresim: false,
-    status: "active",
-    instructions: "For future use. Administer over 2-4 minutes."
-  },
-  {
-    id: "orderLactatedRingers500",
-    medicationId: "medLactatedRingersIV",
-    unitsOrdered: 0,
-    frequency: "ONCE",
-    priority: "PRN",
-    indication: "Hypotension",
-    orderingProvider: "Dr. Adler",
-    dose: 500,
-    visibleInPresim: false,
-    status: "active",
-    infusionRate: 999,
-    instructions: "For future use. Administer over 30 minutes."
-  },
+  // {
+  //   id: "orderCeftriaxoneIv1g",
+  //   medicationId: "medCeftriaxoneIv1g",
+  //   unitsOrdered: 0,
+  //   frequency: "Q8H",
+  //   priority: "PRN",
+  //   indication: "Infection",
+  //   orderingProvider: "Dr. Adler",
+  //   dose: 1,
+  //   visibleInPresim: false,
+  //   status: "active",
+  //   instructions: "For future use. Administer over 2-4 minutes."
+  // },
+  // {
+  //   id: "orderLactatedRingers500",
+  //   medicationId: "medLactatedRingersIV",
+  //   unitsOrdered: 0,
+  //   frequency: "ONCE",
+  //   priority: "PRN",
+  //   indication: "Hypotension",
+  //   orderingProvider: "Dr. Adler",
+  //   dose: 500,
+  //   visibleInPresim: false,
+  //   status: "active",
+  //   infusionRate: 999,
+  //   instructions: "For future use. Administer over 30 minutes."
+  // },
   {
     id: "orderOndansetronIv4",
     medicationId: "medOndansetronIv4",

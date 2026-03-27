@@ -4,8 +4,8 @@ import { Separator } from "@/components/ui/separator"
 
 const FamilyHistory = () => {
 
-  const familyMembers = ['Father', 'Paternal Uncle', 'Mother', 'Maternal Grandfather']
-  const conditions = ['HTN', 'T2DM']
+  const familyMembers = ['Mother', 'Father']
+  const conditions = ['Type 2 Diabetes Mellitus', 'CHF']
   return (
     <Card className="relative col-span-1 pt-2 overflow-hidden h-fit gap-3">
       <StyledTitle color="bg-lime-200" firstLetter="F" secondLetter="amily History" />
