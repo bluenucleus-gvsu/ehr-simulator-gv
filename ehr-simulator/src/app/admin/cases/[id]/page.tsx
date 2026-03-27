@@ -92,7 +92,7 @@ export default function CasePage() {
     // { label: "Intake & Output", href: "intake-output" },
     // { label: "Medications", href: "medications" },
     // { label: "Medication Administrations", href: "medication-administrations" },
-    { label: "Note Entries", href: "#" },
+    { label: "Note Entries", href: "notes" },
     { label: "Order Entries", href: "orders" },
     { label: "Lab Results", href: "#" },
     { label: "Charts", href: "#" },
