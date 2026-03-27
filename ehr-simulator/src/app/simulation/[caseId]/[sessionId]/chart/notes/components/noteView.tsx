@@ -1,27 +1,30 @@
 "use client"
 
 import { useState, useMemo } from "react";
-import NursingNoteEntry from "./nursingNoteEntry";
-import NoteDisplay from "./noteDisplay";
+import { ClinicalNote } from "./components/notesData";
+import NursingNoteEntry from "./components/nursingNoteEntry";
+import NoteDisplay from "./components/noteDisplay";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Filter } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import FilterBadges from "./filterBadges";
-import { differenceInMinutes, format } from "date-fns";
-import { ClinicalDocumentView, EditableStudentNoteUpsert, submitStudentNote } from "@/actions/simulation";
-import { useSimSessionContext } from "@/context/SimSessionContext";
-import { Skeleton } from "@/components/ui/skeleton";
+import FilterBadges from "./components/filterBadges";
+import { useSimulationCase } from "@/context/SimulationCaseContext";
 
-export interface NoteViewProps {
-  isError: boolean;
-  isLoading: boolean;
-  clinicalDocuments: ClinicalDocumentView[];
-  caseId: string;
-  sessionId: string;
-}
+type DbClinicalDocument = {
+  category?: string | null;
+  author?: string | null;
+  specialty?: string | null;
+  time_offset?: number | null;
+  doc_text?: string | null;
+  is_in_presim?: boolean | null;
+};
+
+const NotePage = () => {
+  const { caseBundle } = useSimulationCase();
+  const [sessionStartTime] = useState(new Date().getTime())
 
 const NoteView = ({
   isError = false,
@@ -32,6 +35,20 @@ const NoteView = ({
 }: NoteViewProps) => {
   const { simStartTime, userName, userId, groupId, isPresim } = useSimSessionContext();
   const [filteredSpecialties, setFilteredSpecialties] = useState<string[]>([]);
+
+  const notesData = useMemo(() => {
+    const docs = (caseBundle?.clinicalDocuments ?? []) as DbClinicalDocument[];
+    return docs
+      .map((doc): ClinicalNote => ({
+        title: doc.category ?? "Clinical Document",
+        author: doc.author ?? "N/A",
+        specialty: doc.specialty ?? "N/A",
+        timeOffset: doc.time_offset ?? 0,
+        content: doc.doc_text ?? "<p>N/A</p>",
+        excludedFromPresim: !(doc.is_in_presim ?? false),
+      }))
+      .sort((a, b) => a.timeOffset - b.timeOffset);
+  }, [caseBundle]);
 
   const specialties = useMemo(() => {
     return [...new Set(clinicalDocuments.map((note) => note.specialty))];
@@ -60,53 +77,9 @@ const NoteView = ({
   };
 
   const onSubmitNote = async (noteContent: string) => {
-    const now = differenceInMinutes(new Date(), simStartTime ?? 0)
-    if (!groupId || !userId || !caseId || !sessionId) {
-      toast.error("Still loading session data. Please try again in a moment.");
-      return;
-    }
-
-    const newNote: EditableStudentNoteUpsert = {
-      group_id: groupId,
-      user_id: userId,
-      case_id: caseId,
-      case_session_id: sessionId,
-      author: userName || 'Unknown Student',
-      category: 'Nursing',
-      specialty: 'Nursing',
-      time_offset: now,
-      doc_text: noteContent,
-      is_in_presim: false
-    }
-
-    const result = await submitStudentNote(newNote);
-    if (result.success) {
-      toast.success(`Nursing note submitted at ${format(now, 'HH:mm')}`);
-    }
-    else if (!result.success) {
-      toast.error(result.message)
-    }
+    if (!noteContent) return;
+    toast.info("Add note is disabled in rendering-only mode.");
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col h-full w-full pt-16 bg-gray-100 justify-start items-center gap-6">
-        <Skeleton className="w-5/6 h-16 rounded-xl bg-gray-200" />
-        <Skeleton className="w-5/6 h-8 rounded-xl bg-gray-200" />
-        <Skeleton className="w-5/6 h-8 rounded-xl bg-gray-200" />
-        <Skeleton className="w-5/6 h-8 rounded-xl bg-gray-200" />
-        <Skeleton className="w-5/6 h-8 rounded-xl bg-gray-200" />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="w-full h-full flex flex-col px-4 gap-3 bg-gray-100 justify-center items-center">
-        <p className="text-red-600">Error loading notes.</p>
-      </div>
-    );
-  }
 
   return (
     <div className="w-full h-[calc(100vh-4rem)] flex flex-col px-4  gap-3 bg-gray-100">
@@ -155,7 +128,7 @@ const NoteView = ({
             handleClearFilters={clearAllFilters}
           />
         </div>
-        <NursingNoteEntry isPresim={isPresim} submitNote={onSubmitNote} />
+        <NursingNoteEntry submitNote={onSubmitNote} disabled />
       </div>
 
       <div className="flex flex-col flex-grow gap-4 p-2 rounded-t-lg overflow-y-auto border inset-shadow-sm bg-gray-100">

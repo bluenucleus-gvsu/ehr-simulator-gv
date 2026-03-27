@@ -15,16 +15,9 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import StyledTitle from "./styledTitle"
-import { format } from "date-fns"
-import CardSkeleton from "./cardSkeleton"
-import { useState } from "react"
-
-const chartData = [
-  { timeId: "day1-morning", startTime: "0000", endTime: "1159", intake: 886, output: 400 },
-  { timeId: "day1-evening", startTime: "1200", endTime: "2359", intake: 405, output: 290 },
-  { timeId: "day2-morning", startTime: "0000", endTime: "1159", intake: 837, output: 420 },
-  { timeId: "day2-evening", startTime: "1200", endTime: "2359", intake: 730, output: 390 },
-]
+import { useMemo } from "react"
+import { useSimulationCase } from "@/context/SimulationCaseContext"
+import { intakeOutputBlocksFromCaseRow } from "@/utils/form"
 
 const chartConfig = {
   intake: {
@@ -37,38 +30,52 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
+type ChartRow = { timeId: string; blockLabel: string; intake: number; output: number }
+
 interface TickPayload {
-  value: string; // We know this maps to timeId, which is a string
-  index?: number;
-  offset?: number;
+  value: string
+  index?: number
+  offset?: number
 }
 interface CustomTickProps {
-  x?: number;
-  y?: number;
-  payload?: TickPayload;
+  x?: number
+  y?: number
+  payload?: TickPayload
 }
 
 export function IntakeOutput() {
-  const [simStartTime] = useState(new Date().getTime())
+  const { caseBundle } = useSimulationCase()
 
-  if (!simStartTime) {
-    return (
-      <Card className="relative col-span-1 pt-2 overflow-hidden h-fit gap-3">
-        <StyledTitle color="bg-sky-200" firstLetter="I" secondLetter="ntake/Output" />
-        <CardSkeleton />
-      </Card>
+  const chartData = useMemo<ChartRow[]>(() => {
+    const blocks = intakeOutputBlocksFromCaseRow(caseBundle?.caseRow?.intake_output_blocks)
+    return blocks.map((b) => ({
+      timeId: `block-${b.blockId}`,
+      blockLabel: `Block ${b.blockId}`,
+      intake: b.intake,
+      output: b.output,
+    }))
+  }, [caseBundle?.caseRow?.intake_output_blocks])
+
+  const roundedMax = useMemo(() => {
+    const max = Math.max(
+      ...chartData.map((r) => r.intake),
+      ...chartData.map((r) => r.output),
+      100,
     )
-  }
-
+    return Math.max(100, Math.ceil(max / 100) * 100)
+  }, [chartData])
 
   const MultiLineTick = (props: CustomTickProps) => {
-    const { x, y, payload } = props;
+    const { x, y, payload } = props
 
-    if (!payload || !payload.value) return null;
-    const row = chartData.find(row => row.timeId === payload.value)
-    if (!row) return null;
+    if (!payload?.value) return null
+    const row = chartData.find((r) => r.timeId === payload.value)
+    if (!row) return null
 
-    const displayDate = format(simStartTime, "MM/dd")
+    const blockNum = Number(row.timeId.replace("block-", ""))
+    const tag =
+      blockNum === 1 ? "Earliest" : blockNum === 4 ? "Most recent" : ""
+
     return (
       <text
         x={x}
@@ -78,49 +85,44 @@ export function IntakeOutput() {
         fontSize="11"
         className="recharts-text recharts-cartesian-axis-tick-value"
       >
-        <tspan fill="black" x={x} dy={'0.6em'}>{displayDate}</tspan>
-        <tspan x={x} dy="1.1em">{row?.startTime} -</tspan>
-        <tspan x={x} dy="1.1em">{row?.endTime}</tspan>
+        <tspan fill="black" x={x} dy="0.6em">
+          {row.blockLabel}
+        </tspan>
+        {tag ? (
+          <tspan x={x} dy="1.1em" fontSize="10">
+            {tag}
+          </tspan>
+        ) : null}
       </text>
-    );
-  };
+    )
+  }
 
   return (
     <Card className="relative col-span-1 pt-2 overflow-hidden h-fit gap-3">
       <StyledTitle color="bg-sky-200" firstLetter="I" secondLetter="ntake/Output" />
       <CardContent className="grid gap-2 px-4">
-        <ChartContainer config={chartConfig}>
-          <BarChart accessibilityLayer data={chartData}>
+        <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+          <BarChart accessibilityLayer data={chartData} margin={{ top: 8, right: 8, left: 8, bottom: 32 }}>
             <CartesianGrid vertical={false} />
             <YAxis
               axisLine={false}
               tickLine={false}
-              unit="mL"
+              unit=" mL"
+              domain={[0, roundedMax]}
             />
             <XAxis
               dataKey="timeId"
               tickLine={false}
               tickMargin={6}
               axisLine={false}
-              tick={(props => <MultiLineTick {...props} />)}
-              height={35}
+              tick={(props) => <MultiLineTick {...props} />}
+              height={48}
               interval={0}
             />
-            <ChartTooltip content={<ChartTooltipContent label={undefined} payload={[]} coordinate={{ x: 0, y: 0 }} accessibilityLayer hideLabel active={false} />} />
-            <ChartLegend className="text-xs pt-3 text-neutral-700" content={<ChartLegendContent payload={[]} />} />
-            <Bar
-              dataKey="output"
-              stackId="a"
-              fill="#fef08a"
-              radius={[0, 0, 4, 4]}
-            />
-            <Bar
-              dataKey="intake"
-              stackId="a"
-              fill="#bae6fd"
-              radius={[4, 4, 0, 0]}
-            />
-
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartLegend className="text-xs pt-3 text-neutral-700" content={<ChartLegendContent />} />
+            <Bar dataKey="output" stackId="a" fill="#fef08a" radius={[0, 0, 4, 4]} />
+            <Bar dataKey="intake" stackId="a" fill="#bae6fd" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ChartContainer>
       </CardContent>

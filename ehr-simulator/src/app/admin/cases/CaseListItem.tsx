@@ -8,10 +8,10 @@ interface CaseListItemProps {
 }
 
 export default function CaseListItem({ courseCaseAssignment }: CaseListItemProps) {
-  const { id, name, description, admitting_diagnosis } = courseCaseAssignment;
+  const { caseId, caseName, description, diagnosis, courseCode } = courseCaseAssignment;
 
   return (
-    <Link href={`/admin/case-builder/${id}/demographics`}>
+    <Link href={`/admin/case-builder/form/demographics?caseId=${caseId}`}>
       <div className="border rounded-md p-4 hover:bg-secondary dark:hover:bg-gray-800 transition py-5 border-l-10 border-l-blue-700 cursor-pointer">
         <div className="flex gap-2 items-end">
           <h2 className="text-xl font-semibold">{name}</h2>

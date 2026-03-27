@@ -7,6 +7,12 @@ export async function upsertCaseDemographics(
 ) {
   const d = payload
 
+  const relationship_status_id = await resolveRelationshipStatusId(
+    supabase,
+    d.relationshipStatus,
+  )
+  const insurance = normalizeInsuranceEnum(d.insurance)
+
   const row = {
     ...(caseId ? { id: caseId } : {}),
     name: "Case " + d.firstName + " " + d.lastName,
@@ -19,9 +25,10 @@ export async function upsertCaseDemographics(
     height_in: toNumeric(d.heightInches),
     weight_kg: toNumeric(d.dosingWeight),
     language: d.language ?? null,
-    //insurance
+    insurance,
     employment: d.employment ?? null,
     religion: d.religion ?? null,
+    relationship_status_id,
     requires_interpreter: Boolean(d.needsInterpreter),
     admitting_diagnosis: d.admittingDiagnosis ?? null,
     attending_provider: [d.attendingProviderName, d.attendingProviderTitle].filter(Boolean).join(" ") || null,
@@ -29,6 +36,7 @@ export async function upsertCaseDemographics(
     time_of_admission: d.admissionTime,
     emergency_contact_name: d.contact ?? null,
     emergency_contact_relationship: d.contactRelationship ?? null,
+    emergency_contact_phone: (d.contactPhone ?? "").trim() || null,
     updated_at: new Date().toISOString(),
     created_at: new Date().toISOString(), // Fix: check if exists before setting created_at
   };
@@ -46,17 +54,57 @@ export async function upsertCaseDemographics(
   return data;
 }
 
+async function resolveRelationshipStatusId(
+  supabase: SupabaseClient,
+  name: string | null | undefined,
+): Promise<string | null> {
+  const n = (name ?? "").trim()
+  if (!n) return null
+  const { data, error } = await supabase
+    .from("relationship_statuses")
+    .select("id")
+    .eq("name", n)
+    .maybeSingle()
+  if (error) {
+    console.error("relationship_statuses lookup failed", error)
+    return null
+  }
+  return data?.id ?? null
+}
+
+/** `cases.insurance` is Postgres enum insurance_type — must match seeded values. */
+function normalizeInsuranceEnum(
+  raw: string | null | undefined,
+): "Medicare" | "Medicaid" | "Private" | null {
+  const v = (raw ?? "").trim()
+  if (v === "Medicare" || v === "Medicaid" || v === "Private") return v
+  return null
+}
+
+/**
+ * Build ISO date (yyyy-mm-dd) from month, day, and stated age.
+ * Birth year is chosen so calendar age on **today** matches `age` (accounts for
+ * "birthday not yet this year" — avoids year = currentYear - age alone, which
+ * produced wrong DOBs like 2000-10-14 when the patient should read as `age` now).
+ */
 function computeDob(d: any) {
   const day = Number(d?.DOBDay);
   if (!Number.isFinite(day) || day <= 0) return null;
 
   const month = monthToNumber(d?.DOBMonth);
-  const age = Number(d?.age);
-  const year = new Date().getFullYear() - (Number.isFinite(age) ? age : 0);
+  const targetAge = Number(d?.age);
+  if (!Number.isFinite(targetAge) || targetAge < 0) return null;
+
+  const today = new Date();
+  let birthYear = today.getFullYear() - targetAge;
+  const birthdayThisYear = new Date(today.getFullYear(), month - 1, day);
+  if (today < birthdayThisYear) {
+    birthYear -= 1;
+  }
 
   const mm = String(month).padStart(2, "0");
   const dd = String(day).padStart(2, "0");
-  return `${year}-${mm}-${dd}`;
+  return `${birthYear}-${mm}-${dd}`;
 }
 
 function toNumeric(v: any): number | null {

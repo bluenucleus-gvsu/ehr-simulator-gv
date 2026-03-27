@@ -30,6 +30,7 @@ export interface DemographicFormData {
   summary: string;
   contact: string;
   contactRelationship: string;
+  contactPhone: string;
 }
 
 export interface HistoryFormData {
@@ -242,6 +243,29 @@ export const defaultIoData = [
   { blockId: 3, intake: 0, output: 0 },
   { blockId: 4, intake: 0, output: 0 }
 ]
+
+/** Normalize `cases.intake_output_blocks` jsonb for the case builder / sim. */
+export function intakeOutputBlocksFromCaseRow(raw: unknown): IntakeOutputFormData[] {
+  if (!Array.isArray(raw) || raw.length === 0) {
+    return defaultIoData.map((b) => ({ ...b }))
+  }
+  const byBlock = new Map<number, { intake: number; output: number }>()
+  for (const row of raw) {
+    if (!row || typeof row !== "object") continue
+    const o = row as Record<string, unknown>
+    const blockId = Number(o.blockId)
+    if (!Number.isFinite(blockId)) continue
+    byBlock.set(blockId, {
+      intake: Number(o.intake) || 0,
+      output: Number(o.output) || 0,
+    })
+  }
+  return [1, 2, 3, 4].map((blockId) => ({
+    blockId,
+    intake: byBlock.get(blockId)?.intake ?? 0,
+    output: byBlock.get(blockId)?.output ?? 0,
+  }))
+}
 
 export const defaultOrders: OrderType[] = [
   {

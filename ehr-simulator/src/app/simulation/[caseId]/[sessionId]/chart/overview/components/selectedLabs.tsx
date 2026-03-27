@@ -7,7 +7,9 @@ import { formatTimeFromOffset } from "@/app/simulation/[caseId]/[sessionId]/char
 import { getResultStatus } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/page"
 import { AlertTriangle } from "lucide-react"
 import { useState } from "react"
-import { generateAllInitialLabTimes, generateInitialLabData, labTemplate } from "../../labs/components/labsData"
+import { labTemplate } from "../../labs/components/labsData"
+import { useSimulationCase } from "@/context/SimulationCaseContext"
+import { buildLabRowsFromBundle } from "../../labs/components/labsFromBundle"
 
 
 const selectedLabs = [
@@ -21,9 +23,9 @@ const selectedLabs = [
 ];
 
 export function SelectedLabs() {
+  const { caseBundle } = useSimulationCase();
   const [startTime] = useState(new Date().getTime())
-  const [labTimes] = useState(generateAllInitialLabTimes(startTime))
-  const [initialLabTableData] = useState(generateInitialLabData(labTimes, labTemplate));
+  const { rows: initialLabTableData, timePoints } = buildLabRowsFromBundle(caseBundle, labTemplate);
 
 
 
@@ -60,9 +62,8 @@ export function SelectedLabs() {
     }
 
     // Iterate backwards through time
-    for (let i = 0; i < labTimes.length; i++) {
-      const timePoint = labTimes[i];
-      const timestampKey = timePoint.dateKey;
+    for (let i = timePoints.length - 1; i >= 0; i--) {
+      const timestampKey = timePoints[i];
 
       const valueAtTime = row[timestampKey];
 

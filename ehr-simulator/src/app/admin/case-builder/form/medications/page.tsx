@@ -13,6 +13,8 @@ import MedCardForm from "./components/medCardForm"
 import { useRouter } from "next/navigation"
 import { useFormContext } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
+import { CaseSection } from "@/lib/saveCase"
+import { saveCaseData } from "@/actions/case_builder/caseBuilder"
 
 function getComboboxData(medications: AllMedicationTypes[]) {
   return medications.map(med => {
@@ -30,7 +32,7 @@ function getComboboxData(medications: AllMedicationTypes[]) {
 
 export default function MedicationOrderForm() {
   const router = useRouter()
-  const { onDataChange, medOrderData } = useFormContext()
+  const { onDataChange, medOrderData, medAdministrationData, caseId } = useFormContext()
   const [selectedMed, setSelectedMed] = useState('')
   const [selectedMeds, setSelectedMeds] = useState<AllMedicationTypes[]>(medOrderData.selectedMeds)
   const [medOrders, setMedOrders] = useState<MedicationOrder[]>(medOrderData.createdOrders)
@@ -104,6 +106,13 @@ export default function MedicationOrderForm() {
       createdOrders: medOrders,
       selectedMeds: selectedMeds
     });
+    if (caseId) {
+      await saveCaseData({
+        payload: { orders: medOrders, administrations: medAdministrationData },
+        section: CaseSection.MEDICATION_ORDERS,
+        caseId,
+      })
+    }
     router.push('/admin/case-builder/form/medication-administrations');
   }
   return (

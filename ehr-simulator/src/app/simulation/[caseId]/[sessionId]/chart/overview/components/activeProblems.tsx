@@ -3,9 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import StyledTitle from "./styledTitle"
-import { jamesAllen } from "@/app/simulation/[caseId]/[sessionId]/chart/components/chartData"
-// import CardSkeleton from "./cardSkeleton"
-import type { ChartData } from "@/app/simulation/[caseId]/[sessionId]/chart/components/chartData";
+import { useSimulationCase } from "@/context/SimulationCaseContext";
 
 const ActiveProblems = () => {
   // if (isLoading || isFetching) {
@@ -41,24 +39,16 @@ const ActiveProblems = () => {
   //   )
   // }
 
-  const chartData: ChartData | undefined = jamesAllen
-
-  if (!chartData || Object.keys(chartData).length === 0) {
-    return (
-      <Card className="relative col-span-1 pt-2 overflow-hidden h-fit gap-3">
-        <StyledTitle color="bg-red-200" firstLetter="A" secondLetter="ctive Problems" />
-        <p>No data exists</p>
-      </Card>
-    )
-  }
-
-  const pmh = chartData.pmh.value;
+  const { caseBundle } = useSimulationCase();
+  const pmh = caseBundle?.caseRow?.medical_history?.length
+    ? caseBundle.caseRow.medical_history
+    : ["N/A"];
 
   return (
     <Card className="relative col-span-1 pt-2 overflow-hidden h-fit gap-3">
       <StyledTitle color="bg-red-200" firstLetter="A" secondLetter="ctive Problems" />
       <CardContent className="px-4 space-y-1">
-        {pmh.map(problem => {
+        {pmh.map((problem: string) => {
           return (
             <div key={problem} className="group">
               <p className="text-sm">{problem}</p>

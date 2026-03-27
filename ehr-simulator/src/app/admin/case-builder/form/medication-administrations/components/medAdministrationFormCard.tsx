@@ -93,8 +93,11 @@ export default function MedAdministrationFormCard({
               </div>
 
               <div className="flex-1 p-2 space-y-2 flex flex-col items-center justify-center min-h-[80px]">
-                {col.associatedAdministrations?.map(admin => {
+                {col.associatedAdministrations?.map((admin, adminIdx) => {
                   const adminTime = new Date(sessionStartTime + admin.adminTimeMinuteOffset * 60 * 1000);
+                  const adminKey = `${order.id}-col${colIndex}-i${adminIdx}-${
+                    admin.id?.trim() ? admin.id : `t${admin.adminTimeMinuteOffset}`
+                  }`;
 
                   let statusStyle = "bg-slate-100 text-slate-600 border-slate-200";
                   if (admin.status === "Given") statusStyle = "bg-green-100 text-green-700 border-green-200";
@@ -103,7 +106,7 @@ export default function MedAdministrationFormCard({
                   else if (admin.status === "Missed") statusStyle = "bg-red-100 text-red-700 border-red-200";
 
                   return (
-                    <div key={admin.id} className={`relative w-fit text-center p-1.5 rounded border text-xs ${statusStyle} group`}>
+                    <div key={adminKey} className={`relative w-fit text-center p-1.5 rounded border text-xs ${statusStyle} group`}>
                       <div className="font-bold">{format(adminTime, 'HH:mm')}</div>
                       <div className="text-[10px] opacity-">{admin.status}</div>
 

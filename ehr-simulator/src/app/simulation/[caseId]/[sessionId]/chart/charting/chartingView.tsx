@@ -11,28 +11,16 @@ import { Button } from "@/components/ui/button";
 import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { toast } from "sonner";
 import FlexSheetSidebar from "./components/flexSheetSidebar";
+import { useSimulationCase } from "@/context/SimulationCaseContext";
 
 import {
   type FlexSheetData,
   assessmentTools,
-  generateChartingDataFromDB,
-  getAllTimeOffsets,
+  flexSheetTemplate,
 } from "./components/flexSheetData";
 import { TableAssessmentSelectCell, TableInputCell } from "./components/tableInputCell";
 import { ChartingToolTip } from "./components/ChartingToolTip";
-import { DatabaseDocumentation, StudentDatabaseDocumentation, upsertDocumentationRows } from "@/actions/simulation";
-import { useSimSessionContext } from "@/context/SimSessionContext";
-import FlexSheetColumnShifter from "./components/flexSheetColumnShifter";
-import { calculateColTotal, formatTimeFromOffset, getPinnedStyles } from "./components/flexSheetHelpers";
-import { ImagingData, LabCellValue } from "../labs/components/labsData";
-
-interface FlexSheetViewProps {
-  dbDocumentation: DatabaseDocumentation[];
-  params: {
-    caseId: string;
-    sessionId: string;
-  };
-}
+import { buildChartingRowsFromBundle } from "./components/chartingFromBundle";
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
@@ -50,9 +38,12 @@ const tableWidth = 6
 export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   const { groupId, userId, simStartTime, handleUnsavedCharting } = useSimSessionContext();
 
-  const [timeOffsets, setTimeOffsets] = useState(getAllTimeOffsets(simStartTime, dbDocumentation));
-  const [data, setData] = useState<FlexSheetData[]>(generateChartingDataFromDB(dbDocumentation, timeOffsets));
-  // const [fieldSelections, setFieldSelections] = useState<Record<string, string[]>>({});
+export function FlexSheet() {
+  const { caseBundle } = useSimulationCase();
+  const [sessionStartTime] = useState(new Date().getTime());
+  const [timeOffsets, setTimeOffsets] = useState<number[]>([0]);
+  const [data, setData] = useState<FlexSheetData[]>([]);
+  const [fieldSelections, setFieldSelections] = useState<Record<string, string[]>>({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [dirtyColumns, setDirtyColumns] = useState<Set<string>>(new Set());
@@ -70,6 +61,13 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
 
   const { caseId, sessionId } = params;
   const canSubmit = dirtyColumns.size > 0
+
+  useEffect(() => {
+    const mapped = buildChartingRowsFromBundle(caseBundle?.documentationResults ?? [], flexSheetTemplate);
+    setTimeOffsets(mapped.timeOffsets);
+    setData(mapped.rows);
+    setFieldSelections({});
+  }, [caseBundle]);
 
 
   // Calculate visible IDs based on checkboxes
@@ -203,56 +201,8 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
     }
 
     setIsSaving(true);
-    try {
-      if (!userId || !groupId || !sessionId || !caseId) {
-        toast.error('Case data still loading. Please try again.')
-        return
-      }
-      // 1. Unpivot the data: Build one DB row for every dirty time column
-      const payload = Array.from(dirtyColumns).map(timeOffset => {
-        const dbRecord: StudentDatabaseDocumentation = {
-          case_id: caseId,
-          case_session_id: sessionId,
-          user_id: userId,
-          group_id: groupId,
-          time_offset: Number(timeOffset),
-          is_in_presim: false,
-        };
-
-        // 2. Loop through all frontend rows to grab the values for this specific time column
-        data.forEach(row => {
-          const isDataRow = row.componentType !== 'static' && row.componentType !== 'totalScoreRow';
-
-          if (isDataRow && row.id) {
-            const cellValue = row[timeOffset];
-            // Convert CheckboxList array values back to string
-            let formattedValue = cellValue;
-            if (Array.isArray(cellValue)) {
-              formattedValue = cellValue.join(',');
-            }
-
-            (dbRecord as Record<string, any>)[row.id] = formattedValue !== '' && formattedValue !== undefined ? formattedValue : null;
-          }
-        });
-
-        return dbRecord;
-      });
-
-      const { error } = await upsertDocumentationRows(payload);
-
-      if (error) throw error;
-
-      toast.success("FlexSheet data saved successfully!");
-
-      // 4. Clear the dirty columns
-      setDirtyColumns(new Set());
-
-    } catch (err) {
-      toast.error("Failed to save data");
-      console.error(err);
-    } finally {
-      setIsSaving(false);
-    }
+    toast.info("Charting save is disabled in rendering-only mode.");
+    setIsSaving(false);
   };
 
   // handle refreshing and Back navigation when user has unsaved data

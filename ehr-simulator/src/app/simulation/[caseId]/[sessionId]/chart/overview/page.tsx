@@ -8,7 +8,7 @@ import { SelectedLabs } from "./components/selectedLabs"
 // import MarSnapshot from "./components/marSnapshot"
 import Demographics from "./components/demographics"
 import FamilyHistory from "./components/familyHistory"
-import VitalsOverviewContainer from "./components/vitalsOverviewContainer"
+import { IntakeOutput } from "./components/intakeOutput"
 
 interface OverviewPageProps {
   params: Promise<{
@@ -24,7 +24,8 @@ const OverviewPage = ({ params }: OverviewPageProps) => {
         <div className="grid sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 py-2">
           <Alerts />
           <ActiveProblems />
-          <VitalsOverviewContainer params={params} />
+          <IntakeOutput />
+          <VitalsOverview />
           <RecurringOrders />
           <Visitors />
           <Nutrition />

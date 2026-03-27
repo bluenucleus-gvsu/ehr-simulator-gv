@@ -25,10 +25,10 @@ const templateStudentNote = `
 
 interface NursingNoteEntryProps {
   submitNote: (userNote: string) => void,
-  isPresim: boolean | null;
+  disabled?: boolean,
 }
 
-const NursingNoteEntry = ({ submitNote, isPresim }: NursingNoteEntryProps) => {
+const NursingNoteEntry = ({ submitNote, disabled = false }: NursingNoteEntryProps) => {
   const [newNote, setNewNote] = useState<string>(templateStudentNote);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -43,12 +43,13 @@ const NursingNoteEntry = ({ submitNote, isPresim }: NursingNoteEntryProps) => {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen && !disabled} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
           disabled={isPresim ?? true}
           variant="outline"
           onClick={() => setIsOpen(true)}
+          disabled={disabled}
           className="bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm gap-2"
         >
           <ClipboardPen className="h-4 w-4" />

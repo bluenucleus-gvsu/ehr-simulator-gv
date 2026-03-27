@@ -3,8 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import StyledTitle from "./styledTitle"
-// import CardSkeleton from "./cardSkeleton"
-import { jamesAllen, type ChartData } from "@/app/simulation/[caseId]/[sessionId]/chart/components/chartData"
+import { useSimulationCase } from "@/context/SimulationCaseContext"
 
 const Demographics = () => {
   // const { data, isLoading, isError, isFetching, error } = useGetChartQuery()
@@ -52,59 +51,53 @@ const Demographics = () => {
   //   )
   // }
 
-  const chartData: ChartData | undefined = jamesAllen
-
-  if (!chartData || Object.keys(chartData).length === 0) {
-    return (
-      <Card className="relative col-span-1 pt-2 overflow-hidden h-fit gap-3">
-        <StyledTitle color="bg-lime-200" firstLetter="D" secondLetter="emograhics" />
-        <p>No data exists</p>
-      </Card>
-    )
-  }
+  const { caseBundle } = useSimulationCase();
+  const caseRow = caseBundle?.caseRow;
+  const valueOrFallback = (value?: string | null) => value || "N/A";
+  const relationshipStatus = caseRow?.relationship_status?.name ?? "N/A";
 
   return (
     <Card className="relative col-span-1 pt-2 overflow-hidden h-fit gap-3">
       <StyledTitle color="bg-lime-200" firstLetter="D" secondLetter="emograhics" />
       <CardContent className="px-4 space-y-1">
-        {/* <div className="flex">
-          <p className="text-sm pr-2 font-light">{chartData.gender.label}: </p>
-          <p className="text-sm">{chartData.gender.value}</p>
+        <div className="flex">
+          <p className="text-sm pr-2 font-light">Gender: </p>
+          <p className="text-sm">N/A</p>
         </div>
         <Separator className="bg-lime-200" />
         <div className="flex">
-          <p className="text-sm pr-2 font-light">{chartData.genderIdentity.label}: </p>
-          <p className="text-sm">{chartData.genderIdentity.value}</p>
+          <p className="text-sm pr-2 font-light">Gender Identity: </p>
+          <p className="text-sm">N/A</p>
         </div>
         <Separator className="bg-lime-200" />
         <div className="flex">
-          <p className="text-sm pr-2 font-light">{chartData.pronouns.label}: </p>
-          <p className="text-sm">{chartData.pronouns.value}</p>
+          <p className="text-sm pr-2 font-light">Pronouns: </p>
+          <p className="text-sm">N/A</p>
         </div>
         <Separator className="bg-lime-200" /> */}
         <div className="flex">
-          <p className="text-sm pr-2 font-light">{chartData.relationshipStatus.label}: </p>
-          <p className="text-sm">{chartData.relationshipStatus.value}</p>
+          <p className="text-sm pr-2 font-light">Relationship Status: </p>
+          <p className="text-sm">{relationshipStatus}</p>
         </div>
         <Separator className="bg-lime-200" />
         <div className="flex">
-          <p className="text-sm pr-2 font-light">{chartData.employmentStatus.label}: </p>
-          <p className="text-sm">{chartData.employmentStatus.value}</p>
+          <p className="text-sm pr-2 font-light">Employment: </p>
+          <p className="text-sm">{valueOrFallback(caseRow?.employment)}</p>
         </div>
         <Separator className="bg-lime-200" />
         <div className="flex">
-          <p className="text-sm pr-2 font-light">{chartData.insurance.label}: </p>
-          <p className="text-sm">{chartData.insurance.value}</p>
+          <p className="text-sm pr-2 font-light">Insurance: </p>
+          <p className="text-sm">{caseRow?.insurance ?? "N/A"}</p>
         </div>
         <Separator className="bg-lime-200" />
         <div className="flex">
-          <p className="text-sm pr-2 font-light">{chartData.religion.label}: </p>
-          <p className="text-sm">{chartData.religion.value}</p>
+          <p className="text-sm pr-2 font-light">Religion: </p>
+          <p className="text-sm">{valueOrFallback(caseRow?.religion)}</p>
         </div>
         <Separator className="bg-lime-200" />
         <div className="flex">
-          <p className="text-sm pr-2 font-light">{chartData.language.label}: </p>
-          <p className="text-sm">{chartData.language.value}</p>
+          <p className="text-sm pr-2 font-light">Language: </p>
+          <p className="text-sm">{valueOrFallback(caseRow?.language)}</p>
         </div>
       </CardContent>
       <div className="absolute bottom-0 bg-lime-200 w-full h-3"></div>
