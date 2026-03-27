@@ -26,13 +26,22 @@ export const nursingOrders: OrderType[] = [
     details: "Implement standard fall risk protocol. Ensure bed in low position and call light within reach.",
     status: "Active",
     orderingProvider: "Dr. Chen, MD",
-    important: false,
+    important: true,
     visibleInPresim: true
   },
   {
     category: 'Nursing',
     title: "Cardiac Monitoring",
     details: "Acute Electrolyte imbalance",
+    status: "Active",
+    orderingProvider: "Dr. Chen, MD",
+    important: true,
+    visibleInPresim: true
+  },
+  {
+    category: 'Nursing',
+    title: "Q2Hr Turns",
+    details: "Reposition patient every two hours",
     status: "Active",
     orderingProvider: "Dr. Chen, MD",
     important: true,
@@ -58,17 +67,6 @@ export const nursingOrders: OrderType[] = [
     important: true,
     visibleInPresim: true
   },
-
-
-  {
-    category: 'Laboratory',
-    title: "Complete Blood Count (CBC)",
-    details: "Collect Complete Blood Count (CBC).",
-    status: "Active",
-    orderingProvider: "Dr. Chen, MD",
-    important: true,
-    visibleInPresim: true
-  },
   {
     category: 'Nursing',
     title: "Orthostatic Vitals",
@@ -87,6 +85,7 @@ export const nursingOrders: OrderType[] = [
     important: true,
     visibleInPresim: true
   },
+
 ];
 
 export const nursingHeaderNames: OrderType = {

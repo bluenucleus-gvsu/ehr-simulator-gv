@@ -35,7 +35,7 @@ export const getAllTimeOffsets = (simulationNow: number) => {
 
   const allTimeOffsets = [... new Set([...dynamicTimeOffsets, ...predefinedTimeOffsets])];
 
-  return allTimeOffsets.sort((a, b) => b - a)
+  return allTimeOffsets.sort((a, b) => a - b)
 };
 
 export const generateInitialChartingData = (allTimeOffsets: number[]): FlexSheetData[] => {

@@ -15,7 +15,7 @@ const FamilyHistory = () => {
             <div key={`${member}=${index}`} className="group">
               <div className="flex w-full pb-1">
                 <p className="text-sm flex-1 pr-2 font-light text-nowrap">{member}:</p>
-                <p className="text-sm w-full">{conditions.join(", ")}</p>
+                <p className="text-sm w-full">{conditions[index]}</p>
               </div>
               <Separator className="bg-lime-200 group-last:bg-transparent" />
             </div>

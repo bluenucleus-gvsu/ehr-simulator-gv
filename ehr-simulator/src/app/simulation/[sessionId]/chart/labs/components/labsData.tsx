@@ -75,7 +75,7 @@ export const generateAllInitialLabTimes = (referenceDate: number) => {
       timePoints.set(displayTimeStamp, { dateKey: timeOffset, labs: entry.labs })
     }
   })
-  const sortedTimePoints = Array.from(timePoints.values()).sort((a, b) => b.dateKey - a.dateKey);
+  const sortedTimePoints = Array.from(timePoints.values()).sort((a, b) => a.dateKey - b.dateKey);
   return sortedTimePoints;
 }
 

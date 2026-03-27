@@ -111,6 +111,18 @@ export const allMedications: AllMedicationTypes[] = [
     takeWithFood: true,
   },
   {
+    id: "medPantoprazoleIv40",
+    genericName: "pantoprazole",
+    brandName: "Protonix",
+    route: "PO",
+    strength: 40,
+    strengthUnit: "mg",
+    dispenseUnit: "Tablet",
+    administrationFrequencies: [],
+    canBeCrushedOrSplit: false
+  },
+
+  {
     id: "medAmoxIv",
     genericName: "amoxicillin",
     brandName: "Amoxil IV",
@@ -275,21 +287,21 @@ export const allMedications: AllMedicationTypes[] = [
     canBeCrushedOrSplit: true,
     takeWithFood: false,
   },
-  {
-    id: "medPantoprazoleIv40",
-    genericName: "pantoprazole",
-    brandName: "Protonix IV",
-    route: "IV",
-    strength: 40,
-    strengthUnit: "mg",
-    dispenseUnit: "Vial",
-    administrationFrequencies: ["QD"],
-    infusionRateUnit: "mL/hr",
-    diluent: "D5W",
-    totalVolume: 50,
-    infusionDurationHours: 0.5,
-    isContinuous: false,
-  },
+  // {
+  //   id: "medPantoprazoleIv40",
+  //   genericName: "pantoprazole",
+  //   brandName: "Protonix IV",
+  //   route: "IV",
+  //   strength: 40,
+  //   strengthUnit: "mg",
+  //   dispenseUnit: "Vial",
+  //   administrationFrequencies: ["QD"],
+  //   infusionRateUnit: "mL/hr",
+  //   diluent: "D5W",
+  //   totalVolume: 50,
+  //   infusionDurationHours: 0.5,
+  //   isContinuous: false,
+  // },
   {
     id: "medEnoxaparinSc40",
     genericName: "enoxaparin",
@@ -490,7 +502,7 @@ export const allMedications: AllMedicationTypes[] = [
   },
   {
     id: "medSodiumChloride",
-    genericName: "Sodium chloride",
+    genericName: "sodium chloride",
     route: "PO",
     strength: 1,
     strengthUnit: "g",
@@ -555,7 +567,7 @@ export const medicationOrders: MedicationOrder[] = [
     instructions: "Hold if BP < 100/60. Notify provider if held. "
   },
   {
-    id: "orderPantoprazoleIv40",
+    id: "orderPantoprazolePo40",
     medicationId: "medPantoprazoleIv40",
     unitsOrdered: 0,
     frequency: "QD",
@@ -734,6 +746,15 @@ export const medAdministrations: MedAdministrationInstance[] = [
     visibleInPresim: true
   },
   {
+    id: "adminProtonix1",
+    medicationOrderId: "orderPantoprazolePo40",
+    administratorId: "Max Smith, RN",
+    adminTimeMinuteOffset: -2760,
+    status: "Given",
+    administeredDose: 10,
+    visibleInPresim: true
+  },
+  {
     id: "adminLisinoprilOral10_2",
     medicationOrderId: "orderLisinoprilOral10",
     administratorId: "Derek Van Boven, RN",
@@ -743,8 +764,26 @@ export const medAdministrations: MedAdministrationInstance[] = [
     visibleInPresim: true
   },
   {
+    id: "adminProtonix2",
+    medicationOrderId: "orderPantoprazolePo40",
+    administratorId: "Derek Van Boven, RN",
+    adminTimeMinuteOffset: -1260,
+    status: "Given",
+    administeredDose: 10,
+    visibleInPresim: true
+  },
+  {
     id: "adminLisinoprilOral10_due",
     medicationOrderId: "orderLisinoprilOral10",
+    administratorId: "System",
+    adminTimeMinuteOffset: 0,
+    status: "Due",
+    administeredDose: 10,
+    visibleInPresim: false
+  },
+  {
+    id: "adminProtonix3",
+    medicationOrderId: "orderPantoprazolePo40",
     administratorId: "System",
     adminTimeMinuteOffset: 0,
     status: "Due",
