@@ -127,7 +127,7 @@ export const respiratoryOrders: OrderType[] = [
     title: "Oxygen Therapy",
     details: "Administer oxygen via nasal cannula at 2 L/min. Titrate to maintain SpO₂ ≥ 92%.",
     status: "Active",
-    orderingProvider: "Dr. Azzedine Habz",
+    orderingProvider: "Dr. Chen",
     visibleInPresim: true
   },
   {
@@ -169,36 +169,7 @@ export const laboratoryOrders: OrderType[] = [
     orderingProvider: "Dr. John Smith, MD",
     important: true,
     visibleInPresim: true
-  },
-  {
-
-    category: 'Laboratory',
-    title: "HbA1c",
-    status: "Active",
-    details: "Collect HbA1c if not done within last 3 months.",
-    orderingProvider: "Dr. John Smith, MD",
-    important: false,
-    visibleInPresim: true
-  },
-  {
-    important: false,
-
-    category: 'Laboratory',
-    title: "Wound Culture",
-    status: "Active",
-    details: "Collect wound culture if signs of worsening infection.",
-    orderingProvider: "Dr. John Smith, MD",
-    visibleInPresim: true
-  },
-  {
-    category: 'Laboratory',
-    title: "Blood Glucose Monitoring (ACHS)",
-    status: "Active",
-    details: "Monitor blood glucose before meals and at bedtime (ACHS). Notify provider for blood glucose < 70 mg/dL or > 300 mg/dL.",
-    orderingProvider: "Dr. John Smith, MD",
-    important: true,
-    visibleInPresim: true
-  },
+  }
 ]
 
 export const laboratoryHeaderNames: OrderType = {
@@ -218,36 +189,6 @@ export const consultHeaderNames: OrderType = {
 }
 
 export const consultOrders: OrderType[] = [
-  {
-    important: false,
-
-    category: 'Consult',
-    title: "Case Management Consult",
-    status: "Active",
-    details: "Consult Case Management for discharge planning and home wound care follow-up.",
-    orderingProvider: "Dr. John Smith, MD",
-    visibleInPresim: true
-  },
-  {
-    important: false,
-
-    category: 'Consult',
-    title: "Pharmacy Consult",
-    status: "Active",
-    details: "Consult Pharmacy for medication review.",
-    orderingProvider: "Dr. John Smith, MD",
-    visibleInPresim: true
-  },
-  {
-    important: false,
-
-    category: 'Consult',
-    title: "Wound Culture",
-    status: "Active",
-    details: "Collect wound culture if signs of worsening infection.",
-    orderingProvider: "Dr. John Smith, MD",
-    visibleInPresim: true
-  }
 ]
 
 
