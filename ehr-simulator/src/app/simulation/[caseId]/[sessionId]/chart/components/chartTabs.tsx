@@ -12,7 +12,7 @@ export default function ChartTabs() {
     {
       name: "Overview",
       value: "Overview",
-      path: `/simulation/${caseId}/${caseId}/${sessionId}/chart/overview`,
+      path: `/simulation/${caseId}/${sessionId}/chart/overview`,
       icon: ''
     },
     {

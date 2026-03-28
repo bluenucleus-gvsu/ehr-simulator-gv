@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import StyledTitle from "./styledTitle"
 // import CardSkeleton from "./cardSkeleton"
-import { formatTimeFromOffset } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/page"
+import { formatTimeFromOffset } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/chartingView"
 import { getResultStatus } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/page"
 import { AlertTriangle } from "lucide-react"
 import { useState } from "react"

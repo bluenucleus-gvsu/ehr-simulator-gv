@@ -7,6 +7,8 @@ import { revalidatePath } from "next/cache";
 export type SectionAssignment = Database['public']['Tables']['section_assignments']['Row'];
 export type SectionAssignmentInsert = Database['public']['Tables']['section_assignments']['Insert'];
 export type SimCase = Database['public']['Tables']['cases']['Row']
+export type CaseSessionUpsert = Database['public']['Tables']['case_sessions']['Insert']
+
 export type ActionResponse<T = null> = {
   success: boolean;
   message: string;
@@ -96,7 +98,7 @@ export async function getCaseByCourseId(id: string) {
     return result
   }
 
-  // Auto-generated Supabase types wouldn't recognize the PK/FK relationship between cases -m and course_case
+  // Auto-generated Supabase types wouldn't recognize the PK/FK relationship between cases and course_case
   // Force case data to be single object, not array
   const cleanData = data?.map((item) => {
     const _caseData = Array.isArray(item.cases)
@@ -179,7 +181,7 @@ export async function getSectionCaseAssignments(courseId: string) {
 }
 
 export async function createSectionCaseAssignment(payload: SectionAssignmentInsert): Promise<ActionResponse<SectionAssignment>> {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
@@ -308,6 +310,26 @@ export async function getCourseCaseAssignments() {
     message: 'Successfully retrieved sim cases.',
     data: assignments,
   };
+}
+
+export async function updateCaseSession(session: CaseSessionUpsert) {
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { error } = await supabase
+    .from('case_sessions')
+    .upsert(session);
+
+  if (error) {
+    return {
+      success: false,
+      message: 'Failed to update session data.',
+      error,
+      data: null
+    };
+  }
 }
 
 // extracts type of data from ActionResponse for use in frontend

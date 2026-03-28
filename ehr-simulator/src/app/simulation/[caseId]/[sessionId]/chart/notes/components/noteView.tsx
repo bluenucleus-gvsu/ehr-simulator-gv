@@ -30,9 +30,8 @@ const NoteView = ({
   caseId,
   sessionId
 }: NoteViewProps) => {
-  const { simStartTime, userName, userId, groupId } = useSimSessionContext();
+  const { simStartTime, userName, userId, groupId, isPresim } = useSimSessionContext();
   const [filteredSpecialties, setFilteredSpecialties] = useState<string[]>([]);
-  console.log(`${userId}`)
 
   const specialties = useMemo(() => {
     return [...new Set(clinicalDocuments.map((note) => note.specialty))];
@@ -156,7 +155,7 @@ const NoteView = ({
             handleClearFilters={clearAllFilters}
           />
         </div>
-        <NursingNoteEntry submitNote={onSubmitNote} />
+        <NursingNoteEntry isPresim={isPresim || true} submitNote={onSubmitNote} />
       </div>
 
       <div className="flex flex-col flex-grow gap-4 p-2 rounded-t-lg overflow-y-auto border inset-shadow-sm bg-gray-100">

@@ -1,3 +1,4 @@
+import { DatabaseDocumentation } from "@/actions/simulation";
 import { getMinutes } from "date-fns";
 export interface chartingOptions {
   subsetId: string;
@@ -20,65 +21,73 @@ export interface FlexSheetData {
   [key: string]: string | string[] | number | boolean | undefined | { subsetId: string, label: string }[] | { low: number, high: number } | { assessment: string, description: string }[];
 };
 
-// an array of all numeric time offsets is needed because tanstack table needs to iterate through them to display each time column
-// a time offset is either derived from the prefined data (numeric keys) or generated dynamically to fall exactly on the hour (1300, 1400, etc.)
-// negative time is in the present, prefined charting data's postive time is in the past, could flip for clarity
-export const getAllTimeOffsets = (simulationNow: number) => {
+export const getAllTimeOffsets = (simulationNow: number, dbResults: DatabaseDocumentation[]) => {
+  const minutesPastTheHour = getMinutes(simulationNow);
+  const dynamicTimeOffsets = Array.from({ length: 1 }, (_, index) => {
+    return minutesPastTheHour - (60 * index);
+  });
 
-  const minutesPastTheHour = getMinutes(simulationNow)
-  const dynamicTimeOffsets = Array.from({ length: 4 }, (_, index) => {
-    const temp = minutesPastTheHour - (60 * index)
-    return temp
-  })
+  // Extract unique time offsets from the database results
+  const dbTimeOffsets = dbResults
+    .filter(row => row.time_offset != null)
+    .map(row => row.time_offset as number); // safely cast as number
 
-  const predefinedTimeOffsets = Object.keys(predefinedVitalsData2).map(Number)
-
-  const allTimeOffsets = [... new Set([...dynamicTimeOffsets, ...predefinedTimeOffsets])];
+  // Combine and deduplicate
+  const allTimeOffsets = [...new Set([...dynamicTimeOffsets, ...dbTimeOffsets])];
 
   return allTimeOffsets.sort((a, b) => a - b)
+
 };
 
-export const generateInitialChartingData = (allTimeOffsets: number[]): FlexSheetData[] => {
-  const generatedData: FlexSheetData[] = []
+export const generateChartingDataFromDB = (
+  dbResults: DatabaseDocumentation[],
+  allTimeOffsets: number[],
+  // template: FlexSheetData[]
+): FlexSheetData[] => {
 
+  // 1. Group by time offset
+  const dataByTime = dbResults.reduce((acc, row) => {
+    if (row.time_offset == null) {
+      acc[100000] = row;
+    } else {
+      acc[row.time_offset] = row;
+    }
+
+    return acc;
+  }, {} as Record<number, DatabaseDocumentation>);
+
+  const generatedData: FlexSheetData[] = [];
+
+  // 2. Build rows
   flexSheetTemplate.forEach(templateRow => {
-    const newRow: FlexSheetData = {
-      id: templateRow.id,
-      field: templateRow.field,
-      componentType: templateRow.componentType,
-      rowType: templateRow.rowType,
-      ...(templateRow.chartingOptions && { chartingOptions: templateRow.chartingOptions }),
-      ...(templateRow.normalRange && { normalRange: templateRow.normalRange }),
-      ...(templateRow.hideable && { hideable: templateRow.hideable }),
-      ...(templateRow.hideableId && { hideableId: templateRow.hideableId }),
-      ...(templateRow.assessmentSubsets && { assessmentSubsets: templateRow.assessmentSubsets }),
-      ...(templateRow.wdlDescription && { wdlDescription: templateRow.wdlDescription }),
-      ...(templateRow.toolName && { toolName: templateRow.toolName })
-    };
-
+    const newRow: FlexSheetData = { ...templateRow };
     let hasPrefinedValue = false;
 
-    // if a predefined value exists at the corresping time offset for a specific row (HR, BP, etc), assign it to the row with time offset as the key 
+    const dbColumnName = templateRow.id as keyof DatabaseDocumentation;
+
     allTimeOffsets.forEach(offset => {
-      const predefinedValue = predefinedVitalsData2[offset]?.[templateRow.id]
-      if (predefinedValue) {
+      const dbRowForTime = dataByTime[offset];
+
+      // Check if the DB row exists and has a value for this ID
+      if (dbRowForTime && dbRowForTime[dbColumnName] !== null && dbRowForTime[dbColumnName] !== undefined) {
+        newRow[offset] = String(dbRowForTime[dbColumnName]);
         hasPrefinedValue = true;
+      } else {
+        newRow[offset] = "";
       }
-      newRow[offset] = predefinedValue
     });
 
-    // if a hideable row has a predefined value, the row should be displayed 
     if (hasPrefinedValue) {
       newRow.hideable = false;
     } else {
       newRow.hideable = templateRow.hideable !== undefined ? templateRow.hideable : false;
     }
 
-    generatedData.push(newRow)
+    generatedData.push(newRow);
   });
-  return generatedData
-};
 
+  return generatedData;
+};
 
 type PredefinedVitalsEvent = {
   [field: string]: string;
@@ -303,13 +312,13 @@ export const flexSheetTemplate: FlexSheetData[] = [
     rowType: "titleRow"
   },
   {
-    id: "hrInput",
+    id: "hr",
     field: "HR",
     componentType: "input",
     normalRange: { low: 60, high: 100 }
   },
   {
-    id: "hrSourceSelect",
+    id: "hr_source",
     field: "HR Source",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -323,12 +332,12 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "bpInput",
+    id: "bp",
     field: "BP",
     componentType: "input"
   },
   {
-    id: "bpSourceSelect",
+    id: "bp_source",
     field: "BP Source",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -345,19 +354,19 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ],
   },
   {
-    id: "rrInput",
+    id: "rr",
     field: "RR",
     componentType: "input",
     normalRange: { low: 12, high: 20 }
   },
   {
-    id: "tempInput",
+    id: "temp",
     field: "Temp",
     componentType: "input",
     normalRange: { low: 36.6, high: 37.2 }
   },
   {
-    id: "tempSourceSelect",
+    id: "temp_source",
     field: "Temp Source",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -371,14 +380,14 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "spo2Input",
+    id: "spo2",
     field: "SpO2",
     componentType: "input",
     normalRange: { low: 95, high: 100 }
   },
   {
-    id: "o2SourceSelect",
-    field: "O2 Source",
+    id: "spo2_source",
+    field: "SpO2 Source",
     componentType: "assessmentselect",
     chartingOptions: [
       { subsetId: "Room Air", label: "Room Air" },
@@ -391,7 +400,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "weightKgInput",
+    id: "weight_kg",
     field: "Weight (kg)",
     componentType: "input",
   },
@@ -413,14 +422,14 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "oralIntake",
+    id: "oral",
     field: "Oral",
     componentType: "input",
     hideable: true,
     hideableId: "Oral",
   },
   {
-    id: "ivIntakeInput",
+    id: "intravenous",
     field: "Intravenous",
     componentType: "input",
     hideable: true,
@@ -428,14 +437,14 @@ export const flexSheetTemplate: FlexSheetData[] = [
 
   },
   {
-    id: "enteralNutritionInput",
+    id: "enteral_nutrition",
     field: "Enteral Nutrition",
     componentType: "input",
     hideable: true,
     hideableId: "Enteral Nutrition",
   },
   {
-    id: "parenteralNutritionInput",
+    id: "parenteral_nutrition",
     field: "Parenteral Nutrition",
     componentType: "input",
     hideable: true,
@@ -460,35 +469,35 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "urineInput",
-    field: "Urine",
+    id: "urine",
+    field: "Urine (mL)",
     componentType: "input",
     hideable: true,
     hideableId: "ioUrine"
   },
   {
-    id: "emesisInput",
-    field: "Emesis",
+    id: "emesis",
+    field: "Emesis (mL)",
     componentType: "input",
     hideable: true,
     hideableId: "ioEmesis"
   },
   {
-    id: "stoolInput",
-    field: "Stool",
+    id: "stool",
+    field: "Stool (mL)",
     componentType: "input",
     hideable: true,
     hideableId: "ioStool"
   },
   {
-    id: "woundDrainageInput",
-    field: "Wound Drainage",
+    id: "wound_drainage",
+    field: "Wound Drainage (mL)",
     componentType: "input",
     hideable: true,
     hideableId: "Wound Drainage"
   },
   {
-    id: "enteralDrainageInput",
+    id: "enteral_output",
     field: "Enteral Output",
     componentType: "input",
     hideable: true,
@@ -501,32 +510,32 @@ export const flexSheetTemplate: FlexSheetData[] = [
     rowType: "titleRow",
   },
   {
-    id: "painNumeric",
+    id: "pain",
     field: "Numeric Rating",
     componentType: "input",
   },
   {
-    id: "painLocation",
+    id: "pain_location",
     field: "Location",
     componentType: "input",
   },
   {
-    id: "painCharacteristics",
+    id: "pain_characteristics",  // TODO: add pain fields to schema
     field: "Characteristics",
     componentType: "input",
   },
   {
-    id: "painAlleviatingFactors",
+    id: "pain_alleviating_factors",
     field: "Alleviating Factors",
     componentType: "input",
   },
   {
-    id: "painAggravatingFactors",
+    id: "pain_aggravating_factors",
     field: "Aggravating Factors",
     componentType: "input",
   },
   {
-    id: "painInterventions",
+    id: "pain_interventions",
     field: "Interventions",
     componentType: "input",
   },
@@ -552,14 +561,14 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "appearanceInput",
+    id: "appearance",
     field: "Appearance",
     componentType: "input",
     hideable: true,
     hideableId: "Appearance"
   },
   {
-    id: "safetyCheckInput",
+    id: "safety_check",
     field: "Safety Check",
     componentType: "input",
     hideable: true,
@@ -589,7 +598,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "moodAffectInput",
+    id: "mood_and_affect",
     field: "Mood & Affect",
     componentType: "input",
     hideable: true,
@@ -623,35 +632,35 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "headScalpInput",
+    id: "head_and_scalp",
     field: "Head & Scalp",
     componentType: "input",
     hideable: true,
     hideableId: "Head & Scalp"
   },
   {
-    id: "eyesInput",
+    id: "eyes",
     field: "Eyes",
     componentType: "input",
     hideable: true,
     hideableId: "Eyes"
   },
   {
-    id: "earsInput",
+    id: "ears",
     field: "Ears",
     componentType: "input",
     hideable: true,
     hideableId: "Ears"
   },
   {
-    id: "noseInput",
+    id: "nose",
     field: "Nose",
     componentType: "input",
     hideable: true,
     hideableId: "Nose"
   },
   {
-    id: "mouthThroatInput",
+    id: "mouth_and_throat",
     field: "Mouth & Throat",
     componentType: "input",
     hideable: true,
@@ -681,21 +690,21 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "neurologicalOrientationInput",
+    id: "orientation",
     field: "Orientation",
     componentType: "input",
     hideable: true,
     hideableId: "Orientation"
   },
   {
-    id: "speechInput",
+    id: "speech",
     field: "Speech",
     componentType: "input",
     hideable: true,
     hideableId: "Speech"
   },
   {
-    id: "motorFunctionInput",
+    id: "motor_function",
     field: "Motor Function",
     componentType: "input",
     hideable: true,
@@ -726,28 +735,28 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "skinInput",
+    id: "skin",
     field: "Skin",
     componentType: "input",
     hideable: true,
     hideableId: "Skin"
   },
   {
-    id: "hairNailsInput",
+    id: "hair_and_nails",
     field: "Hair & Nails",
     componentType: "input",
     hideable: true,
     hideableId: "Hair & Nails"
   },
   {
-    id: "turgorInput",
+    id: "turgor",
     field: "Turgor",
     componentType: "input",
     hideable: true,
     hideableId: "Turgor"
   },
   {
-    id: "woundInput",
+    id: "wound",
     field: "Wound",
     componentType: "input",
     hideable: true,
@@ -777,21 +786,21 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "heartSoundsInput",
+    id: "heart_sounds",
     field: "Heart Sounds",
     componentType: "input",
     hideable: true,
     hideableId: "Heart Sounds"
   },
   {
-    id: "extremitiesInput",
+    id: "extremities",
     field: "Extremities",
     componentType: "input",
     hideable: true,
     hideableId: "Extremities"
   },
   {
-    id: "jugularDistentionInput",
+    id: "jugular_distention",
     field: "Jugular Distention",
     componentType: "input",
     hideable: true,
@@ -819,14 +828,14 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "chestAppearanceInput",
+    id: "chest_appearance",
     field: "Chest Appearance",
     componentType: "input",
     hideable: true,
     hideableId: "Chest Appearance"
   },
   {
-    id: "lungSoundsInput",
+    id: "lung_sounds",
     field: "Lung Sounds",
     componentType: "input",
     hideable: true,
@@ -856,21 +865,21 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "abdomenInput",
+    id: "abdomen",
     field: "Abdomen",
     componentType: "input",
     hideable: true,
     hideableId: "Abdomen"
   },
   {
-    id: "bowelSoundsInput",
+    id: "bowel_sounds",
     field: "Bowel Sounds",
     componentType: "input",
     hideable: true,
     hideableId: "Bowel Sounds"
   },
   {
-    id: "nauseaInput",
+    id: "nausea",
     field: "Nausea",
     componentType: "input",
     hideable: true,
@@ -898,14 +907,14 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "extremityRomInput",
+    id: "extremity_rom",
     field: "Extremity ROM",
     componentType: "input",
     hideable: true,
     hideableId: "Extremity ROM"
   },
   {
-    id: "musculoskeletalGaitInput",
+    id: "gait",
     field: "Gait",
     componentType: "input",
     hideable: true,
@@ -933,14 +942,14 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "voidingInput",
+    id: "voiding",
     field: "Voiding",
     componentType: "input",
     hideable: true,
     hideableId: "Voiding"
   },
   {
-    id: "urineInput",
+    id: "urine_description",
     field: "Urine",
     componentType: "input",
     hideable: true,
@@ -948,22 +957,22 @@ export const flexSheetTemplate: FlexSheetData[] = [
   },
   {
     id: "ivAssessmentTitle",
-    field: "IV Assessment",
+    field: "IV Assessment",     // TODO: add IV sites to schem
     componentType: "static",
     rowType: "titleRow"
   },
   {
-    id: "ivSiteInput",
+    id: "iv_site",
     field: "IV Site",
     componentType: "input"
   },
   {
-    id: "ivTypeInput",
+    id: "iv_type",
     field: "IV Type",
     componentType: "input"
   },
   {
-    id: "ivLocationInput",
+    id: "iv_location",
     field: "IV Location",
     componentType: 'input'
   },
@@ -974,7 +983,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     rowType: "titleRow"
   },
   {
-    id: "nursingCareProvidedInput",
+    id: "nursing_care_provided",
     field: "Nursing Care Provided",
     componentType: "input"
   },
@@ -1005,7 +1014,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     hideableId: "CIWA-Ar"
   },
   {
-    id: "ciwaArNauseaVomitingSelect",
+    id: "nausea_vomiting",
     field: "Nausea & Vomiting",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1023,7 +1032,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     toolName: "CIWA-Ar"
   },
   {
-    id: "ciwaArTremorSelect",
+    id: "tremor",
     field: "Tremor",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1041,7 +1050,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     toolName: "CIWA-Ar"
   },
   {
-    id: "ciwaArParoxysmalSweatsSelect",
+    id: "paroxysmal_sweats",
     field: "Paroxysmal Sweats",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1059,7 +1068,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     toolName: "CIWA-Ar"
   },
   {
-    id: "ciwaArAnxietySelect",
+    id: "anxiety",
     field: "Anxiety",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1077,7 +1086,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     toolName: "CIWA-Ar"
   },
   {
-    id: "ciwaArAgitationSelect",
+    id: "agitation",
     field: "Agitation",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1095,7 +1104,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     toolName: "CIWA-Ar"
   },
   {
-    id: "ciwaArTactileDisturbancesSelect",
+    id: "tactile_disturbances",
     field: "Tactile Disturbances",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1113,7 +1122,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     toolName: "CIWA-Ar"
   },
   {
-    id: "ciwaArVisualDisturbancesSelect",
+    id: "visual_disturbances",
     field: "Visual Disturbances",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1131,7 +1140,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     toolName: "CIWA-Ar"
   },
   {
-    id: "ciwaArHeadacheSelect",
+    id: "headache",
     field: "Headache",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1149,7 +1158,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     toolName: "CIWA-Ar"
   },
   {
-    id: "ciwaArOrientationSelect",
+    id: "orientation2",
     field: "Orientation",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1172,7 +1181,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     hideableId: "Morse Fall Risk"
   },
   {
-    id: "morseHistoryOfFallingSelect",
+    id: "history_of_falling",
     field: "History of Falling",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1185,7 +1194,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
 
   },
   {
-    id: "morseSecondaryDiagnosisSelect",
+    id: "secondary_diagnosis",
     field: "Secondary Diagnosis",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1198,7 +1207,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
 
   },
   {
-    id: "morseAmbulatoryAidSelect",
+    id: "ambulatory_aid",
     field: "Ambulatory Aid",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1211,7 +1220,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     toolName: "Morse Fall Risk"
   },
   {
-    id: "morseIvTherapySelect",
+    id: "iv_therapy_heparin_lock",
     field: "IV Therapy/Heparin Lock",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1224,7 +1233,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
 
   },
   {
-    id: "morseGaitSelect",
+    id: "fall_risk_gait",
     field: "Gait",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1238,7 +1247,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
 
   },
   {
-    id: "morseMentalStatusSelect",
+    id: "mental_status",
     field: "Mental Status",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1250,7 +1259,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     toolName: "Morse Fall Risk"
   },
   {
-    id: "bradenScaleTitle",
+    id: "bradenSkinScale",
     field: "Braden Scale",
     componentType: "static",
     rowType: "titleRow",
@@ -1259,7 +1268,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
 
   },
   {
-    id: "bradenSensoryPerceptionSelect",
+    id: "sensory_perception",
     field: "Sensory Perception",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1274,7 +1283,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
 
   },
   {
-    id: "bradenMoistureSelect",
+    id: "moisture",
     field: "Moisture",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1289,7 +1298,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
 
   },
   {
-    id: "bradenActivitySelect",
+    id: "activity",
     field: "Activity",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1304,7 +1313,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
 
   },
   {
-    id: "bradenMobilitySelect",
+    id: "mobility",
     field: "Mobility",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1319,7 +1328,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
 
   },
   {
-    id: "bradenNutritionSelect",
+    id: "nutrition",
     field: "Nutrition",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1334,7 +1343,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
 
   },
   {
-    id: "bradenFrictionAndShearSelect",
+    id: "friction_and_shear",
     field: "Friction and Shear",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1355,7 +1364,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     hideableId: "PAINAD",
   },
   {
-    id: "painadBreathingSelect",
+    id: "breathing_independent_of_vocalization",
     field: "Breathing",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1368,7 +1377,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     toolName: "PAINAD"
   },
   {
-    id: "painadNegativeVocalizationSelect",
+    id: "negative_vocalization",
     field: "Negative Vocalization",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1381,7 +1390,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     toolName: "PAINAD"
   },
   {
-    id: "painadFacialExpressionSelect",
+    id: "facial_expression",
     field: "Facial Expression",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1394,7 +1403,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     toolName: "PAINAD"
   },
   {
-    id: "painadBodyLanguageSelect",
+    id: "body_language",
     field: "Body Language",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1407,7 +1416,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     toolName: "PAINAD"
   },
   {
-    id: "painadConsolabilitySelect",
+    id: "consolability",
     field: "Consolability",
     componentType: "assessmentselect",
     chartingOptions: [

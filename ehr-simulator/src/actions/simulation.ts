@@ -13,6 +13,9 @@ export type DatabaseMedicationOrder = Database['public']['Tables']['medication_o
 export type DatabaseMedAdministration = Database['public']['Views']['all_medication_administrations']['Row'];
 
 export type StudentMedicationAdministration = Database['public']['Tables']['student_medication_administrations']['Insert'];
+export type DatabaseDocumentation = Database['public']['Views']['all_documentation_results']['Row'];
+export type StudentDatabaseDocumentation = Database['public']['Tables']['editable_documentation_results']['Insert'];
+
 export type ClinicalDocumentView = {
   id: UUID,
   case_id: UUID,
@@ -217,4 +220,47 @@ export async function submitMedicationAdministrations(
     message: 'Medications successfully documented'
   }
 
+}
+
+export async function getAllDocumentationData(caseId: string, sessionId: string) {
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { data, error } = await supabase
+    .from('all_documentation_results')
+    .select('*')
+    .eq('case_id', caseId)
+    .or(`case_session_id.eq.${sessionId},case_session_id.is.null`);
+
+  if (error) {
+    return {
+      success: false,
+      message: 'Failed to retrieve documentation results.',
+      error
+    }
+  }
+
+  return {
+    success: true,
+    data,
+    message: 'Successfully retrieved documentation results.'
+  }
+}
+
+
+export async function upsertDocumentationRows(payload: StudentDatabaseDocumentation[]) {
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { data, error } = await supabase
+    .from('editable_documentation_results')
+    .upsert(payload, {
+      onConflict: 'case_session_id, time_offset'
+    });
+
+  return { data, error };
 }

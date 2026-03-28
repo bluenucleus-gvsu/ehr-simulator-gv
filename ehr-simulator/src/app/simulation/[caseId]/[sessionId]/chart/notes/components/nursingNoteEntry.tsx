@@ -25,9 +25,10 @@ const templateStudentNote = `
 
 interface NursingNoteEntryProps {
   submitNote: (userNote: string) => void,
+  isPresim: boolean;
 }
 
-const NursingNoteEntry = ({ submitNote }: NursingNoteEntryProps) => {
+const NursingNoteEntry = ({ submitNote, isPresim }: NursingNoteEntryProps) => {
   const [newNote, setNewNote] = useState<string>(templateStudentNote);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -45,6 +46,7 @@ const NursingNoteEntry = ({ submitNote }: NursingNoteEntryProps) => {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
+          disabled={isPresim}
           variant="outline"
           onClick={() => setIsOpen(true)}
           className="bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm gap-2"

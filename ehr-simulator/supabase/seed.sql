@@ -483,3 +483,39 @@ VALUES
     NULL,
     NULL
   );
+
+  INSERT INTO documentation_results (
+  case_id, 
+  is_in_presim, 
+  time_offset, 
+  hr, 
+  bp, 
+  rr, 
+  temp, 
+  spo2, 
+  pain, 
+  appearance, 
+  lung_sounds, 
+  heart_sounds, 
+  abdomen
+) VALUES 
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', true, -30, 
+    '82', '120/80', '16', '37.1', '98%', '2', 
+    'Calm and cooperative', 'Clear bilaterally', 'Regular rate and rhythm', 'Soft, non-tender'
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', true, 0, 
+    '88', '125/82', '18', '37.3', '97%', '4', 
+    'Slightly anxious', 'Clear bilaterally', 'Regular rate and rhythm', 'Mildly tender'
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', true, 15, 
+    '95', '130/85', '20', '37.4', '96%', '6', 
+    'Restless, grimacing', 'Diminished at bases', 'Tachycardic', 'Guarding noted'
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', true, 30, 
+    '85', '122/80', '16', '37.2', '99%', '3', 
+    'Resting comfortably', 'Clear bilaterally', 'Regular rate and rhythm', 'Soft, non-tender'
+  );

@@ -1997,6 +1997,96 @@ export type Database = {
         }
         Relationships: []
       }
+      all_documentation_results: {
+        Row: {
+          abdomen: string | null
+          activity: number | null
+          agitation: number | null
+          ambulatory_aid: number | null
+          anxiety: number | null
+          appearance: string | null
+          body_language: number | null
+          bowel_sounds: string | null
+          bp: string | null
+          bp_source: string | null
+          breathing_independent_of_vocalization: number | null
+          case_id: string | null
+          case_session_id: string | null
+          chest_appearance: string | null
+          consolability: number | null
+          created_at: string | null
+          ears: string | null
+          emesis: string | null
+          enteral_nutrition: string | null
+          enteral_output: string | null
+          extremities: string | null
+          extremity_rom: string | null
+          eyes: string | null
+          facial_expression: number | null
+          fall_risk_gait: number | null
+          friction_and_shear: number | null
+          gait: string | null
+          group_id: string | null
+          hair_and_nails: string | null
+          head_and_scalp: string | null
+          headache: number | null
+          heart_sounds: string | null
+          history_of_falling: number | null
+          hr: string | null
+          hr_source: string | null
+          id: string | null
+          integument_status: string | null
+          intravenous: string | null
+          is_in_presim: boolean | null
+          iv_location: string | null
+          iv_site: string | null
+          iv_therapy_heparin_lock: number | null
+          iv_type: string | null
+          jugular_distention: string | null
+          lung_sounds: string | null
+          mental_status: number | null
+          mobility: number | null
+          moisture: number | null
+          mood_and_affect: string | null
+          motor_function: string | null
+          mouth_and_throat: string | null
+          nausea: string | null
+          nausea_vomiting: number | null
+          negative_vocalization: number | null
+          nose: string | null
+          nursing_care_provided: string | null
+          nutrition: number | null
+          oral: string | null
+          orientation: string | null
+          orientation2: number | null
+          pain: string | null
+          parenteral_nutrition: string | null
+          paroxysmal_sweats: number | null
+          rr: string | null
+          safety_check: string | null
+          secondary_diagnosis: number | null
+          sensory_perception: number | null
+          skin: string | null
+          source_type: string | null
+          speech: string | null
+          spo2: string | null
+          stool: string | null
+          tactile_disturbances: number | null
+          temp: string | null
+          temp_source: string | null
+          time_offset: number | null
+          tremor: number | null
+          turgor: string | null
+          urine: string | null
+          user_id: string | null
+          visual_disturbances: number | null
+          voiding: string | null
+          weight_kg: string | null
+          wound: string | null
+          wound_drainage: string | null
+        }
+        Relationships: []
+      }
       all_medication_administrations: {
         Row: {
           administered_dose: number | null

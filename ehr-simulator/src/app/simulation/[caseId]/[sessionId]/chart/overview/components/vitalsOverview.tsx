@@ -20,8 +20,9 @@ import { Card } from "@/components/ui/card"
 import type { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData"
 import { useMemo, useState } from "react"
 import StyledTitle from "./styledTitle"
-import { generateInitialChartingData, getAllTimeOffsets } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData"
-import { formatTimeFromOffset } from "../../charting/page"
+import { generateChartingDataFromDB, getAllTimeOffsets } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData"
+import { formatTimeFromOffset } from "../../charting/chartingView"
+import { DatabaseDocumentation } from "@/actions/simulation"
 
 export type vitalsOverviewTable = {
   field: string
@@ -29,13 +30,13 @@ export type vitalsOverviewTable = {
 }
 
 const vitalSignIds = [
-  "hrInput",
-  "bpInput",
-  "rrInput",
-  "tempInput",
-  "spo2Input",
-  "painInput",
-  "weightKgInput",
+  "hr",
+  "bp",
+  "rr",
+  "temp",
+  "spo2",
+  "pain",
+  "weightKg",
 ];
 
 function mostRecentVitals(
@@ -55,18 +56,20 @@ function mostRecentVitals(
 
   return activeOffsets.slice(0, limit);
 }
+interface VitalsOverviewProps {
+  dbDocumentation: DatabaseDocumentation[]
+}
 
 
-
-export function VitalsOverview() {
+export function VitalsOverview({ dbDocumentation = [] }: VitalsOverviewProps) {
   const [sessionStartTime] = useState(new Date().getTime());
 
   const { allTimeOffsets, fullChartingData } = useMemo(() => {
     if (!sessionStartTime) return { allTimeOffsets: [], fullChartingData: [] };
-    const offsets = getAllTimeOffsets(sessionStartTime);
-    const data = generateInitialChartingData(offsets);
+    const offsets = getAllTimeOffsets(sessionStartTime, dbDocumentation);
+    const data = generateChartingDataFromDB(dbDocumentation, offsets);
     return { allTimeOffsets: offsets, fullChartingData: data };
-  }, [sessionStartTime]);
+  }, [sessionStartTime, dbDocumentation]);
 
   const filteredData = useMemo(() => {
     return fullChartingData.filter(row => vitalSignIds.includes(row.id));
