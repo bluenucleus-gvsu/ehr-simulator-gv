@@ -1,15 +1,24 @@
 "use client";
-import React from "react";
+
+import React, { useState } from "react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation"; // Use Next.js router
+import { markSessionInProgress } from "@/actions/simulation"; // Adjust import path
 
 type Props = {
   id: string;
+  caseId: string;
+  sessionId: string | null;
   name?: string | null;
-  simTime?: string | null;    // ISO - when the simulation starts
-  presimTime?: string | null; // ISO - when case report becomes available
+  simTime?: string | null;
+  presimTime?: string | null;
   groupMembers?: string[];
 };
 
-export default function AssignedCaseCard({ id, name, simTime, presimTime, groupMembers = [] }: Props) {
+export default function AssignedCaseCard({ id, caseId, sessionId, name, simTime, presimTime, groupMembers = [] }: Props) {
+  const router = useRouter();
+  const [isStarting, setIsStarting] = useState(false); // Add a loading state
+
   const now = new Date();
   const sim = simTime ? new Date(simTime) : null;
   const presim = presimTime ? new Date(presimTime) : null;
@@ -18,10 +27,30 @@ export default function AssignedCaseCard({ id, name, simTime, presimTime, groupM
   // 1. presim_time hasn't arrived yet (or no dates) → Not Available
   // 2. presim_time passed, sim_time is future        → View Case Report (highlighted)
   // 3. sim_time is today                             → Start Simulation (highlighted)
+
   const isSimDay = sim
     ? sim.getFullYear() === now.getFullYear() && sim.getMonth() === now.getMonth() && sim.getDate() === now.getDate()
     : false;
   const isPresimPhase = !isSimDay && sim && sim > now && presim ? presim <= now : false;
+
+  const handleRoute = async (pathSuffix: string, isStartingSim: boolean = false) => {
+    if (!sessionId) {
+      toast.error("Session is still being generated. Please try again later.");
+      return;
+    }
+
+    if (isStartingSim) {
+      setIsStarting(true);
+      const { success } = await markSessionInProgress(sessionId);
+
+      if (!success) {
+        toast.error("Failed to update session status, but proceeding anyway.");
+      }
+    }
+
+    // Navigate to the chart
+    router.push(`/simulation/${caseId}/${sessionId}/${pathSuffix}`);
+  };
 
   return (
     <div className="border rounded-md p-3 bg-white shadow-sm flex items-center justify-between">
@@ -41,16 +70,19 @@ export default function AssignedCaseCard({ id, name, simTime, presimTime, groupM
       <div className="ml-4 flex items-center gap-2">
         {isSimDay ? (
           <button
-            className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
-            onClick={() => (window.location.href = `/simulation/${id}/chart/overview`)}
+            className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+            // Pass `true` here to trigger the server action!
+            onClick={() => handleRoute('chart/overview', true)}
+            disabled={isStarting}
             aria-label={`Start simulation ${name ?? id}`}
           >
-            Start Simulation
+            {isStarting ? "Loading..." : "Start Simulation"}
           </button>
         ) : isPresimPhase ? (
           <button
             className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
-            onClick={() => (window.location.href = `/simulation/${id}/presim`)}
+            // Pass `false` (or nothing) so it just routes to the case report without updating the status
+            onClick={() => handleRoute('chart/overview', false)}
             aria-label={`View pre-sim chart for ${name ?? id}`}
           >
             View Case Report
@@ -68,3 +100,5 @@ export default function AssignedCaseCard({ id, name, simTime, presimTime, groupM
     </div>
   );
 }
+
+

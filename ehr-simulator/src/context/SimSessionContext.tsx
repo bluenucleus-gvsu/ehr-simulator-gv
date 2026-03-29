@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { getUsersGroupId } from '@/actions/users';
+import { useParams } from 'next/navigation';
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,8 +13,6 @@ const supabase = createBrowserClient(
 export interface SimSessionContextType {
   userName: string | null;
   userId: string | null;
-  // caseId: string | null;
-  // caseSessionId: string | null;
   loading: boolean;
   simStartTime: number | null;
   groupId: string | null;
@@ -24,26 +23,27 @@ const SimContext = createContext<SimSessionContextType>({
   userName: null,
   userId: null,
   groupId: null,
-  // caseId: null,
-  // caseSessionId: null,
   loading: true,
   simStartTime: null,
-  isPresim: null
+  isPresim: true
 })
 
 export function SimSessionProvider({ children }: { children: React.ReactNode }) {
   const [userName, setUserName] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
-  // const [caseId, setCaseId] = useState<string | null>(null)
   const [groupId, setGroupId] = useState<string | null>(null)
-  // const [caseSessionId, setCaseSessionId] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true);
   const [simStartTime, setSimStartTime] = useState<number | null>(null)
-  const [isPresim, setIsPresim] = useState<boolean | null>(false)
+  const [isPresim, setIsPresim] = useState<boolean | null>(true)
 
+  const params = useParams();
+  const sessionId = params?.sessionId as string;
 
   useEffect(() => {
-    async function loadUser() {
+    async function loadSimData() {
+      setLoading(true);
+
+      // 1. Load User Details
       const { data: { user } } = await supabase.auth.getUser();
       if (user && user.id) {
         setUserId(user.id)
@@ -53,30 +53,38 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
           setGroupId(response.data?.group_id)
         }
       }
+
+      // 2. Load Session Details to determine Pre-sim vs Active Sim
+      if (sessionId) {
+        const { data: sessionData, error } = await supabase
+          .from('case_sessions')
+          .select('started_at')
+          .eq('id', sessionId)
+          .single();
+
+        if (!error && sessionData) {
+          const hasStarted = !!sessionData.started_at;
+          setIsPresim(!hasStarted);
+
+          if (hasStarted) {
+            setSimStartTime(new Date(sessionData.started_at).getTime());
+          } else {
+            // PRE-SIM: Freeze a temporary local time for the UI.
+            // This prevents time from jumping around on page navigations,
+            // but never writes to database.
+            setSimStartTime(Date.now());
+          }
+        }
+      }
       setLoading(false);
     }
-    loadUser();
-  }, [userId])
-
-  const startSimSession = (
-    // newCaseId: string,
-    // newCaseSessionId: string,
-    startTime: number,
-    isPresim: boolean
-  ) => {
-    // setCaseId(newCaseId);
-    // setCaseSessionId(newCaseSessionId);
-    setSimStartTime(startTime);
-    setIsPresim(isPresim);
-  }
+    loadSimData();
+  }, [sessionId]);
 
   const value = {
     userName,
     userId,
-    // caseId,
-    // caseSessionId,
     loading,
-    startSimSession,
     simStartTime,
     groupId,
     isPresim

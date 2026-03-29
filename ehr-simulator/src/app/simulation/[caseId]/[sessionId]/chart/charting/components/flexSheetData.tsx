@@ -21,7 +21,10 @@ export interface FlexSheetData {
   [key: string]: string | string[] | number | boolean | undefined | { subsetId: string, label: string }[] | { low: number, high: number } | { assessment: string, description: string }[];
 };
 
-export const getAllTimeOffsets = (simulationNow: number, dbResults: DatabaseDocumentation[]) => {
+export const getAllTimeOffsets = (simulationNow: number | null, dbResults: DatabaseDocumentation[]) => {
+  if (!simulationNow) {
+    return []
+  }
   const minutesPastTheHour = getMinutes(simulationNow);
   const dynamicTimeOffsets = Array.from({ length: 1 }, (_, index) => {
     return minutesPastTheHour - (60 * index);

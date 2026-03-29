@@ -98,14 +98,14 @@ export function calculateColTotal(toolName: string, grouped: FlexSheetData[], ti
 
 
 export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
-  const [sessionStartTime] = useState(new Date().getTime());
-  const [timeOffsets, setTimeOffsets] = useState(getAllTimeOffsets(sessionStartTime, dbDocumentation));
+  const { groupId, userId, simStartTime } = useSimSessionContext();
+
+  const [timeOffsets, setTimeOffsets] = useState(getAllTimeOffsets(simStartTime, dbDocumentation));
   const [data, setData] = useState<FlexSheetData[]>(generateChartingDataFromDB(dbDocumentation, timeOffsets));
   const [fieldSelections, setFieldSelections] = useState<Record<string, string[]>>({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [dirtyColumns, setDirtyColumns] = useState<Set<string>>(new Set());
-  const { groupId, userId } = useSimSessionContext();
   const { caseId, sessionId } = params;
   const canSubmit = dirtyColumns.size > 0
 
@@ -315,7 +315,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
       },
     }),
     ...timeOffsets.map(offsetKey => {
-      const { time: displayTime, date: displayDate } = formatTimeFromOffset(offsetKey, sessionStartTime);
+      const { time: displayTime, date: displayDate } = formatTimeFromOffset(offsetKey, simStartTime);
       return columnHelper.accessor(row => row[offsetKey], {
         id: String(offsetKey),
         header: () => (
@@ -369,7 +369,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
         }
       })
     })
-  ], [timeOffsets, sessionStartTime, fieldSelections, handleSubsetSelection]);
+  ], [timeOffsets, simStartTime, fieldSelections, handleSubsetSelection]);
 
   const ptTable = useReactTable({
     data: filteredData,
@@ -400,7 +400,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
               <AddTimeColumnButton
                 onColumnAdd={handleColumnAdd}
                 existingTimeColumns={timeOffsets}
-                sessionStartTime={sessionStartTime}
+                sessionStartTime={simStartTime}
               />
               <Button onClick={handleSave} disabled={isSaving || !canSubmit} className="h-6 bg-lime-500 text-white hover:bg-lime-600 shadow">
                 {isSaving ? "Saving..." : "File"}

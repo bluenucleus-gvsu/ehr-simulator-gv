@@ -62,7 +62,6 @@ const NoteView = ({
     const now = differenceInMinutes(new Date(), simStartTime || 0)
     if (!groupId || !userId || !caseId || !sessionId) {
       toast.error("Still loading session data. Please try again in a moment.");
-      // console.error("Missing IDs:", { groupId, userId, caseId, sessionId });
       return;
     }
 
@@ -155,7 +154,7 @@ const NoteView = ({
             handleClearFilters={clearAllFilters}
           />
         </div>
-        <NursingNoteEntry isPresim={isPresim || true} submitNote={onSubmitNote} />
+        <NursingNoteEntry isPresim={isPresim} submitNote={onSubmitNote} />
       </div>
 
       <div className="flex flex-col flex-grow gap-4 p-2 rounded-t-lg overflow-y-auto border inset-shadow-sm bg-gray-100">

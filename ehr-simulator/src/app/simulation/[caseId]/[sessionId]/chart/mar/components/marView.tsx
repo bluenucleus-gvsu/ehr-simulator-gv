@@ -45,9 +45,10 @@ export default function MarView({
   medicationAdministrations,
   params
 }: MarViewData) {
-  // data
+  // context
+  const { userId, groupId, isPresim, userName, simStartTime } = useSimSessionContext();
+  // med data
   const [selectedOrders, setSelectedOrders] = useState<MedicationOrder[]>([]);
-  // const [administrations, setAdministrations] = useState<DatabaseMedAdministration[]>(medicationAdministrations)
   const [newAdministrations, setNewAdministrations] = useState<NewAdministrationData>({});
   const [associatedOrders, setAssociatedOrders] = useState<MedicationOrder[]>([])
   // filters
@@ -60,11 +61,14 @@ export default function MarView({
   const [isWrongPtScan, setIsWrongPtScan] = useState<boolean>(false)
   const [isMedAdminPanelOpen, setIsMedAdminPanelOpen] = useState(false);
   // temp time management
-  const [anchorDate] = useState<Date>(new Date());
-  const [elapsedMinutes, setElapsedMinutes] = useState(0);
   const [timeColumnOffset, setTimeColumnOffset] = useState(0)
-  // user data
-  const { userId, groupId, isPresim, userName } = useSimSessionContext();
+  const anchorDate = useMemo(() => {
+    return simStartTime ? new Date(simStartTime) : new Date();
+  }, [simStartTime]);
+
+  const [elapsedMinutes, setElapsedMinutes] = useState(() => {
+    return differenceInMinutes(new Date(), anchorDate);
+  });
   // Scanner debugging
   // const [scannedSymbol, setScannedSymbol] = useState('')
 
@@ -360,10 +364,12 @@ export default function MarView({
 
 
   useEffect(() => {
-    // Update the elsapseMinutes every minute
+    // 1. Immediately sync elapsed time when the component mounts or anchorDate changes
+    setElapsedMinutes(differenceInMinutes(new Date(), anchorDate));
+
+    // 2. Start the interval to update it every minute
     const interval = setInterval(() => {
-      const now = new Date();
-      setElapsedMinutes(differenceInMinutes(now, anchorDate));
+      setElapsedMinutes(differenceInMinutes(new Date(), anchorDate));
     }, 60000); // Update every minute
 
     return () => clearInterval(interval);

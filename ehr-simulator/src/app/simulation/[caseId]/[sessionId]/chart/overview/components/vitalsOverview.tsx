@@ -18,11 +18,12 @@ import {
 } from "@/components/ui/table"
 import { Card } from "@/components/ui/card"
 import type { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData"
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 import StyledTitle from "./styledTitle"
 import { generateChartingDataFromDB, getAllTimeOffsets } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData"
 import { formatTimeFromOffset } from "../../charting/chartingView"
 import { DatabaseDocumentation } from "@/actions/simulation"
+import { useSimSessionContext } from "@/context/SimSessionContext"
 
 export type vitalsOverviewTable = {
   field: string
@@ -62,14 +63,14 @@ interface VitalsOverviewProps {
 
 
 export function VitalsOverview({ dbDocumentation = [] }: VitalsOverviewProps) {
-  const [sessionStartTime] = useState(new Date().getTime());
+  const { simStartTime } = useSimSessionContext()
 
   const { allTimeOffsets, fullChartingData } = useMemo(() => {
-    if (!sessionStartTime) return { allTimeOffsets: [], fullChartingData: [] };
-    const offsets = getAllTimeOffsets(sessionStartTime, dbDocumentation);
+    if (!simStartTime) return { allTimeOffsets: [], fullChartingData: [] };
+    const offsets = getAllTimeOffsets(simStartTime, dbDocumentation);
     const data = generateChartingDataFromDB(dbDocumentation, offsets);
     return { allTimeOffsets: offsets, fullChartingData: data };
-  }, [sessionStartTime, dbDocumentation]);
+  }, [simStartTime, dbDocumentation]);
 
   const filteredData = useMemo(() => {
     return fullChartingData.filter(row => vitalSignIds.includes(row.id));
@@ -92,7 +93,7 @@ export function VitalsOverview({ dbDocumentation = [] }: VitalsOverviewProps) {
         id: String(timeKey),
         accessorKey: String(timeKey) as keyof FlexSheetData,
         header: () => {
-          const result = formatTimeFromOffset(timeKey, sessionStartTime)
+          const result = formatTimeFromOffset(timeKey, simStartTime)
           if (result.error) {
             return <span>Error</span>;
           }
@@ -121,7 +122,7 @@ export function VitalsOverview({ dbDocumentation = [] }: VitalsOverviewProps) {
         }
       }
     })
-  ], [displayTimeOffsets, sessionStartTime])
+  ], [displayTimeOffsets, simStartTime])
 
   const table = useReactTable({
     data: filteredData,

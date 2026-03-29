@@ -264,3 +264,43 @@ export async function upsertDocumentationRows(payload: StudentDatabaseDocumentat
 
   return { data, error };
 }
+
+
+export async function markSessionInProgress(sessionId: string) {
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  try {
+    const { data: session, error: fetchError } = await supabase
+      .from('case_sessions')
+      .select('started_at')
+      .eq('id', sessionId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    // 1. update started_at and status
+    const updates: { status: string; started_at?: string } = {
+      status: 'in progress'
+    };
+
+    // 2. Only set the timestamp if it hasn't been set yet
+    if (!session?.started_at) {
+      updates.started_at = new Date().toISOString();
+    }
+
+    // 3. Perform the update
+    const { error: updateError } = await supabase
+      .from('case_sessions')
+      .update(updates)
+      .eq('id', sessionId);
+
+    if (updateError) throw updateError;
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to mark session in progress:", error);
+    return { success: false, error };
+  }
+}
