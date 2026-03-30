@@ -111,6 +111,18 @@ export const allMedications: AllMedicationTypes[] = [
     takeWithFood: true,
   },
   {
+    id: "medPantoprazoleIv40",
+    genericName: "pantoprazole",
+    brandName: "Protonix",
+    route: "PO",
+    strength: 40,
+    strengthUnit: "mg",
+    dispenseUnit: "Tablet",
+    administrationFrequencies: [],
+    canBeCrushedOrSplit: false
+  },
+
+  {
     id: "medAmoxIv",
     genericName: "amoxicillin",
     brandName: "Amoxil IV",
@@ -275,21 +287,21 @@ export const allMedications: AllMedicationTypes[] = [
     canBeCrushedOrSplit: true,
     takeWithFood: false,
   },
-  {
-    id: "medPantoprazoleIv40",
-    genericName: "pantoprazole",
-    brandName: "Protonix IV",
-    route: "IV",
-    strength: 40,
-    strengthUnit: "mg",
-    dispenseUnit: "Vial",
-    administrationFrequencies: ["QD"],
-    infusionRateUnit: "mL/hr",
-    diluent: "D5W",
-    totalVolume: 50,
-    infusionDurationHours: 0.5,
-    isContinuous: false,
-  },
+  // {
+  //   id: "medPantoprazoleIv40",
+  //   genericName: "pantoprazole",
+  //   brandName: "Protonix IV",
+  //   route: "IV",
+  //   strength: 40,
+  //   strengthUnit: "mg",
+  //   dispenseUnit: "Vial",
+  //   administrationFrequencies: ["QD"],
+  //   infusionRateUnit: "mL/hr",
+  //   diluent: "D5W",
+  //   totalVolume: 50,
+  //   infusionDurationHours: 0.5,
+  //   isContinuous: false,
+  // },
   {
     id: "medEnoxaparinSc40",
     genericName: "enoxaparin",
@@ -490,7 +502,7 @@ export const allMedications: AllMedicationTypes[] = [
   },
   {
     id: "medSodiumChloride",
-    genericName: "Sodium chloride",
+    genericName: "sodium chloride",
     route: "PO",
     strength: 1,
     strengthUnit: "g",
@@ -500,672 +512,303 @@ export const allMedications: AllMedicationTypes[] = [
   }
 ];
 
-
 export const medicationOrders: MedicationOrder[] = [
+  // {
+  //   id: "orderCeftriaxoneIv1g",
+  //   medicationId: "medCeftriaxoneIv1g",
+  //   unitsOrdered: 0,
+  //   frequency: "Q8H",
+  //   priority: "PRN",
+  //   indication: "Infection",
+  //   orderingProvider: "Dr. Adler",
+  //   dose: 1,
+  //   visibleInPresim: false,
+  //   status: "active",
+  //   instructions: "For future use. Administer over 2-4 minutes."
+  // },
+  // {
+  //   id: "orderLactatedRingers500",
+  //   medicationId: "medLactatedRingersIV",
+  //   unitsOrdered: 0,
+  //   frequency: "ONCE",
+  //   priority: "PRN",
+  //   indication: "Hypotension",
+  //   orderingProvider: "Dr. Adler",
+  //   dose: 500,
+  //   visibleInPresim: false,
+  //   status: "active",
+  //   infusionRate: 999,
+  //   instructions: "For future use. Administer over 30 minutes."
+  // },
   {
-    id: 'orderAcetaminophenIV',
-    medicationId: 'medAcetaminophenIv',
-    unitsOrdered: 1,
-    dose: 1000,
-    frequency: "Q6hr",
+    id: "orderOndansetronIv4",
+    medicationId: "medOndansetronIv4",
+    unitsOrdered: 0,
+    frequency: "Q6H",
     priority: "PRN",
-    indication: 'Pain',
-    status: 'active',
-    orderingProvider: 'Dr. Samuel Wanjouri',
-    visibleInPresim: true,
-    infusionRate: 125
-  },
-  {
-    id: 'orderSodiumChloride',
-    medicationId: 'medSodiumChloride',
-    unitsOrdered: 2,
-    dose: 2,
-    frequency: "Q6hr",
-    priority: "PRN",
-    indication: 'Hyponatremia',
-    status: 'active',
-    orderingProvider: 'Dr. Samuel Wanjouri',
-    visibleInPresim: true
-  },
-  {
-    id: 'orderOndansetronIv4',
-    medicationId: 'medOndansetronIv4',
-    unitsOrdered: 1000000,
+    indication: "Nausea",
+    orderingProvider: "Dr. Chen",
     dose: 4,
-    frequency: "Q6hr",
-    priority: "PRN",
-    indication: 'Nausea',
-    status: 'active',
-    orderingProvider: 'Dr. Samuel Wanjouri',
-    visibleInPresim: true
-  },
-  {
-    id: 'orderOndansetronIv2',
-    medicationId: 'medOndansetronIv4',
-    unitsOrdered: 1000000,
-    dose: 2,
-    frequency: "Q6hr",
-    priority: "PRN",
-    indication: 'Nausea',
-    status: 'active',
-    orderingProvider: 'Dr. Samuel Wanjouri',
-    visibleInPresim: true
-  },
-  {
-    id: 'orderCefazolin1000',
-    medicationId: 'medCefazolin1000',
-    unitsOrdered: 1,
-    dose: 1000,
-    frequency: "Q6hr",
-    priority: "Routine",
-    indication: 'Infx',
-    status: 'active',
-    orderingProvider: 'Dr. Samuel Wanjouri',
     visibleInPresim: true,
-    infusionRate: 125
-
-  },
-  {
-    id: "orderDextrose5inNS45",
-    medicationId: "medDextrose5inNS45",
-    unitsOrdered: 1,
-    dose: 1000,
-    frequency: 'Continuous',
-    priority: "Routine",
-    indication: '',
     status: "active",
-    orderingProvider: "Dr. Nigel Amos",
-    visibleInPresim: true,
-    infusionRate: 125
-  },
-  {
-    id: "orderAtropinePush",
-    medicationId: "medAtropinePush",
-    unitsOrdered: 1,
-    dose: 0.5,
-    frequency: 'Q1hr',
-    priority: "PRN",
-    indication: "Bradycardia",
-    status: 'active',
-    orderingProvider: 'Dr. Beatrice Chebet',
-    visibleInPresim: true
-  },
-  {
-    id: "orderDopamine400InDex5",
-    medicationId: 'medDopamine400InDex5',
-    unitsOrdered: 1,
-    dose: 400,
-    frequency: 'Once',
-    priority: "Routine",
-    indication: "Bradycardia",
-    status: 'active',
-    orderingProvider: "Dr. Hicham Makloufi",
-    visibleInPresim: true
-  },
-  {
-    id: 'orderLidocaineInDex5',
-    medicationId: 'medLidocaineInDex5',
-    unitsOrdered: 1,
-    dose: 2,
-    frequency: 'Continuous',
-    priority: 'Routine',
-    indication: 'PVCs',
-    status: 'active',
-    orderingProvider: 'Dr. Muhammad Al-Berzi',
-    visibleInPresim: true
-  },
-  {
-    id: "orderMetoprololIvPush",
-    medicationId: "medMetoprololIvPush",
-    unitsOrdered: 0.8,               // amount of orderableUnits to be administered to pt   
-    dose: 9,
-    frequency: "Q8H",
-    priority: "STAT",
-    indication: "Tachycardia",
-    status: "active",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderAlbuterolInh",
-    medicationId: "medAlbuterolInhalation",
-    unitsOrdered: 1,               // amount of orderableUnits to be administered to pt   
-    dose: 60,
-    frequency: "Q8H",
-    priority: "STAT",
-    indication: "Asthma",
-    status: "active",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-
-  {
-    id: "orderAmoxIv",
-    medicationId: "medAmoxIv",
-    unitsOrdered: 1,               // amount of orderableUnits to be administered to pt   
-    dose: 500,
-    frequency: "Q8H",
-    infusionRate: 100,
-    priority: "Routine",
-    indication: "Infection",
-    status: "active",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderPiperacillinTazobactamIV",
-    medicationId: "medPiperacillinTazobactamIV",
-    unitsOrdered: 1,               // amount of orderableUnits to be administered to pt   
-    dose: 3.375,
-    frequency: "Q8H",
-    infusionRate: 100,
-    priority: "Routine",
-    indication: "Infection",
-    status: "active",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderNormalSaline09",
-    medicationId: "medNormalSaline09Iv",
-    unitsOrdered: 1,
-    dose: 500,
-    infusionRate: 100,
-    frequency: "Continuous",
-    priority: "Routine",
-    indication: "IV Fluids",
-    status: "active",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderMetoprololOral25",
-    medicationId: "medMetoprololOral25",
-    dose: 50,
-    unitsOrdered: 7,
-    frequency: "Twice Daily",
-    priority: "Routine",
-    status: "active",
-    indication: "Blood Pressure",
-    instructions: "Check HR and BP within 30 minutes of administration.",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
+    instructions: "Administer over 2 minutes."
   },
   {
     id: "orderLisinoprilOral10",
     medicationId: "medLisinoprilOral10",
-    unitsOrdered: 1, // Ordering 1 Tablet (10mg)
+    unitsOrdered: 0,
+    frequency: "QD",
+    priority: "Routine",
+    indication: "HTN",
+    orderingProvider: "Dr. Chen",
     dose: 10,
+    visibleInPresim: true,
+    status: "active",
+    instructions: "Hold if BP < 100/60. Notify provider if held. "
+  },
+  {
+    id: "orderPantoprazolePo40",
+    medicationId: "medPantoprazoleIv40",
+    unitsOrdered: 0,
     frequency: "QD",
     priority: "Routine",
-    status: "active",
-    indication: "Hypertension",
-    instructions: "Monitor blood pressure daily.",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderVancomycinIv",
-    medicationId: "medVancomycinIv1000",
-    unitsOrdered: 1000, // Ordering 1 Bag (1000mg)
-    dose: 1000,
-    frequency: "Q12H",
-    priority: "Routine",
-    infusionRate: 250,
-    status: "active",
-    indication: "Infx",
-    instructions: "Infuse over 2 hours. Monitor for Red Man Syndrome. Obtain trough level before 4th dose.",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderAtorvastatinOral40",
-    medicationId: "medAtorvastatinOral40",
-    unitsOrdered: 1,
+    indication: "GERD",
+    orderingProvider: "Dr. Chen",
     dose: 40,
-    frequency: "QD",
-    priority: "Routine",
+    visibleInPresim: true,
     status: "active",
-    indication: "Hyperlipidemia",
-    instructions: "Administer in the evening.",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
+    instructions: " "
+  },
+  {
+    id: "orderSodiumChloride",
+    medicationId: "medSodiumChloride",
+    unitsOrdered: 0,
+    frequency: "BID",
+    priority: "Routine",
+    indication: "Hyponatremia",
+    orderingProvider: "Dr. Chen",
+    dose: 1,
+    visibleInPresim: true,
+    status: "active",
+    instructions: "Hold if serum sodium greater than 135."
+  },
+  {
+    id: "orderAcetaminophenIV",
+    medicationId: "medAcetaminophenIv",
+    unitsOrdered: 0,
+    frequency: "Q8H",
+    priority: "PRN",
+    indication: "Pain/Fever",
+    orderingProvider: "Dr. Chen",
+    dose: 1000,
+    visibleInPresim: true,
+    status: "active",
+    instructions: "For mild pain (1-3) or temperature greater than 38.0. If unable to take PO.",
+    infusionRate: 400
   },
   {
     id: "orderAcetaminophenOral650",
     medicationId: "medAcetaminophenOral650",
+    unitsOrdered: 0,
+    frequency: "Q6H",
+    priority: "PRN",
+    indication: "Pain/Fever",
+    orderingProvider: "Dr. Chen",
     dose: 650,
-    unitsOrdered: 2,
-    frequency: "Q6hr",
-    priority: "PRN",
+    visibleInPresim: true,
     status: "active",
-    indication: "Pain",
-    instructions: "For pain of 4/10 or greater. Max dose of 4 tablets per 24 hours.",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
+    instructions: "For mild pain (1-3) or temperature greater than 38.0"
   },
   {
-    id: "orderAcetaminophenOral325",
-    medicationId: "medAcetaminophenOral650",
-    dose: 325,
-    unitsOrdered: 1,
-    frequency: "Q6hr",
-    priority: "PRN",
-    status: "active",
-    indication: "Pain",
-    instructions: "For pain of 4/10 or greater. Max dose of 4g per 24 hours.",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderInsulinGlargineSc",
-    medicationId: "medInsulinGlargineSc",
-    unitsOrdered: 15,
-    dose: 15,
-    frequency: "QD",
+    id: "orderNormalSaline09",
+    medicationId: "medNormalSaline09Iv",
+    unitsOrdered: 0,
+    frequency: "CONTINUOUS",
     priority: "Routine",
-    status: "active",
-    indication: "Type 2 Diabetes",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderInsulinAspartHum",
-    medicationId: "medInsulinAspartHum",
-    unitsOrdered: 15,
-    dose: 15,
-    frequency: "QD",
-    priority: "Routine",
-    status: "active",
-    indication: "Type 2 Diabetes",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderLactatedRingers",
-    medicationId: "medLactatedRingersIV",
-    unitsOrdered: 1,
+    indication: "Hydration",
+    orderingProvider: "Dr. Chen",
     dose: 1000,
-    infusionRate: 100,
-    frequency: "Continuous",
-    priority: "Routine",
+    visibleInPresim: true,
     status: "active",
-    indication: "Maintainence Fluids",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  // {
-  //   id: "orderHydrocortisoneCream",
-  //   medicationId: "medHydrocortisoneCream",
-  //   unitsOrdered: 1, // Represents "one application"
-  //   dose: 1,
-  //   frequency: "Q4hr",
-  //   priority: "PRN",
-  //   status: "active",
-  //   indication: "Itching",
-  //   instructions: "Apply thin layer to affected area as needed for rash or itching.",
-  //   orderingProvider: "Dr. Rahul Gupta",
-  //   visibleInPresim: true
-  // },
-  {
-    id: "orderFurosemideOral20",
-    medicationId: "medFurosemideOral20",
-    unitsOrdered: 1, // 1 Tablet
-    dose: 20,
-    frequency: "BID",
-    priority: "Routine",
-    status: "active",
-    indication: "Edema",
-    instructions: "Monitor daily weight and I/O.",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderPantoprazoleIv40",
-    medicationId: "medPantoprazoleIv40",
-    unitsOrdered: 1, // 1 Vial
-    dose: 40,
-    frequency: "QD",
-    priority: "Routine",
-    infusionRate: 100, // 50mL over 0.5hr = 100mL/hr
-    status: "active",
-    indication: "GERD",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderEnoxaparinSc40",
-    medicationId: "medEnoxaparinSc40",
-    unitsOrdered: 1, // 1 Pre-filled Syringe
-    dose: 40,
-    frequency: "QD",
-    priority: "Routine",
-    status: "active",
-    indication: "DVT Prophylaxis",
-    instructions: "Administer to abdomen, 2 inches from umbilicus. Do not expel air bubble.",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderMorphineIv",
-    medicationId: "medMorphineIv10",
-    unitsOrdered: 0.2, // 0.2 of the 10mg Ampule = 2mg dose
-    dose: 2,
-    frequency: "Q3hr",
-    priority: "PRN",
-    status: "active",
-    indication: "Severe Pain",
-    instructions: "For pain 7-10. Reassess pain in 30 minutes.",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  // {
-  //   id: "orderNitroPatchTd",
-  //   medicationId: "medNitroPatchTd",
-  //   unitsOrdered: 1, // 1 Patch
-  //   dose: 0.4,
-  //   frequency: "Daily",
-  //   priority: "Routine",
-  //   status: "active",
-  //   indication: "Angina Prophylaxis",
-  //   instructions: "Apply one patch daily in AM. Remove at night (12-hour nitrate-free interval). Rotate sites.",
-  //   orderingProvider: "Dr. Rahul Gupta"
-  // },
-  // {
-  //   id: "orderOndansetronIv4",
-  //   medicationId: "medOndansetronIv4",
-  //   unitsOrdered: 1, // 1 Vial
-  //   frequency: "Q6hr",
-  //   priority: "RN",
-  //   infusionRate: 100, // 50mL over 0.5hr = 100mL/hr
-  //   dose: 4,
-  //   status: "active",
-  //   indication: "Nausea/Vomiting",
-  //   instructions: "As needed for nausea.",
-  //   orderingProvider: "Dr. Rahul Gupta"
-  // },
-  {
-    id: "orderCeftriaxoneIm250",
-    medicationId: "medCeftriaxoneIm250",
-    unitsOrdered: 1, // 1 Vial
-    dose: 250,
-    frequency: "Once",
-    priority: "STAT",
-    status: "active",
-    indication: "Bacterial Infection",
-    instructions: "Reconstitute with 1.8 mL sterile water and administer IM.",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderEpinephrineIm1mg",
-    medicationId: "medEpinephrineIm1mg",
-    unitsOrdered: 1,
-    dose: 1,
-    frequency: "Q12hr",
-    priority: "PRN",
-    status: "active",
-    indication: "Anaphylaxis",
-    instructions: "Administer immediately for signs of severe allergic reaction (wheezing, hives, swelling).",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderMethylprednisoloneIv125",
-    medicationId: "medMethylprednisoloneIv125",
-    unitsOrdered: 1, // 1 Vial
-    dose: 125,
-    frequency: "Once",
-    priority: "STAT",
-    infusionRate: 100, // 100mL over 1hr = 100mL/hr
-    status: "active",
-    indication: "Severe Inflammation",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderNitroglycerin04mgSl",
-    medicationId: "medNitroglycerin04mgSl",
-    unitsOrdered: 1,
-    dose: 0.4,
-    frequency: "Q5min",
-    priority: "PRN",
-    status: "active",
-    indication: "Angina",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
+    infusionRate: 75,
+    instructions: " "
   }
 ]
 
 // negative time offset -> occurred in the past
 export const medAdministrations: MedAdministrationInstance[] = [
   {
-    medicationOrderId: "orderAtropinePush",
-    administratorId: "RN Smith",
-    adminTimeMinuteOffset: -150,
-    status: 'Given',
-    notes: "",
+    id: "adminNormalSaline09_1",
+    medicationOrderId: "orderNormalSaline09",
+    administratorId: "Max Smith, RN",
+    adminTimeMinuteOffset: -3000,
+    status: "Given",
     administeredDose: 1000,
     visibleInPresim: true
   },
   {
-    medicationOrderId: "orderDopamine400InDex5",
-    administratorId: "RN Smith",
-    adminTimeMinuteOffset: 60,
-    status: 'Due',
-    notes: "",
+    id: "adminNormalSaline09_2",
+    medicationOrderId: "orderNormalSaline09",
+    administratorId: "Derek Van Boven, RN",
+    adminTimeMinuteOffset: -2220,
+    status: "Given",
     administeredDose: 1000,
     visibleInPresim: true
   },
   {
-    medicationOrderId: "orderCefazolin1000",
-    administratorId: "RN Smith",
+    id: "adminNormalSaline09_3",
+    medicationOrderId: "orderNormalSaline09",
+    administratorId: "Kevin Gerbie, RN",
+    adminTimeMinuteOffset: -1440,
+    status: "Given",
+    administeredDose: 1000,
+    visibleInPresim: true
+  },
+  {
+    id: "adminNormalSaline09_4",
+    medicationOrderId: "orderNormalSaline09",
+    administratorId: "Nate Craft, RN",
+    adminTimeMinuteOffset: -660,
+    status: "Given",
+    administeredDose: 1000,
+    visibleInPresim: true
+  },
+  {
+    id: "adminAcetaminophenOral650_1",
+    medicationOrderId: "orderAcetaminophenOral650",
+    administratorId: "Derek Van Boven, RN",
+    adminTimeMinuteOffset: -1200,
+    status: "Given",
+    administeredDose: 650,
+    visibleInPresim: true
+  },
+  {
+    id: "adminAcetaminophenOral650_2",
+    medicationOrderId: "orderAcetaminophenOral650",
+    administratorId: "Nate Craft, RN",
     adminTimeMinuteOffset: -480,
-    status: 'Held',
-    notes: "",
-    administeredDose: 1000,
+    status: "Given",
+    administeredDose: 650,
     visibleInPresim: true
   },
   {
-    medicationOrderId: "orderCefazolin1000",
-    administratorId: "RN Smith",
-    adminTimeMinuteOffset: -120,
-    status: 'Missed',
-    notes: "",
-    administeredDose: 1000,
+    id: "adminSodiumChloride_1",
+    medicationOrderId: "orderSodiumChloride",
+    administratorId: "Max Smith, RN",
+    adminTimeMinuteOffset: -2760,
+    status: "Given",
+    administeredDose: 1,
     visibleInPresim: true
   },
   {
-    medicationOrderId: "orderCefazolin1000",
-    administratorId: "RN Smith",
-    adminTimeMinuteOffset: 420,
-    status: 'Due',
-    notes: "",
-    administeredDose: 1000,
+    id: "adminSodiumChloride_2",
+    medicationOrderId: "orderSodiumChloride",
+    administratorId: "Max Smith, RN",
+    adminTimeMinuteOffset: -2040,
+    status: "Given",
+    administeredDose: 1,
     visibleInPresim: true
   },
   {
-    medicationOrderId: "orderDextrose5inNS45",
-    administratorId: "RN Smith",
-    adminTimeMinuteOffset: -120,
-    status: 'Given',
-    notes: "",
-    administeredDose: 1000,
+    id: "adminSodiumChloride_3",
+    medicationOrderId: "orderSodiumChloride",
+    administratorId: "Derek Van Boven, RN",
+    adminTimeMinuteOffset: -1260,
+    status: "Given",
+    administeredDose: 1,
     visibleInPresim: true
   },
   {
-    medicationOrderId: "orderDextrose5inNS45",
-    administratorId: "RN Smith",
-    adminTimeMinuteOffset: 361,
-    status: 'Due',
-    notes: "",
-    administeredDose: 1000,
+    id: "adminSodiumChloride_4",
+    medicationOrderId: "orderSodiumChloride",
+    administratorId: "Nate Craft, RN",
+    adminTimeMinuteOffset: -720,
+    status: "Given",
+    administeredDose: 1,
     visibleInPresim: true
   },
   {
-    medicationOrderId: "orderDextrose5inNS45",
-    administratorId: "RN Smith",
-    adminTimeMinuteOffset: -420,
-    status: 'Given',
-    notes: "",
-    administeredDose: 1000,
-    visibleInPresim: true
-  },
-  {
-    medicationOrderId: "orderCefazolin1000",
-    administratorId: "RN Smith",
-    adminTimeMinuteOffset: 60,
-    status: 'Due',
-    notes: "",
-    administeredDose: 1000,
-    visibleInPresim: true
-  },
-  {
-    medicationOrderId: "orderCeftriaxoneIm250",
-    administratorId: "RN Smith",
-    adminTimeMinuteOffset: -30,
-    status: 'Given',
-    notes: "",
-    administeredDose: 250,
-    visibleInPresim: true
-  },
-  {
-    medicationOrderId: "orderCeftriaxoneIm250",
-    administratorId: "RN Smith",
-    adminTimeMinuteOffset: -360,
-    status: 'Given',
-    notes: "",
-    administeredDose: 250,
-    visibleInPresim: true
-  },
-  {
-    medicationOrderId: "orderMetoprololOral25",
-    administratorId: "RN Smith",
-    adminTimeMinuteOffset: -200,
-    status: 'Given',
-    notes: " metoprolol",
-    administeredDose: 25,
-    visibleInPresim: true
-  },
-  {
-    medicationOrderId: "orderAmoxIv",
-    administratorId: "RN Smith",
-    adminTimeMinuteOffset: -31,
-    status: 'Given',
-    notes: "-61 amox.",
-    administeredDose: 200,
-    visibleInPresim: true
-  },
-  {
-    medicationOrderId: "orderAmoxIv",
-    administratorId: "RN Smith",
-    adminTimeMinuteOffset: -180,
-    status: 'Held',
-    notes: "-61 amox.",
-    administeredDose: 100,
-    visibleInPresim: true
-  },
-  {
-    medicationOrderId: "orderMetoprololOral25",
-    administratorId: "RN Jones",
+    id: "adminSodiumChloride_due",
+    medicationOrderId: "orderSodiumChloride",
+    administratorId: "System",
     adminTimeMinuteOffset: 0,
-    status: 'Due',
-    notes: "-121 metoprolol dose.",
-    administeredDose: 100,
-    visibleInPresim: true
+    status: "Due",
+    administeredDose: 1,
+    visibleInPresim: false
   },
   {
+    id: "adminLisinoprilOral10_1",
     medicationOrderId: "orderLisinoprilOral10",
-    administratorId: "RN Jones",
-    adminTimeMinuteOffset: -121,
-    status: 'Missed',
-    notes: "-121 metoprolol dose.",
-    administeredDose: 100,
+    administratorId: "Max Smith, RN",
+    adminTimeMinuteOffset: -2760,
+    status: "Given",
+    administeredDose: 10,
     visibleInPresim: true
   },
   {
+    id: "adminProtonix1",
+    medicationOrderId: "orderPantoprazolePo40",
+    administratorId: "Max Smith, RN",
+    adminTimeMinuteOffset: -2760,
+    status: "Given",
+    administeredDose: 10,
+    visibleInPresim: true
+  },
+  {
+    id: "adminLisinoprilOral10_2",
     medicationOrderId: "orderLisinoprilOral10",
-    administratorId: "RN Jones",
-    adminTimeMinuteOffset: 60,
-    status: 'Due',
-    notes: "-121 metoprolol dose.",
-    administeredDose: 100,
+    administratorId: "Derek Van Boven, RN",
+    adminTimeMinuteOffset: -1260,
+    status: "Given",
+    administeredDose: 10,
     visibleInPresim: true
   },
   {
-    medicationOrderId: "orderVancomycinIv",
-    administratorId: "RN Jones",
-    adminTimeMinuteOffset: 60,
-    status: 'Due',
-    notes: "-121 metoprolol dose.",
-    administeredDose: 100,
+    id: "adminProtonix2",
+    medicationOrderId: "orderPantoprazolePo40",
+    administratorId: "Derek Van Boven, RN",
+    adminTimeMinuteOffset: -1260,
+    status: "Given",
+    administeredDose: 10,
     visibleInPresim: true
   },
   {
-    medicationOrderId: "orderVancomycinIv",
-    administratorId: "RN Jones",
-    adminTimeMinuteOffset: -140,
-    status: 'Refused',
-    notes: "-121 metoprolol dose.",
-    administeredDose: 100,
-    visibleInPresim: true
+    id: "adminLisinoprilOral10_due",
+    medicationOrderId: "orderLisinoprilOral10",
+    administratorId: "System",
+    adminTimeMinuteOffset: 0,
+    status: "Due",
+    administeredDose: 10,
+    visibleInPresim: false
   },
   {
-    medicationOrderId: "orderVancomycinIv",
-    administratorId: "RN Jones",
-    adminTimeMinuteOffset: -360,
-    status: 'Refused',
-    notes: "-121 metoprolol dose.",
-    administeredDose: 100,
-    visibleInPresim: true
+    id: "adminProtonix3",
+    medicationOrderId: "orderPantoprazolePo40",
+    administratorId: "System",
+    adminTimeMinuteOffset: 0,
+    status: "Due",
+    administeredDose: 10,
+    visibleInPresim: false
   },
   {
+    id: "adminOndansetronIv4_1",
     medicationOrderId: "orderOndansetronIv4",
-    administratorId: "RN Jones",
-    adminTimeMinuteOffset: -60,
-    status: 'Held',
-    notes: "-121 zofran dose.",
-    administeredDose: 0,
+    administratorId: "Max Smith, RN",
+    adminTimeMinuteOffset: -3000,
+    status: "Given",
+    administeredDose: 4,
     visibleInPresim: true
   },
   {
+    id: "adminOndansetronIv4_2",
     medicationOrderId: "orderOndansetronIv4",
-    administratorId: "RN Jones",
-    adminTimeMinuteOffset: 240,
-    status: 'Due',
-    notes: "-121 zofran dose.",
-    administeredDose: 0,
+    administratorId: "Derek Van Boven, RN",
+    adminTimeMinuteOffset: -1440,
+    status: "Given",
+    administeredDose: 4,
     visibleInPresim: true
-  },
-  {
-    medicationOrderId: "orderOndansetronIv4",
-    administratorId: "RN Jones",
-    adminTimeMinuteOffset: -260,
-    status: 'Refused',
-    notes: "-121 zofran dose.",
-    administeredDose: 0,
-    visibleInPresim: true
-  },
-  {
-    medicationOrderId: "orderOndansetronIv2",
-    administratorId: "RN Jones",
-    adminTimeMinuteOffset: -10,
-    status: 'Given',
-    notes: "",
-    administeredDose: 2,
-    visibleInPresim: true
-  },
-  {
-    medicationOrderId: "orderOndansetronIv2",
-    administratorId: "RN Jones",
-    adminTimeMinuteOffset: -530,
-    status: 'Given',
-    notes: "",
-    administeredDose: 2,
-    visibleInPresim: true
-  },
+  }
 ]
-
 
 export const medRouteSelections: string[] = ["PO", "IV", "SC", "Topical", "Inhalation", "IM", "SL", "Otic", "Ophthalmic"]
 export const medActionSelections: string[] = ["Given", "Held", "Refused", "Patient Administered", "Override"]

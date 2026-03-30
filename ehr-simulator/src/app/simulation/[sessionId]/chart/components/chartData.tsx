@@ -1,6 +1,6 @@
 export interface StringValueItem {
   label: string;
-  id: string; 
+  id: string;
   value: string;
 }
 
@@ -17,8 +17,8 @@ export interface NumericValueItem {
 }
 
 interface IsolationItem extends StringValueItem {
-  id: 'isolation'; 
-  tooltip: string; 
+  id: 'isolation';
+  tooltip: string;
 }
 
 export interface ContactItem {
@@ -44,7 +44,7 @@ export interface ChartData {
   code: StringValueItem;
   admissionDate: NumericValueItem;
   location: StringValueItem;
-  
+
 
   // Clinical Info
   isolation: IsolationItem;
@@ -73,43 +73,41 @@ export interface ChartData {
 
 
 export const jamesAllen: ChartData = {
-  name: { id: 'name', label: "Name", value: "James Allen" },
+  name: { id: 'name', label: "Name", value: "Harold Adams" },
   gender: { id: 'gender', label: "Gender", value: "Male" },
-  age: { id: "dob", label: "DOB", value: 56 },
+  age: { id: "dob", label: "DOB", value: 72 },
   mrn: { id: "mrn", label: "MRN", value: "56743" },
-  code: { id: "code", label: "Code", value: "Full"},
-  admissionDate: { id: "admission", label: "Admission Date", value: 4 },
+  code: { id: "code", label: "Code", value: "Full" },
+  admissionDate: { id: "admission", label: "Admission Date", value: 2 },
   pronouns: { id: "pronouns", label: "Pronouns", value: "He/Him" },
   sexAtBirth: { id: 'sexAtBirth', label: "Sex Assigned at Birth", value: "Male" },
   genderIdentity: { id: 'genderIdentity', label: "Gender Identity", value: "Male" },
-  ethnicity: { id: "ethnicity", label: "Ethnicity", value: "African American" },
-  location: { id: "location", label: "Location", value: "CHS-350-G"},
-  
-  isolation: { id: 'isolation', label: "Isolation", value: "MRSA", tooltip: 'Contact Precautions: Use gloves and gown when entering the patient’s room'},
-  allergies: { id: 'allergies', label: "Allergies", value: ["None known"] },
-  immunizations: { id: 'immunizations', label: "Immunizations", value: ["Influenza", "Pneumococcal"] },
-  attending: { id: 'attending', label: "Attending Provider", value: "Dr. Sheila Monroe, PCP" },
-  pmh: { 
+  ethnicity: { id: "ethnicity", label: "Ethnicity", value: "" },
+  location: { id: "location", label: "Location", value: "CHS Sim Lab" },
+
+  isolation: { id: 'isolation', label: "Isolation", value: "MRSA", tooltip: 'Contact Precautions: Use gloves and gown when entering the patient’s room' }, // TODO: Come back to this
+  allergies: { id: 'allergies', label: "Allergies", value: ["Seasonal Allergies"] },
+  immunizations: { id: 'immunizations', label: "Immunizations", value: [""] },
+  attending: { id: 'attending', label: "Attending Provider", value: "Dr. David Adler, MD" },
+  pmh: {
     id: 'pmh', label: "Past Medical History", value: [
-      "T2DM",
-      "HTN",
-      "Peripheral neuropathy"
+      "Hypertension",
+      "GERD"
     ]
   },
-  height: { id: "height", label: "Height", value: '6\'4\"'},
-  weight: { id: "weight", label: "Weight", value:"94kg" },
-  
-  relationshipStatus: { id: 'maritalStatus', label: "Relationship Status", value: "Widowed" },
-  employmentStatus: { id: 'employmentStatus', label: "Employment", value: "Retired factory worker" },
+  height: { id: "height", label: "Height", value: '6\'4\"' },
+  weight: { id: "weight", label: "Weight", value: "94kg" },
+
+  relationshipStatus: { id: 'maritalStatus', label: "Relationship Status", value: "Married" },
+  employmentStatus: { id: 'employmentStatus', label: "Employment", value: "Retired School Teacher" },
   insurance: { id: 'insurance', label: "Insurance", value: "Medicare" },
   language: { id: 'language', label: "Language", value: "English" },
-  religion: { id: "religion", label: "Religion", value: "Baptist" },
-  supportPersons: { 
-    id: 'supportPersons', 
-    label: "Support Persons", 
+  religion: { id: "religion", label: "Religion", value: "None" },
+  supportPersons: {
+    id: 'supportPersons',
+    label: "Support Persons",
     value: [
-      { name: "Sofia Allen", relationship: "Spouse", phone: "(616) 555-1234" },
-      { name: "Samuel Allen", relationship: "Son", phone: "(616) 555-1234" }
+      { name: "Linda Adams", relationship: "Spouse", phone: "" },
     ]
   },
   veteranStatus: { id: 'veteranStatus', label: "Veteran Status", value: "No" }

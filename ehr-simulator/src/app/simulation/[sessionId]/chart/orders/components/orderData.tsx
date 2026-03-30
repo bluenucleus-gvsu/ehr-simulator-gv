@@ -13,81 +13,79 @@ export interface OrderType {
 export const nursingOrders: OrderType[] = [
   {
     category: 'Nursing',
-    title: "Vital Signs Monitoring (q4h)",
-    status: "Active",
-    details: "Monitor BP, HR, RR, Temp, SpO₂ every 4 hours. Notify provider for Temp > 38.0°C (100.4°F), Systolic BP > 160 mmHg or < 100 mmHg, HR > 110 bpm or < 50 bpm.",
-    orderingProvider: "Dr. John Smith, MD",
-    important: true,
-    visibleInPresim: true
-  },
-  {
-    category: 'Nursing',
-    title: "Blood Glucose Monitoring (ACHS)",
-    status: "Active",
-    details: "Monitor blood glucose before meals and at bedtime (ACHS). Notify provider for blood glucose < 70 mg/dL or > 300 mg/dL.",
-    orderingProvider: "Dr. John Smith, MD",
-    important: true,
-    visibleInPresim: true
-  },
-  {
-    category: 'Nursing',
     title: "Activity: As Tolerated",
-    status: "Active",
     details: "Encourage patient activity as tolerated. Assist with ambulation as needed.",
-    orderingProvider: "Dr. John Smith, MD",
-    important: false,
+    status: "Active",
+    orderingProvider: "Dr. Chen, MD",
+    important: true,
     visibleInPresim: true
-
   },
   {
-    important: false,
-
     category: 'Nursing',
     title: "Fall Risk Precautions",
-    status: "Active",
     details: "Implement standard fall risk protocol. Ensure bed in low position and call light within reach.",
-    orderingProvider: "Dr. John Smith, MD",
-    visibleInPresim: true
-  },
-  {
-    important: false,
-
-    category: 'Nursing',
-    title: "Contact Precautions for MRSA",
     status: "Active",
-    details: "Gown and gloves with all room entry. Use dedicated patient equipment. Strict hand hygiene.",
-    orderingProvider: "Dr. John Smith, MD",
-    visibleInPresim: true
-  },
-  {
-    important: true,
-
-    category: 'Nursing',
-    title: "Right Great Toe Wound Care",
-    status: "Active",
-    details: "Daily dressing change with normal saline (NS) wound cleansing and application of sterile dry dressing. Apply topical antimicrobial per wound care protocol. Monitor for signs of infection (increased redness, drainage, odor).",
-    orderingProvider: "Dr. John Smith, MD",
-    visibleInPresim: true
-  },
-  {
-    important: false,
-
-    category: 'Nursing',
-    title: "Diabetic Diet",
-    status: "Active",
-    details: "Provide consistent carbohydrate diabetic diet. Encourage fluid intake unless contraindicated.",
-    orderingProvider: "Dr. John Smith, MD",
-    visibleInPresim: true
-  },
-  {
-    category: 'Nursing',
-    title: "Patient Education",
-    status: "Active",
-    details: "Educate patient on diabetes management, wound care, and MRSA precautions.",
-    orderingProvider: "Dr. John Smith, MD",
+    orderingProvider: "Dr. Chen, MD",
     important: true,
     visibleInPresim: true
   },
+  {
+    category: 'Nursing',
+    title: "Cardiac Monitoring",
+    details: "Acute Electrolyte imbalance",
+    status: "Active",
+    orderingProvider: "Dr. Chen, MD",
+    important: true,
+    visibleInPresim: true
+  },
+  {
+    category: 'Nursing',
+    title: "Q2Hr Turns",
+    details: "Reposition patient every two hours",
+    status: "Active",
+    orderingProvider: "Dr. Chen, MD",
+    important: true,
+    visibleInPresim: true
+  },
+
+  {
+    category: 'Nursing',
+    title: "Insert and Maintain IV",
+    details: "",
+    status: "Active",
+    orderingProvider: "Dr. Chen, MD",
+    important: true,
+    visibleInPresim: true
+  },
+
+  {
+    category: 'Nursing',
+    title: "Vital Signs Monitoring (q4h)",
+    details: "Monitor BP, HR, RR, Temp, SpO₂ every 4 hours. Notify provider for Temp > 38.0°C (100.4°F), Systolic BP > 160 mmHg or < 100 mmHg, HR > 110 bpm or < 50 bpm.",
+    status: "Active",
+    orderingProvider: "Dr. Chen, MD",
+    important: true,
+    visibleInPresim: true
+  },
+  {
+    category: 'Nursing',
+    title: "Orthostatic Vitals",
+    details: "Document BP & HR with patient supine, sitting, standing. Perform daily.",
+    status: "Active",
+    orderingProvider: "Dr. Chen, MD",
+    important: true,
+    visibleInPresim: true
+  },
+  {
+    category: 'Nursing',
+    title: "Intake & Output",
+    details: "Document I&O every 8 hours.",
+    status: "Active",
+    orderingProvider: "Dr. Chen, MD",
+    important: true,
+    visibleInPresim: true
+  },
+
 ];
 
 export const nursingHeaderNames: OrderType = {
@@ -122,21 +120,21 @@ export const medHeaderNames: MedOrderData = {
 
 export const respiratoryOrders: OrderType[] = [
   {
-    important: false,
     category: 'Respiratory',
     title: "Oxygen Therapy",
-    details: "Administer oxygen via nasal cannula at 2 L/min. Titrate to maintain SpO₂ ≥ 92%.",
+    details: "Titrate oxygen via nasal cannula to maintain SpO₂ ≥ 95%.",
     status: "Active",
-    orderingProvider: "Dr. Azzedine Habz",
+    orderingProvider: "Dr. Chen, MD",
+    important: true,
     visibleInPresim: true
   },
   {
-    important: false,
     category: 'Respiratory',
     title: "Incentive Spirometry",
     details: "Instruct patient to use incentive spirometer 10 times per hour while awake. Document effort and results",
     status: "Active",
-    orderingProvider: "Dr. Azzedine Habz",
+    orderingProvider: "Dr. Chen, MD",
+    important: false,
     visibleInPresim: true
   },
 ];
@@ -157,7 +155,7 @@ export const laboratoryOrders: OrderType[] = [
     title: "Basic Metabolic Panel (BMP)",
     status: "Active",
     details: "Collect Basic Metabolic Panel (BMP).",
-    orderingProvider: "Dr. John Smith, MD",
+    orderingProvider: "Dr. Chen, MD",
     important: true,
     visibleInPresim: true
   },
@@ -166,39 +164,10 @@ export const laboratoryOrders: OrderType[] = [
     title: "Complete Blood Count (CBC)",
     status: "Active",
     details: "Collect Complete Blood Count (CBC).",
-    orderingProvider: "Dr. John Smith, MD",
+    orderingProvider: "Dr. Chen, MD",
     important: true,
     visibleInPresim: true
-  },
-  {
-
-    category: 'Laboratory',
-    title: "HbA1c",
-    status: "Active",
-    details: "Collect HbA1c if not done within last 3 months.",
-    orderingProvider: "Dr. John Smith, MD",
-    important: false,
-    visibleInPresim: true
-  },
-  {
-    important: false,
-
-    category: 'Laboratory',
-    title: "Wound Culture",
-    status: "Active",
-    details: "Collect wound culture if signs of worsening infection.",
-    orderingProvider: "Dr. John Smith, MD",
-    visibleInPresim: true
-  },
-  {
-    category: 'Laboratory',
-    title: "Blood Glucose Monitoring (ACHS)",
-    status: "Active",
-    details: "Monitor blood glucose before meals and at bedtime (ACHS). Notify provider for blood glucose < 70 mg/dL or > 300 mg/dL.",
-    orderingProvider: "Dr. John Smith, MD",
-    important: true,
-    visibleInPresim: true
-  },
+  }
 ]
 
 export const laboratoryHeaderNames: OrderType = {
@@ -219,33 +188,21 @@ export const consultHeaderNames: OrderType = {
 
 export const consultOrders: OrderType[] = [
   {
-    important: false,
-
     category: 'Consult',
-    title: "Case Management Consult",
+    title: "Physical Therapy Consult",
+    details: "Evaluate and treat for functional mobility, strength, and safe transfer recommendations.",
     status: "Active",
-    details: "Consult Case Management for discharge planning and home wound care follow-up.",
-    orderingProvider: "Dr. John Smith, MD",
+    orderingProvider: "Dr. Chen, MD",
+    important: false,
     visibleInPresim: true
   },
   {
-    important: false,
-
     category: 'Consult',
-    title: "Pharmacy Consult",
+    title: "Occupational Therapy Consult",
+    details: "Evaluate and treat for activities of daily living (ADLs), adaptive equipment needs, and upper extremity function.",
     status: "Active",
-    details: "Consult Pharmacy for medication review.",
-    orderingProvider: "Dr. John Smith, MD",
-    visibleInPresim: true
-  },
-  {
+    orderingProvider: "Dr. Chen, MD",
     important: false,
-
-    category: 'Consult',
-    title: "Wound Culture",
-    status: "Active",
-    details: "Collect wound culture if signs of worsening infection.",
-    orderingProvider: "Dr. John Smith, MD",
     visibleInPresim: true
   }
 ]

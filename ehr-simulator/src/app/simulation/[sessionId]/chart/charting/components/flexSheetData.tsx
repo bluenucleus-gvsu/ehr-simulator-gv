@@ -35,7 +35,7 @@ export const getAllTimeOffsets = (simulationNow: number) => {
 
   const allTimeOffsets = [... new Set([...dynamicTimeOffsets, ...predefinedTimeOffsets])];
 
-  return allTimeOffsets.sort((a, b) => b - a)
+  return allTimeOffsets.sort((a, b) => a - b)
 };
 
 export const generateInitialChartingData = (allTimeOffsets: number[]): FlexSheetData[] => {
@@ -90,38 +90,208 @@ type PredefinedDataByTime = {
 };
 
 export const predefinedVitalsData2: PredefinedDataByTime = {
-  120: {
-    "hrInput": "88",
-    "hrSourceSelect": "Radial",
-    "bpInput": "124/72",
-    "bpSourceSelect": "Left upper arm",
-    "rrInput": "20",
-    "tempInput": "36.8",
-    "tempSourceSelect": "Oral",
-    "spo2Input": "98"
-  },
-  90: { // Data from 90 minutes ago
-    "hrInput": "112",
+  3000: { // Data from 3000 minutes ago
+    "hrInput": "90",
     "hrSourceSelect": "Monitor",
-    "bpInput": "112/68",
-    "bpSourceSelect": "Left upper arm",
-    "rrInput": "21",
+    "bpInput": "116/70",
+    "bpSourceSelect": "Right upper arm",
+    "rrInput": "18",
+    "tempInput": "37.6",
+    "tempSourceSelect": "Oral",
+    "spo2Input": "96",
+    "turgorInput": "poor",
+    "abdomenInput": "tenderness",
+    "bowelSoundsInput": "hyperactive",
+    "nauseaInput": "yes"
+  },
+  2880: { // Data from 2880 minutes ago
+    "hrInput": "88",
+    "hrSourceSelect": "Monitor",
+    "bpInput": "118/72",
+    "bpSourceSelect": "Right upper arm",
+    "rrInput": "18",
+    "tempInput": "37.2",
+    "tempSourceSelect": "Oral",
+    "spo2Input": "97",
+    "weightKgInput": "75"
+  },
+  2640: { // Data from 2640 minutes ago
+    "hrInput": "92",
+    "hrSourceSelect": "Monitor",
+    "bpInput": "114/70",
+    "bpSourceSelect": "Right upper arm",
+    "rrInput": "18",
     "tempInput": "37.4",
     "tempSourceSelect": "Oral",
-    "spo2Input": "91",
-    "painInput": "2",
-    "weightKgInput": "76.4 kg",
-    "lungSoundsInput": "Clear",
-    "heartSoundsInput": "S1, S2. No mumur noted",
-    "extremitiesInput": "+2 pitting edema in BLE"
+    "spo2Input": "97",
+    "urineInput": "concentrated",
+    "ivSiteInput": "clean, dry, intact",
+    "ivLocationInput": "left AC",
+    "bradenSensoryPerceptionSelect": "3",
+    "bradenMoistureSelect": "3",
+    "bradenActivitySelect": "3",
+    "bradenMobilitySelect": "3",
+    "bradenNutritionSelect": "2",
+    "bradenFrictionAndShearSelect": "2"
   },
-  5: { // Data from 5 minutes ago
-    "hrInput": "121",
+  2400: { // Data from 2400 minutes ago
+    "hrInput": "90",
     "hrSourceSelect": "Monitor",
-    "bpInput": "92/58",
-    "bpSourceSelect": "Left upper arm",
-    "rrInput": "28",
-    "spo2Input": "91",
+    "bpInput": "116/74",
+    "bpSourceSelect": "Right upper arm",
+    "rrInput": "20",
+    "tempInput": "37.6",
+    "tempSourceSelect": "Oral",
+    "spo2Input": "96",
+    "oralIntake": "450",
+    "ivIntakeInput": "600",
+    "stoolInput": "2"
+  },
+  2390: { // Data from 2390 minutes ago
+    "hrInput": "104",
+    "hrSourceSelect": "Monitor",
+    "bpInput": "102/68",
+    "bpSourceSelect": "Right upper arm"
+  },
+  2160: { // Data from 2160 minutes ago
+    "hrInput": "96",
+    "hrSourceSelect": "Monitor",
+    "bpInput": "110/68",
+    "bpSourceSelect": "Right upper arm",
+    "rrInput": "20",
+    "tempInput": "37.8",
+    "tempSourceSelect": "Oral",
+    "spo2Input": "96",
+    "ivSiteInput": "clean, dry, intact",
+    "ivLocationInput": "left AC",
+    "bradenSensoryPerceptionSelect": "3",
+    "bradenMoistureSelect": "3",
+    "bradenActivitySelect": "3",
+    "bradenMobilitySelect": "3",
+    "bradenNutritionSelect": "2",
+    "bradenFrictionAndShearSelect": "2"
+  },
+  1920: { // Data from 1920 minutes ago
+    "hrInput": "98",
+    "hrSourceSelect": "Monitor",
+    "bpInput": "108/66",
+    "bpSourceSelect": "Right upper arm",
+    "rrInput": "20",
+    "tempInput": "37.9",
+    "tempSourceSelect": "Oral",
+    "spo2Input": "96",
+    "oralIntake": "300",
+    "ivIntakeInput": "600",
+    "stoolInput": "1"
+  },
+  1680: { // Data from 1680 minutes ago
+    "hrInput": "100",
+    "hrSourceSelect": "Monitor",
+    "bpInput": "106/64",
+    "bpSourceSelect": "Right upper arm",
+    "rrInput": "20",
+    "tempInput": "38.0",
+    "tempSourceSelect": "Oral",
+    "spo2Input": "96",
+    "weightKgInput": "75.8"
+  },
+  1440: { // Data from 1440 minutes ago
+    "hrInput": "104",
+    "hrSourceSelect": "Monitor",
+    "bpInput": "102/66",
+    "bpSourceSelect": "Right upper arm",
+    "rrInput": "22",
+    "tempInput": "38.1",
+    "tempSourceSelect": "Oral",
+    "spo2Input": "95",
+    "oralIntake": "150",
+    "ivIntakeInput": "600",
+    "stoolInput": "1",
+    "skinInput": "flush, warm, diaphoretic",
+    "lungSoundsInput": "Clear, diminished",
+    "abdomenInput": "tenderness",
+    "nauseaInput": "yes",
+    "ivSiteInput": "clean, dry, intact",
+    "ivLocationInput": "left AC",
+    "bradenSensoryPerceptionSelect": "3",
+    "bradenMoistureSelect": "3",
+    "bradenActivitySelect": "3",
+    "bradenMobilitySelect": "3",
+    "bradenNutritionSelect": "2",
+    "bradenFrictionAndShearSelect": "2"
+  },
+  1200: { // Data from 1200 minutes ago
+    "hrInput": "108",
+    "hrSourceSelect": "Monitor",
+    "bpInput": "98/60",
+    "bpSourceSelect": "Right upper arm",
+    "rrInput": "22",
+    "tempInput": "38.6",
+    "tempSourceSelect": "Oral",
+    "spo2Input": "96"
+  },
+  960: { // Data from 960 minutes ago
+    "hrInput": "110",
+    "hrSourceSelect": "Monitor",
+    "bpInput": "96/58",
+    "bpSourceSelect": "Right upper arm",
+    "rrInput": "22",
+    "tempInput": "38.4",
+    "tempSourceSelect": "Oral",
+    "spo2Input": "95",
+    "oralIntake": "200",
+    "ivIntakeInput": "600",
+    "stoolInput": "1"
+  },
+  720: { // Data from 720 minutes ago
+    "hrInput": "112",
+    "hrSourceSelect": "Monitor",
+    "bpInput": "94/58",
+    "bpSourceSelect": "Right upper arm",
+    "rrInput": "24",
+    "tempInput": "38.4",
+    "tempSourceSelect": "Oral",
+    "spo2Input": "94"
+  },
+  600: { // Data from 600 minutes ago
+    "skinInput": "flush, warm, diaphoretic",
+    "turgorInput": "poor",
+    "lungSoundsInput": "Clear, diminished",
+    "ivSiteInput": "clean, dry, intact",
+    "ivLocationInput": "left AC",
+    "bradenSensoryPerceptionSelect": "3",
+    "bradenMoistureSelect": "3",
+    "bradenActivitySelect": "3",
+    "bradenMobilitySelect": "3",
+    "bradenNutritionSelect": "2",
+    "bradenFrictionAndShearSelect": "2"
+  },
+  480: { // Data from 480 minutes ago
+    "hrInput": "116",
+    "hrSourceSelect": "Monitor",
+    "bpInput": "92/56",
+    "bpSourceSelect": "Right upper arm",
+    "rrInput": "24",
+    "tempInput": "38.8",
+    "tempSourceSelect": "Oral",
+    "spo2Input": "95",
+    "oralIntake": "150",
+    "ivIntakeInput": "600"
+  },
+  240: { // Data from 240 minutes ago
+    "hrInput": "118",
+    "hrSourceSelect": "Monitor",
+    "bpInput": "90/56",
+    "bpSourceSelect": "Right upper arm",
+    "rrInput": "24",
+    "tempInput": "38.4",
+    "tempSourceSelect": "Oral",
+    "spo2Input": "95",
+    "weightKgInput": "76.2"
+  },
+  0: { // Data from now
+    "oralIntake": "100",
+    "ivIntakeInput": "600"
   }
 };
 
