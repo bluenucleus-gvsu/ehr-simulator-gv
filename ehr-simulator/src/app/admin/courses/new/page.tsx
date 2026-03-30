@@ -14,6 +14,7 @@ import {
   UserCog,
   Check,
   ChevronsUpDown,
+  Loader2,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -99,6 +100,9 @@ export default function CreateCoursePage() {
     [makeSectionName(0)]: makeSectionState(),
   })
 
+  const [isPending, setIsPending] = useState(false)
+  const [triggerSubmit, setTriggerSubmit] = useState(false)
+
   const [draggedStudent, setDraggedStudent] = useState<{
     student: Student
     fromGroup: string
@@ -106,66 +110,83 @@ export default function CreateCoursePage() {
   } | null>(null)
   const [dragOverGroup, setDragOverGroup] = useState<string | null>(null)
 
-  const handleSubmit = async () => {
-    if (allStudents.length > 0) {
-      await provisionStudents(allStudents)
-    }
+  // Runs after React commits the loading UI to the DOM
+  useEffect(() => {
+    if (!triggerSubmit) return
+    setTriggerSubmit(false)
 
-    // Look up real user IDs by email from the users table
-    const provisionedUsers = await getUsersByEmails(allStudents.map(s => s.email).filter((email): email is string => email != null))
-    const emailToUserId = Object.fromEntries(
-      provisionedUsers.map(u => [u.email, u.id])
-    )
+    const run = async () => {
+      try {
+        if (allStudents.length > 0) {
+          await provisionStudents(allStudents)
+        }
 
-    const courseResponse = await createCourse({ active: true, code: courseCode, name: courseName })
-    if (!courseResponse.success || !courseResponse.data) return
-    const courseId = courseResponse.data.id
+        const provisionedUsers = await getUsersByEmails(allStudents.map(s => s.email).filter((email): email is string => email != null))
+        const emailToUserId = Object.fromEntries(
+          provisionedUsers.map(u => [u.email, u.id])
+        )
 
-    const sectionResults = await Promise.all(
-      sections.map((section) =>
-        createSection({
-          course_id: courseId,
-          name: section.name,
-          start_date: section.start_date,
-          end_date: section.end_date,
-          meeting_time: section.meeting_time,
-          semester: semester,
-        })
-      )
-    )
+        const courseResponse = await createCourse({ active: true, code: courseCode, name: courseName })
+        if (!courseResponse.success || !courseResponse.data) return
+        const courseId = courseResponse.data.id
 
-    for (let i = 0; i < sections.length; i++) {
-      const sectionResult = sectionResults[i]
-      if (!sectionResult.success || !sectionResult.data) continue
+        const sectionResults = await Promise.all(
+          sections.map((section) =>
+            createSection({
+              course_id: courseId,
+              name: section.name,
+              start_date: section.start_date,
+              end_date: section.end_date,
+              meeting_time: section.meeting_time,
+              semester: semester,
+            })
+          )
+        )
 
-      const sectionId = sectionResult.data.id
-      const sectionName = sections[i].name
-      const groups = sectionStates[sectionName]?.groups ?? {}
+        for (let i = 0; i < sections.length; i++) {
+          const sectionResult = sectionResults[i]
+          if (!sectionResult.success || !sectionResult.data) continue
 
-      await Promise.all(
-        Object.entries(groups).map(async ([groupName, students]) => {
-          const groupResponse = await createGroup({ name: groupName, section_id: sectionId })
-          if (!groupResponse.success || !groupResponse.data) return
-
-          const groupId = groupResponse.data.id
+          const sectionId = sectionResult.data.id
+          const sectionName = sections[i].name
+          const groups = sectionStates[sectionName]?.groups ?? {}
 
           await Promise.all(
-            students
-              .filter((student): student is Student & { email: string } => student.email != null)
-              .map((student) => {
-                const studentId = emailToUserId[student.email]  // real UUID from DB
-                if (!studentId) {
-                  console.error("No user ID found for student:", student.email)
-                  return
-                }
-                return createGroupMembers({ group_id: groupId, student_id: studentId, active: true })
-              })
+            Object.entries(groups).map(async ([groupName, students]) => {
+              const groupResponse = await createGroup({ name: groupName, section_id: sectionId })
+              if (!groupResponse.success || !groupResponse.data) return
+
+              const groupId = groupResponse.data.id
+
+              await Promise.all(
+                students
+                  .filter((student): student is Student & { email: string } => student.email != null)
+                  .map((student) => {
+                    const studentId = emailToUserId[student.email]
+                    if (!studentId) {
+                      console.error("No user ID found for student:", student.email)
+                      return
+                    }
+                    return createGroupMembers({ group_id: groupId, student_id: studentId, active: true })
+                  })
+              )
+            })
           )
-        })
-      )
+        }
+
+        router.push("/admin/courses")
+      } finally {
+        setIsPending(false)
+      }
     }
 
-    router.push("/admin/courses")
+    run()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [triggerSubmit])
+
+  const handleSubmit = () => {
+    setIsPending(true)
+    setTriggerSubmit(true)
   }
 
   const parseCSV = (text: string): Student[] => {
@@ -482,6 +503,12 @@ export default function CreateCoursePage() {
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-slate-50/50">
+      {isPending && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/70 backdrop-blur-sm">
+          <Loader2 className="size-10 animate-spin text-slate-700 mb-3" />
+          <p className="text-slate-700 font-medium">Creating course...</p>
+        </div>
+      )}
       <header className="sticky top-0 flex items-center justify-between px-4 sm:px-8 py-3 bg-white border-b z-10 shadow gap-4 flex-wrap">
         <div>
           <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
@@ -493,8 +520,8 @@ export default function CreateCoursePage() {
           <Button className="cursor-pointer" variant="secondary" onClick={() => router.push("/admin/courses")}>
             <ArrowLeft /> Cancel
           </Button>
-          <Button className="cursor-pointer" onClick={handleSubmit}>
-            Submit Course <ArrowRight />
+          <Button className="cursor-pointer" onClick={handleSubmit} disabled={isPending}>
+            {isPending ? <><Loader2 className="animate-spin" /> Submitting...</> : <>Submit Course <ArrowRight /></>}
           </Button>
         </div>
       </header>
