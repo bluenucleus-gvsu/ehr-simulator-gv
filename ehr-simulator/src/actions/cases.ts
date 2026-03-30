@@ -84,7 +84,7 @@ export async function getCaseByCourseId(id: string) {
         name
       )
       `)
-    .eq("course_id", id)
+    // .eq("course_id", id) // Commented out to retrieve all cases for assignment. 
 
   if (error) {
     const result = {
