@@ -5,20 +5,20 @@ const Nutrition = () => {
   const dietOrders = [
     {
       category: "Diet",
-      title: "Carb Controlled",
+      title: "Heart Healthy",
       details: '',
       status: 'Active',
-      orderingProvider: 'Dr. Mehmet Oz',
-      important: false,
+      orderingProvider: 'Dr. Chen',
+      important: true,
       visibleInPresim: true,
     },
     {
       category: "Diet",
-      title: "Fluid Restriction",
+      title: "Fluid Restriction, 2L",
       details: '',
       status: 'Active',
-      orderingProvider: 'Dr. Mehmet Oz',
-      important: false,
+      orderingProvider: 'Dr. Chen',
+      important: true,
       visibleInPresim: true,
     }
   ]

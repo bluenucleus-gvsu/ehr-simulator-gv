@@ -75,7 +75,7 @@ export const generateAllInitialLabTimes = (referenceDate: number) => {
       timePoints.set(displayTimeStamp, { dateKey: timeOffset, labs: entry.labs })
     }
   })
-  const sortedTimePoints = Array.from(timePoints.values()).sort((a, b) => b.dateKey - a.dateKey);
+  const sortedTimePoints = Array.from(timePoints.values()).sort((a, b) => a.dateKey - b.dateKey);
   return sortedTimePoints;
 }
 
@@ -113,13 +113,13 @@ export const generateInitialLabData = (
     if (templateRow.rowType === "imaging") {
       allTimesColumns.forEach(timePoint => {
         const labValue = labResultsLookup.get(timePoint.dateKey)?.get(templateRow.field);
-        newRow[timePoint.dateKey] = labValue ? labValue.value : {};
+        newRow[timePoint.dateKey] = labValue ? labValue.value : undefined;
       });
     }
     if (templateRow.rowType === "microbiology") {
       allTimesColumns.forEach(timePoint => {
         const labValue = labResultsLookup.get(timePoint.dateKey)?.get(templateRow.field);
-        newRow[timePoint.dateKey] = labValue ? labValue.value : {};
+        newRow[timePoint.dateKey] = labValue ? labValue.value : undefined;
       });
     }
     generatedData.push(newRow)
@@ -132,112 +132,66 @@ export const generateInitialLabData = (
 
 export const predefinedLabData: PredefinedLabEntry[] = [
   {
-    daysOffset: 2, // Today
-    hoursOffset: 1,
+    daysOffset: 2,
+    hoursOffset: 0,
     labs: [
-      { labName: "Sodium", value: "134" },
+      { labName: "Sodium", value: "125" },
       { labName: "Potassium", value: "3.7" },
-      { labName: "Chlorine", value: "99" },
+      { labName: "Chloride", value: "94" },
       { labName: "BUN", value: "25" },
-      { labName: "Creatinine", value: "1.3" },
-      { labName: "Glucose", value: "275" },
-      { labName: "CO2", value: "24" },
-      { labName: "Calcium", value: "8.9" },
-
-      { labName: "RBC", value: "4.5" },
-      { labName: "WBC", value: "11.8" },
-      { labName: "Platelets", value: "280" },
-      { labName: "Hemoglobin", value: "14.2" },
-      { labName: "Hematocrit", value: "42" },
-      { labName: "MCV", value: "92" },
-      { labName: "MCH", value: "31" },
-      { labName: "MCHC", value: "33" },
-
-      { labName: "pH", value: "7.35" },
-      { labName: "pCO2", value: "48" },
-      { labName: "pO2", value: "38" },
-      { labName: "HCO3", value: "25" },
-
-      { labName: "Hemoglobin A1c", value: "9.5" },
-      { labName: "AST", value: "35" },
-      { labName: "ALT", value: "40" },
-      { labName: "Troponin", value: "0.01" },
-    ]
+      { labName: "Creatinine", value: "1.1" },
+      { labName: "Glucose", value: "108" },
+      { labName: "CO2", value: "94" },
+      { labName: "Calcium", value: "9.1" },
+      { labName: "Lactate", value: "1.3" },
+      { labName: "RBC", value: "6.2" },
+      { labName: "WBC", value: "11" },
+      { labName: "Platelets", value: "220" },
+      { labName: "Hemoglobin", value: "15.2" },
+      { labName: "Hematocrit", value: "46" },
+      { labName: "Specific Gravity", value: "1.03" },
+      { labName: "Urine pH", value: "6" },
+      { labName: "Magnesium", value: "1.8" },
+      { labName: "Phosphate", value: "3.2" },
+      { labName: "Monocytes", value: "6" },
+      { labName: "Lymphocytes", value: "20" },
+      { labName: "Neutrophils", value: "72" },
+    ],
   },
   {
-    daysOffset: 0, // Today
-    hoursOffset: 1,
+    daysOffset: 1,
+    hoursOffset: 0,
     labs: [
-      { labName: "Glucose", value: "210" },
-    ]
+      { labName: "Sodium", value: "129" },
+      { labName: "Potassium", value: "3.6" },
+      { labName: "Chloride", value: "95" },
+      { labName: "BUN", value: "28" },
+      { labName: "Creatinine", value: "1.2" },
+      { labName: "Glucose", value: "118" },
+      { labName: "WBC", value: "13.5" },
+      { labName: "Platelets", value: "210" },
+      { labName: "Hemoglobin", value: "15" },
+      { labName: "Hematocrit", value: "45" },
+      { labName: "Neutrophils", value: "78" },
+    ],
   },
-  {
-    daysOffset: 1, // Today
-    hoursOffset: 4,
-    labs: [
-      { labName: "Glucose", value: "204" },
-    ]
-  },
-
   {
     daysOffset: 0,
-    hoursOffset: 4,
+    hoursOffset: 2,
     labs: [
-      { labName: "Sodium", value: "136" },
-      { labName: "Potassium", value: "6.1" },
-      { labName: "Chlorine", value: "100" },
-      { labName: "BUN", value: "20" },
-      { labName: "Creatinine", value: "1.2" },
-      { labName: "Glucose", value: "185" },
-      { labName: "CO2", value: "25" },
-      { labName: "Calcium", value: "9.0" },
-    ]
-  },
-  {
-    daysOffset: 1,
-    hoursOffset: 1,
-    labs: [
-      { labName: "Glucose", value: "160" },
-      {
-        labName: "CT R. Foot",
-        value: {
-          isCritical: true,
-          displayName: "CT OF THE RIGHT FOOT",
-          technique: "Non-contrast axial and sagittal CT images of the right foot were obtained. Multiplanar reconstructions performed.",
-          findings: [
-            { region: "Soft Tissue", description: "There is a focal soft tissue defect overlying the plantar aspect of the right forefoot, measuring approximately 2.8 cm in diameter, with surrounding subcutaneous fat stranding and mild edema." },
-            { region: "Bone Structures", description: "Cortical irregularity and erosion noted involving the underlying second and third metatarsal heads. Trabecular sclerosis and decreased attenuation suggest early osteomyelitic changes. No definitive intraosseous gas observed." },
-            { region: "Joints", description: "Mild degenerative changes at the tarsometatarsal joints. No joint effusion", },
-            { region: "Vascularity", description: "Posterior tibial artery calcifications consistent with peripheral vascular disease." }
-          ],
-          impressions: [
-            "Soft tissue ulceration of the right plantar forefoot with adjacent inflammatory changes.",
-            "Findings suggestive of early osteomyelitis involving the second and third metatarsal heads.",
-            "Peripheral vascular calcifications likely related to underlying diabetes."
-          ]
-        },
-      },
-      {
-        labName: "Wound Culture",
-        value: {
-          sampleType: "Wound Culture – Right Great Toe",
-          appearance: "Purulent drainage noted, surrounding erythema",
-          microscopy: "Gram stain: Moderate gram-positive cocci in clusters, few PMNs",
-          cultureResults: "Staphylococcus aureus (moderate growth)",
-          sensitivity: "Methicillin (R), Clindamycin (S), Vancomycin (S)",
-          comments: "Likely MRSA involvement. Consider empiric coverage with vancomycin. Poor healing noted in context of suboptimal glycemic control.",
-          reporter: "AC, Microbiology Lab – St. Jude Medical Center",
-          isCritical: true
-        }
-      }
-    ]
-  },
-  {
-    daysOffset: 1,
-    hoursOffset: 14,
-    labs: [
-      { labName: "Glucose", value: "195" },
-    ]
+      { labName: "Sodium", value: "126" },
+      { labName: "Potassium", value: "3.5" },
+      { labName: "Chloride", value: "93" },
+      { labName: "BUN", value: "32" },
+      { labName: "Creatinine", value: "1.4" },
+      { labName: "Glucose", value: "130" },
+      { labName: "Lactate", value: "2.4" },
+      { labName: "WBC", value: "18.5" },
+      { labName: "Platelets", value: "200" },
+      { labName: "Hemoglobin", value: "14.8" },
+      { labName: "Hematocrit", value: "44" },
+      { labName: "Neutrophils", value: "85" },
+    ],
   },
 ];
 

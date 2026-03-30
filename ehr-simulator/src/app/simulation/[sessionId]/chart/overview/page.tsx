@@ -5,9 +5,8 @@ import Nutrition from "./components/nutrition"
 import ActiveProblems from "./components/activeProblems"
 import Alerts from "./components/alerts"
 import CareTeam from "./components/careTeam"
-import { IntakeOutput } from "./components/intakeOutput"
 import { SelectedLabs } from "./components/selectedLabs"
-import MarSnapshot from "./components/marSnapshot"
+// import MarSnapshot from "./components/marSnapshot"
 import Demographics from "./components/demographics"
 import FamilyHistory from "./components/familyHistory"
 
@@ -23,9 +22,8 @@ const OverviewPage = () => {
           <Visitors />
           <Nutrition />
           <CareTeam />
-          <IntakeOutput />
           <SelectedLabs />
-          <MarSnapshot />
+          {/* <MarSnapshot /> */}
           <Demographics />
           <FamilyHistory />
         </div>

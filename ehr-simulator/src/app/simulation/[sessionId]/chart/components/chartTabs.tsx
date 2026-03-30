@@ -1,6 +1,6 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clipboard, NotebookText, Pill, TestTubeDiagonal, User } from "lucide-react";
-import MultiPtSelector from "./multiPtSelector";
+import { Clipboard, NotebookText, Pill, TestTubeDiagonal } from "lucide-react";
+// import MultiPtSelector from "./multiPtSelector";
 import Link from "next/link";
 import { useParams } from "next/navigation"
 
@@ -21,12 +21,12 @@ export default function ChartTabs() {
       icon: <TestTubeDiagonal />,
       path: `/simulation/${sessionId}/chart/labs`,
     },
-    {
-      name: "Avatar",
-      value: "Avatar",
-      icon: <User />,
-      path: `/simulation/${sessionId}/chart/overview`,
-    },
+    // {
+    //   name: "Avatar",
+    //   value: "Avatar",
+    //   icon: <User />,
+    //   path: `/simulation/${sessionId}/chart/overview`,
+    // },
     {
       name: "Orders",
       value: "Orders",
@@ -72,7 +72,7 @@ export default function ChartTabs() {
               </TabsTrigger>
             </Link>
           )),
-          <MultiPtSelector key="multiPatientSelector" />
+          // <MultiPtSelector key="multiPatientSelector" />
         ]}
       </TabsList>
     </Tabs>

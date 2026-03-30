@@ -60,7 +60,7 @@ export function SelectedLabs() {
     }
 
     // Iterate backwards through time
-    for (let i = labTimes.length - 1; i >= 0; i--) {
+    for (let i = 0; i < labTimes.length; i++) {
       const timePoint = labTimes[i];
       const timestampKey = timePoint.dateKey;
 

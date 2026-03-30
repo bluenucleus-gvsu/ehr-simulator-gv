@@ -28,7 +28,7 @@ export function getMedDose(medication: AllMedicationTypes, order: MedicationOrde
   if (isSlidingScaleInsulin(medication)) {
     return "Variable"
   } else {
-    return `${medication.strength * order.unitsOrdered}${medication.strengthUnit}`
+    return `${(order.dose / medication.strength) * medication.strength}${medication.strengthUnit}`
   }
 }
 
