@@ -522,7 +522,6 @@ export const medicationOrders: MedicationOrder[] = [
     orderingProvider: "Dr. Chen",
     dose: 40,
     visibleInPresim: true,
-    instructions: " "
   },
   {
     id: "orderSodiumChloride",
@@ -568,95 +567,8 @@ export const medicationOrders: MedicationOrder[] = [
     dose: 1000,
     visibleInPresim: true,
     infusionRate: 75,
-    instructions: " "
   },
-  {
-    id: "orderFurosemideOral20",
-    medicationId: "medFurosemideOral20",
-    dose: 20,
-    frequency: "BID",
-    priority: "Routine",
-    indication: "Edema",
-    instructions: "Monitor daily weight and I/O.",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderPantoprazoleIv40",
-    medicationId: "medPantoprazoleIv40",
-    dose: 40,
-    frequency: "QD",
-    priority: "Routine",
-    infusionRate: 100, // 50mL over 0.5hr = 100mL/hr
-    indication: "GERD",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderEnoxaparinSc40",
-    medicationId: "medEnoxaparinSc40",
-    dose: 40,
-    frequency: "QD",
-    priority: "Routine",
-    indication: "DVT Prophylaxis",
-    instructions: "Administer to abdomen, 2 inches from umbilicus. Do not expel air bubble.",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderMorphineIv",
-    medicationId: "medMorphineIv10",
-    dose: 2,
-    frequency: "Q3hr",
-    priority: "PRN",
-    indication: "Severe Pain",
-    instructions: "For pain 7-10. Reassess pain in 30 minutes.",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderCeftriaxoneIm250",
-    medicationId: "medCeftriaxoneIm250",
-    dose: 250,
-    frequency: "Once",
-    priority: "STAT",
-    indication: "Bacterial Infection",
-    instructions: "Reconstitute with 1.8 mL sterile water and administer IM.",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderEpinephrineIm1mg",
-    medicationId: "medEpinephrineIm1mg",
-    dose: 1,
-    frequency: "Q12hr",
-    priority: "PRN",
-    indication: "Anaphylaxis",
-    instructions: "Administer immediately for signs of severe allergic reaction (wheezing, hives, swelling).",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderMethylprednisoloneIv125",
-    medicationId: "medMethylprednisoloneIv125",
-    dose: 125,
-    frequency: "Once",
-    priority: "STAT",
-    infusionRate: 100, // 100mL over 1hr = 100mL/hr
-    indication: "Severe Inflammation",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  },
-  {
-    id: "orderNitroglycerin04mgSl",
-    medicationId: "medNitroglycerin04mgSl",
-    dose: 0.4,
-    frequency: "Q5min",
-    priority: "PRN",
-    indication: "Angina",
-    orderingProvider: "Dr. Rahul Gupta",
-    visibleInPresim: true
-  }
+
 ]
 
 // negative time offset -> occurred in the past

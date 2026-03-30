@@ -490,6 +490,11 @@ export type Database = {
           orientation: string | null
           orientation2: number | null
           pain: string | null
+          pain_aggravating_factors: string | null
+          pain_alleviating_factors: string | null
+          pain_characteristics: string | null
+          pain_interventions: string | null
+          pain_location: string | null
           parenteral_nutrition: string | null
           paroxysmal_sweats: number | null
           rr: string | null
@@ -499,6 +504,7 @@ export type Database = {
           skin: string | null
           speech: string | null
           spo2: string | null
+          spo2_source: string | null
           stool: string | null
           tactile_disturbances: number | null
           temp: string | null
@@ -507,6 +513,7 @@ export type Database = {
           tremor: number | null
           turgor: string | null
           urine: string | null
+          urine_description: string | null
           visual_disturbances: number | null
           voiding: string | null
           weight_kg: string | null
@@ -573,6 +580,11 @@ export type Database = {
           orientation?: string | null
           orientation2?: number | null
           pain?: string | null
+          pain_aggravating_factors?: string | null
+          pain_alleviating_factors?: string | null
+          pain_characteristics?: string | null
+          pain_interventions?: string | null
+          pain_location?: string | null
           parenteral_nutrition?: string | null
           paroxysmal_sweats?: number | null
           rr?: string | null
@@ -582,6 +594,7 @@ export type Database = {
           skin?: string | null
           speech?: string | null
           spo2?: string | null
+          spo2_source?: string | null
           stool?: string | null
           tactile_disturbances?: number | null
           temp?: string | null
@@ -590,6 +603,7 @@ export type Database = {
           tremor?: number | null
           turgor?: string | null
           urine?: string | null
+          urine_description?: string | null
           visual_disturbances?: number | null
           voiding?: string | null
           weight_kg?: string | null
@@ -656,6 +670,11 @@ export type Database = {
           orientation?: string | null
           orientation2?: number | null
           pain?: string | null
+          pain_aggravating_factors?: string | null
+          pain_alleviating_factors?: string | null
+          pain_characteristics?: string | null
+          pain_interventions?: string | null
+          pain_location?: string | null
           parenteral_nutrition?: string | null
           paroxysmal_sweats?: number | null
           rr?: string | null
@@ -665,6 +684,7 @@ export type Database = {
           skin?: string | null
           speech?: string | null
           spo2?: string | null
+          spo2_source?: string | null
           stool?: string | null
           tactile_disturbances?: number | null
           temp?: string | null
@@ -673,6 +693,7 @@ export type Database = {
           tremor?: number | null
           turgor?: string | null
           urine?: string | null
+          urine_description?: string | null
           visual_disturbances?: number | null
           voiding?: string | null
           weight_kg?: string | null
@@ -826,6 +847,11 @@ export type Database = {
           orientation: string | null
           orientation2: number | null
           pain: string | null
+          pain_aggravating_factors: string | null
+          pain_alleviating_factors: string | null
+          pain_characteristics: string | null
+          pain_interventions: string | null
+          pain_location: string | null
           parenteral_nutrition: string | null
           paroxysmal_sweats: number | null
           rr: string | null
@@ -835,6 +861,7 @@ export type Database = {
           skin: string | null
           speech: string | null
           spo2: string | null
+          spo2_source: string | null
           stool: string | null
           tactile_disturbances: number | null
           temp: string | null
@@ -843,6 +870,7 @@ export type Database = {
           tremor: number | null
           turgor: string | null
           urine: string | null
+          urine_description: string | null
           user_id: string
           visual_disturbances: number | null
           voiding: string | null
@@ -912,6 +940,11 @@ export type Database = {
           orientation?: string | null
           orientation2?: number | null
           pain?: string | null
+          pain_aggravating_factors?: string | null
+          pain_alleviating_factors?: string | null
+          pain_characteristics?: string | null
+          pain_interventions?: string | null
+          pain_location?: string | null
           parenteral_nutrition?: string | null
           paroxysmal_sweats?: number | null
           rr?: string | null
@@ -921,6 +954,7 @@ export type Database = {
           skin?: string | null
           speech?: string | null
           spo2?: string | null
+          spo2_source?: string | null
           stool?: string | null
           tactile_disturbances?: number | null
           temp?: string | null
@@ -929,6 +963,7 @@ export type Database = {
           tremor?: number | null
           turgor?: string | null
           urine?: string | null
+          urine_description?: string | null
           user_id: string
           visual_disturbances?: number | null
           voiding?: string | null
@@ -998,6 +1033,11 @@ export type Database = {
           orientation?: string | null
           orientation2?: number | null
           pain?: string | null
+          pain_aggravating_factors?: string | null
+          pain_alleviating_factors?: string | null
+          pain_characteristics?: string | null
+          pain_interventions?: string | null
+          pain_location?: string | null
           parenteral_nutrition?: string | null
           paroxysmal_sweats?: number | null
           rr?: string | null
@@ -1007,6 +1047,7 @@ export type Database = {
           skin?: string | null
           speech?: string | null
           spo2?: string | null
+          spo2_source?: string | null
           stool?: string | null
           tactile_disturbances?: number | null
           temp?: string | null
@@ -1015,6 +1056,7 @@ export type Database = {
           tremor?: number | null
           turgor?: string | null
           urine?: string | null
+          urine_description?: string | null
           user_id?: string
           visual_disturbances?: number | null
           voiding?: string | null
@@ -2070,6 +2112,7 @@ export type Database = {
           source_type: string | null
           speech: string | null
           spo2: string | null
+          spo2_source: string | null
           stool: string | null
           tactile_disturbances: number | null
           temp: string | null

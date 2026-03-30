@@ -67,6 +67,7 @@ export function VitalsOverview({ dbDocumentation = [] }: VitalsOverviewProps) {
 
   const { allTimeOffsets, fullChartingData } = useMemo(() => {
     if (!simStartTime) return { allTimeOffsets: [], fullChartingData: [] };
+
     const offsets = getAllTimeOffsets(simStartTime, dbDocumentation);
     const data = generateChartingDataFromDB(dbDocumentation, offsets);
     return { allTimeOffsets: offsets, fullChartingData: data };

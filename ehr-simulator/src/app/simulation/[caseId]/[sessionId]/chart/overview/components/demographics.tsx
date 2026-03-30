@@ -67,7 +67,7 @@ const Demographics = () => {
     <Card className="relative col-span-1 pt-2 overflow-hidden h-fit gap-3">
       <StyledTitle color="bg-lime-200" firstLetter="D" secondLetter="emograhics" />
       <CardContent className="px-4 space-y-1">
-        <div className="flex">
+        {/* <div className="flex">
           <p className="text-sm pr-2 font-light">{chartData.gender.label}: </p>
           <p className="text-sm">{chartData.gender.value}</p>
         </div>
@@ -81,7 +81,7 @@ const Demographics = () => {
           <p className="text-sm pr-2 font-light">{chartData.pronouns.label}: </p>
           <p className="text-sm">{chartData.pronouns.value}</p>
         </div>
-        <Separator className="bg-lime-200" />
+        <Separator className="bg-lime-200" /> */}
         <div className="flex">
           <p className="text-sm pr-2 font-light">{chartData.relationshipStatus.label}: </p>
           <p className="text-sm">{chartData.relationshipStatus.value}</p>

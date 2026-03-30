@@ -15,15 +15,15 @@ import {
   ClipboardList
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { format, subMinutes } from "date-fns"
-import DOMPurify from "dompurify"
+import { addMinutes, format } from "date-fns"
+// import DOMPurify from "dompurify"
 import { ClinicalDocumentView } from "@/actions/simulation"
 
 const displayDate = (startTime: number | null, offset: number) => {
   if (!startTime) {
     return 'Unknown'
   }
-  return format(subMinutes(startTime, offset), "Pp")
+  return format(addMinutes(startTime, offset), "Pp")
 
 };
 
@@ -34,11 +34,11 @@ interface NoteDisplayProps {
 
 export default function NoteDisplay({ note, startTime }: NoteDisplayProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const sanitizedContent = DOMPurify.sanitize(note.doc_text)
+  // const sanitizedContent = DOMPurify.sanitize(note.doc_text)
 
   // Determine icon based on note type
-  const NoteIcon = (note.specialty === "Nursing Note" || note.specialty === "Student Note") ? Stethoscope : ClipboardList;
-  const iconColor = (note.specialty === "Nursing Note" || note.specialty === "Student Note") ? "text-blue-600 bg-blue-50" : "text-orange-600 bg-orange-50";
+  const NoteIcon = (note.specialty === "Nursing" || note.specialty === "Student") ? Stethoscope : ClipboardList;
+  const iconColor = (note.specialty === "Nursing" || note.specialty === "Student") ? "text-blue-600 bg-blue-50" : "text-orange-600 bg-orange-50";
 
   return (
     <Collapsible
@@ -93,7 +93,7 @@ export default function NoteDisplay({ note, startTime }: NoteDisplayProps) {
         <div className="px-8 py-4 text-sm text-black space-y-4 animate-in slide-in-from-top-2 duration-200 border-t  border-slate-100">
           <div
             className="w-full max-w-none [&_p]:min-h-[1rem]"
-            dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+            dangerouslySetInnerHTML={{ __html: note.doc_text }}
           />
         </div>
       </CollapsibleContent>

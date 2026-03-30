@@ -38,10 +38,11 @@ const NoteView = ({
   }, [clinicalDocuments]);
 
   const filteredNotesData = useMemo(() => {
+    const sorted_notes = clinicalDocuments.sort((a, b) => b.time_offset - a.time_offset);
     if (filteredSpecialties.length === 0) {
-      return clinicalDocuments;
+      return sorted_notes;
     }
-    return clinicalDocuments.filter(note => filteredSpecialties.includes(note.specialty));
+    return sorted_notes.filter(note => filteredSpecialties.includes(note.specialty))
   }, [clinicalDocuments, filteredSpecialties]);
 
   const handleFilterChange = (specialty: string, checked: boolean | "indeterminate") => {
@@ -59,7 +60,7 @@ const NoteView = ({
   };
 
   const onSubmitNote = async (noteContent: string) => {
-    const now = differenceInMinutes(new Date(), simStartTime || 0)
+    const now = differenceInMinutes(new Date(), simStartTime ?? 0)
     if (!groupId || !userId || !caseId || !sessionId) {
       toast.error("Still loading session data. Please try again in a moment.");
       return;

@@ -1,8 +1,8 @@
-import { CircleUserRound, Info } from "lucide-react";
+import { CircleUserRound } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { ChartData } from "./chartData";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+// import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format, subDays, subYears } from "date-fns";
 
 // You need to import your mock data sources here
@@ -179,7 +179,7 @@ export default function ChartSidebar() {
           <p className="text-purple-900 text-xs font-light tracking-tight">
             <span className="underline text-nowrap">{sidebarData.isolation.label}:</span>
             <span className="pl-2 font-normal">{sidebarData.isolation.value}</span>
-            <span className="pl-1">
+            {/* <span className="pl-1">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger>
@@ -190,11 +190,11 @@ export default function ChartSidebar() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            </span>
+            </span> */}
           </p>
           <p className="text-purple-900 text-xs font-light tracking-tight">
-            <span className="underline pr-2 text-nowrap">{sidebarData.allergies.label}:</span>
-            <span className='font-normal decoration-none no-underline px-2 bg-yellow-200 rounded-md'>
+            <span className="underline text-nowrap">{sidebarData.allergies.label}:</span>
+            <span className='font-normal decoration-none no-underline px-2  rounded-md'>
               {sidebarData.allergies.value.join(", ")}
             </span>
           </p>

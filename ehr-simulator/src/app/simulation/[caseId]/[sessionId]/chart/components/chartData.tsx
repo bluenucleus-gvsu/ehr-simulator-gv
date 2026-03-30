@@ -85,7 +85,7 @@ export const jamesAllen: ChartData = {
   ethnicity: { id: "ethnicity", label: "Ethnicity", value: "" },
   location: { id: "location", label: "Location", value: "CHS Sim Lab" },
 
-  isolation: { id: 'isolation', label: "Isolation", value: "MRSA", tooltip: 'Contact Precautions: Use gloves and gown when entering the patient’s room' }, // TODO: Come back to this
+  isolation: { id: 'isolation', label: "Isolation", value: "None", tooltip: 'Contact Precautions: Use gloves and gown when entering the patient’s room' }, // TODO: Come back to this
   allergies: { id: 'allergies', label: "Allergies", value: ["Seasonal Allergies"] },
   immunizations: { id: 'immunizations', label: "Immunizations", value: [""] },
   attending: { id: 'attending', label: "Attending Provider", value: "Dr. David Adler, MD" },
