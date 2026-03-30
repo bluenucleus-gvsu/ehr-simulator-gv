@@ -35,7 +35,7 @@ export default async function AdminLayout({
 
     const role = profile?.role as string | undefined;
 
-    if (profileError || !profile || role !== "admin") {
+    if (profileError || !profile || (role !== "admin" && role !== "faculty")) {
       return (
         <main className="p-8 min-h-screen flex items-center justify-center">
           <div className="max-w-xl w-full text-center bg-white rounded-lg shadow p-6">

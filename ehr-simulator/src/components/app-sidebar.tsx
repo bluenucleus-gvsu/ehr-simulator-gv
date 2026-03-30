@@ -44,11 +44,6 @@ const adminRoutes = [
 
 const defaultRoutes = [
   {
-    title: "Profile",
-    url: "/",
-    icom: User,
-  },
-  {
     title: "Settings",
     url: "/auth/login",
     icom: Settings,
@@ -57,7 +52,7 @@ const defaultRoutes = [
 
 export function AppSidebar() {
 
-  const { loading } = useUser();
+  const { user, loading } = useUser();
   const pathname = usePathname();
   const router = useRouter();
   const isCurrentPath = (url: string) => pathname === url;
@@ -105,6 +100,16 @@ export function AppSidebar() {
         <SidebarGroupLabel>Menu</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
+            {user?.id && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href={`/faculty/${user.id}`}>
+                    <User />
+                    <span>Profile</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
             {defaultRoutes.map((route) => (
               <SidebarMenuItem key={route.url}>
                 <SidebarMenuButton asChild>

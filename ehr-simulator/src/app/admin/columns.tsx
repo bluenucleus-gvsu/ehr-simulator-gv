@@ -35,10 +35,17 @@ export const columns: ColumnDef<StudentInfo>[] = [
       const name = row.getValue("full_name") as string
       const role = original.role
 
-      // Only students have profile pages. Render a link for students only.
       if (role === "student") {
         return (
           <Link href={`/user/profile/${id}`} className="text-blue-600 underline">
+            {name}
+          </Link>
+        )
+      }
+
+      if (role === "faculty") {
+        return (
+          <Link href={`/faculty/${id}`} className="text-blue-600 underline">
             {name}
           </Link>
         )

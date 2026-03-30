@@ -47,7 +47,7 @@ export default function AuthCallbackPage() {
           role === 'admin'
             ? '/admin'
             : role === 'faculty'
-            ? `/faculty/${session.user.id}`
+            ? '/admin'
             : `/user/profile/${session.user.id}`
         router.replace(destination)
       } else {
