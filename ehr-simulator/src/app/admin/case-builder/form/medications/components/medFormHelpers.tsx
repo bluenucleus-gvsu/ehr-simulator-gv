@@ -1,5 +1,5 @@
-import { AllMedicationTypes, MedicationOrder } from "@/app/simulation/[sessionId]/chart/mar/components/marData"
-import { isSlidingScaleInsulin, pluralize } from "@/app/simulation/[sessionId]/chart/mar/components/marHelpers"
+import { AllMedicationTypes, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData"
+import { isSlidingScaleInsulin, pluralize } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers"
 import { Separator } from "@/components/ui/separator"
 
 export const renderMedFormTitle = (medication: AllMedicationTypes) => {

@@ -99,6 +99,8 @@ export default async function ProfilePage({ params }: { params: { id: string } |
                             <li key={a.id} className="text-sm">
                               <AssignedCaseCard
                                 id={a.id}
+                                caseId={a.case_id}
+                                sessionId={a.session_id}
                                 name={a.name}
                                 simTime={a.sim_time}
                                 presimTime={a.presim_time}

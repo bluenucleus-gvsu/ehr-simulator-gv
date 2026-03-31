@@ -1,4 +1,4 @@
-import { FlexSheetData } from "@/app/simulation/[sessionId]/chart/charting/components/flexSheetData";
+import { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
 
 export type DocumentationResultInsert = {
   case_id: string

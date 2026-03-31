@@ -19,7 +19,7 @@ import InfoTooltip from "../../components/helpTooltip";
 import { useRouter } from "next/navigation";
 import { categories, specialties } from "@/utils/form";
 
-import { ClinicalNote } from "@/app/simulation/[sessionId]/chart/notes/components/notesData";
+import { ClinicalNote } from "@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData";
 import NoteFormDisplay from "./noteFormDisplay";
 import { useFormContext } from "@/context/FormContext";
 import { Checkbox } from "@/components/ui/checkbox";
