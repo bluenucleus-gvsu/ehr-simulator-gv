@@ -215,7 +215,7 @@ export const labTemplate: LabTableData[] = [
     criticalRange: { low: 3.0, high: 6.0 },
   },
   {
-    field: "Chlorine",
+    field: "Chloride",
     unit: "(mEq/L)",
     rowType: "results",
     normalRange: { low: 95, high: 105 },
