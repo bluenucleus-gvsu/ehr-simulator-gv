@@ -21,7 +21,7 @@ export default async function Mar({ params }: PageProps) {
       </div>
     )
   }
-  console.log(documentationData.data)
+
   return (
     <FlexSheetView params={awaitedParams} dbDocumentation={documentationData.data} />
 

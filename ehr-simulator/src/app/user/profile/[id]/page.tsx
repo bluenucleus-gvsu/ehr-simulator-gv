@@ -5,8 +5,6 @@ import CompletedCaseCard from "@/app/user/components/CompletedCaseCard";
 import AssignedCaseCard from "@/app/user/components/AssignedCaseCard";
 import { createServerSupabase } from "@/utils/supabase/server";
 import { getUserCourses } from "@/actions/getUserCourses";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 export default async function ProfilePage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
   const { id } = await params;
@@ -96,7 +94,7 @@ export default async function ProfilePage({ params }: { params: { id: string } |
                       ) : (
                         <ul className="space-y-2">
                           {course.assigned.map((a) => (
-                            <li key={a.id} className="text-sm">
+                            <li key={`${a.id}-${a.session_id}`} className="text-sm">
                               <AssignedCaseCard
                                 id={a.id}
                                 caseId={a.case_id}
@@ -121,7 +119,7 @@ export default async function ProfilePage({ params }: { params: { id: string } |
                       ) : (
                         <ul className="list-disc pl-5 space-y-1">
                           {course.completed.map((s) => (
-                            <li key={s.id} className="text-sm">
+                            <li key={`${s.id}`} className="text-sm">
                               <CompletedCaseCard
                                 id={s.id}
                                 name={s.name}
@@ -179,12 +177,6 @@ export default async function ProfilePage({ params }: { params: { id: string } |
               ))}
             </ul>
           )}
-        </div>
-        <div className="bg-white rounded-lg shadow mt-6 p-4 mb-6">
-          <h3 className="text-lg font-semibold mb-3">Simulations</h3>
-          <Link href="/simulation/123/chart/overview" passHref className="p-4">
-            <Button> Enter Presim </Button>
-          </Link>
         </div>
       </section>
     </main>

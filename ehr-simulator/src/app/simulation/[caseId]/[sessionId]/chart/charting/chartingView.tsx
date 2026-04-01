@@ -10,7 +10,6 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { toast } from "sonner";
-// import { Skeleton } from "@/components/ui/skeleton";
 import { differenceInMilliseconds, format } from "date-fns";
 import FlexSheetSidebar from "./components/flexSheetSidebar";
 
@@ -18,7 +17,6 @@ import {
   type FlexSheetData,
   assessmentTools,
   generateChartingDataFromDB,
-  // generateInitialChartingData,
   getAllTimeOffsets,
 } from "./components/flexSheetData";
 import { ImagingData, LabCellValue } from "../labs/components/labsData";
@@ -34,6 +32,7 @@ interface FlexSheetViewProps {
     sessionId: string;
   };
 }
+
 const columnHelper = createColumnHelper<FlexSheetData>();
 
 function getPinnedStyles(column: Column<FlexSheetData>): React.CSSProperties {
@@ -96,9 +95,8 @@ export function calculateColTotal(toolName: string, grouped: FlexSheetData[], ti
   return totalRow;
 }
 
-
 export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
-  const { groupId, userId, simStartTime } = useSimSessionContext();
+  const { groupId, userId, simStartTime, handleUnsavedCharting } = useSimSessionContext();
 
   const [timeOffsets, setTimeOffsets] = useState(getAllTimeOffsets(simStartTime, dbDocumentation));
   const [data, setData] = useState<FlexSheetData[]>(generateChartingDataFromDB(dbDocumentation, timeOffsets));
@@ -258,6 +256,23 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
       setIsSaving(false);
     }
   };
+
+  // handle refreshing and Back navigation when user has unsaved data
+  useEffect(() => {
+    handleUnsavedCharting(dirtyColumns.size > 0);
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (dirtyColumns.size > 0) {
+        event.preventDefault();
+        return 'You have unsaved charting data.';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [dirtyColumns, handleUnsavedCharting]);
 
   // Auto-open sidebar logic
   useEffect(() => {
