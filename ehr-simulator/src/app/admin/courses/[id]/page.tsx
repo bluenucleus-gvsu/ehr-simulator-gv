@@ -40,7 +40,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
   const [courseResult, sectionsResult, casesResult] = await Promise.all([
     getCourseById(coursedId),
     getSectionCaseAssignments(coursedId),
-    getCaseByCourseId(coursedId)
+    getCaseByCourseId()
   ]);
 
   if (!sectionsResult.success || !casesResult.success || !courseResult.success || !courseResult.data) {

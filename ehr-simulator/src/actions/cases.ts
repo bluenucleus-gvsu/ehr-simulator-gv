@@ -71,22 +71,16 @@ export async function getSimCaseById(id: string) {
 }
 
 
-export async function getCaseByCourseId(id: string) {
+export async function getCaseByCourseId() {
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
   const { data, error } = await supabase
-    .from("course_cases")
-    .select(`
-      case_id,
-      course_id,
-      cases(
-        name
-      )
-      `)
-    // .eq("course_id", id) // Commented out to retrieve all cases for assignment. 
+    .from("cases")
+    .select("*")
+  // .eq("course_id", id) // Commented out to retrieve all cases for assignment. 
 
   if (error) {
     const result = {
@@ -98,22 +92,9 @@ export async function getCaseByCourseId(id: string) {
     return result
   }
 
-  // Auto-generated Supabase types wouldn't recognize the PK/FK relationship between cases and course_case
-  // Force case data to be single object, not array
-  const cleanData = data?.map((item) => {
-    const _caseData = Array.isArray(item.cases)
-      ? item.cases[0]
-      : item.cases;
-
-    return {
-      ...item,
-      cases: _caseData || { name: "Unknown Case" }
-    };
-  });
-
   return {
     success: true,
-    data: cleanData,
+    data: data,
     message: 'Successfully retrieved Sim Cases paired with this course',
   };
 }
