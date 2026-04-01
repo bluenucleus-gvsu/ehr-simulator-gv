@@ -31,8 +31,8 @@ export default function AssignedCaseCard({ id, caseId, sessionId, name, simTime,
   const isSimDay = sim
     ? sim.getFullYear() === now.getFullYear() && sim.getMonth() === now.getMonth() && sim.getDate() === now.getDate()
     : false;
-  const isPresimPhase = !isSimDay && sim && sim > now && presim ? presim <= now : false;
 
+  const isPresimPhase = sim && sim > now && presim ? presim <= now : false;
   const handleRoute = async (pathSuffix: string, isStartingSim: boolean = false) => {
     if (!sessionId) {
       toast.error("Session is still being generated. Please try again later.");
@@ -68,7 +68,7 @@ export default function AssignedCaseCard({ id, caseId, sessionId, name, simTime,
       </div>
 
       <div className="ml-4 flex items-center gap-2">
-        {isSimDay ? (
+        {isSimDay && !isPresimPhase ? (
           <button
             className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
             // Pass `true` here to trigger the server action!
@@ -85,7 +85,7 @@ export default function AssignedCaseCard({ id, caseId, sessionId, name, simTime,
             onClick={() => handleRoute('chart/overview', false)}
             aria-label={`View pre-sim chart for ${name ?? id}`}
           >
-            View Case Report
+            View Pre-Sim Chart
           </button>
         ) : (
           <button
