@@ -17,6 +17,8 @@ export interface SimSessionContextType {
   simStartTime: number | null;
   groupId: string | null;
   isPresim: boolean | null;
+  hasUnsavedCharting: boolean | null;
+  handleUnsavedCharting: (chartingStatus: boolean) => void;
 }
 
 const SimContext = createContext<SimSessionContextType>({
@@ -25,16 +27,20 @@ const SimContext = createContext<SimSessionContextType>({
   groupId: null,
   loading: true,
   simStartTime: null,
-  isPresim: true
-})
+  isPresim: true,
+  hasUnsavedCharting: false,
+  handleUnsavedCharting: () => { }
+});
 
 export function SimSessionProvider({ children }: { children: React.ReactNode }) {
-  const [userName, setUserName] = useState<string | null>(null)
-  const [userId, setUserId] = useState<string | null>(null)
-  const [groupId, setGroupId] = useState<string | null>(null)
+  const [userName, setUserName] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [groupId, setGroupId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [simStartTime, setSimStartTime] = useState<number | null>(null)
-  const [isPresim, setIsPresim] = useState<boolean | null>(true)
+  const [simStartTime, setSimStartTime] = useState<number | null>(null);
+  const [isPresim, setIsPresim] = useState<boolean | null>(true);
+  const [hasUnsavedCharting, setHasUnsavedCharting] = useState<boolean | null>(false);
+
 
   const params = useParams();
   const sessionId = params?.sessionId as string;
@@ -81,13 +87,19 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
     loadSimData();
   }, [sessionId]);
 
+  const handleUnsavedCharting = (chartingStatus: boolean) => {
+    setHasUnsavedCharting(chartingStatus);
+  }
+
   const value = {
     userName,
     userId,
     loading,
     simStartTime,
     groupId,
-    isPresim
+    isPresim,
+    hasUnsavedCharting,
+    handleUnsavedCharting
   }
 
   return <SimContext.Provider value={value}>{children}</SimContext.Provider>
