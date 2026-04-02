@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, FolderPen, TriangleAlert } from "lucide-react"
+import { ArrowLeft, ChevronDown, FolderPen, TriangleAlert } from "lucide-react"
 import { useRouter, useParams } from "next/navigation"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { type CaseDataRow, type CaseDataScalarUpdate, type CaseFamilyHistoryRow, type CodeStatusType, type InsuranceType } from "../types"
@@ -94,21 +94,36 @@ export default function CasePage() {
     // { label: "Medication Administrations", href: "medication-administrations" },
     { label: "Note Entries", href: "notes" },
     { label: "Order Entries", href: "orders" },
-    { label: "Lab Results", href: "#" },
+    { label: "Lab Results", href: "labs" },
     { label: "Charts", href: "#" },
     { label: "Intake & Output", href: "#" },
     { label: "Medications", href: "#" },
     { label: "Medication Administrations", href: "#" },
   ]
 
+  // Unfinished pages aren't linked to, their buttons are grayed out
+  const EditPageButton = ({ label, href }: { label: string; href: string }) => (
+    <Link href={`/admin/cases/${caseId}/${href}`}>
+      <Button variant={`${href === "#" ? "secondary" : "outline"}`} className="w-full cursor-pointer">
+        {label}
+      </Button>
+    </Link>
+  )
+
   useEffect(() => {
     const fetchAll = async () => {
-      const [caseResult, isolationResult, relStatusResult, relTypeResult, safetyResult, coursesResult] = await Promise.all([getSimCaseById(caseId),
-      getIsolationPrecautions(),
-      getRelationshipStatuses(),
-      getRelationshipTypes(),
-      getSafetyAlerts(),
-      getCoursesForCase(caseId),
+      const [caseResult, isolationResult, relStatusResult, relTypeResult, safetyResult, coursesResult] = await Promise.all([
+        // Get the case details
+        getSimCaseById(caseId),
+
+        // Get options for select fields
+        getIsolationPrecautions(),
+        getRelationshipStatuses(),
+        getRelationshipTypes(),
+        getSafetyAlerts(),
+
+        // Get the courses that the case is assigned to
+        getCoursesForCase(caseId),
       ])
 
       if (caseResult.success && caseResult.data) {
@@ -189,6 +204,7 @@ export default function CasePage() {
     })))
   }
 
+  // Update db when safety alert is toggled
   const handleSafetyAlertToggle = async (safetyAlertId: string, checked: boolean) => {
     if (!formData) return
     if (checked) {
@@ -210,6 +226,7 @@ export default function CasePage() {
     }
   }
 
+  // Update db when leaving form field after editing entry
   const handleBlur = <K extends keyof CaseDataScalarUpdate>(field: K) => {
     if (!formData || !initialRow.current) return
     if (formData[field] !== initialRow.current[field]) {
@@ -219,8 +236,7 @@ export default function CasePage() {
     }
   }
 
-
-
+  // Display error or loading message
   if (loadError) return <div className="p-8 text-red-500">{loadError}</div>
   if (!formData) return <div className="p-8 text-slate-500">Loading...</div>
 
@@ -245,11 +261,16 @@ export default function CasePage() {
       <div className="flex-1 p-3 sm:p-4 md:px-6 lg:px-12 bg-slate-50/50">
         <div className="max-w-7xl mx-auto space-y-3 pb-10">
 
+          {/* Warn when case is assigned to multiple courses */}
           {assignedCourses.length > 1 && <MultipleCourseWarning courses={assignedCourses} />}
+
+          {/* --- Form sections start here --- */}
 
           {/* Case Info */}
           <FormSection title="Case Info" subtitle="General case identifiers and clinical context">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+
+              {/* Case name */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Case Name</Label>
                 <Input
@@ -258,6 +279,8 @@ export default function CasePage() {
                   onBlur={() => handleBlur('name')}
                 />
               </div>
+
+              {/* Case description */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Description</Label>
                 <Input
@@ -266,6 +289,8 @@ export default function CasePage() {
                   onBlur={() => handleBlur('description')}
                 />
               </div>
+
+              {/* Admitting diagnosis */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Admitting Diagnosis</Label>
                 <Input
@@ -274,6 +299,8 @@ export default function CasePage() {
                   onBlur={() => handleBlur('admitting_diagnosis')}
                 />
               </div>
+
+              {/* Attending provider */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Attending Provider</Label>
                 <Input
@@ -282,6 +309,8 @@ export default function CasePage() {
                   onBlur={() => handleBlur('attending_provider')}
                 />
               </div>
+
+              {/* Code status */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Code Status</Label>
                 <Select
@@ -291,7 +320,7 @@ export default function CasePage() {
                     updateCaseData({ code_status: val as CodeStatusType })
                   }}
                 >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue /><ChevronDown /></SelectTrigger>
                   <SelectContent>
                     {(['Full', 'DNR', 'Partial'] as CodeStatusType[]).map(s => (
                       <SelectItem key={s} value={s}>{s}</SelectItem>
@@ -299,6 +328,8 @@ export default function CasePage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Time of Admission */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Time of Admission</Label>
                 <Input
@@ -308,6 +339,8 @@ export default function CasePage() {
                   onBlur={() => handleBlur('time_of_admission')}
                 />
               </div>
+
+              {/* Inpatient duration */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Inpatient Duration (days)</Label>
                 <Input
@@ -323,6 +356,8 @@ export default function CasePage() {
           {/*  Demographics  */}
           <FormSection title="Demographics" subtitle="Patient identity and personal background">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+
+              {/* First name */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">First Name</Label>
                 <Input
@@ -331,6 +366,8 @@ export default function CasePage() {
                   onBlur={() => handleBlur('first_name')}
                 />
               </div>
+
+              {/* Last name */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Last Name</Label>
                 <Input
@@ -339,6 +376,8 @@ export default function CasePage() {
                   onBlur={() => handleBlur('last_name')}
                 />
               </div>
+
+              {/* DOB */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Date of Birth</Label>
                 <Input
@@ -348,6 +387,8 @@ export default function CasePage() {
                   onBlur={() => handleBlur('date_of_birth')}
                 />
               </div>
+
+              {/* Language */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Language</Label>
                 <Input
@@ -356,6 +397,8 @@ export default function CasePage() {
                   onBlur={() => handleBlur('language')}
                 />
               </div>
+
+              {/* Religion */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Religion</Label>
                 <Input
@@ -364,6 +407,8 @@ export default function CasePage() {
                   onBlur={() => handleBlur('religion')}
                 />
               </div>
+
+              {/* Insurance */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Insurance</Label>
                 <Select
@@ -374,7 +419,7 @@ export default function CasePage() {
                     updateCaseData({ insurance: v })
                   }}
                 >
-                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="None" /><ChevronDown /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
                     {(['Medicare', 'Medicaid', 'Private'] as InsuranceType[]).map(s => (
@@ -383,6 +428,8 @@ export default function CasePage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Employment */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Employment</Label>
                 <Input
@@ -392,6 +439,8 @@ export default function CasePage() {
                   onBlur={() => handleBlur('employment')}
                 />
               </div>
+
+              {/* Height */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Height</Label>
                 <div className="flex gap-2">
@@ -411,6 +460,8 @@ export default function CasePage() {
                   />
                 </div>
               </div>
+
+              {/* Weight */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Weight</Label>
                 <Input
@@ -421,6 +472,8 @@ export default function CasePage() {
                   onBlur={() => handleBlur('weight_kg')}
                 />
               </div>
+
+              {/* Req interpreter */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Requires Interpreter</Label>
                 <div className="flex items-center h-9">
@@ -433,6 +486,8 @@ export default function CasePage() {
                   />
                 </div>
               </div>
+
+              {/* Relationship Status */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Relationship Status</Label>
                 <Select
@@ -443,7 +498,7 @@ export default function CasePage() {
                     updateCaseData({ relationship_status_id: v })
                   }}
                 >
-                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="None" /><ChevronDown /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
                     {relationshipStatusOptions.map(o => (
@@ -452,6 +507,8 @@ export default function CasePage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Isolation Precautions */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Isolation Precautions</Label>
                 <Select
@@ -462,7 +519,7 @@ export default function CasePage() {
                     updateCaseData({ isolation_precautions_id: v })
                   }}
                 >
-                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="None" /><ChevronDown /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
                     {isolationOptions.map(o => (
@@ -471,6 +528,8 @@ export default function CasePage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Emergency Contact Name */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Emergency Contact Name</Label>
                 <Input
@@ -479,6 +538,8 @@ export default function CasePage() {
                   onBlur={() => handleBlur('emergency_contact_name')}
                 />
               </div>
+
+              {/* Emergency Contact Relationship */}
               <div className="flex flex-col gap-1">
                 <Label className="text-xs font-medium text-slate-500">Emergency Contact Relationship</Label>
                 <Input
@@ -492,6 +553,8 @@ export default function CasePage() {
 
           {/* Clinical Profile */}
           <FormSection title="Clinical Profile" subtitle="Past medical and surgical events">
+
+            {/* Medical hx */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <MultiTextInput
                 ref={medicalHistoryRef}
@@ -501,6 +564,8 @@ export default function CasePage() {
                 placeholder="e.g. HTN, GERD..."
                 emptyMessage="No diagnoses recorded."
               />
+
+              {/* Surgical hx */}
               <MultiTextInput
                 ref={surgicalHistoryRef}
                 labelText="Surgical History"
@@ -509,6 +574,8 @@ export default function CasePage() {
                 placeholder="e.g. TAVR (2010)..."
                 emptyMessage="No procedures recorded."
               />
+
+              {/* Allergies */}
               <MultiTextInput
                 ref={allergiesRef}
                 labelText="Allergies"
@@ -523,6 +590,8 @@ export default function CasePage() {
           {/* Social & Environmental */}
           <FormSection title="Social & Environmental" subtitle="Living situation and habits">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              {/* Social habits */}
               <MultiTextInput
                 ref={socialHabitsRef}
                 labelText="Social Habits"
@@ -531,6 +600,8 @@ export default function CasePage() {
                 placeholder="e.g. Tobacco Use, High Risk Occupation..."
                 emptyMessage="No social habits recorded."
               />
+
+              {/* Living situation */}
               <MultiTextInput
                 ref={livingSituationRef}
                 labelText="Living Situation"
@@ -571,20 +642,18 @@ export default function CasePage() {
             </div>
           </FormSection>
 
+          {/* Links to other parts of case */}
           <Card className="border-slate-200 shadow-sm">
             <div className="flex items-baseline gap-3 px-4 py-0">
               <p className="text-sm font-semibold text-slate-800">View & Edit More...</p>
             </div>
             <CardContent className="px-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
               {editPageRoutes.map(({ label, href }, key) => (
-                <Link key={key} href={`/admin/cases/${caseId}/${href}`}>
-                  <Button variant="outline" className="w-full cursor-pointer">
-                    {label}
-                  </Button>
-                </Link>
+                <EditPageButton key={key} label={label} href={href} />
               ))}
             </CardContent>
           </Card>
+
         </div>
       </div>
     </div>
