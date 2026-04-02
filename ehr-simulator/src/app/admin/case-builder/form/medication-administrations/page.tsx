@@ -24,13 +24,13 @@ import {
   allMedications,
   MedAdministrationInstance,
   AdministrationStatus,
-} from "@/app/simulation/[sessionId]/chart/mar/components/marData"
-import { createColumns } from "@/app/simulation/[sessionId]/chart/mar/components/marHelpers"
+} from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData"
+import { createColumns } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers"
 import MedAdministrationFormCard from "./components/medAdministrationFormCard"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useFormContext } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
-import ColumnShiftControl from "@/app/simulation/[sessionId]/chart/mar/components/columnShiftControl"
+import ColumnShiftControl from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/columnShiftControl"
 import { CaseSection } from "@/lib/saveCase"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
 

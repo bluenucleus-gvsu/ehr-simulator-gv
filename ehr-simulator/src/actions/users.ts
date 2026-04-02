@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@supabase/supabase-js";
+import { ActionResponse } from "./cases";
 
 export async function getAllUsers() {
   const supabase = createClient(
@@ -114,4 +115,42 @@ export async function getUsersByEmails(emails: string[]) {
 
   if (error) throw new Error(error.message)
   return data || []
+}
+export async function getUsersGroupId(userId: string) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { data, error } = await supabase
+    .from('users')
+    .select(`id,
+      full_name,
+      group_members!inner(group_id)
+      `)
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    const response: ActionResponse = {
+      success: false,
+      error,
+      message: 'Failed to retrieve user data'
+    };
+    return response;
+  }
+  const extractedGroupId = data.group_members[0]?.group_id
+
+  console.log(data.group_members)
+
+  const cleanData = {
+    id: data.id,
+    full_name: data.full_name,
+    group_id: extractedGroupId,
+  };
+  return {
+    success: true,
+    data: cleanData,
+    message: 'Successfully retrieved user data.'
+  }
 }

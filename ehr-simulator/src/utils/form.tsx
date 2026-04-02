@@ -1,8 +1,8 @@
-import { FlexSheetData } from "@/app/simulation/[sessionId]/chart/charting/components/flexSheetData";
-import { LabTableData } from "@/app/simulation/[sessionId]/chart/labs/components/labsData";
-import { AllMedicationTypes, MedAdministrationInstance, MedicationOrder } from "@/app/simulation/[sessionId]/chart/mar/components/marData";
-import { ClinicalNote } from "@/app/simulation/[sessionId]/chart/notes/components/notesData";
-import { OrderType } from "@/app/simulation/[sessionId]/chart/orders/components/orderData";
+import { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
+import { LabTableData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
+import { AllMedicationTypes, MedAdministrationInstance, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
+import { ClinicalNote } from "@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData";
+import { OrderType } from "@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData";
 import { Column } from "@tanstack/react-table";
 
 export interface DemographicFormData {

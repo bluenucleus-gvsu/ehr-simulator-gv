@@ -1,4 +1,4 @@
-import { MedAdministrationInstance } from "@/app/simulation/[sessionId]/chart/mar/components/marData";
+import { MedAdministrationInstance } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
 
 export type MedicationAdministrationInsert = {
   case_id: string,

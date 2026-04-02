@@ -7,7 +7,7 @@ import {
 } from "lucide-react"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
-import { allMedications, AllMedicationTypes, MedicationOrder } from "@/app/simulation/[sessionId]/chart/mar/components/marData"
+import { allMedications, AllMedicationTypes, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData"
 import Combobox from "@/components/ui/combobox"
 import MedCardForm from "./components/medCardForm"
 import { useRouter } from "next/navigation"

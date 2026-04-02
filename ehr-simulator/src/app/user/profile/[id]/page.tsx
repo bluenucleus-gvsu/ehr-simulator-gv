@@ -86,7 +86,7 @@ export default async function ProfilePage({ params }: { params: { id: string } |
                     {course.code ?? ""}{course.code && course.name ? " - " : ""}{course.name ?? "Unnamed Course"}
                   </div>
 
-                  <details className="mb-2 bg-slate-50 p-2 rounded">
+                  <details open className="mb-2 bg-slate-50 p-2 rounded">
                     <summary className="cursor-pointer font-medium">Assigned Cases</summary>
                     <div className="mt-2">
                       {course.assigned.length === 0 ? (
@@ -94,9 +94,11 @@ export default async function ProfilePage({ params }: { params: { id: string } |
                       ) : (
                         <ul className="space-y-2">
                           {course.assigned.map((a) => (
-                            <li key={a.id} className="text-sm">
+                            <li key={`${a.id}-${a.session_id}`} className="text-sm">
                               <AssignedCaseCard
                                 id={a.id}
+                                caseId={a.case_id}
+                                sessionId={a.session_id}
                                 name={a.name}
                                 simTime={a.sim_time}
                                 presimTime={a.presim_time}
@@ -117,7 +119,7 @@ export default async function ProfilePage({ params }: { params: { id: string } |
                       ) : (
                         <ul className="list-disc pl-5 space-y-1">
                           {course.completed.map((s) => (
-                            <li key={s.id} className="text-sm">
+                            <li key={`${s.id}`} className="text-sm">
                               <CompletedCaseCard
                                 id={s.id}
                                 name={s.name}

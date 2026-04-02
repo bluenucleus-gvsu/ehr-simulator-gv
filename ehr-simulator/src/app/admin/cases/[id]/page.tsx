@@ -10,7 +10,7 @@ import { useRouter, useParams } from "next/navigation"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { type CaseDataRow, type CaseDataScalarUpdate, type CaseFamilyHistoryRow, type CodeStatusType, type InsuranceType } from "../types"
 import {
-  getSimCaseById, updateSimCase,
+  getSimCaseByIdForEdit, updateSimCase,
   getIsolationPrecautions, getRelationshipStatuses, getRelationshipTypes, getSafetyAlerts,
   replaceFamilyHistory, getCoursesForCase,
   addSafetyAlert, removeSafetyAlert,
@@ -114,7 +114,7 @@ export default function CasePage() {
     const fetchAll = async () => {
       const [caseResult, isolationResult, relStatusResult, relTypeResult, safetyResult, coursesResult] = await Promise.all([
         // Get the case details
-        getSimCaseById(caseId),
+        getSimCaseByIdForEdit(caseId),
 
         // Get options for select fields
         getIsolationPrecautions(),

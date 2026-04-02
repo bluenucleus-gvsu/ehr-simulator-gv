@@ -1,7 +1,7 @@
-import { type AllMedicationTypes, type MedicationOrder } from "@/app/simulation/[sessionId]/chart/mar/components/marData"
+import { type AllMedicationTypes, type MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData"
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { isSlidingScaleInsulin } from "@/app/simulation/[sessionId]/chart/mar/components/marHelpers";
+import { isSlidingScaleInsulin } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers";
 import { Textarea } from "@/components/ui/textarea";
 import { renderMedFormDetails, renderMedFormTitle } from "./medFormHelpers";
 import { X } from "lucide-react";

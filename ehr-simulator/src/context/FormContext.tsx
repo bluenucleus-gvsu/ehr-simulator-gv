@@ -2,11 +2,11 @@
 
 import { createContext, useContext, useState } from 'react';
 import { CompleteFormType, defaultIoData, defaultOrders, DemographicFormData, FormBlob, HistoryFormData, IntakeOutputFormData, MedOrderFormData, TableFormData } from '@/utils/form';
-import { ClinicalNote } from '@/app/simulation/[sessionId]/chart/notes/components/notesData';
-import { OrderType } from '@/app/simulation/[sessionId]/chart/orders/components/orderData';
-import { LabTableData, labTemplate } from '@/app/simulation/[sessionId]/chart/labs/components/labsData';
-import { FlexSheetData, flexSheetTemplate } from '@/app/simulation/[sessionId]/chart/charting/components/flexSheetData';
-import { MedAdministrationInstance } from '@/app/simulation/[sessionId]/chart/mar/components/marData';
+import { ClinicalNote } from '@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData';
+import { OrderType } from '@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData';
+import { LabTableData, labTemplate } from '@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData';
+import { FlexSheetData, flexSheetTemplate } from '@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData';
+import { MedAdministrationInstance } from '@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData';
 
 interface FormContextType {
   demographicData: DemographicFormData;

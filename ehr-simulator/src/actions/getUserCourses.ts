@@ -4,6 +4,8 @@ import { createServerSupabase } from "@/utils/supabase/server";
 
 export interface AssignedCase {
   id: string;
+  case_id: string;
+  session_id: string | null;
   name: string | null;
   sim_time: string | null;
   presim_time: string | null;

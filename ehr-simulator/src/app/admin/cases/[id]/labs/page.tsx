@@ -1,7 +1,7 @@
 "use client"
 
-import { type LabTableData } from "@/app/simulation/[sessionId]/chart/labs/components/labsData"
-import { labTemplate } from "@/app/simulation/[sessionId]/chart/labs/components/labsData"
+import { type LabTableData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData"
+import { labTemplate } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData"
 import { useReactTable, getCoreRowModel, createColumnHelper } from "@tanstack/react-table"
 import { useMemo, useState, useEffect } from "react"
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip"
