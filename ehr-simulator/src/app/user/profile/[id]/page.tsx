@@ -86,7 +86,7 @@ export default async function ProfilePage({ params }: { params: { id: string } |
                     {course.code ?? ""}{course.code && course.name ? " - " : ""}{course.name ?? "Unnamed Course"}
                   </div>
 
-                  <details className="mb-2 bg-slate-50 p-2 rounded">
+                  <details open className="mb-2 bg-slate-50 p-2 rounded">
                     <summary className="cursor-pointer font-medium">Assigned Cases</summary>
                     <div className="mt-2">
                       {course.assigned.length === 0 ? (
