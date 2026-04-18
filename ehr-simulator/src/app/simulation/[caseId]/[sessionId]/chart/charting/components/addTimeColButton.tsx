@@ -6,7 +6,7 @@ import { TimePickerInput } from "@/components/ui/time-picker-input";
 import { Clock, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { differenceInMinutes } from "date-fns";
-import { formatTimeFromOffset } from "../chartingView";
+import { formatTimeFromOffset } from "../components/flexSheetHelpers";
 
 interface AddTimeColumnButtonProps {
     onColumnAdd: (timeString: number) => void;
@@ -23,13 +23,20 @@ function handleConflictingTimes(timeOffset: number, sessionStartTime: number) {
     });
 }
 
+function columnAddSuccess(timeOffset: number, sessionStartTime: number) {
+    const timeData = formatTimeFromOffset(timeOffset, sessionStartTime)
+    const date = timeData?.date || 'Unknown Date'
+    const time = timeData?.time || 'Unknown Time'
+    toast.success(`Column added at ${time + ' on ' + date}.`);
+}
+
 export function AddTimeColumnButton({ onColumnAdd, existingTimeColumns, sessionStartTime }: AddTimeColumnButtonProps) {
     const [selectedTime, setSelectedTime] = useState<Date | undefined>(new Date());
     const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false);
 
     const handleAddTime = () => {
         if (!sessionStartTime) {
-            return
+            return;
         }
         const timeOffset = differenceInMinutes(new Date().getTime(), sessionStartTime)
 
@@ -39,6 +46,7 @@ export function AddTimeColumnButton({ onColumnAdd, existingTimeColumns, sessionS
         }
 
         onColumnAdd(timeOffset);
+        columnAddSuccess(timeOffset, sessionStartTime);
     }
 
     const handleAddUserDefinedTime = () => {
@@ -59,6 +67,7 @@ export function AddTimeColumnButton({ onColumnAdd, existingTimeColumns, sessionS
         }
 
         onColumnAdd(timeOffset);
+        columnAddSuccess(timeOffset, sessionStartTime);
         setIsPopoverOpen(false);
         setSelectedTime(new Date());
     }
@@ -77,7 +86,7 @@ export function AddTimeColumnButton({ onColumnAdd, existingTimeColumns, sessionS
                         Insert Time
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent className="z-3 p-3 flex flex-col bg-white shadow shadow-black/25 rounded-xl" sideOffset={4}>
+                <PopoverContent className="z-15 p-3 flex flex-col bg-white shadow shadow-black/25 rounded-xl" sideOffset={4}>
                     <div className="flex justify-around">
                         <h1 className="text-center font-normal text-sm">Hours</h1>
                         <h1 className="text-center font-normal text-sm">Minutes</h1>

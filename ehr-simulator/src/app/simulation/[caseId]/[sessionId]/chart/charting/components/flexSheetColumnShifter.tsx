@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ChevronsLeft, ChevronsRight, Undo2 } from "lucide-react";
-import { formatTimeFromOffset } from "../chartingView";
+import { formatTimeFromOffset } from "../components/flexSheetHelpers";
 
 interface ColumnShiftControlProps {
   columns: number[];
@@ -11,8 +11,14 @@ interface ColumnShiftControlProps {
 }
 
 const FlexSheetColumnShifter = ({ columns, onColumnShift, columnOffset, tableWidth, simStartTime }: ColumnShiftControlProps) => {
+  const remainder = columns.length % tableWidth;
+  const isFirstPartialPage = columnOffset === 0 && remainder !== 0;
+
   const visibleFirstOffset = columns[columnOffset];
-  const visibleLastIndex = Math.min(columnOffset + tableWidth - 1, columns.length - 1);
+
+  const visibleLastIndex = isFirstPartialPage
+    ? remainder - 1
+    : Math.min(columnOffset + tableWidth - 1, columns.length - 1);
   const visibleLastOffset = columns[visibleLastIndex];
 
   const firstColumnData = formatTimeFromOffset(visibleFirstOffset, simStartTime);
@@ -39,7 +45,7 @@ const FlexSheetColumnShifter = ({ columns, onColumnShift, columnOffset, tableWid
           {dateDisplay}
         </p>
         <Button
-          disabled={columnOffset >= (Math.floor(columns.length / 6)) * 6}
+          disabled={columnOffset + tableWidth >= columns.length}
           variant="ghost"
           size="icon"
           className="h-6 w-6 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-md"

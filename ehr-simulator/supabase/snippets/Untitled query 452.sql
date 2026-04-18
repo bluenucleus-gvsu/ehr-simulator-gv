@@ -1,3 +1,7 @@
-select stool_occurrence
-from documentation_results
-where case_id = '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc'
+select * from documentation_results where case_id = 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d'
+
+DELETE FROM documentation_results where time_offset in (-10, -20) AND case_id = 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d';
+
+UPDATE documentation_results SET agitation = '4' where case_id = 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d' AND time_offset = -10;
+
+select * from users

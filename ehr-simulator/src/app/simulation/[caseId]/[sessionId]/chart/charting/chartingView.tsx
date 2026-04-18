@@ -1,6 +1,6 @@
 'use client'
 
-import { useReactTable, getCoreRowModel, flexRender, createColumnHelper, type Column, type RowData } from "@tanstack/react-table";
+import { useReactTable, getCoreRowModel, flexRender, createColumnHelper, RowData } from "@tanstack/react-table";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import CheckBoxList from "./components/checkBoxList";
@@ -10,7 +10,6 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { toast } from "sonner";
-import { addMinutes, format } from "date-fns";
 import FlexSheetSidebar from "./components/flexSheetSidebar";
 
 import {
@@ -19,37 +18,19 @@ import {
   generateChartingDataFromDB,
   getAllTimeOffsets,
 } from "./components/flexSheetData";
-import { ImagingData, LabCellValue, LabTableData } from "../labs/components/labsData";
 import { TableAssessmentSelectCell, TableInputCell } from "./components/tableInputCell";
 import { ChartingToolTip } from "./components/ChartingToolTip";
 import { DatabaseDocumentation, StudentDatabaseDocumentation, upsertDocumentationRows } from "@/actions/simulation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
 import FlexSheetColumnShifter from "./components/flexSheetColumnShifter";
+import { calculateColTotal, formatTimeFromOffset, getPinnedStyles } from "./components/flexSheetHelpers";
+import { ImagingData, LabCellValue } from "../labs/components/labsData";
 
 interface FlexSheetViewProps {
   dbDocumentation: DatabaseDocumentation[];
   params: {
     caseId: string;
     sessionId: string;
-  };
-}
-
-const columnHelper = createColumnHelper<FlexSheetData>();
-
-export function getPinnedStyles(column: Column<FlexSheetData> | Column<LabTableData>, width: number = 200, isHeader: boolean = false): React.CSSProperties {
-  const isPinned = column.getIsPinned();
-  if (!isPinned) {
-    return isHeader ? { position: 'sticky', top: 0, zIndex: 10 } : {};
-  }
-
-  const side = isPinned as 'left' | 'right';
-
-  return {
-    position: 'sticky',
-    [side]: `${column.getStart(side)}px`,
-    top: isHeader ? 0 : undefined,
-    zIndex: isHeader ? 30 : (side === 'left' ? 2 : 1),
-    width: width
   };
 }
 
@@ -62,44 +43,7 @@ declare module '@tanstack/react-table' {
   }
 }
 
-export const formatTimeFromOffset = (offsetMinutes: number, nowTimestamp: number | null) => {
-  if (!nowTimestamp || offsetMinutes == null || isNaN(offsetMinutes)) {
-    return null;
-  }
-
-  const targetTime = addMinutes(new Date(nowTimestamp), offsetMinutes);
-  const time = format(targetTime, 'HHmm');
-  const date = format(targetTime, 'MM/dd');
-  return { time, date };
-};
-
-export function calculateColTotal(toolName: string, grouped: FlexSheetData[], timeOffsets: number[]) {
-  const totalRow: FlexSheetData = {
-    id: `${toolName}TotalScore`,
-    field: `${toolName} Total Score`,
-    componentType: "totalScoreRow",
-    rowType: "totalScoreRow",
-  };
-
-  timeOffsets.forEach(timeCol => {
-    let totalScore = 0;
-    let hasEnteredValue = false;
-
-    grouped.forEach(toolRow => {
-      // Safe check for existing value
-      const val = toolRow[timeCol];
-      if (val) {
-        const score = parseInt(val.toString());
-        if (!isNaN(score)) {
-          totalScore += score;
-          hasEnteredValue = true;
-        }
-      }
-    });
-    totalRow[timeCol] = hasEnteredValue ? totalScore.toString() : "";
-  });
-  return totalRow;
-}
+const columnHelper = createColumnHelper<FlexSheetData>();
 
 const tableWidth = 6
 
@@ -108,12 +52,22 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
 
   const [timeOffsets, setTimeOffsets] = useState(getAllTimeOffsets(simStartTime, dbDocumentation));
   const [data, setData] = useState<FlexSheetData[]>(generateChartingDataFromDB(dbDocumentation, timeOffsets));
-  const [fieldSelections, setFieldSelections] = useState<Record<string, string[]>>({});
+  // const [fieldSelections, setFieldSelections] = useState<Record<string, string[]>>({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [dirtyColumns, setDirtyColumns] = useState<Set<string>>(new Set());
-  const [columnOffset, setColumnOffset] = useState(Math.floor(timeOffsets.length / tableWidth) * tableWidth)
-  const slicedTimeOffsets = timeOffsets.slice(columnOffset, (columnOffset + tableWidth))
+
+  // 1. Calculate the bounds and remainder
+  const maxOffset = Math.max(0, timeOffsets.length - tableWidth);
+  const remainder = timeOffsets.length % tableWidth;
+
+  // 2. Initialize state to the maximum offset (the end of the array)
+  const [columnOffset, setColumnOffset] = useState(maxOffset);
+
+  // 3. Dynamically set the end of the slice so the oldest page doesn't overlap
+  const sliceEnd = (columnOffset === 0 && remainder !== 0) ? remainder : columnOffset + tableWidth;
+  const slicedTimeOffsets = timeOffsets.slice(columnOffset, sliceEnd);
+
   const { caseId, sessionId } = params;
   const canSubmit = dirtyColumns.size > 0
 
@@ -121,12 +75,33 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   // Calculate visible IDs based on checkboxes
   const visibleSubsetIds = useMemo(() => {
     const combinedSet = new Set<string>();
-    Object.values(fieldSelections).forEach(selectedIdsArray => {
-      // Exclude "WDL" from the set of IDs that trigger row visibility
-      selectedIdsArray.forEach(id => id !== "WDL" && combinedSet.add(id));
+
+    data.forEach(row => {
+      timeOffsets.forEach(offset => {
+        const cellValue = row[offset];
+
+        // 1. If it's a checkbox list, add all explicitly selected tools (ignoring WDL)
+        if (row.componentType === 'checkboxlist' && Array.isArray(cellValue)) {
+          cellValue.forEach(item => {
+            console.log('YOKES')
+            if (typeof item === 'string' && item !== "WDL") {
+              combinedSet.add(item);
+            }
+          });
+        }
+
+        // 2. The Auto-Open Fix: If a hideable row has a pre-existing value, 
+        // force its parent category (hideableId) to be visible so the title/total rows appear.
+        if (row.hideable && row.hideableId) {
+          if (cellValue !== "" && cellValue !== null && cellValue !== undefined && (!Array.isArray(cellValue) || cellValue.length > 0)) {
+            combinedSet.add(row.hideableId);
+          }
+        }
+      });
     });
+
     return combinedSet;
-  }, [fieldSelections]);
+  }, [data, timeOffsets]);
 
   const filteredData = useMemo(() => {
     // 1. Group rows by toolName first (needed to calculate totals correctly)
@@ -181,43 +156,45 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   }, []);
 
   const handleSubsetSelection = useCallback((rowId: string, columnId: string, selectedIdsForField: string[]) => {
-    const selectionKey = `${rowId}-${columnId}`;
-
-    // Update selections state
-    setFieldSelections(prev => ({
-      ...prev,
-      [selectionKey]: selectedIdsForField
+    setData(prevData => prevData.map(row => {
+      if (row.id === rowId) {
+        return { ...row, [columnId]: selectedIdsForField };
+      }
+      return row;
     }));
 
-    // Also update the actual cell value in data to reflect the selection
-    setData(prevData => {
-      return prevData.map(row => {
-        if (row.id === rowId) {
-          return { ...row, [columnId]: selectedIdsForField };
-        }
-        return row;
-      });
+    setDirtyColumns(prev => {
+      const newSet = new Set(prev);
+      newSet.add(columnId);
+      return newSet;
     });
   }, []);
 
   const handleColumnAdd = (newTime: number) => {
-    if (timeOffsets.includes(newTime)) {
-      toast.error(`A column for time ${newTime} already exists.`);
-      return;
-    }
     setTimeOffsets(prev => [...prev, newTime].sort((a, b) => a - b));
     setData(prevData =>
       prevData.map(row => ({ ...row, [newTime]: '' }))
     );
+    // Paginate to newly added column
+    setColumnOffset(Math.max(0, (timeOffsets.length + 1) - tableWidth));
   };
 
-  const handleColOffsetChange = (offset: number | string) => {
-    if (typeof offset === "number") {
-      setColumnOffset(prev => prev + offset);
-    } else if (offset === 'reset') {
-      setColumnOffset((Math.floor(timeOffsets.length / tableWidth)) * tableWidth)
+  const handleColOffsetChange = (shift: number | string) => {
+    if (typeof shift === "number") {
+      setColumnOffset(prev => {
+        if (prev === 0 && shift > 0 && remainder !== 0) {
+          return remainder;
+        }
+
+        const next = prev + shift;
+        if (next <= 0) return 0;
+        if (next >= maxOffset) return maxOffset;
+        return next;
+      });
+    } else if (shift === 'reset') {
+      setColumnOffset(maxOffset);
     }
-  }
+  };
 
   const handleSave = async () => {
     if (dirtyColumns.size === 0) {
@@ -244,14 +221,17 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
 
         // 2. Loop through all frontend rows to grab the values for this specific time column
         data.forEach(row => {
-          const isDataRow = row.componentType !== 'static' &&
-            row.componentType !== 'checkboxlist' &&
-            row.componentType !== 'totalScoreRow';
+          const isDataRow = row.componentType !== 'static' && row.componentType !== 'totalScoreRow';
 
           if (isDataRow && row.id) {
             const cellValue = row[timeOffset];
-            // explicit any with large, pivoted data set
-            (dbRecord as Record<string, any>)[row.id] = cellValue !== '' ? cellValue : null;
+            // Convert CheckboxList array values back to string
+            let formattedValue = cellValue;
+            if (Array.isArray(cellValue)) {
+              formattedValue = cellValue.join(',');
+            }
+
+            (dbRecord as Record<string, any>)[row.id] = formattedValue !== '' && formattedValue !== undefined ? formattedValue : null;
           }
         });
 
@@ -293,17 +273,17 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   }, [dirtyColumns, handleUnsavedCharting]);
 
   // Auto-open sidebar logic
-  useEffect(() => {
-    let shouldOpen = false;
-    for (const tool of assessmentTools) {
-      if (visibleSubsetIds.has(tool.name)) {
-        shouldOpen = true;
-        break;
-      }
-    }
-    if (shouldOpen !== isSidebarOpen) setIsSidebarOpen(shouldOpen);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visibleSubsetIds]);
+  // useEffect(() => {
+  //   let shouldOpen = false;
+  //   for (const tool of assessmentTools) {
+  //     if (visibleSubsetIds.has(tool.name)) {
+  //       shouldOpen = true;
+  //       break;
+  //     }
+  //   }
+  //   if (shouldOpen !== isSidebarOpen) setIsSidebarOpen(shouldOpen);
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [visibleSubsetIds]);
 
 
   const columns = useMemo(() => [
@@ -390,8 +370,8 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
                 />
               )
             case 'checkboxlist':
-              const selectionKey = `${row.original.id}-${column.id}`;
-              const currentSelectedSubsets = fieldSelections[selectionKey] || [];
+              const currentSelectedSubsets = (getValue() as string[]) || [];
+
               return (
                 <CheckBoxList
                   options={row.original.assessmentSubsets || []}
@@ -405,7 +385,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
         }
       })
     })
-  ], [simStartTime, fieldSelections, handleSubsetSelection, slicedTimeOffsets]);
+  ], [simStartTime, handleSubsetSelection, slicedTimeOffsets]);
 
   const ptTable = useReactTable({
     data: filteredData,

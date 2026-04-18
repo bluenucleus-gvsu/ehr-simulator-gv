@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useReactTable, getCoreRowModel, flexRender, createColumnHelper } from "@tanstack/react-table";
 import { Tooltip, TooltipTrigger, TooltipContent, } from "@/components/ui/tooltip";
 import { TriangleAlert } from "lucide-react";
-import { formatTimeFromOffset, getPinnedStyles } from "../charting/chartingView";
+import { formatTimeFromOffset, getPinnedStyles } from "../charting/components/flexSheetHelpers";
 import {
   Table,
   TableHeader,

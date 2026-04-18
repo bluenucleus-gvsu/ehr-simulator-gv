@@ -1,4 +1,7 @@
+import { Column } from "@tanstack/react-table";
 import { FlexSheetData } from "./flexSheetData";
+import { LabTableData } from "../../labs/components/labsData";
+import { addMinutes, format } from "date-fns";
 
 const bpThresholds = {
   diastolic: { low: 60, high: 120 },
@@ -39,3 +42,64 @@ export function getAlertFlag(
 
   return false;
 }
+
+
+export function getPinnedStyles(column: Column<FlexSheetData> | Column<LabTableData>, width: number = 200, isHeader: boolean = false): React.CSSProperties {
+  const isPinned = column.getIsPinned();
+  if (!isPinned) {
+    return isHeader ? { position: 'sticky', top: 0, zIndex: 10 } : {};
+  }
+
+  const side = isPinned as 'left' | 'right';
+
+  return {
+    position: 'sticky',
+    [side]: `${column.getStart(side)}px`,
+    top: isHeader ? 0 : undefined,
+    zIndex: isHeader ? 10 : (side === 'left' ? 2 : 1),
+    width: width
+  };
+}
+
+export const formatTimeFromOffset = (offsetMinutes: number, nowTimestamp: number | null) => {
+  if (!nowTimestamp || offsetMinutes == null || isNaN(offsetMinutes)) {
+    return null;
+  }
+
+  const targetTime = addMinutes(new Date(nowTimestamp), offsetMinutes);
+  const time = format(targetTime, 'HHmm');
+  const date = format(targetTime, 'MM/dd');
+  return { time, date };
+};
+
+export function calculateColTotal(toolName: string, grouped: FlexSheetData[], timeOffsets: number[]) {
+  const totalRow: FlexSheetData = {
+    id: `${toolName}TotalScore`,
+    field: `${toolName} Total Score`,
+    componentType: "totalScoreRow",
+    rowType: "totalScoreRow",
+  };
+
+  timeOffsets.forEach(timeCol => {
+    let totalScore = 0;
+    let hasEnteredValue = false;
+
+    grouped.forEach(toolRow => {
+      // Safe check for existing value
+      const val = toolRow[timeCol];
+      if (val) {
+        const score = parseInt(val.toString());
+        if (!isNaN(score)) {
+          totalScore += score;
+          hasEnteredValue = true;
+        }
+      }
+    });
+    totalRow[timeCol] = hasEnteredValue ? totalScore.toString() : "";
+  });
+  return totalRow;
+}
+
+export const getLastPageOffset = (totalItems: number, width: number) => {
+  return Math.max(0, Math.ceil(totalItems / width) - 1) * width;
+};

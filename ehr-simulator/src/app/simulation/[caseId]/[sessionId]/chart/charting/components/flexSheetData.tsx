@@ -1,5 +1,4 @@
 import { DatabaseDocumentation } from "@/actions/simulation";
-import { getMinutes } from "date-fns";
 export interface chartingOptions {
   subsetId: string;
   label: string;
@@ -25,18 +24,12 @@ export const getAllTimeOffsets = (simulationNow: number | null, dbResults: Datab
   if (!simulationNow) {
     return []
   }
-  const minutesPastTheHour = getMinutes(simulationNow);
-  const dynamicTimeOffsets = Array.from({ length: 1 }, (_, index) => {
-    return minutesPastTheHour - (60 * index);
-  });
-
   // Extract unique time offsets from the database results
   const dbTimeOffsets = dbResults
     .filter(row => row.time_offset != null)
-    .map(row => row.time_offset as number); // safely cast as number
+    .map(row => row.time_offset as number);
 
-  // Combine and deduplicate
-  const allTimeOffsets = [...new Set([...dynamicTimeOffsets, ...dbTimeOffsets])];
+  const allTimeOffsets = [...new Set(dbTimeOffsets)];
 
   return allTimeOffsets.sort((a, b) => a - b)
 
@@ -45,7 +38,6 @@ export const getAllTimeOffsets = (simulationNow: number | null, dbResults: Datab
 export const generateChartingDataFromDB = (
   dbResults: DatabaseDocumentation[],
   allTimeOffsets: number[],
-  // template: FlexSheetData[]
 ): FlexSheetData[] => {
 
   // 1. Group by time offset
@@ -73,10 +65,15 @@ export const generateChartingDataFromDB = (
 
       // Check if the DB row exists and has a value for this ID
       if (dbRowForTime && dbRowForTime[dbColumnName] !== null && dbRowForTime[dbColumnName] !== undefined) {
-        newRow[offset] = String(dbRowForTime[dbColumnName]);
+        const val = String(dbRowForTime[dbColumnName]);
+        if (templateRow.componentType === 'checkboxlist') {
+          newRow[offset] = val ? val.split(',') : [];
+        } else {
+          newRow[offset] = val;
+        }
         hasPrefinedValue = true;
       } else {
-        newRow[offset] = "";
+        newRow[offset] = templateRow.componentType === 'checkboxlist' ? [] : "";
       }
     });
 
@@ -200,7 +197,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     rowType: "titleRow",
   },
   {
-    id: "intakeCheckbox",
+    id: "intake_selections",
     field: "Intake Fields",
     componentType: "checkboxlist",
     assessmentSubsets: [
@@ -246,7 +243,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     rowType: "titleRow",
   },
   {
-    id: "outputCheckbox",
+    id: "output_selections",
     field: "Output Fields",
     componentType: "checkboxlist",
     assessmentSubsets: [
@@ -309,7 +306,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     componentType: "input",
   },
   {
-    id: "pain_characteristics",  // TODO: add pain fields to schema
+    id: "pain_characteristics",
     field: "Characteristics",
     componentType: "input",
   },
@@ -339,7 +336,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "generalAppearanceCheckbox",
+    id: "general_appearance_selections",
     field: "General Appearance",
     componentType: "checkboxlist",
     assessmentSubsets: [
@@ -377,7 +374,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
 
   },
   {
-    id: "psychosocialStatusCheckbox",
+    id: "psychosocial_selections",
     field: "Psychosocial Status",
     componentType: "checkboxlist",
     assessmentSubsets: [
@@ -407,7 +404,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "heentStatusCheckbox",
+    id: "heent_selections",
     field: "HEENT Status",
     componentType: "checkboxlist",
     assessmentSubsets: [
@@ -467,7 +464,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "neurologicalStatusCheckbox",
+    id: "neuro_selections",
     field: "Neurological Status", // Corrected field name
     componentType: "checkboxlist",
     assessmentSubsets: [
@@ -511,7 +508,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "integumentStatusCheckbox",
+    id: "integument_selections",
     field: "Integument Status",
     componentType: "checkboxlist",
     assessmentSubsets: [
@@ -563,7 +560,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "cardiovascularStatusCheckbox",
+    id: "cardiovascular_selections",
     field: "Cardiovascular Status",
     componentType: "checkboxlist",
     assessmentSubsets: [
@@ -606,7 +603,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "respiratoryStatusCheckbox",
+    id: "respiratory_selections",
     field: "Respiratory Status",
     componentType: "checkboxlist",
     assessmentSubsets: [
@@ -642,7 +639,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "giStatusCheckbox",
+    id: "gi_selections",
     field: "GI Status",
     componentType: "checkboxlist",
     assessmentSubsets: [
@@ -685,7 +682,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "musculoskeletalStatusCheckbox",
+    id: "musculoskeletal_selections",
     field: "Musculoskeletal Status",
     componentType: "checkboxlist",
     assessmentSubsets: [
@@ -720,7 +717,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     ]
   },
   {
-    id: "genitourinaryStatusCheckbox",
+    id: "genitourinary_selections",
     field: "Genitourinary Status",
     componentType: "checkboxlist",
     assessmentSubsets: [
@@ -784,7 +781,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     rowType: "titleRow"
   },
   {
-    id: "additionalToolsCheckbox",
+    id: "assessment_tool_selections",
     field: "Additional Tools",
     componentType: "checkboxlist",
     assessmentSubsets: [

@@ -21,7 +21,7 @@ import type { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/
 import { useMemo } from "react"
 import StyledTitle from "./styledTitle"
 import { generateChartingDataFromDB, getAllTimeOffsets } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData"
-import { formatTimeFromOffset } from "../../charting/chartingView"
+import { formatTimeFromOffset } from "../../charting/components/flexSheetHelpers"
 import { DatabaseDocumentation } from "@/actions/simulation"
 import { useSimSessionContext } from "@/context/SimSessionContext"
 
