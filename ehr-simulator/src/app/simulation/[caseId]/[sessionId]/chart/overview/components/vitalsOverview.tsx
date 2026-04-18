@@ -33,10 +33,10 @@ export type vitalsOverviewTable = {
 const vitalSignIds = [
   "hr",
   "bp",
+  "map",
   "rr",
   "temp",
   "spo2",
-  "pain",
   "weightKg",
 ];
 
@@ -55,7 +55,7 @@ function mostRecentVitals(
 
   activeOffsets.sort((a, b) => a - b);
 
-  return activeOffsets.slice(0, limit);
+  return activeOffsets.slice(-1 * limit);
 }
 interface VitalsOverviewProps {
   dbDocumentation: DatabaseDocumentation[]
@@ -95,7 +95,7 @@ export function VitalsOverview({ dbDocumentation = [] }: VitalsOverviewProps) {
         accessorKey: String(timeKey) as keyof FlexSheetData,
         header: () => {
           const result = formatTimeFromOffset(timeKey, simStartTime)
-          if (result.error) {
+          if (!result) {
             return <span>Error</span>;
           }
 

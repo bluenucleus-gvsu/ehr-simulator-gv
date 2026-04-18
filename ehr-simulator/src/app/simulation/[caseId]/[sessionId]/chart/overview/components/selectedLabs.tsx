@@ -85,7 +85,9 @@ export function SelectedLabs() {
         {selectedLabData.map(labData => {
           if (!labData) return null
 
-          const { date: displayDate, time: displayTime } = formatTimeFromOffset(labData.dateKey, startTime)
+          const timeData = formatTimeFromOffset(labData.dateKey, startTime)
+          const displayDate = timeData?.date || "Unknown";
+          const displayTime = timeData?.time || "Unknown";
 
           const normalRange = labData.normalRange
           const criticalRange = labData.criticalRange

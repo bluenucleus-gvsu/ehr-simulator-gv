@@ -10,7 +10,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { toast } from "sonner";
-import { differenceInMilliseconds, format } from "date-fns";
+import { addMinutes, format } from "date-fns";
 import FlexSheetSidebar from "./components/flexSheetSidebar";
 
 import {
@@ -19,11 +19,12 @@ import {
   generateChartingDataFromDB,
   getAllTimeOffsets,
 } from "./components/flexSheetData";
-import { ImagingData, LabCellValue } from "../labs/components/labsData";
+import { ImagingData, LabCellValue, LabTableData } from "../labs/components/labsData";
 import { TableAssessmentSelectCell, TableInputCell } from "./components/tableInputCell";
 import { ChartingToolTip } from "./components/ChartingToolTip";
 import { DatabaseDocumentation, StudentDatabaseDocumentation, upsertDocumentationRows } from "@/actions/simulation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
+import FlexSheetColumnShifter from "./components/flexSheetColumnShifter";
 
 interface FlexSheetViewProps {
   dbDocumentation: DatabaseDocumentation[];
@@ -35,16 +36,20 @@ interface FlexSheetViewProps {
 
 const columnHelper = createColumnHelper<FlexSheetData>();
 
-function getPinnedStyles(column: Column<FlexSheetData>): React.CSSProperties {
+export function getPinnedStyles(column: Column<FlexSheetData> | Column<LabTableData>, width: number = 200, isHeader: boolean = false): React.CSSProperties {
   const isPinned = column.getIsPinned();
   if (!isPinned) {
-    return {};
+    return isHeader ? { position: 'sticky', top: 0, zIndex: 10 } : {};
   }
+
   const side = isPinned as 'left' | 'right';
+
   return {
     position: 'sticky',
     [side]: `${column.getStart(side)}px`,
-    zIndex: side === 'left' ? 2 : 1,
+    top: isHeader ? 0 : undefined,
+    zIndex: isHeader ? 30 : (side === 'left' ? 2 : 1),
+    width: width
   };
 }
 
@@ -58,10 +63,11 @@ declare module '@tanstack/react-table' {
 }
 
 export const formatTimeFromOffset = (offsetMinutes: number, nowTimestamp: number | null) => {
-  if (!nowTimestamp) {
-    return { error: { status: 'TIME_ERROR', data: 'Time has not been initialized.' } };
+  if (!nowTimestamp || offsetMinutes == null || isNaN(offsetMinutes)) {
+    return null;
   }
-  const targetTime = differenceInMilliseconds(nowTimestamp, (offsetMinutes * 60 * 1000));
+
+  const targetTime = addMinutes(new Date(nowTimestamp), offsetMinutes);
   const time = format(targetTime, 'HHmm');
   const date = format(targetTime, 'MM/dd');
   return { time, date };
@@ -95,6 +101,8 @@ export function calculateColTotal(toolName: string, grouped: FlexSheetData[], ti
   return totalRow;
 }
 
+const tableWidth = 6
+
 export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   const { groupId, userId, simStartTime, handleUnsavedCharting } = useSimSessionContext();
 
@@ -104,6 +112,8 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [dirtyColumns, setDirtyColumns] = useState<Set<string>>(new Set());
+  const [columnOffset, setColumnOffset] = useState(Math.floor(timeOffsets.length / tableWidth) * tableWidth)
+  const slicedTimeOffsets = timeOffsets.slice(columnOffset, (columnOffset + tableWidth))
   const { caseId, sessionId } = params;
   const canSubmit = dirtyColumns.size > 0
 
@@ -200,6 +210,14 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
       prevData.map(row => ({ ...row, [newTime]: '' }))
     );
   };
+
+  const handleColOffsetChange = (offset: number | string) => {
+    if (typeof offset === "number") {
+      setColumnOffset(prev => prev + offset);
+    } else if (offset === 'reset') {
+      setColumnOffset((Math.floor(timeOffsets.length / tableWidth)) * tableWidth)
+    }
+  }
 
   const handleSave = async () => {
     if (dirtyColumns.size === 0) {
@@ -329,8 +347,11 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
         return <p className="min-w-24 h-full text-left text-xs py-0 pl-4 text-neutral-600 shadow-none rounded-none focus-visible:ring-0 focus-visible:ring-offset-0">{info.getValue()}</p>;
       },
     }),
-    ...timeOffsets.map(offsetKey => {
-      const { time: displayTime, date: displayDate } = formatTimeFromOffset(offsetKey, simStartTime);
+    ...slicedTimeOffsets.map(offsetKey => {
+      const displayData = formatTimeFromOffset(offsetKey, simStartTime);
+      const displayDate = displayData?.date || "";
+      const displayTime = displayData?.time || "";
+
       return columnHelper.accessor(row => row[offsetKey], {
         id: String(offsetKey),
         header: () => (
@@ -384,7 +405,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
         }
       })
     })
-  ], [timeOffsets, simStartTime, fieldSelections, handleSubsetSelection]);
+  ], [simStartTime, fieldSelections, handleSubsetSelection, slicedTimeOffsets]);
 
   const ptTable = useReactTable({
     data: filteredData,
@@ -405,13 +426,13 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
     },
     getCoreRowModel: getCoreRowModel(),
   });
-
+  console.log(data)
   return (
     <SidebarProvider open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
       <SidebarInset>
         <div className="flex flex-col bg-gray-100 w-[calc(100vw-16rem)] h-[calc(100vh-4rem)] px-4">
           <div className="flex flex-col w-full h-full justify-center items-center gap-2 pt-2 ">
-            <div className="w-full flex justify-start gap-2 ">
+            <div className="w-full flex justify-start gap-3 ">
               <AddTimeColumnButton
                 onColumnAdd={handleColumnAdd}
                 existingTimeColumns={timeOffsets}
@@ -423,14 +444,25 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
               <Button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="bg-white h-6 w-4 text-black hover:bg-gray-200 shadow shadow-black/20">
                 {isSidebarOpen ? <PanelLeftOpenIcon /> : <PanelLeftCloseIcon />}
               </Button>
+              <FlexSheetColumnShifter
+                columnOffset={columnOffset}
+                onColumnShift={handleColOffsetChange}
+                columns={timeOffsets}
+                tableWidth={tableWidth}
+                simStartTime={simStartTime}
+              />
             </div>
-            <div className="flex-grow w-full overflow-auto border border-gray-200 rounded-md ">
+            <div className="flex-grow w-full overflow-hidden border border-gray-200 rounded-md flex flex-col ">
               <Table className="w-full rounded-md">
-                <TableHeader className=" bg-gray-50 sticky top-0">
+                <TableHeader className=" bg-gray-50">
                   {ptTable.getHeaderGroups().map(headerGroup => (
                     <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map(header => (
-                        <TableHead style={getPinnedStyles(header.column)} key={header.id} className="border-b-2 p-0 border-gray-200 ">
+                        <TableHead
+                          style={getPinnedStyles(header.column, 200, true)}
+                          key={header.id}
+                          className="p-0 bg-gray-50 shadow-[inset_0_-1px_0_0_#e5e7eb]"
+                        >
                           {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                         </TableHead>
                       ))}

@@ -6,6 +6,7 @@ import { TimePickerInput } from "@/components/ui/time-picker-input";
 import { Clock, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { differenceInMinutes } from "date-fns";
+import { formatTimeFromOffset } from "../chartingView";
 
 interface AddTimeColumnButtonProps {
     onColumnAdd: (timeString: number) => void;
@@ -13,22 +14,27 @@ interface AddTimeColumnButtonProps {
     sessionStartTime: number | null;
 }
 
-export function AddTimeColumnButton({ onColumnAdd, existingTimeColumns, sessionStartTime }: AddTimeColumnButtonProps) {
-    const [simulationTime] = useState(new Date().getTime());
+function handleConflictingTimes(timeOffset: number, sessionStartTime: number) {
+    const timeData = formatTimeFromOffset(timeOffset, sessionStartTime)
+    const date = timeData?.date || 'Unknown Date'
+    const time = timeData?.time || 'Unknown Time'
+    toast.error(`Column for ${date + ' at ' + time} already exists`, {
+        description: "Please choose a different time or use an existing column.",
+    });
+}
 
+export function AddTimeColumnButton({ onColumnAdd, existingTimeColumns, sessionStartTime }: AddTimeColumnButtonProps) {
     const [selectedTime, setSelectedTime] = useState<Date | undefined>(new Date());
     const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false);
 
     const handleAddTime = () => {
-        if (!simulationTime || !sessionStartTime) {
+        if (!sessionStartTime) {
             return
         }
-        const timeOffset = differenceInMinutes(sessionStartTime, simulationTime)
+        const timeOffset = differenceInMinutes(new Date().getTime(), sessionStartTime)
 
         if (existingTimeColumns.includes(timeOffset)) {
-            toast.error(`Time at ${timeOffset} already exists`, {
-                description: "Please choose a different time or use an existing column.",
-            });
+            handleConflictingTimes(timeOffset, sessionStartTime)
             return;
         }
 
@@ -45,12 +51,10 @@ export function AddTimeColumnButton({ onColumnAdd, existingTimeColumns, sessionS
             });
             return;
         }
-        const timeOffset = differenceInMinutes(sessionStartTime, selectedTime.getTime())
+        const timeOffset = differenceInMinutes(selectedTime.getTime(), sessionStartTime)
 
         if (existingTimeColumns.includes(timeOffset)) {
-            toast.error(`Time at ${timeOffset} already exists`, {
-                description: "Please choose a different time or use an existing column.",
-            });
+            handleConflictingTimes(timeOffset, sessionStartTime)
             return;
         }
 
