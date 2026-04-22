@@ -1,6 +1,6 @@
 'use client'
 
-import { useReactTable, getCoreRowModel, flexRender, createColumnHelper, RowData } from "@tanstack/react-table";
+import { useReactTable, getCoreRowModel, flexRender, createColumnHelper, type Column, type RowData } from "@tanstack/react-table";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import CheckBoxList from "./components/checkBoxList";
@@ -10,17 +10,47 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { toast } from "sonner";
+// import { Skeleton } from "@/components/ui/skeleton";
+import { addMinutes, format } from "date-fns";
 import FlexSheetSidebar from "./components/flexSheetSidebar";
-import { useSimulationCase } from "@/context/SimulationCaseContext";
 
 import {
   type FlexSheetData,
   assessmentTools,
   flexSheetTemplate,
 } from "./components/flexSheetData";
+import { ImagingData, LabCellValue } from "../labs/components/labsData";
 import { TableAssessmentSelectCell, TableInputCell } from "./components/tableInputCell";
 import { ChartingToolTip } from "./components/ChartingToolTip";
-import { buildChartingRowsFromBundle } from "./components/chartingFromBundle";
+import { DatabaseDocumentation, StudentDatabaseDocumentation, upsertDocumentationRows } from "@/actions/simulation";
+import { useSimSessionContext } from "@/context/SimSessionContext";
+import {
+  buildChartingRowsFromBundle,
+  coerceDocumentationValueForPersist,
+  resolveDocumentationDbColumn,
+} from "./components/chartingFromBundle";
+
+interface FlexSheetViewProps {
+  dbDocumentation: DatabaseDocumentation[];
+  params: {
+    caseId: string;
+    sessionId: string;
+  };
+}
+const columnHelper = createColumnHelper<FlexSheetData>();
+
+function getPinnedStyles(column: Column<FlexSheetData>): React.CSSProperties {
+  const isPinned = column.getIsPinned();
+  if (!isPinned) {
+    return {};
+  }
+  const side = isPinned as 'left' | 'right';
+  return {
+    position: 'sticky',
+    [side]: `${column.getStart(side)}px`,
+    zIndex: side === 'left' ? 2 : 1,
+  };
+}
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
@@ -31,75 +61,77 @@ declare module '@tanstack/react-table' {
   }
 }
 
-const columnHelper = createColumnHelper<FlexSheetData>();
+export const formatTimeFromOffset = (offsetMinutes: number, nowTimestamp: number | null) => {
+  if (!nowTimestamp) {
+    return { error: { status: 'TIME_ERROR', data: 'Time has not been initialized.' } };
+  }
+  const targetTime = addMinutes(new Date(nowTimestamp), offsetMinutes);
+  const time = format(targetTime, 'HHmm');
+  const date = format(targetTime, 'MM/dd');
+  return { time, date };
+};
 
-const tableWidth = 6
+export function calculateColTotal(toolName: string, grouped: FlexSheetData[], timeOffsets: number[]) {
+  const totalRow: FlexSheetData = {
+    id: `${toolName}TotalScore`,
+    field: `${toolName} Total Score`,
+    componentType: "totalScoreRow",
+    rowType: "totalScoreRow",
+  };
+
+  timeOffsets.forEach(timeCol => {
+    let totalScore = 0;
+    let hasEnteredValue = false;
+
+    grouped.forEach(toolRow => {
+      // Safe check for existing value
+      const val = toolRow[timeCol];
+      if (val) {
+        const score = parseInt(val.toString());
+        if (!isNaN(score)) {
+          totalScore += score;
+          hasEnteredValue = true;
+        }
+      }
+    });
+    totalRow[timeCol] = hasEnteredValue ? totalScore.toString() : "";
+  });
+  return totalRow;
+}
+
 
 export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
-  const { groupId, userId, simStartTime, handleUnsavedCharting } = useSimSessionContext();
-
-export function FlexSheet() {
-  const { caseBundle } = useSimulationCase();
-  const [sessionStartTime] = useState(new Date().getTime());
-  const [timeOffsets, setTimeOffsets] = useState<number[]>([0]);
-  const [data, setData] = useState<FlexSheetData[]>([]);
+  const { groupId, userId, simStartTime } = useSimSessionContext();
+  const initialCharting = useMemo(
+    () => buildChartingRowsFromBundle(dbDocumentation, flexSheetTemplate),
+    [dbDocumentation],
+  );
+  const [timeOffsets, setTimeOffsets] = useState(initialCharting.timeOffsets);
+  const [data, setData] = useState<FlexSheetData[]>(initialCharting.rows);
   const [fieldSelections, setFieldSelections] = useState<Record<string, string[]>>({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [dirtyColumns, setDirtyColumns] = useState<Set<string>>(new Set());
-
-  // 1. Calculate the bounds and remainder
-  const maxOffset = Math.max(0, timeOffsets.length - tableWidth);
-  const remainder = timeOffsets.length % tableWidth;
-
-  // 2. Initialize state to the maximum offset (the end of the array)
-  const [columnOffset, setColumnOffset] = useState(maxOffset);
-
-  // 3. Dynamically set the end of the slice so the oldest page doesn't overlap
-  const sliceEnd = (columnOffset === 0 && remainder !== 0) ? remainder : columnOffset + tableWidth;
-  const slicedTimeOffsets = timeOffsets.slice(columnOffset, sliceEnd);
-
   const { caseId, sessionId } = params;
   const canSubmit = dirtyColumns.size > 0
 
   useEffect(() => {
-    const mapped = buildChartingRowsFromBundle(caseBundle?.documentationResults ?? [], flexSheetTemplate);
-    setTimeOffsets(mapped.timeOffsets);
-    setData(mapped.rows);
-    setFieldSelections({});
-  }, [caseBundle]);
+    const hydrated = buildChartingRowsFromBundle(dbDocumentation, flexSheetTemplate)
+    setTimeOffsets(hydrated.timeOffsets)
+    setData(hydrated.rows)
+    setDirtyColumns(new Set())
+  }, [dbDocumentation]);
 
 
   // Calculate visible IDs based on checkboxes
   const visibleSubsetIds = useMemo(() => {
     const combinedSet = new Set<string>();
-
-    data.forEach(row => {
-      timeOffsets.forEach(offset => {
-        const cellValue = row[offset];
-
-        // 1. If it's a checkbox list, add all explicitly selected tools (ignoring WDL)
-        if (row.componentType === 'checkboxlist' && Array.isArray(cellValue)) {
-          cellValue.forEach(item => {
-            console.log('YOKES')
-            if (typeof item === 'string' && item !== "WDL") {
-              combinedSet.add(item);
-            }
-          });
-        }
-
-        // 2. The Auto-Open Fix: If a hideable row has a pre-existing value, 
-        // force its parent category (hideableId) to be visible so the title/total rows appear.
-        if (row.hideable && row.hideableId) {
-          if (cellValue !== "" && cellValue !== null && cellValue !== undefined && (!Array.isArray(cellValue) || cellValue.length > 0)) {
-            combinedSet.add(row.hideableId);
-          }
-        }
-      });
+    Object.values(fieldSelections).forEach(selectedIdsArray => {
+      // Exclude "WDL" from the set of IDs that trigger row visibility
+      selectedIdsArray.forEach(id => id !== "WDL" && combinedSet.add(id));
     });
-
     return combinedSet;
-  }, [data, timeOffsets]);
+  }, [fieldSelections]);
 
   const filteredData = useMemo(() => {
     // 1. Group rows by toolName first (needed to calculate totals correctly)
@@ -154,44 +186,34 @@ export function FlexSheet() {
   }, []);
 
   const handleSubsetSelection = useCallback((rowId: string, columnId: string, selectedIdsForField: string[]) => {
-    setData(prevData => prevData.map(row => {
-      if (row.id === rowId) {
-        return { ...row, [columnId]: selectedIdsForField };
-      }
-      return row;
+    const selectionKey = `${rowId}-${columnId}`;
+
+    // Update selections state
+    setFieldSelections(prev => ({
+      ...prev,
+      [selectionKey]: selectedIdsForField
     }));
 
-    setDirtyColumns(prev => {
-      const newSet = new Set(prev);
-      newSet.add(columnId);
-      return newSet;
+    // Also update the actual cell value in data to reflect the selection
+    setData(prevData => {
+      return prevData.map(row => {
+        if (row.id === rowId) {
+          return { ...row, [columnId]: selectedIdsForField };
+        }
+        return row;
+      });
     });
   }, []);
 
   const handleColumnAdd = (newTime: number) => {
+    if (timeOffsets.includes(newTime)) {
+      toast.error(`A column for time ${newTime} already exists.`);
+      return;
+    }
     setTimeOffsets(prev => [...prev, newTime].sort((a, b) => a - b));
     setData(prevData =>
       prevData.map(row => ({ ...row, [newTime]: '' }))
     );
-    // Paginate to newly added column
-    setColumnOffset(Math.max(0, (timeOffsets.length + 1) - tableWidth));
-  };
-
-  const handleColOffsetChange = (shift: number | string) => {
-    if (typeof shift === "number") {
-      setColumnOffset(prev => {
-        if (prev === 0 && shift > 0 && remainder !== 0) {
-          return remainder;
-        }
-
-        const next = prev + shift;
-        if (next <= 0) return 0;
-        if (next >= maxOffset) return maxOffset;
-        return next;
-      });
-    } else if (shift === 'reset') {
-      setColumnOffset(maxOffset);
-    }
   };
 
   const handleSave = async () => {
@@ -201,39 +223,78 @@ export function FlexSheet() {
     }
 
     setIsSaving(true);
-    toast.info("Charting save is disabled in rendering-only mode.");
-    setIsSaving(false);
+    try {
+      if (!userId || !groupId || !sessionId || !caseId) {
+        toast.error('Case data still loading. Please try again.')
+        return
+      }
+      const dirtyTimeOffsets = Array.from(dirtyColumns).filter((col) =>
+        Number.isFinite(Number(col)),
+      );
+      if (dirtyTimeOffsets.length === 0) {
+        toast.info("No valid time columns to save.");
+        return;
+      }
+      // 1. Unpivot the data: Build one DB row for every dirty time column
+      const payload = dirtyTimeOffsets.map((timeOffset) => {
+        const dbRecord: StudentDatabaseDocumentation = {
+          case_id: caseId,
+          case_session_id: sessionId,
+          user_id: userId,
+          group_id: groupId,
+          time_offset: Number(timeOffset),
+          is_in_presim: false,
+        };
+
+        // 2. Loop through all frontend rows to grab the values for this specific time column
+        data.forEach(row => {
+          const isDataRow = row.componentType !== 'static' &&
+            row.componentType !== 'checkboxlist' &&
+            row.componentType !== 'totalScoreRow';
+
+          if (isDataRow && row.id) {
+            const cellValue = row[timeOffset];
+            const dbColumn = resolveDocumentationDbColumn(row.id);
+            (dbRecord as Record<string, unknown>)[dbColumn] = coerceDocumentationValueForPersist(
+              dbColumn,
+              cellValue,
+            );
+          }
+        });
+
+        return dbRecord;
+      });
+
+      const { error } = await upsertDocumentationRows(payload);
+
+      if (error) throw error;
+
+      toast.success("FlexSheet data saved successfully!");
+
+      // 4. Clear the dirty columns
+      setDirtyColumns(new Set());
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      toast.error(`Failed to save data (${errorMessage})`);
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  // handle refreshing and Back navigation when user has unsaved data
-  useEffect(() => {
-    handleUnsavedCharting(dirtyColumns.size > 0);
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (dirtyColumns.size > 0) {
-        event.preventDefault();
-        return 'You have unsaved charting data.';
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [dirtyColumns, handleUnsavedCharting]);
-
   // Auto-open sidebar logic
-  // useEffect(() => {
-  //   let shouldOpen = false;
-  //   for (const tool of assessmentTools) {
-  //     if (visibleSubsetIds.has(tool.name)) {
-  //       shouldOpen = true;
-  //       break;
-  //     }
-  //   }
-  //   if (shouldOpen !== isSidebarOpen) setIsSidebarOpen(shouldOpen);
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [visibleSubsetIds]);
+  useEffect(() => {
+    let shouldOpen = false;
+    for (const tool of assessmentTools) {
+      if (visibleSubsetIds.has(tool.name)) {
+        shouldOpen = true;
+        break;
+      }
+    }
+    if (shouldOpen !== isSidebarOpen) setIsSidebarOpen(shouldOpen);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleSubsetIds]);
 
 
   const columns = useMemo(() => [
@@ -277,11 +338,8 @@ export function FlexSheet() {
         return <p className="min-w-24 h-full text-left text-xs py-0 pl-4 text-neutral-600 shadow-none rounded-none focus-visible:ring-0 focus-visible:ring-offset-0">{info.getValue()}</p>;
       },
     }),
-    ...slicedTimeOffsets.map(offsetKey => {
-      const displayData = formatTimeFromOffset(offsetKey, simStartTime);
-      const displayDate = displayData?.date || "";
-      const displayTime = displayData?.time || "";
-
+    ...timeOffsets.map(offsetKey => {
+      const { time: displayTime, date: displayDate } = formatTimeFromOffset(offsetKey, simStartTime);
       return columnHelper.accessor(row => row[offsetKey], {
         id: String(offsetKey),
         header: () => (
@@ -320,8 +378,8 @@ export function FlexSheet() {
                 />
               )
             case 'checkboxlist':
-              const currentSelectedSubsets = (getValue() as string[]) || [];
-
+              const selectionKey = `${row.original.id}-${column.id}`;
+              const currentSelectedSubsets = fieldSelections[selectionKey] || [];
               return (
                 <CheckBoxList
                   options={row.original.assessmentSubsets || []}
@@ -335,7 +393,7 @@ export function FlexSheet() {
         }
       })
     })
-  ], [simStartTime, handleSubsetSelection, slicedTimeOffsets]);
+  ], [timeOffsets, simStartTime, fieldSelections, handleSubsetSelection]);
 
   const ptTable = useReactTable({
     data: filteredData,
@@ -356,13 +414,13 @@ export function FlexSheet() {
     },
     getCoreRowModel: getCoreRowModel(),
   });
-  console.log(data)
+
   return (
     <SidebarProvider open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
       <SidebarInset>
         <div className="flex flex-col bg-gray-100 w-[calc(100vw-16rem)] h-[calc(100vh-4rem)] px-4">
           <div className="flex flex-col w-full h-full justify-center items-center gap-2 pt-2 ">
-            <div className="w-full flex justify-start gap-3 ">
+            <div className="w-full flex justify-start gap-2 ">
               <AddTimeColumnButton
                 onColumnAdd={handleColumnAdd}
                 existingTimeColumns={timeOffsets}
@@ -374,25 +432,14 @@ export function FlexSheet() {
               <Button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="bg-white h-6 w-4 text-black hover:bg-gray-200 shadow shadow-black/20">
                 {isSidebarOpen ? <PanelLeftOpenIcon /> : <PanelLeftCloseIcon />}
               </Button>
-              <FlexSheetColumnShifter
-                columnOffset={columnOffset}
-                onColumnShift={handleColOffsetChange}
-                columns={timeOffsets}
-                tableWidth={tableWidth}
-                simStartTime={simStartTime}
-              />
             </div>
-            <div className="flex-grow w-full overflow-hidden border border-gray-200 rounded-md flex flex-col ">
+            <div className="flex-grow w-full overflow-auto border border-gray-200 rounded-md ">
               <Table className="w-full rounded-md">
-                <TableHeader className=" bg-gray-50">
+                <TableHeader className=" bg-gray-50 sticky top-0">
                   {ptTable.getHeaderGroups().map(headerGroup => (
                     <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map(header => (
-                        <TableHead
-                          style={getPinnedStyles(header.column, 200, true)}
-                          key={header.id}
-                          className="p-0 bg-gray-50 shadow-[inset_0_-1px_0_0_#e5e7eb]"
-                        >
+                        <TableHead style={getPinnedStyles(header.column)} key={header.id} className="border-b-2 p-0 border-gray-200 ">
                           {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                         </TableHead>
                       ))}

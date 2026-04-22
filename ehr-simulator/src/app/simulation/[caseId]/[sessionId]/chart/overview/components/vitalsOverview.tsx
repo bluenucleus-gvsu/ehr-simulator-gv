@@ -17,13 +17,14 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Card } from "@/components/ui/card"
-import type { FlexSheetData } from "@/app/simulation/[sessionId]/chart/charting/components/flexSheetData"
-import { flexSheetTemplate } from "@/app/simulation/[sessionId]/chart/charting/components/flexSheetData"
-import { useMemo, useState } from "react"
+import type { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData"
+import { flexSheetTemplate } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData"
+import { useMemo } from "react"
 import StyledTitle from "./styledTitle"
-import { formatTimeFromOffset } from "../../charting/page"
+import { formatTimeFromOffset } from "../../charting/chartingView"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
-import { buildChartingRowsFromBundle } from "@/app/simulation/[sessionId]/chart/charting/components/chartingFromBundle"
+import { buildChartingRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/chartingFromBundle"
+import { useSimSessionContext } from "@/context/SimSessionContext"
 
 export type vitalsOverviewTable = {
   field: string
@@ -31,13 +32,13 @@ export type vitalsOverviewTable = {
 }
 
 const vitalSignIds = [
-  "hrInput",
-  "bpInput",
-  "rrInput",
-  "tempInput",
-  "spo2Input",
-  "painNumeric",
-  "weightKgInput",
+  "hr",
+  "bp",
+  "rr",
+  "temp",
+  "spo2",
+  "pain",
+  "weight_kg",
 ];
 
 function mostRecentVitals(
@@ -65,7 +66,7 @@ interface VitalsOverviewProps {
 
 export function VitalsOverview() {
   const { caseBundle } = useSimulationCase();
-  const [sessionStartTime] = useState(new Date().getTime());
+  const { simStartTime } = useSimSessionContext();
 
   const { allTimeOffsets, fullChartingData } = useMemo(() => {
     const mapped = buildChartingRowsFromBundle(

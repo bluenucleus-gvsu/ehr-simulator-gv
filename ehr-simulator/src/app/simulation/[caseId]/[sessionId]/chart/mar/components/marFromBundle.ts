@@ -72,8 +72,6 @@ function placeholderMedication(id: string, label: string): OralMedication {
     strength: 0,
     strengthUnit: "",
     dispenseUnit: "dose",
-    administrationFrequencies: [],
-    canBeCrushedOrSplit: false,
   };
 }
 
@@ -115,12 +113,10 @@ export function medOrderFormStateFromCaseBundle(caseBundle: CaseBundle | null): 
     createdOrders.push({
       id,
       medicationId: catalog.id,
-      unitsOrdered: 0,
       frequency: String(row.frequency ?? ""),
       priority,
       instructions: (row.instructions as string) ?? undefined,
       indication: String(row.indication ?? ""),
-      status: "active",
       orderingProvider: String(row.ordering_provider ?? ""),
       infusionRate: parseInfusionRate(row.infusion_rate as string | undefined),
       dose: Number(row.dose ?? 0),
@@ -175,12 +171,10 @@ export function buildMarFromCaseBundle(caseBundle: CaseBundle | null): {
     const mo: MedicationOrder = {
       id,
       medicationId,
-      unitsOrdered: 0,
       frequency: String(row.frequency ?? ""),
       priority,
       instructions: (row.instructions as string) ?? undefined,
       indication: String(row.indication ?? ""),
-      status: "active",
       orderingProvider: String(row.ordering_provider ?? ""),
       infusionRate: parseInfusionRate(row.infusion_rate as string | undefined),
       dose: Number(row.dose ?? 0),
@@ -233,13 +227,11 @@ export function buildMarFromCaseBundle(caseBundle: CaseBundle | null): {
     const mo: MedicationOrder = {
       id: catalogId,
       medicationId: catalog?.id ?? catalogId,
-      unitsOrdered: 0,
       frequency: "",
       priority: "",
       indication: "",
       orderingProvider: "",
       dose: fallbackDose,
-      status: "active",
       visibleInPresim: true,
     };
     medicationOrders.push(mo);

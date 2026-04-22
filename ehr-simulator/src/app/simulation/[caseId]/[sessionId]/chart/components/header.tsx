@@ -32,12 +32,12 @@ const Header = ({ tabs }: HeaderProps) => {
     }
   };
   return (
-    <header className="border-b h-(--header-height)">
-      <div className="flex h-(--header-height) justify-between items-center pl-12 gap-2">
+    <header className="border-b border-white/20 h-(--header-height) bg-black/5 backdrop-blur-[2px]">
+      <div className="flex h-(--header-height) justify-between items-center pl-8 gap-3">
         <div className="flex items-center gap-2">
           <Stethoscope color="white" size={26} strokeWidth={2.5} />
           <Link href="#" >
-            <h1 className="text-3xl font-bold text-white hover:underline">
+            <h1 className="text-3xl font-bold text-white hover:opacity-90 transition-opacity">
               <span>Flex</span>
               <span className="font-normal">Chart</span>
             </h1>
@@ -48,7 +48,7 @@ const Header = ({ tabs }: HeaderProps) => {
           <Button
             onClick={toggleFullScreen}
             variant='secondary'
-            className="p-0 size-6 hover:text-blue-600 hover:ring-2"
+            className="p-0 size-7 bg-white/90 hover:bg-white text-slate-700 hover:text-blue-600 border border-white/70 shadow-sm"
           >
             {!isFullscreen ? (
               <Expand className="!size-4" />

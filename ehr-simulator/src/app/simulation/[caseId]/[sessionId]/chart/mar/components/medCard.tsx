@@ -14,6 +14,7 @@ interface MedCardProps {
   isSelected: boolean;
   onSelectionChange: (order: MedicationOrder, checked: boolean) => void;
   isHighlightableColumn: boolean;
+  isPresim: boolean;
   selectionDisabled?: boolean;
 }
 
@@ -26,6 +27,7 @@ const MedCard = ({
   onSelectionChange,
   isSelected,
   isHighlightableColumn,
+  isPresim,
   selectionDisabled,
 }: MedCardProps) => {
 
@@ -35,10 +37,9 @@ const MedCard = ({
   };
 
   const visibleAdministrations = administrations.filter(currentAdmin => {
-    if (isPresim && !currentAdmin.is_in_presim) {
-      return false
+    if (isPresim && currentAdmin.is_in_presim === false) {
+      return false;
     }
-
     if (currentAdmin.status !== "Due") return true;
 
     const successfullAdministration = administrations.some(otherAdmin => {

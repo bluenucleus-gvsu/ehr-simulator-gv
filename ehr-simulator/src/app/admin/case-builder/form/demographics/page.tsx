@@ -35,11 +35,11 @@ import { FormShell } from "../../components/formShell";
 import { CaseSection } from "@/lib/saveCase";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { getCaseBundle } from "@/actions/case_builder/getCase";
-import { labTemplate } from "@/app/simulation/[sessionId]/chart/labs/components/labsData";
-import { buildLabRowsFromBundle } from "@/app/simulation/[sessionId]/chart/labs/components/labsFromBundle";
-import { medOrderFormStateFromCaseBundle } from "@/app/simulation/[sessionId]/chart/mar/components/marFromBundle";
-import { FlexSheetData, flexSheetTemplate } from "@/app/simulation/[sessionId]/chart/charting/components/flexSheetData";
-import { DOCUMENTATION_FIELD_TO_COLUMN } from "@/lib/documentationTypes";
+import { labTemplate } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
+import { buildLabRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsFromBundle";
+import { medOrderFormStateFromCaseBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marFromBundle";
+import { flexSheetTemplate } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
+import { buildChartingRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/chartingFromBundle";
 
 export default function DemographicsForm() {
   const { onDataChange, demographicData: initialData, setCaseId, caseId } = useFormContext();
@@ -47,76 +47,6 @@ export default function DemographicsForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showCancelAlert, setShowCancelAlert] = useState<boolean>(false);
-
-  const chartingFieldAliases: Record<string, string> = {
-    "Mood & Affect": "Mood and Affect",
-    "Head & Scalp": "Head and Scalp",
-    "Nausea & Vomiting": "Nausea/Vomiting",
-    "Breathing (Independent of Vocalization)": "Breathing Independent of Vocalization",
-  };
-
-  const hydrateChartingFromDocumentation = (documentationResults: any[]) => {
-    const rows: FlexSheetData[] = flexSheetTemplate.map((row) => ({ ...row }));
-    const populatedHideableRows = new Set<string>();
-
-    const normalizedResults = (documentationResults ?? []).filter(Boolean);
-    const timePoints = Array.from(
-      new Set(
-        normalizedResults
-          .map((row) => Number(row?.time_offset))
-          .filter((offset) => Number.isFinite(offset)),
-      ),
-    ).sort((a, b) => a - b);
-
-    const timePointsInPreSim = new Set(
-      normalizedResults
-        .filter((row) => Boolean(row?.is_in_presim))
-        .map((row) => Number(row?.time_offset))
-        .filter((offset) => Number.isFinite(offset)),
-    );
-
-    const columnToField = Object.entries(DOCUMENTATION_FIELD_TO_COLUMN).reduce<Record<string, string>>(
-      (acc, [fieldName, columnName]) => {
-        acc[String(columnName)] = fieldName;
-        return acc;
-      },
-      {},
-    );
-
-    const rowFieldToRow = rows.reduce<Record<string, FlexSheetData>>((acc, row) => {
-      acc[row.field] = row;
-      return acc;
-    }, {});
-
-    for (const docRow of normalizedResults) {
-      const timeOffset = Number(docRow?.time_offset);
-      if (!Number.isFinite(timeOffset)) continue;
-      const timeKey = String(timeOffset);
-
-      for (const [columnName, fieldName] of Object.entries(columnToField)) {
-        const rawValue = docRow?.[columnName];
-        if (rawValue == null || rawValue === "") continue;
-
-        const targetRow =
-          rowFieldToRow[fieldName] ??
-          rowFieldToRow[Object.keys(chartingFieldAliases).find((k) => chartingFieldAliases[k] === fieldName) ?? ""];
-        if (!targetRow) continue;
-
-        targetRow[timeKey] = String(rawValue);
-        if (targetRow.hideable) {
-          targetRow.hideable = false;
-          populatedHideableRows.add(targetRow.field);
-        }
-      }
-    }
-
-    return {
-      data: rows,
-      timePoints: timePoints.length > 0 ? timePoints : [0],
-      timePointsInPreSim,
-      visibleItems: populatedHideableRows,
-    };
-  };
 
   useEffect(() => {
     const editCaseId = searchParams.get("caseId");
@@ -251,10 +181,10 @@ export default function DemographicsForm() {
         ),
       });
 
-      const hydratedCharting = hydrateChartingFromDocumentation(bundle.documentationResults ?? []);
+      const hydratedCharting = buildChartingRowsFromBundle(bundle.documentationResults ?? [], flexSheetTemplate);
       onDataChange("charting", {
-        data: hydratedCharting.data,
-        timePoints: hydratedCharting.timePoints,
+        data: hydratedCharting.rows,
+        timePoints: hydratedCharting.timeOffsets,
         timePointsInPreSim: hydratedCharting.timePointsInPreSim,
         visibleItems: hydratedCharting.visibleItems,
       });

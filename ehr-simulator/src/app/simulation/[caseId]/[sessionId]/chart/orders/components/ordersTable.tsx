@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Dot } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 
 interface OrdersTableProps<T> {
   columnNames: string[],
@@ -36,8 +37,8 @@ const OrdersTable = <T extends Record<string, string | boolean | undefined>>({
   const columns = useMemo(
     () => [
       // unique first column
-      columnHelper.accessor((row: T) => row.displayName, {
-        id: "displayName",
+      columnHelper.accessor((row: T) => (row as { title?: string }).title ?? "", {
+        id: "title",
         header: () => {
           return (
             <div className="pl-2 w-full h-12 flex items-center justify-start ">
@@ -62,8 +63,16 @@ const OrdersTable = <T extends Record<string, string | boolean | undefined>>({
           )
         },
         cell: info => {
+          const row = info.row.original as T & { title?: string; isImportant?: boolean };
           return (
-            <h1 className="text-xs text-right font-medium text-wrap tracking-tight">{info.row.original.title}</h1>
+            <div className="flex flex-col items-end gap-1 text-right">
+              {row.isImportant ? (
+                <Badge variant="outline" className="text-[10px] font-semibold tracking-wide border-amber-300 bg-amber-50 text-amber-900 shrink-0">
+                  IMPORTANT
+                </Badge>
+              ) : null}
+              <h1 className="text-xs font-medium text-wrap tracking-tight">{row.title}</h1>
+            </div>
           )
         }
       }),

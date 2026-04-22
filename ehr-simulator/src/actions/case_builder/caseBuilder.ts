@@ -10,12 +10,9 @@ import { updateLabs } from "@/actions/case_builder/updateLabs";
 import { updateDocumentationResults } from "@/actions/case_builder/updateDocumentationResults";
 import { updateMedications } from "@/actions/case_builder/updateMedications";
 import { updateCaseIntakeOutput } from "@/actions/case_builder/updateCaseIntakeOutput";
-import type { IntakeOutputFormData } from "@/utils/form";
 
-import type {
-  MedAdministrationInstance,
-  MedicationOrder,
-} from "@/app/simulation/[sessionId]/chart/mar/components/marData";
+import { MedAdministrationInstance, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
+import type { IntakeOutputFormData } from "@/utils/form";
 
 // TODO: Narrow type definitions for each section & enforce at runtime.
 type SaveCaseArgs =
@@ -26,11 +23,7 @@ type SaveCaseArgs =
   | { section: typeof CaseSection.LABS; payload: any; caseId?: string | null }
   | { section: typeof CaseSection.DOCUMENTATION; payload: any; caseId?: string | null }
   | { section: typeof CaseSection.INTAKE_OUTPUT; payload: IntakeOutputFormData[]; caseId?: string | null }
-  | {
-      section: typeof CaseSection.MEDICATION_ORDERS;
-      payload: { orders: MedicationOrder[]; administrations: MedAdministrationInstance[] };
-      caseId?: string | null;
-    }
+  | { section: typeof CaseSection.MEDICATION_ORDERS; payload: { orders: MedicationOrder[]; administrations: MedAdministrationInstance[] }; caseId?: string | null }
 
 export async function saveCaseData({ payload, section, caseId }: SaveCaseArgs) {
   const supabase = createClient(

@@ -75,9 +75,7 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
           if (hasStarted) {
             setSimStartTime(new Date(sessionData.started_at).getTime());
           } else {
-            // PRE-SIM: Freeze a temporary local time for the UI.
-            // This prevents time from jumping around on page navigations,
-            // but never writes to database.
+            // PRE-SIM: align with case-builder timeline behavior (relative to current time).
             setSimStartTime(Date.now());
           }
         }

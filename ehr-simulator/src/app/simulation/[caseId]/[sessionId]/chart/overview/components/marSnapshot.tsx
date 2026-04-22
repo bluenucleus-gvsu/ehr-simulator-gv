@@ -8,7 +8,7 @@ import {
   buildMarFromCaseBundle,
   countDueAdministrations,
   countMarOrdersByCategory,
-} from "@/app/simulation/[sessionId]/chart/mar/components/marFromBundle";
+} from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marFromBundle";
 
 const MarSnapshot = () => {
   const { caseBundle } = useSimulationCase();

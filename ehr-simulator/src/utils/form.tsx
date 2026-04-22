@@ -75,7 +75,7 @@ export interface FormBlob {
   labs: TableFormData<LabTableData>;
   charting: TableFormData<FlexSheetData>;
   intakeOutput: IntakeOutputFormData[];
-  medOrders: MedicationOrder[];
+  medOrders: MedOrderFormData;
   medAdministrationInstances: MedAdministrationInstance[]
 }
 

@@ -110,7 +110,7 @@ function constructMicrobiologyRows(microbiologyReports: MicrobiologyReportDraft[
       case_id: report.case_id,
       lab_id: labId,
       name: report.name,
-      sample_type: report.raw.sampleType,
+      sample_type: report.raw.sampleType || report.name,
       appearance: report.raw.appearance,
       microscopy: report.raw.microscopy,
       location: report.raw.location,

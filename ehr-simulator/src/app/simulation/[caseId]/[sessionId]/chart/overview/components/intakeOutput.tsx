@@ -101,6 +101,7 @@ export function IntakeOutput() {
     <Card className="relative col-span-1 pt-2 overflow-hidden h-fit gap-3">
       <StyledTitle color="bg-sky-200" firstLetter="I" secondLetter="ntake/Output" />
       <CardContent className="grid gap-2 px-4">
+        <p className="text-xs text-muted-foreground -mt-1 px-1">12-hour block summary (mL per block)</p>
         <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
           <BarChart accessibilityLayer data={chartData} margin={{ top: 8, right: 8, left: 8, bottom: 32 }}>
             <CartesianGrid vertical={false} />

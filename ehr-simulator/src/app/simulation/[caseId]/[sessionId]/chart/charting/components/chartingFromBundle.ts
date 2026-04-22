@@ -90,10 +90,61 @@ function asCellString(value: unknown): string {
   return String(value);
 }
 
+/** Legacy flex row ids (e.g. hrInput) → documentation_results columns; otherwise row id is the column name. */
+export function resolveDocumentationDbColumn(rowId: string): string {
+  return DOC_COLUMN_BY_ROW_ID[rowId] ?? rowId;
+}
+
+/** Integer columns on editable_documentation_results (must match DB schema). */
+const INTEGER_DOCUMENTATION_COLUMNS = new Set<string>([
+  "nausea_vomiting",
+  "tremor",
+  "paroxysmal_sweats",
+  "anxiety",
+  "agitation",
+  "tactile_disturbances",
+  "visual_disturbances",
+  "headache",
+  "orientation2",
+  "history_of_falling",
+  "secondary_diagnosis",
+  "ambulatory_aid",
+  "iv_therapy_heparin_lock",
+  "fall_risk_gait",
+  "mental_status",
+  "sensory_perception",
+  "moisture",
+  "activity",
+  "mobility",
+  "nutrition",
+  "friction_and_shear",
+  "breathing_independent_of_vocalization",
+  "negative_vocalization",
+  "facial_expression",
+  "body_language",
+  "consolability",
+]);
+
+/** Coerce flex cell values to types Postgres accepts (avoids 22P02 on integer columns). */
+export function coerceDocumentationValueForPersist(
+  dbColumn: string,
+  raw: unknown,
+): string | number | null {
+  if (raw === "" || raw === undefined || raw === null) return null;
+  if (INTEGER_DOCUMENTATION_COLUMNS.has(dbColumn)) {
+    const n = typeof raw === "number" && Number.isFinite(raw) ? raw : parseInt(String(raw), 10);
+    return Number.isFinite(n) ? n : null;
+  }
+  if (Array.isArray(raw)) {
+    return raw.length ? String(raw[0]) : null;
+  }
+  return String(raw);
+}
+
 export function buildChartingRowsFromBundle(
   documentationResults: DocumentationRow[] | null | undefined,
   template: FlexSheetData[],
-): { rows: FlexSheetData[]; timeOffsets: number[] } {
+): { rows: FlexSheetData[]; timeOffsets: number[]; timePointsInPreSim: Set<number>; visibleItems: Set<string> } {
   const docs = documentationResults ?? [];
   const timeOffsets = Array.from(
     new Set(
@@ -102,6 +153,12 @@ export function buildChartingRowsFromBundle(
         .filter((offset): offset is number => typeof offset === "number"),
     ),
   ).sort((a, b) => b - a);
+  const timePointsInPreSim = new Set(
+    docs
+      .filter((row) => Boolean(row?.is_in_presim))
+      .map((row) => Number(row.time_offset))
+      .filter((offset) => Number.isFinite(offset)),
+  );
 
   const fallbackOffsets = timeOffsets.length > 0 ? timeOffsets : [0];
   const docByOffset = new Map<number, DocumentationRow>();
@@ -111,30 +168,26 @@ export function buildChartingRowsFromBundle(
     }
   }
 
+  const visibleItems = new Set<string>();
   const rows = template.map((templateRow) => {
     const nextRow: FlexSheetData = { ...templateRow };
     let hasValue = false;
-    const mappedColumn = DOC_COLUMN_BY_ROW_ID[templateRow.id];
+    const mappedColumn = resolveDocumentationDbColumn(templateRow.id);
 
-    if (mappedColumn) {
-      for (const offset of fallbackOffsets) {
-        const docRow = docByOffset.get(offset);
-        const value = asCellString(docRow?.[mappedColumn]);
-        nextRow[offset] = value;
-        if (value !== "") hasValue = true;
-      }
-    } else {
-      for (const offset of fallbackOffsets) {
-        nextRow[offset] = "";
-      }
+    for (const offset of fallbackOffsets) {
+      const docRow = docByOffset.get(offset);
+      const value = asCellString(docRow?.[mappedColumn]);
+      nextRow[offset] = value;
+      if (value !== "") hasValue = true;
     }
 
     if (templateRow.hideable) {
       nextRow.hideable = !hasValue;
+      if (hasValue) visibleItems.add(templateRow.field);
     }
 
     return nextRow;
   });
 
-  return { rows, timeOffsets: fallbackOffsets };
+  return { rows, timeOffsets: fallbackOffsets, timePointsInPreSim, visibleItems };
 }

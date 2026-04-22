@@ -5,6 +5,8 @@ import CompletedCaseCard from "@/app/user/components/CompletedCaseCard";
 import AssignedCaseCard from "@/app/user/components/AssignedCaseCard";
 import { createServerSupabase } from "@/utils/supabase/server";
 import { getUserCourses } from "@/actions/getUserCourses";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default async function ProfilePage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
   const { id } = await params;
@@ -54,10 +56,18 @@ export default async function ProfilePage({ params }: { params: { id: string } |
           feedback: null,
           teamMembers: a.groupMembers,
         }));
+      const mergedCompleted = [...c.completed, ...pastAssigned];
+      const seen = new Set<string>();
+      const dedupedCompleted = mergedCompleted.filter((item) => {
+        const k = `${item.id}|${item.completed_at ?? ""}`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
       return {
         ...c,
         assigned: upcomingAssigned,
-        completed: [...c.completed, ...pastAssigned].sort(
+        completed: dedupedCompleted.sort(
           (a, b) => new Date(b.completed_at ?? 0).getTime() - new Date(a.completed_at ?? 0).getTime()
         ),
       };
@@ -86,7 +96,7 @@ export default async function ProfilePage({ params }: { params: { id: string } |
                     {course.code ?? ""}{course.code && course.name ? " - " : ""}{course.name ?? "Unnamed Course"}
                   </div>
 
-                  <details open className="mb-2 bg-slate-50 p-2 rounded">
+                  <details className="mb-2 bg-slate-50 p-2 rounded">
                     <summary className="cursor-pointer font-medium">Assigned Cases</summary>
                     <div className="mt-2">
                       {course.assigned.length === 0 ? (
@@ -94,7 +104,7 @@ export default async function ProfilePage({ params }: { params: { id: string } |
                       ) : (
                         <ul className="space-y-2">
                           {course.assigned.map((a) => (
-                            <li key={`${a.id}-${a.session_id}`} className="text-sm">
+                            <li key={`${a.id}:${a.session_id ?? "no-session"}`} className="text-sm">
                               <AssignedCaseCard
                                 id={a.id}
                                 caseId={a.case_id}
@@ -118,8 +128,8 @@ export default async function ProfilePage({ params }: { params: { id: string } |
                         <div className="text-sm text-muted-foreground">No completed cases.</div>
                       ) : (
                         <ul className="list-disc pl-5 space-y-1">
-                          {course.completed.map((s) => (
-                            <li key={`${s.id}`} className="text-sm">
+                          {course.completed.map((s, idx) => (
+                            <li key={`${course.id}:${s.id}:${s.completed_at ?? "na"}:${idx}`} className="text-sm">
                               <CompletedCaseCard
                                 id={s.id}
                                 name={s.name}
@@ -158,8 +168,8 @@ export default async function ProfilePage({ params }: { params: { id: string } |
                         <div className="text-sm text-muted-foreground">No completed cases.</div>
                       ) : (
                         <ul className="list-disc pl-5 space-y-1">
-                          {course.completed.map((s) => (
-                            <li key={s.id} className="text-sm">
+                          {course.completed.map((s, idx) => (
+                            <li key={`${course.id}:${s.id}:${s.completed_at ?? "na"}:${idx}`} className="text-sm">
                               <CompletedCaseCard
                                 id={s.id}
                                 name={s.name}
@@ -177,6 +187,12 @@ export default async function ProfilePage({ params }: { params: { id: string } |
               ))}
             </ul>
           )}
+        </div>
+        <div className="bg-white rounded-lg shadow mt-6 p-4 mb-6">
+          <h3 className="text-lg font-semibold mb-3">Simulations</h3>
+          <Link href="/simulation/123/chart/overview" passHref className="p-4">
+            <Button> Enter Presim </Button>
+          </Link>
         </div>
       </section>
     </main>

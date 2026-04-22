@@ -4,10 +4,21 @@ import { Card, CardContent } from "@/components/ui/card"
 import StyledTitle from "./styledTitle"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
 
+function alertName(raw: unknown): string {
+  if (Array.isArray(raw)) {
+    const first = raw[0] as { name?: string } | undefined
+    return first?.name ?? "N/A"
+  }
+  if (raw && typeof raw === "object") {
+    return (raw as { name?: string }).name ?? "N/A"
+  }
+  return "N/A"
+}
+
 const Alerts = () => {
   const { caseBundle } = useSimulationCase();
   const alertNames = caseBundle?.safetyAlerts?.length
-    ? caseBundle.safetyAlerts.map((row) => row?.safety_alert?.name ?? "N/A")
+    ? caseBundle.safetyAlerts.map((row) => alertName(row?.safety_alert))
     : ["N/A"];
 
   return (

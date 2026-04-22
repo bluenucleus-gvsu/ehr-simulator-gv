@@ -8,7 +8,11 @@ import { SelectedLabs } from "./components/selectedLabs"
 // import MarSnapshot from "./components/marSnapshot"
 import Demographics from "./components/demographics"
 import FamilyHistory from "./components/familyHistory"
+import SurgicalHistory from "./components/surgicalHistory"
+import SocialHabits from "./components/socialHabits"
+import LivingSituation from "./components/livingSituation"
 import { IntakeOutput } from "./components/intakeOutput"
+import VitalsOverviewContainer from "./components/vitalsOverviewContainer"
 
 interface OverviewPageProps {
   params: Promise<{
@@ -24,16 +28,19 @@ const OverviewPage = ({ params }: OverviewPageProps) => {
         <div className="grid sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 py-2">
           <Alerts />
           <ActiveProblems />
-          <IntakeOutput />
-          <VitalsOverview />
+          <VitalsOverviewContainer params={params} />
           <RecurringOrders />
           <Visitors />
           <Nutrition />
           <CareTeam />
+          <IntakeOutput />
           <SelectedLabs />
           {/* <MarSnapshot /> */}
           <Demographics />
           <FamilyHistory />
+          <SurgicalHistory />
+          <SocialHabits />
+          <LivingSituation />
         </div>
       </div>
     </div>

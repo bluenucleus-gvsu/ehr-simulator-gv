@@ -9,6 +9,7 @@ type DbOrder = {
   details?: string | null;
   status?: string | null;
   provider?: string | null;
+  is_important?: boolean | null;
 }
 
 type OrderRow = {
@@ -16,6 +17,7 @@ type OrderRow = {
   details: string;
   status: string;
   orderingProvider: string;
+  isImportant: boolean;
 }
 
 const createHeaderNames = (title: string) => ({
@@ -34,6 +36,7 @@ const OrdersPage = () => {
     details: order.details ?? "N/A",
     status: order.status ?? "N/A",
     orderingProvider: order.provider ?? "N/A",
+    isImportant: Boolean(order.is_important),
   });
 
   const filterByCategory = (categoryNames: string[]) => {

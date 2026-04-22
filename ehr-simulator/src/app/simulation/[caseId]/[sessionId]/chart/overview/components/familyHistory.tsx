@@ -5,11 +5,22 @@ import StyledTitle from "./styledTitle"
 import { Separator } from "@/components/ui/separator"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
 
+function relationshipName(raw: unknown): string {
+  if (Array.isArray(raw)) {
+    const first = raw[0] as { name?: string } | undefined
+    return first?.name ?? "N/A"
+  }
+  if (raw && typeof raw === "object") {
+    return (raw as { name?: string }).name ?? "N/A"
+  }
+  return "N/A"
+}
+
 const FamilyHistory = () => {
   const { caseBundle } = useSimulationCase();
   const familyHistoryRows = caseBundle?.familyHistory?.length
     ? caseBundle.familyHistory.map((row) => ({
-      member: row?.relationship?.name ?? "N/A",
+      member: relationshipName(row?.relationship),
       condition: row?.condition ?? "N/A",
     }))
     : [{ member: "N/A", condition: "N/A" }];

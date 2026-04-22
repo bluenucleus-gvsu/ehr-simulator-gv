@@ -24,9 +24,51 @@ export default function MedAdministrationFormCard({
   isHighlightableColumn,
   onDeleteAdministration
 }: MedCardProps) {
+  const timelineAdministrations = (() => {
+    if (!administrations || administrations.length <= 1) {
+      return administrations;
+    }
+
+    const sorted = [...administrations]
+      .filter((admin) => Number.isFinite(admin.adminTimeMinuteOffset))
+      .sort((a, b) => a.adminTimeMinuteOffset - b.adminTimeMinuteOffset);
+
+    if (sorted.length <= 1) {
+      return administrations;
+    }
+
+    const clusters: MedAdministrationInstance[][] = [];
+    for (const admin of sorted) {
+      const lastCluster = clusters[clusters.length - 1];
+      if (!lastCluster) {
+        clusters.push([admin]);
+        continue;
+      }
+      const prev = lastCluster[lastCluster.length - 1];
+      if (Math.abs(admin.adminTimeMinuteOffset - prev.adminTimeMinuteOffset) <= 6 * 60) {
+        lastCluster.push(admin);
+      } else {
+        clusters.push([admin]);
+      }
+    }
+
+    if (clusters.length <= 1) {
+      return administrations;
+    }
+
+    return clusters.reduce((best, current) => {
+      if (current.length !== best.length) {
+        return current.length > best.length ? current : best;
+      }
+      const bestMean = best.reduce((sum, x) => sum + x.adminTimeMinuteOffset, 0) / best.length;
+      const currentMean = current.reduce((sum, x) => sum + x.adminTimeMinuteOffset, 0) / current.length;
+      return Math.abs(currentMean) < Math.abs(bestMean) ? current : best;
+    }, clusters[0]);
+  })();
+
   // Calculate columns logic
   const processedColumns = columns.map(col => {
-    const administrationsInColumn = administrations.filter(admin => {
+    const administrationsInColumn = timelineAdministrations.filter(admin => {
       const adminAbsoluteTime = new Date(sessionStartTime + admin.adminTimeMinuteOffset * 60 * 1000);
       return adminAbsoluteTime >= col.startTime && adminAbsoluteTime <= col.endTime;
     })
@@ -34,10 +76,10 @@ export default function MedAdministrationFormCard({
   })
 
   const findLastAdminTime = () => {
-    if (!administrations || administrations.length === 0) {
+    if (!timelineAdministrations || timelineAdministrations.length === 0) {
       return "Never";
     }
-    const filteredAdmins = administrations.filter((admin: MedAdministrationInstance) => admin.status === "Given")
+    const filteredAdmins = timelineAdministrations.filter((admin: MedAdministrationInstance) => admin.status === "Given")
     if (filteredAdmins.length !== 0) {
       const lastAdmin = filteredAdmins.reduce((latest, current) => {
         return current.adminTimeMinuteOffset > latest.adminTimeMinuteOffset ? current : latest;

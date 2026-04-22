@@ -3,19 +3,25 @@
 import { Phone } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import StyledTitle from "./styledTitle"
+import { buildChartDataFromCaseRow } from "@/app/simulation/[caseId]/[sessionId]/chart/components/chartData"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
 
 const Visitors = () => {
+  const { caseBundle } = useSimulationCase()
+  const chartData = buildChartDataFromCaseRow((caseBundle?.caseRow as Record<string, unknown> | null | undefined) ?? null)
 
-  const { caseBundle } = useSimulationCase();
-  const caseRow = caseBundle?.caseRow;
-  const contactItems = [
-    {
-      name: caseRow?.emergency_contact_name ?? "N/A",
-      relationship: caseRow?.emergency_contact_relationship ?? "N/A",
-      phone: caseRow?.emergency_contact_phone?.trim() || "N/A",
-    },
-  ]
+  if (!chartData || Object.keys(chartData).length === 0) {
+    return (
+      <Card className="relative col-span-1 pt-2 overflow-hidden h-fit gap-3">
+        <StyledTitle color="bg-red-200" firstLetter="C" secondLetter="ontacts" />
+        <p>No contact info</p>
+      </Card>
+    )
+  }
+
+  const contactItems = chartData.supportPersons.value.length
+    ? chartData.supportPersons.value
+    : [{ name: "No contact on file", relationship: "N/A", phone: "N/A" }]
 
   return (
     <Card className="relative pt-2 overflow-hidden h-fit gap-3">
