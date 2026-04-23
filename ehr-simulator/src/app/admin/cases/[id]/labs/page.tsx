@@ -23,14 +23,13 @@ const columnHelper = createColumnHelper<LabTableData>()
 const FIELD_TO_DB_COL: Record<string, string> = {
   "Sodium": "sodium",
   "Potassium": "potassium",
-  "Chlorine": "chloride",
+  "Chloride": "chloride",
   "BUN": "bun",
   "Creatinine": "creatinine",
   "Glucose": "glucose",
   "CO2": "co2",
   "Calcium": "calcium",
   "Lactate": "lactate",
-  "HbA1c": "tsh", // adjust if you have a dedicated column
   "RBC": "rbc",
   "Hemoglobin": "hemoglobin",
   "Hematocrit": "hematocrit",
@@ -39,7 +38,6 @@ const FIELD_TO_DB_COL: Record<string, string> = {
   "MCHC": "mchc",
   "WBC": "wbc",
   "Platelets": "platelets",
-  "pH": "blood",        // adjust per your schema
   "pCO2": "pco2",
   "pO2": "po2",
   "HCO3": "hco3",
@@ -47,9 +45,8 @@ const FIELD_TO_DB_COL: Record<string, string> = {
   "ALT": "alt",
   "ALP": "alp",
   "Troponin": "troponin",
-  "CK-MB": "ckmb",
+  "CKMB": "ckmb",
   "Myoglobin": "myoglobin",
-  "BNP": "crp",        // adjust per your schema
   "Total Cholesterol": "total_cholesterol",
   "HDL Cholesterol": "hdl_cholesterol",
   "LDL Cholesterol": "ldl_cholesterol",
