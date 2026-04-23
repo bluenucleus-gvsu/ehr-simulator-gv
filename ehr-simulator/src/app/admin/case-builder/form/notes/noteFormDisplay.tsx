@@ -16,14 +16,15 @@ import { Badge } from "@/components/ui/badge";
 import DOMPurify from "dompurify";
 
 function displayTimeOffset(minutes: number): string {
-  const d = Math.floor(minutes / 1440);
-  const h = Math.floor((minutes % 1440) / 60);
-  const m = minutes % 60;
+  const abs_min = Math.abs(minutes)
+  const d = Math.floor(abs_min / 1440);
+  const h = Math.floor((abs_min % 1440) / 60);
+  const m = abs_min % 60;
   const parts = [];
-  if (d > 0) parts.push(`${d}d`);
-  if (h > 0) parts.push(`${h}h`);
-  if (m > 0) parts.push(`${m}m`);
-  return parts.join(' ') || '0m';
+  if (d > 0) parts.push(`-${d}d`);
+  if (h > 0) parts.push(`-${h}h`);
+  if (m > 0) parts.push(`-${m}m`);
+  return parts.join(', ') || '0m';
 }
 
 const NoteFormDisplay = ({ note, onDelete }: { note: ClinicalNote, onDelete: () => void }) => {
@@ -42,7 +43,7 @@ const NoteFormDisplay = ({ note, onDelete }: { note: ClinicalNote, onDelete: () 
             {note.title === 'Nursing Note' ? <Stethoscope size={16} /> : <FileText size={16} />}
           </div>
           <div>
-            <h4 className="text-sm font-semibold text-slate-800">{note.title}</h4>
+            <h4 className="text-sm font-semibold text-slate-800">{note.title} {note.timeOffset}</h4>
             <p className="text-xs text-slate-500">{note.specialty} • {note.author}</p>
           </div>
           {note.excludedFromPresim ? (
@@ -59,7 +60,7 @@ const NoteFormDisplay = ({ note, onDelete }: { note: ClinicalNote, onDelete: () 
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs font-mono text-slate-400 bg-white border px-1.5 py-0.5 rounded">
-            -{displayTimeOffset(note.timeOffset)}
+            {displayTimeOffset(note.timeOffset)}
           </span>
           <Button
             variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-red-600"

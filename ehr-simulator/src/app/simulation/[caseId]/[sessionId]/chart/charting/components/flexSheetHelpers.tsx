@@ -1,6 +1,5 @@
 import { Column } from "@tanstack/react-table";
 import { FlexSheetData } from "./flexSheetData";
-import { LabTableData } from "../../labs/components/labsData";
 import { addMinutes, format } from "date-fns";
 
 const bpThresholds = {
@@ -44,7 +43,7 @@ export function getAlertFlag(
 }
 
 
-export function getPinnedStyles(column: Column<FlexSheetData> | Column<LabTableData>, width: number = 200, isHeader: boolean = false): React.CSSProperties {
+export function getPinnedStyles<TData>(column: Column<TData>, width: number = 200, isHeader: boolean = false): React.CSSProperties {
   const isPinned = column.getIsPinned();
   if (!isPinned) {
     return isHeader ? { position: 'sticky', top: 0, zIndex: 10 } : {};

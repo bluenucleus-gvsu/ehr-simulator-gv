@@ -1,3 +1,6 @@
+--------------------------------------------------
+-- New columns for WDL documentations
+--------------------------------------------------
 ALTER TABLE IF EXISTS documentation_results 
   ADD COLUMN IF NOT EXISTS general_appearance_selections TEXT,
   ADD COLUMN IF NOT EXISTS psychosocial_selections TEXT,

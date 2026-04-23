@@ -52,25 +52,18 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
 
   const [timeOffsets, setTimeOffsets] = useState(getAllTimeOffsets(simStartTime, dbDocumentation));
   const [data, setData] = useState<FlexSheetData[]>(generateChartingDataFromDB(dbDocumentation, timeOffsets));
-  // const [fieldSelections, setFieldSelections] = useState<Record<string, string[]>>({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [dirtyColumns, setDirtyColumns] = useState<Set<string>>(new Set());
-
-  // 1. Calculate the bounds and remainder
-  const maxOffset = Math.max(0, timeOffsets.length - tableWidth);
-  const remainder = timeOffsets.length % tableWidth;
-
-  // 2. Initialize state to the maximum offset (the end of the array)
-  const [columnOffset, setColumnOffset] = useState(maxOffset);
-
-  // 3. Dynamically set the end of the slice so the oldest page doesn't overlap
-  const sliceEnd = (columnOffset === 0 && remainder !== 0) ? remainder : columnOffset + tableWidth;
-  const slicedTimeOffsets = timeOffsets.slice(columnOffset, sliceEnd);
-
   const { caseId, sessionId } = params;
   const canSubmit = dirtyColumns.size > 0
 
+  // Column Shifting
+  const maxOffset = Math.max(0, timeOffsets.length - tableWidth);
+  const remainder = timeOffsets.length % tableWidth;
+  const [columnOffset, setColumnOffset] = useState(maxOffset);
+  const sliceEnd = (columnOffset === 0 && remainder !== 0) ? remainder : columnOffset + tableWidth;
+  const slicedTimeOffsets = timeOffsets.slice(columnOffset, sliceEnd);
 
   // Calculate visible IDs based on checkboxes
   const visibleSubsetIds = useMemo(() => {
@@ -80,19 +73,15 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
       timeOffsets.forEach(offset => {
         const cellValue = row[offset];
 
-        // 1. If it's a checkbox list, add all explicitly selected tools (ignoring WDL)
         if (row.componentType === 'checkboxlist' && Array.isArray(cellValue)) {
           cellValue.forEach(item => {
-            console.log('YOKES')
             if (typeof item === 'string' && item !== "WDL") {
               combinedSet.add(item);
             }
           });
         }
 
-        // 2. The Auto-Open Fix: If a hideable row has a pre-existing value, 
-        // force its parent category (hideableId) to be visible so the title/total rows appear.
-        if (row.hideable && row.hideableId) {
+        if (row.hideableId) {
           if (cellValue !== "" && cellValue !== null && cellValue !== undefined && (!Array.isArray(cellValue) || cellValue.length > 0)) {
             combinedSet.add(row.hideableId);
           }
@@ -406,7 +395,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
     },
     getCoreRowModel: getCoreRowModel(),
   });
-  console.log(data)
+
   return (
     <SidebarProvider open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
       <SidebarInset>

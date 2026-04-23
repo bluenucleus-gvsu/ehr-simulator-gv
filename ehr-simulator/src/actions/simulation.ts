@@ -11,9 +11,11 @@ export type EditableStudentNote = Database['public']['Tables']['editable_clinica
 export type ClinicalDocument = Database['public']['Tables']['clinical_documents'];
 export type DatabaseMedicationOrder = Database['public']['Tables']['medication_orders'];
 export type DatabaseMedAdministration = Database['public']['Views']['all_medication_administrations']['Row'];
+export type DatabaseDocumentationInsert = Database['public']['Tables']['documentation_results']['Insert'];
 
 export type StudentMedicationAdministration = Database['public']['Tables']['student_medication_administrations']['Insert'];
 export type DatabaseDocumentation = Database['public']['Views']['all_documentation_results']['Row'];
+
 export type StudentDatabaseDocumentation = Database['public']['Tables']['editable_documentation_results']['Insert'];
 
 export type ClinicalDocumentView = {

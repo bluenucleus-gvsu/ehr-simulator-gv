@@ -89,7 +89,7 @@ export type MicrobiologyReportDraft = {
 export const LAB_FIELD_TO_COLUMN: Record<string, keyof LabResultInsert> = {
   "Sodium": "sodium",
   "Potassium": "potassium",
-  "Chlorine": "chloride",
+  "Chloride": "chloride",
   "BUN": "bun",
   "Creatinine": "creatinine",
   "Glucose": "glucose",
