@@ -126,6 +126,7 @@ export async function getUsersGroupId(userId: string) {
     .from('users')
     .select(`id,
       full_name,
+      role,
       group_members!inner(group_id)
       `)
     .eq('id', userId)
@@ -141,12 +142,11 @@ export async function getUsersGroupId(userId: string) {
   }
   const extractedGroupId = data.group_members[0]?.group_id
 
-  console.log(data.group_members)
-
   const cleanData = {
     id: data.id,
     full_name: data.full_name,
     group_id: extractedGroupId,
+    role: data.role
   };
   return {
     success: true,
