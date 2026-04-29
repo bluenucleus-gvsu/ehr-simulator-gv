@@ -108,3 +108,24 @@ CREATE OR REPLACE VIEW all_documentation_results AS
     created_at,
     'student_documentation' as source_type  
   FROM editable_documentation_results;
+
+-- Set time_offset of case_data to negative if in past, positive if in future
+UPDATE editable_documentation_results 
+SET time_offset = time_offset * -1
+WHERE time_offset < 0;
+
+UPDATE documentation_results
+SET time_offset = time_offset * -1
+WHERE time_offset > 0;
+
+UPDATE clinical_documents
+SET time_offset = time_offset * -1
+WHERE time_offset > 0;
+
+UPDATE editable_clinical_documents
+SET time_offset = time_offset * -1
+WHERE time_offset < 0;
+
+UPDATE lab_results
+SET time_offset = time_offset * -1
+WHERE time_offset > 0;
