@@ -31,9 +31,11 @@ import { useFormContext } from "@/context/FormContext";
 import { relationshipStatuses, precautions, months, codeStatuses, days, insuranceOptions, DemographicFormData } from "@/utils/form";
 import { buttonVariants } from "@/components/ui/button";
 import { FormShell } from "../../components/formShell";
+import { CaseSection } from "@/lib/saveCase";
+import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 
 export default function DemographicsForm() {
-  const { onDataChange, demographicData: initialData } = useFormContext();
+  const { onDataChange, demographicData: initialData, setCaseId, caseId } = useFormContext();
   const [demographicsData, setDemographicsData] = useState<DemographicFormData>(initialData);
   const router = useRouter();
   const [showCancelAlert, setShowCancelAlert] = useState<boolean>(false);
@@ -51,8 +53,17 @@ export default function DemographicsForm() {
     setShowCancelAlert(false);
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     onDataChange("demographics", demographicsData)
+    const result = await saveCaseData({
+      payload: demographicsData,
+      section: CaseSection.DEMOGRAPHICS,
+      caseId: caseId
+    });
+
+    if (result?.id) {
+      setCaseId(result.id)
+    }
     router.push("/admin/case-builder/form/history");
   }
 
@@ -307,7 +318,7 @@ export default function DemographicsForm() {
                         onValueChange={(value) => { setDemographicsData({ ...demographicsData, ["precautions"]: value }) }}
                         value={demographicsData.precautions}
                       >
-                        <SelectTrigger className="bg-white">
+                        <SelectTrigger className="bg-white min-w-50">
                           <SelectValue placeholder="Select..." />
                           <ChevronDown />
                         </SelectTrigger>
@@ -347,7 +358,7 @@ export default function DemographicsForm() {
                           onValueChange={(value) => { setDemographicsData({ ...demographicsData, ["insurance"]: value }) }}
                           value={demographicsData.insurance}
                         >
-                          <SelectTrigger className="bg-white">
+                          <SelectTrigger className="bg-white min-w-50">
                             <SelectValue placeholder="Select..." />
                             <ChevronDown />
                           </SelectTrigger>
@@ -377,7 +388,7 @@ export default function DemographicsForm() {
                           onValueChange={(value) => { setDemographicsData({ ...demographicsData, ["relationshipStatus"]: value }) }}
                           value={demographicsData.relationshipStatus}
                         >
-                          <SelectTrigger className="bg-white">
+                          <SelectTrigger className="bg-white min-w-50">
                             <SelectValue placeholder="Select..." />
                             <ChevronDown />
                           </SelectTrigger>
@@ -501,6 +512,28 @@ export default function DemographicsForm() {
                       value={demographicsData.admissionTime}
                     />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="patientContact">Emergency Contact</Label>
+                  <Input
+                    required
+                    name="patientContact"
+                    id="patientContact"
+                    placeholder="First & Last Name"
+                    className=""
+                    onChange={(e) => { setDemographicsData({ ...demographicsData, ["contact"]: e.target.value }) }}
+                    value={demographicsData.contact}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="contactRelationship">Contact Relationship</Label>
+                  <Input
+                    required
+                    name="contactRelationship"
+                    id="contactRelationship"
+                    onChange={(e) => { setDemographicsData({ ...demographicsData, ["contactRelationship"]: e.target.value }) }}
+                    value={demographicsData.contactRelationship}
+                  />
                 </div>
               </CardContent>
             </Card>

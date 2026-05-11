@@ -11,8 +11,8 @@ create table if not exists public.courses (
   updated_at timestamptz default now()
 );
 
-alter table if exists public.courses
-  add constraint unique_course_combination unique (name, code, semester);
+create unique index if not exists courses_name_code_semester_uidx
+  on public.courses (name, code, semester);
 
 insert into public.courses (name, code, semester, active, start_date, end_date)
 values

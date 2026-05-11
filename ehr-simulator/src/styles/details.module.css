@@ -1,0 +1,16 @@
+.customDetails summary { list-style: none; padding-left: 0; }
+.customDetails summary::-webkit-details-marker { display: none; }
+.customDetails summary::marker { content: none; }
+.arrow { transition: transform 0.18s ease; }
+.customDetails[open] .arrow { transform: rotate(90deg); }
+
+/* panel animation: starts slightly up & transparent, fades/slides down when details opens */
+.panel {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+.customDetails[open] .panel {
+  opacity: 1;
+  transform: translateY(0);
+}

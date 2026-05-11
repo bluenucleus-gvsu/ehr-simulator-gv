@@ -1,9 +1,8 @@
-import { FlexSheetData } from "@/app/simulation/[sessionId]/chart/charting/components/flexSheetData";
-import { LabTableData } from "@/app/simulation/[sessionId]/chart/labs/components/labsData";
-import { AllMedicationTypes, MedAdministrationInstance, MedicationOrder } from "@/app/simulation/[sessionId]/chart/mar/components/marData";
-import { ClinicalNote } from "@/app/simulation/[sessionId]/chart/notes/components/notesData";
-import { OrderType } from "@/app/simulation/[sessionId]/chart/orders/components/orderData";
-import { Column } from "@tanstack/react-table";
+import { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
+import { LabTableData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
+import { AllMedicationTypes, MedAdministrationInstance, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
+import { ClinicalNote } from "@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData";
+import { OrderType } from "@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData";
 
 export interface DemographicFormData {
   DOBDay: string;
@@ -28,6 +27,8 @@ export interface DemographicFormData {
   relationshipStatus: string;
   religion: string;
   summary: string;
+  contact: string;
+  contactRelationship: string;
 }
 
 export interface HistoryFormData {
@@ -78,31 +79,13 @@ export interface FormBlob {
 
 export type CompleteFormType = DemographicFormData | HistoryFormData | ClinicalNote[] | OrderType[] | TableFormData<FlexSheetData | LabTableData> | IntakeOutputFormData[] | MedOrderFormData | MedAdministrationInstance[]
 
-export function getPinnedStyles<T>(column: Column<T>): React.CSSProperties {
-  const styles: React.CSSProperties = {
-    width: `${column.getSize()}px`,
-    minWidth: `${column.getSize()}px`,
-    maxWidth: `${column.getSize()}px`,
-  };
-  if (!column.getIsPinned()) {
-    return {};
-  }
-  const side = column.getIsPinned();
-  return {
-    ...styles,
-    position: 'sticky',
-    [side as string]: `${column.getStart(side)}px`,
-    zIndex: side === 'left' ? 2 : 1,
-  };
-}
-
 export const formatTimeOffset = (minuteOffset: number) => {
   const minutesInDay = 1440;
   const minutesInHour = 60;
 
-  const days = Math.floor(minuteOffset / minutesInDay);
+  const days = Math.ceil(minuteOffset / minutesInDay);
   const remainingMinutesAfterDays = minuteOffset % minutesInDay;
-  const hours = Math.floor(remainingMinutesAfterDays / minutesInHour);
+  const hours = Math.ceil(remainingMinutesAfterDays / minutesInHour);
   const minutes = remainingMinutesAfterDays % minutesInHour;
 
   return { days, hours, minutes };

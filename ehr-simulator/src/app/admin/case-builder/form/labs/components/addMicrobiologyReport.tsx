@@ -1,6 +1,6 @@
 "use client"
 
-import { LabCellValue, MicrobiologyReportData } from "@/app/simulation/[sessionId]/chart/labs/components/labsData";
+import { LabCellValue, MicrobiologyReportData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
 import FormTooltip from "@/components/form-tooltip";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";

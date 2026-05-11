@@ -4,7 +4,6 @@ import {
   Pill,
   Clock,
   User,
-  Plus,
   History,
   Syringe,
   ChevronDown,
@@ -25,13 +24,15 @@ import {
   allMedications,
   MedAdministrationInstance,
   AdministrationStatus,
-} from "@/app/simulation/[sessionId]/chart/mar/components/marData"
-import { createColumns } from "@/app/simulation/[sessionId]/chart/mar/components/marHelpers"
+} from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData"
+import { createColumns } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers"
 import MedAdministrationFormCard from "./components/medAdministrationFormCard"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useFormContext } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
-import ColumnShiftControl from "@/app/simulation/[sessionId]/chart/mar/components/columnShiftControl"
+import ColumnShiftControl from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/columnShiftControl"
+import { CaseSection } from "@/lib/saveCase"
+import { saveCaseData } from "@/actions/case_builder/caseBuilder"
 
 function getComboboxData(orders: MedicationOrder[]) {
   return orders.map(order => {
@@ -51,7 +52,7 @@ function getComboboxData(orders: MedicationOrder[]) {
 }
 
 export default function MedicationAdministrationsForm() {
-  const { onDataChange, medAdministrationData, medOrderData } = useFormContext()
+  const { onDataChange, medAdministrationData, medOrderData, caseId } = useFormContext()
 
   const [medAdministrations, setMedAdministrations] = useState<MedAdministrationInstance[]>(medAdministrationData.filter(admin => {
     return medOrderData.createdOrders.find(med => med.id === admin.medicationOrderId) !== undefined;
@@ -143,9 +144,14 @@ export default function MedicationAdministrationsForm() {
     router.push("/admin/case-builder/form/medications");
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     onDataChange('medAdministrationInstances', medAdministrations)
-    console.log(medAdministrations)
+
+    await saveCaseData({
+      payload: medAdministrations,
+      section: CaseSection.MEDICATION_ORDERS,
+      caseId: caseId
+    })
 
     router.push('/admin/case-builder/form/review')
   }
@@ -181,8 +187,7 @@ export default function MedicationAdministrationsForm() {
             <Card className="border-slate-200 shadow-sm overflow-hidden py-0">
               <CardHeader className="bg-slate-50/50 border-b border-slate-100 pt-4 !pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Plus className="w-5 h-5 text-blue-600" />
-                  Add Administration
+                  Add Medication Administrations
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 pt-0 flex flex-col gap-4">

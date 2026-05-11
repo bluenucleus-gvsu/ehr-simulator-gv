@@ -44,7 +44,6 @@ const FormReview = () => {
       console.error(error)
       alert("Something went wrong saving the case.")
     };
-
   }
 
   return (

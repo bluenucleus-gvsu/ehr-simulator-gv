@@ -2,11 +2,11 @@
 
 import { createContext, useContext, useState } from 'react';
 import { CompleteFormType, defaultIoData, defaultOrders, DemographicFormData, FormBlob, HistoryFormData, IntakeOutputFormData, MedOrderFormData, TableFormData } from '@/utils/form';
-import { ClinicalNote } from '@/app/simulation/[sessionId]/chart/notes/components/notesData';
-import { OrderType } from '@/app/simulation/[sessionId]/chart/orders/components/orderData';
-import { LabTableData, labTemplate } from '@/app/simulation/[sessionId]/chart/labs/components/labsData';
-import { FlexSheetData, flexSheetTemplate } from '@/app/simulation/[sessionId]/chart/charting/components/flexSheetData';
-import { MedAdministrationInstance } from '@/app/simulation/[sessionId]/chart/mar/components/marData';
+import { ClinicalNote } from '@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData';
+import { OrderType } from '@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData';
+import { LabTableData, labTemplate } from '@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData';
+import { FlexSheetData, flexSheetTemplate } from '@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData';
+import { MedAdministrationInstance } from '@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData';
 
 interface FormContextType {
   demographicData: DemographicFormData;
@@ -18,6 +18,8 @@ interface FormContextType {
   ioData: IntakeOutputFormData[];
   medOrderData: MedOrderFormData;
   medAdministrationData: MedAdministrationInstance[]
+  caseId?: string;
+  setCaseId: (id: string) => void;
   onDataChange: (key: keyof FormBlob, data: CompleteFormType) => void;
 }
 
@@ -44,6 +46,8 @@ const defaultDemographicData: DemographicFormData = {
   relationshipStatus: '',
   religion: '',
   summary: '',
+  contact: '',
+  contactRelationship: ''
 }
 const defaultHistoryData = {
   medicalHistory: [],
@@ -56,6 +60,8 @@ const defaultHistoryData = {
 }
 const FormContext = createContext<FormContextType>({
   onDataChange: () => { },
+  setCaseId: () => { },
+  caseId: undefined,
   demographicData: defaultDemographicData,
   historyData: defaultHistoryData,
   noteData: [],
@@ -68,6 +74,7 @@ const FormContext = createContext<FormContextType>({
 });
 
 export function FormContextProvider({ children }: { children: React.ReactNode }) {
+  const [caseId, setCaseId] = useState<string | undefined>(undefined);
   const [demographicData, setDemographicData] = useState<DemographicFormData>(defaultDemographicData);
   const [historyData, setHistoryData] = useState<HistoryFormData>(defaultHistoryData);
   const [noteData, setNoteData] = useState<ClinicalNote[]>([]);
@@ -122,6 +129,8 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
 
   return (
     <FormContext.Provider value={{
+      caseId,
+      setCaseId,
       demographicData,
       historyData,
       noteData,

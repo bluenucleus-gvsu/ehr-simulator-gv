@@ -1,44 +1,40 @@
-"use client"
-
-import * as React from "react";
-import { useEffect } from "react";
-import CourseListItem from "./CourseListItem";
 import { getAllCourses } from "@/actions/courses";
-// import Link from "next/link";
+import CourseListItem from "./components/CourseListItem";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
-type Course = {
-  id: string;
-  name: string;
-  code: string;
-  semester: string;
-  active: boolean;
-  start_date: string;
-  end_date: string;
-}
+export default async function CoursesPage() {
+  const courseResult = await getAllCourses();
 
-async function getCourses(): Promise<Course[]> {
-  return await getAllCourses();
-}
+  if (!courseResult.success || !courseResult.data) {
+    return (
+      <div className="flex h-screen items-center justify-center text-muted-foreground">
+        Courses not found.
+      </div>
+    )
+  }
 
-export default function CoursesPage() {
-  const [courses, setCourses] = React.useState<Course[]>([]);
-  const [loading, setLoading] = React.useState(true);
-
-  useEffect(() => {
-    getCourses().then((courses) => {
-      setCourses(courses);
-      setLoading(false);
-    });
-  }, []);
+  const courses = courseResult.data || [];
 
   return (
-    <div className="pl-4">
-      <h1 className="container mx-auto pt-10 text-4xl font-bold">COURSES</h1>
-      {loading && <p>Loading</p>}
-      {courses.map((course) =>
-        <CourseListItem key={course.id} course={course} />
-      )}
+    <div className="w-full">
+      <header className="bg-white border-b px-8 py-4 pb-4 sticky top-0 z-10">
+        <div className="flex justify-between items-center">
+          <div className="space-y-1">
+            <h1 className="text-5xl font-bold tracking-tight">COURSES</h1>
+            <p className="text-xs text-gray-500">Manage all simulation courses</p>
+          </div>
+          <Link href='/admin/courses/new'>
+            <Button>Create Course</Button>
+          </Link>
+        </div>
+      </header>
 
+      <div className="px-4">
+        {courses.map((course) =>
+          <CourseListItem key={course.id} course={course} />
+        )}
+      </div>
     </div>
   );
 }

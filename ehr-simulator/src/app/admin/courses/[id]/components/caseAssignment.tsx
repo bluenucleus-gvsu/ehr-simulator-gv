@@ -167,8 +167,11 @@ const CaseAssignment = ({ sections, cases, isEditMode, existing_id, initialData 
                   {
                     cases.length > 0 ? (
                       cases.map((c, index) => {
+                        if (!c.id) {
+                          return null
+                        }
                         return (
-                          <SelectItem key={`${index}`} value={c.case_id}>{c.case_data.name || "Unknown Sim"}</SelectItem>
+                          <SelectItem key={`${index}`} value={c.id}>{c.first_name + " " + c.last_name || "Unknown Sim"}</SelectItem>
                         )
                       }
                       )) : (

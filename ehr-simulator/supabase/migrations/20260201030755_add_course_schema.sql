@@ -6,9 +6,8 @@ ADD CONSTRAINT users_role_check
 CHECK (role IN ('admin', 'student', 'faculty')); 
 
 ALTER TABLE public.users ALTER COLUMN role SET DEFAULT 'student';
-ALTER TABLE public.users ADD COLUMN status BOOLEAN DEFAULT true;
--- ALTER TABLE public.courses DROP COLUMN semester; 
--- Also dropping start/end dates?
+alter table public.users
+add column if not exists status boolean default true;
 
 CREATE TABLE IF NOT EXISTS case_data (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -66,14 +65,13 @@ CREATE TABLE IF NOT EXISTS public.case_sessions (
     status text CHECK(status in ('completed', 'in progress', 'unassigned', 'assigned', 'archived')),
     group_id UUID references public.groups(id) ON DELETE SET NULL,
     student_ids text, 
-    --case_session_data_id UUID references public.case_data(id) ON DELETE SET NULL,
     case_id UUID REFERENCES public.case_data(id) ON DELETE SET NULL,
     feedback text,
     started_at TIMESTAMPTZ,
     completed_at TIMESTAMPTZ
 );
 
-CREATE TABLE public.course_cases (
+CREATE TABLE IF NOT EXISTS public.course_cases (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     course_id UUID REFERENCES public.courses(id) ON DELETE CASCADE,
     case_id UUID REFERENCES public.case_data(id) ON DELETE CASCADE,
@@ -81,7 +79,3 @@ CREATE TABLE public.course_cases (
     
     UNIQUE(course_id, case_id)
 );
-
-
-
-

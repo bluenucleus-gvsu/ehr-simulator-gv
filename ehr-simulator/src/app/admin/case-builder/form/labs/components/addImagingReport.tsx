@@ -1,6 +1,6 @@
 'use client'
 
-import { ImagingData, LabCellValue } from "@/app/simulation/[sessionId]/chart/labs/components/labsData";
+import { ImagingData, LabCellValue } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DialogContent } from "@/components/ui/dialog";

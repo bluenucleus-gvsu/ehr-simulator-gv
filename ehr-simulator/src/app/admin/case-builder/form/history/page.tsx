@@ -27,6 +27,8 @@ import { useFormContext } from "@/context/FormContext";
 import { nursingAlerts } from "@/utils/form";
 import { HistoryFormData } from "@/utils/form";
 import { FormShell } from "../../components/formShell";
+import { saveCaseData } from "@/actions/case_builder/caseBuilder";
+import { CaseSection } from "@/lib/saveCase";
 
 const FormSection = ({
   icon: Icon,
@@ -55,7 +57,7 @@ const FormSection = ({
 const HistoryForm = () => {
   const router = useRouter();
 
-  const { onDataChange, historyData } = useFormContext();
+  const { onDataChange, historyData, caseId } = useFormContext();
   const [medicalHistory, setMedicalHistory] = useState<string[]>(historyData.medicalHistory);
   const [surgicalHistory, setSurgicalHistory] = useState<string[]>(historyData.surgicalHistory);
   const [familyHistory, setFamilyHistory] = useState<FamilyHistoryData[]>(historyData.familyHistory);
@@ -110,6 +112,7 @@ const HistoryForm = () => {
 
   const saveAndContinue = () => {
     onDataChange("history", newHistoryData);
+    saveCaseData({ payload: newHistoryData, section: CaseSection.HISTORY, caseId });
     router.push("/admin/case-builder/form/notes");
   }
 

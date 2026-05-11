@@ -6,6 +6,8 @@ import { revalidatePath } from "next/cache";
 
 export type SectionAssignment = Database['public']['Tables']['section_assignments']['Row'];
 export type SectionAssignmentInsert = Database['public']['Tables']['section_assignments']['Insert'];
+export type SimCase = Database['public']['Tables']['cases']['Row']
+export type CaseSessionUpsert = Database['public']['Tables']['case_sessions']['Insert']
 
 export type ActionResponse<T = null> = {
   success: boolean;
@@ -14,31 +16,14 @@ export type ActionResponse<T = null> = {
   error?: PostgrestError;
 };
 
-export type SectionWithAssignments = {
-  id: string;
-  name: string;
-  section_assignments: {
-    id: string;
-    sim_time: string;
-    presim_time: string;
-    // Explicitly defined case_data as an object, not an array
-    case_data: {
-      id: string;
-      name: string;
-      description: string;
-      diagnosis: string;
-    } | null;
-  }[];
-};
-
 export async function getAllSimCases() {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
   const { data, error } = await supabase
-    .from("case_data")
+    .from("cases")
     .select("*")
 
   if (error) {
@@ -59,7 +44,7 @@ export async function getAllSimCases() {
 }
 
 export async function getSimCaseById(id: string) {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
@@ -86,22 +71,16 @@ export async function getSimCaseById(id: string) {
 }
 
 
-export async function getCaseByCourseId(id: string) {
-  const supabase = createClient(
+export async function getCaseByCourseId() {
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
   const { data, error } = await supabase
-    .from("course_cases")
-    .select(`
-      case_id,
-      course_id,
-      case_data(
-        name
-      )
-      `)
-    .eq("course_id", id)
+    .from("cases")
+    .select("*")
+  // .eq("course_id", id) // Commented out to retrieve all cases for assignment. 
 
   if (error) {
     const result = {
@@ -113,30 +92,17 @@ export async function getCaseByCourseId(id: string) {
     return result
   }
 
-  // Auto-generated Supabase types wouldn't recognize the PK/FK relationship between case_data and course_case
-  // Force case data to be single object, not array
-  const cleanData = data?.map((item) => {
-    const _caseData = Array.isArray(item.case_data)
-      ? item.case_data[0]
-      : item.case_data;
-
-    return {
-      ...item,
-      case_data: _caseData || { name: "Unknown Case" }
-    };
-  });
-
   return {
     success: true,
-    data: cleanData,
+    data: data,
     message: 'Successfully retrieved Sim Cases paired with this course',
   };
 }
 
 export async function getSectionCaseAssignments(courseId: string) {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
   const { data, error } = await supabase
@@ -149,11 +115,11 @@ export async function getSectionCaseAssignments(courseId: string) {
         id,
         sim_time,
         presim_time,
-        case_data!section_assignments_case_id_fkey (
+        cases!section_assignments_case_id_fkey (
           id,
           name,
           description,
-          diagnosis
+          admitting_diagnosis
         )
       )
     `)
@@ -169,16 +135,16 @@ export async function getSectionCaseAssignments(courseId: string) {
     return result
   }
 
-  // explicitly get TS to recognize case_data as object, not array
+  // explicitly get TS to recognize cases as object, not array
   const cleanData = data?.map((item) => {
     const cleanedAssignments = item.section_assignments.map(assignment => {
-      const _caseData = Array.isArray(assignment.case_data)
-        ? assignment.case_data[0]
-        : assignment.case_data;
+      const _caseData = Array.isArray(assignment.cases)
+        ? assignment.cases[0]
+        : assignment.cases;
 
       return {
         ...assignment,
-        case_data: _caseData
+        cases: _caseData
       };
     });
 
@@ -196,7 +162,7 @@ export async function getSectionCaseAssignments(courseId: string) {
 }
 
 export async function createSectionCaseAssignment(payload: SectionAssignmentInsert): Promise<ActionResponse<SectionAssignment>> {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
@@ -260,12 +226,12 @@ export async function getCourseCaseAssignments() {
   );
 
   const { data, error } = await supabase
-    .from('case_data')
+    .from('cases')
     .select(`
       id,
       name,
       description, 
-      diagnosis,
+      admitting_diagnosis,
       course_cases (
         id,
         course_id,
@@ -297,7 +263,7 @@ export async function getCourseCaseAssignments() {
         courseCode: null,
         caseName: caseItem.name,
         description: caseItem.description,
-        diagnosis: caseItem.diagnosis
+        diagnosis: caseItem.admitting_diagnosis
       }];
     }
 
@@ -315,7 +281,7 @@ export async function getCourseCaseAssignments() {
         courseCode: course?.code,
         caseName: caseItem.name,
         description: caseItem.description,
-        diagnosis: caseItem.diagnosis
+        diagnosis: caseItem.admitting_diagnosis
       };
     });
   }) ?? [];
@@ -323,14 +289,33 @@ export async function getCourseCaseAssignments() {
   return {
     success: true,
     message: 'Successfully retrieved sim cases.',
-    error: undefined,
     data: assignments,
   };
 }
 
+export async function updateCaseSession(session: CaseSessionUpsert) {
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { error } = await supabase
+    .from('case_sessions')
+    .upsert(session);
+
+  if (error) {
+    return {
+      success: false,
+      message: 'Failed to update session data.',
+      error,
+      data: null
+    };
+  }
+}
+
 // extracts type of data from ActionResponse for use in frontend
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ExtractData<T extends (...args: any) => Promise<ActionResponse<any>>> =
+export type ExtractData<T extends (...args: any) => Promise<ActionResponse<any>>> =
   NonNullable<Awaited<ReturnType<T>>['data']>;
 
 export type SectionSimulationsData = ExtractData<typeof getSectionCaseAssignments>;

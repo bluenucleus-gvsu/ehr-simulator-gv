@@ -19,16 +19,18 @@ import InfoTooltip from "../../components/helpTooltip";
 import { useRouter } from "next/navigation";
 import { categories, specialties } from "@/utils/form";
 
-import { ClinicalNote } from "@/app/simulation/[sessionId]/chart/notes/components/notesData";
+import { ClinicalNote } from "@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData";
 import NoteFormDisplay from "./noteFormDisplay";
 import { useFormContext } from "@/context/FormContext";
 import { Checkbox } from "@/components/ui/checkbox";
 import TextEditor from "@/components/textEditor";
 import { soapTemplateNote } from "@/utils/form";
 import { FormShell } from "../../components/formShell";
+import { saveCaseData } from "@/actions/case_builder/caseBuilder";
+import { CaseSection } from "@/lib/saveCase";
 
 export default function NotesForm() {
-  const { onDataChange, noteData } = useFormContext()
+  const { onDataChange, noteData, caseId } = useFormContext()
   const [notes, setNotes] = useState<ClinicalNote[]>(noteData);
 
   // individual note data
@@ -40,9 +42,9 @@ export default function NotesForm() {
   const [noteContent, setNoteContent] = useState<string>(soapTemplateNote);
 
   // Time Offset
-  const [days, setDays] = useState<number | ''>(0);
-  const [hours, setHours] = useState<number | ''>(0);
-  const [minutes, setMinutes] = useState<number | ''>(0);
+  const [days, setDays] = useState<number | ''>('');
+  const [hours, setHours] = useState<number | ''>('');
+  const [minutes, setMinutes] = useState<number | ''>('');
 
   const [canAddNote, setCanAddNote] = useState(false);
 
@@ -56,7 +58,6 @@ export default function NotesForm() {
 
   const handleSoapToggle = (checked: boolean) => {
     const template = checked ? soapTemplateNote : '<p></p>';
-    // const isCurrentContentEmpty = noteContent === '<p></p>' || noteContent === soapTemplateNote || noteContent === '';
     setIsSoap(checked);
     setNoteContent(template);
   };
@@ -64,9 +65,9 @@ export default function NotesForm() {
   const clearForm = () => {
     setCategory("");
     setNoteContent(isSoap ? soapTemplateNote : '<p></p>');
-    setDays(0);
-    setHours(0);
-    setMinutes(0);
+    setDays('');
+    setHours('');
+    setMinutes('');
   };
 
   useEffect(() => {
@@ -75,7 +76,7 @@ export default function NotesForm() {
   }, [specialty, author, noteContent, category]);
 
   const createNote = () => {
-    const timeOffset = ((Number(days) || 0) * 1440) + ((Number(hours) || 0) * 60) + (Number(minutes) || 0);
+    const timeOffset = -1 * (((Number(days) || 0) * 1440) + ((Number(hours) || 0) * 60) + (Number(minutes) || 0));
 
     const newNote = {
       title: category ? `${category} Note` : "Progress Note",
@@ -96,10 +97,19 @@ export default function NotesForm() {
     router.push("/admin/case-builder/form/history");
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     onDataChange("notes", notes);
+
+    await saveCaseData({
+      payload: notes,
+      section: CaseSection.CLINICAL_DOCUMENTS,
+      caseId: caseId
+    })
+
     router.push("/admin/case-builder/form/orders");
   }
+
+  const sortedNotes = notes.sort((a, b) => b.timeOffset - a.timeOffset)
 
   return (
     <FormShell
@@ -177,15 +187,15 @@ export default function NotesForm() {
                     </div>
                     <div className="flex gap-2">
                       <div className="relative flex-1">
-                        <Input type="number" min={0} value={days} onChange={e => { if (Number(e.target.value) <= 99999999) setDays(Number(e.target.value)) }} className="pr-8 bg-white" />
+                        <Input value={days} onChange={e => { if (Number(e.target.value) <= 99999999) setDays(Number(e.target.value)) }} className="pr-8 bg-white" />
                         <span className="absolute right-3 top-2.5 text-xs text-slate-400">d</span>
                       </div>
                       <div className="relative flex-1">
-                        <Input type="number" min={0} value={hours} onChange={e => { if (Number(e.target.value) <= 99999999) setHours(Number(e.target.value)) }} className="pr-8 bg-white" />
+                        <Input value={hours} onChange={e => { if (Number(e.target.value) <= 99999999) setHours(Number(e.target.value)) }} className="pr-8 bg-white" />
                         <span className="absolute right-3 top-2.5 text-xs text-slate-400">h</span>
                       </div>
                       <div className="relative flex-1">
-                        <Input type="number" min={0} value={minutes} onChange={e => { if (Number(e.target.value) <= 99999999) setMinutes(Number(e.target.value)) }} className="pr-8 bg-white" />
+                        <Input value={minutes} onChange={e => { if (Number(e.target.value) <= 99999999) setMinutes(Number(e.target.value)) }} className="pr-8 bg-white" />
                         <span className="absolute right-3 top-2.5 text-xs text-slate-400">m</span>
                       </div>
                     </div>
@@ -235,7 +245,7 @@ export default function NotesForm() {
                 </div>
               )}
 
-              {notes.map((note, index) => (
+              {sortedNotes.map((note, index) => (
                 <div key={index} className="group relative">
                   <NoteFormDisplay
                     note={note}
