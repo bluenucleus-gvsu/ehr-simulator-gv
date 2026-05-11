@@ -11,9 +11,11 @@ export type EditableStudentNote = Database['public']['Tables']['editable_clinica
 export type ClinicalDocument = Database['public']['Tables']['clinical_documents'];
 export type DatabaseMedicationOrder = Database['public']['Tables']['medication_orders'];
 export type DatabaseMedAdministration = Database['public']['Views']['all_medication_administrations']['Row'];
+export type DatabaseDocumentationInsert = Database['public']['Tables']['documentation_results']['Insert'];
 
 export type StudentMedicationAdministration = Database['public']['Tables']['student_medication_administrations']['Insert'];
 export type DatabaseDocumentation = Database['public']['Views']['all_documentation_results']['Row'];
+
 export type StudentDatabaseDocumentation = Database['public']['Tables']['editable_documentation_results']['Insert'];
 
 export type ClinicalDocumentView = {
@@ -160,35 +162,6 @@ export async function getMedicationAdministrations(caseId: string, sessionId: st
 
 type OrderAndMedicationType = ExtractData<typeof getMedicationOrders>;
 export type DatabaseMedication = OrderAndMedicationType[number]["medications"]
-
-// export async function getAllMedicationAdministrations(caseId: string, sessionId: string) {
-//   const supabase = createClient(
-//     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-//     process.env.SUPABASE_SERVICE_ROLE_KEY!
-//   );
-
-//   const { data, error } = supabase
-//     .from('all_medication_administrations')
-//     .select('*')
-//     .eq('case_id', caseId)
-//     .or(`case_session_id.eq.${sessionId},case_session_id.is.null`);
-
-//   if (error) {
-//     return {
-//       success: false,
-//       message: 'Failed to retrieve medication administration data',
-//       error
-//     }
-//   }
-
-//   revalidatePath(`/simulation/${caseId}/${sessionId}/chart/mar`);
-
-//   return {
-//     success: true,
-//     data,
-//     message: 'Successfully retrieved medication administration data'
-//   }
-// }
 
 export async function submitMedicationAdministrations(
   medAdministrations: StudentMedicationAdministration[],

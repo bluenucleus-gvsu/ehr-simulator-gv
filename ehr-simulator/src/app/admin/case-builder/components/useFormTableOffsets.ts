@@ -11,7 +11,7 @@ export function useTimePoints(initialPoints: number[], initialTimePointsInPresim
       toast.warning("Time column already added");
       return;
     }
-    setTimePoints(prev => [...prev, offset].sort((a, b) => b - a));
+    setTimePoints(prev => [...prev, offset].sort((a, b) => a - b));
   };
 
   const removeTimePoint = (timeToRemove: number) => {

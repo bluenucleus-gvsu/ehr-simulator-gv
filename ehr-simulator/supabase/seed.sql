@@ -510,19 +510,17 @@ VALUES
     'Slightly anxious', 'Clear bilaterally', 'Regular rate and rhythm', 'Mildly tender'
   ),
   (
-    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', true, 15, 
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', true, -100, 
     '95', '130/85', '20', '37.4', '96%', '6', 
     'Restless, grimacing', 'Diminished at bases', 'Tachycardic', 'Guarding noted'
   ),
   (
-    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', true, 30, 
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', true, -180, 
     '85', '122/80', '16', '37.2', '99%', '3', 
     'Resting comfortably', 'Clear bilaterally', 'Regular rate and rhythm', 'Soft, non-tender'
   );
 
-  SET session_replication_role = replica;
-
-
+SET session_replication_role = replica;
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;

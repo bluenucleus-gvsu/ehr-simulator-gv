@@ -17,11 +17,11 @@ export function TableFormHeader({ timePoint, isInPresim, onTogglePresim, onRemov
     <div className="relative flex gap-1 justify-center items-center">
       <div className="grid grid-cols-[80px_20px] gap-x-2 p-1.5">
         <p className="text-gray-800 font-light">Days: </p>
-        <p className="mb-1 ml-1">{days * -1}</p>
+        <p className="mb-1 ml-1">{days}</p>
         <p className="text-gray-800 font-light">Hours: </p>
-        <p className="mb-1 ml-1">{hours * -1}</p>
+        <p className="mb-1 ml-1">{hours}</p>
         <p className="text-gray-800 font-light">Minutes: </p>
-        <p className="mb-1 ml-1">{minutes * -1}</p>
+        <p className="mb-1 ml-1">{minutes}</p>
         <p className="text-gray-800 font-light">In Pre-Sim?</p>
         <Checkbox
           checked={isInPresim}

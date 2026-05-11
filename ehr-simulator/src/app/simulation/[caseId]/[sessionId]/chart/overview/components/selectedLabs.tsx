@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import StyledTitle from "./styledTitle"
 // import CardSkeleton from "./cardSkeleton"
-import { formatTimeFromOffset } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/chartingView"
+import { formatTimeFromOffset } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetHelpers"
 import { getResultStatus } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/page"
 import { AlertTriangle } from "lucide-react"
 import { useState } from "react"
@@ -85,7 +85,9 @@ export function SelectedLabs() {
         {selectedLabData.map(labData => {
           if (!labData) return null
 
-          const { date: displayDate, time: displayTime } = formatTimeFromOffset(labData.dateKey, startTime)
+          const timeData = formatTimeFromOffset(labData.dateKey, startTime)
+          const displayDate = timeData?.date || "Unknown";
+          const displayTime = timeData?.time || "Unknown";
 
           const normalRange = labData.normalRange
           const criticalRange = labData.criticalRange

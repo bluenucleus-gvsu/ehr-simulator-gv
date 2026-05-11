@@ -2,7 +2,6 @@
 
 import { useReactTable, getCoreRowModel, createColumnHelper } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
-// import { Skeleton } from "@/components/ui/skeleton";
 import { AddTableColumn } from "../labs/components/addTimeCol";
 import { useRouter } from "next/navigation";
 import { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
@@ -16,6 +15,7 @@ import { ChartingToolTip } from "@/app/simulation/[caseId]/[sessionId]/chart/cha
 import { FormTable } from "../../components/FormTable";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/saveCase";
+import CheckBoxList from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/checkBoxList";
 
 
 const columnHelper = createColumnHelper<FlexSheetData>();
@@ -59,9 +59,16 @@ export function ChartingForm() {
       caseId: caseId
     })
 
-    console.log(chartingData)
     router.push('/admin/case-builder/form/intake-output')
   }
+  const handleSubsetSelection = (rowId: string, columnId: string, selectedIdsForField: string[]) => {
+    setChartingData(prevData => prevData.map(row => {
+      if (row.id === rowId) {
+        return { ...row, [columnId]: selectedIdsForField };
+      }
+      return row;
+    }));
+  };
 
   const columns = useMemo(
     () => [
@@ -123,7 +130,8 @@ export function ChartingForm() {
               switch (componentType) {
                 case 'input':
                   return (
-                    <TableInputFormCell getValue={getValue}
+                    <TableInputFormCell
+                      getValue={getValue}
                       row={row}
                       column={column}
                       table={table}
@@ -142,7 +150,18 @@ export function ChartingForm() {
                       column={column}
                       table={table}
                       visibleInPresim={timePointsInPresim.has(timePoint)}
-                    />)
+                    />);
+                case 'checkboxlist':
+                  const selectedOptions = (getValue() as string[]) || [];
+                  return (
+                    <CheckBoxList
+                      options={row.original.assessmentSubsets || []}
+                      selectedOptions={selectedOptions}
+                      rowId={row.original.id}
+                      columnId={column.id}
+                      onSelectionChange={handleSubsetSelection}
+                    />
+                  )
               }
             }
           }))
@@ -206,7 +225,7 @@ export function ChartingForm() {
           </div>
         </div>
 
-        <div className="flex-1 w-full border border-gray-300 rounded-t-lg overflow-auto bg-white shadow-sm relative">
+        <div className="flex-1 w-full border border-gray-300 rounded-t-lg bg-white shadow-sm relative flex flex-col overflow-hidden">
           <FormTable
             table={ptTable}
             getCellClassName={(row) => {

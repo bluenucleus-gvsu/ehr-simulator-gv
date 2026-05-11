@@ -51,18 +51,6 @@ export interface LabTimePoint {
   dateKey: number;
   labs: Lab[]
 }
-// export interface LabDataTemplate {
-//   field: string,
-//   unit?: string,
-//   rowType: "divider" | "results" | "imaging" | "microbiology",
-//   normalRange?: { low: number, high: number }
-//   criticalRange?: { low: number, high: number }
-//   hideable?: boolean
-// }
-
-
-
-
 
 export const generateAllInitialLabTimes = (referenceDate: number) => {
   const timePoints = new Map<number, LabTimePoint>()

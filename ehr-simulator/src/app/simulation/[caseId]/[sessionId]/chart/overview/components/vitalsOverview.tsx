@@ -21,7 +21,7 @@ import type { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/
 import { useMemo } from "react"
 import StyledTitle from "./styledTitle"
 import { generateChartingDataFromDB, getAllTimeOffsets } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData"
-import { formatTimeFromOffset } from "../../charting/chartingView"
+import { formatTimeFromOffset } from "../../charting/components/flexSheetHelpers"
 import { DatabaseDocumentation } from "@/actions/simulation"
 import { useSimSessionContext } from "@/context/SimSessionContext"
 
@@ -33,10 +33,10 @@ export type vitalsOverviewTable = {
 const vitalSignIds = [
   "hr",
   "bp",
+  "map",
   "rr",
   "temp",
   "spo2",
-  "pain",
   "weightKg",
 ];
 
@@ -55,7 +55,7 @@ function mostRecentVitals(
 
   activeOffsets.sort((a, b) => a - b);
 
-  return activeOffsets.slice(0, limit);
+  return activeOffsets.slice(-1 * limit);
 }
 interface VitalsOverviewProps {
   dbDocumentation: DatabaseDocumentation[]
@@ -95,7 +95,7 @@ export function VitalsOverview({ dbDocumentation = [] }: VitalsOverviewProps) {
         accessorKey: String(timeKey) as keyof FlexSheetData,
         header: () => {
           const result = formatTimeFromOffset(timeKey, simStartTime)
-          if (result.error) {
+          if (!result) {
             return <span>Error</span>;
           }
 
