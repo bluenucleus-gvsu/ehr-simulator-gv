@@ -2,7 +2,7 @@
 
 import { SupabaseClient } from "@supabase/supabase-js";
 import { transformDocumentationTableToSchema } from "@/lib/documentationTypes";
-import { DocumentationResultInsert } from "@/lib/documentationTypes";
+import { DatabaseDocumentationInsert } from "../simulation";
 
 export async function updateDocumentationResults(
   supabase: SupabaseClient,
@@ -10,7 +10,7 @@ export async function updateDocumentationResults(
   caseId: string
 ) {
 
-  const { documentationResults } = transformDocumentationTableToSchema(caseId, {
+  const documentationResults = transformDocumentationTableToSchema(caseId, {
     data: payload.data ?? [],
     timePoints: payload.timePoints ?? [],
     timePointsInPreSim: new Set(payload.timePointsInPreSim ?? []),
@@ -30,7 +30,7 @@ async function deleteDocumentationResults(supabase: SupabaseClient, caseId: stri
 
 async function saveDocumentationResults(
   supabase: SupabaseClient,
-  documentationResults: DocumentationResultInsert[]) {
+  documentationResults: DatabaseDocumentationInsert[]) {
 
   if (documentationResults.length === 0) return []
   const { data, error } = await supabase

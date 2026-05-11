@@ -47,7 +47,6 @@ const CheckBoxList: React.FC<CheckBoxListProps> = ({
   };
 
   const handleApplyClick = () => {
-    // FIX: Now we correctly emit the IDs to the parent!
     onSelectionChange(rowId, columnId, Array.from(selectedIds));
     setIsPopoverOpen(false);
   };
@@ -60,12 +59,12 @@ const CheckBoxList: React.FC<CheckBoxListProps> = ({
 
   return (
     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-      <PopoverTrigger asChild className='justify-start w-full gap-0 px-0 lg:h-6'>
-        <Button className="h-6 w-full rounded-none px-2 overflow-hidden bg-transparent shadow-none hover:bg-muted/30 font-normal text-xs text-black">
+      <PopoverTrigger asChild className='justify-start w-full gap-0 !h-6'>
+        <Button className="h-full w-full rounded-none px-2 overflow-hidden bg-transparent shadow-none hover:bg-muted/30 font-normal text-xs text-black">
           {displayLabels || ""}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full bg-white p-0 shadow-md shadow-black/30 border rounded-xl overflow-hidden">
+      <PopoverContent className="w-full bg-white p-0 m-0 shadow-md shadow-black/30 border rounded-xl overflow-hidden">
         <div className="">
           {options.map((option) => {
             const isWDLExcept = option.label === "WDL, except:";

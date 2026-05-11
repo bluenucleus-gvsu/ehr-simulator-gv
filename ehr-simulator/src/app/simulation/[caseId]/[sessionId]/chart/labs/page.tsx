@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect, useMemo } from "react";
-import { useReactTable, getCoreRowModel, flexRender, createColumnHelper, type Column } from "@tanstack/react-table";
+import { useReactTable, getCoreRowModel, flexRender, createColumnHelper } from "@tanstack/react-table";
 import { Tooltip, TooltipTrigger, TooltipContent, } from "@/components/ui/tooltip";
 import { TriangleAlert } from "lucide-react";
-import { formatTimeFromOffset } from "../charting/chartingView";
+import { formatTimeFromOffset, getPinnedStyles } from "../charting/components/flexSheetHelpers";
 import {
   Table,
   TableHeader,
@@ -42,19 +42,6 @@ export const getResultStatus = (initialValue: string, normalRange: { low: number
 }
 
 const columnHelper = createColumnHelper<LabTableData>();
-function getPinnedStyles(column: Column<LabTableData>): React.CSSProperties {
-  const isPinned = column.getIsPinned();
-  if (!isPinned) {
-    return {};
-  }
-  const side = isPinned as 'left' | 'right';
-  return {
-    position: 'sticky',
-    [side]: `${column.getStart(side)}px`,
-    zIndex: side === 'left' ? 2 : 1,
-    width: '240px'
-  };
-}
 
 export function LabPage() {
   const [simStartTime] = useState(new Date().getTime());
@@ -148,7 +135,9 @@ export function LabPage() {
 
     // Dynamic Time Columns
     ...timePoints.map(timePoint => {
-      const { time: displayTime, date: displayDate } = formatTimeFromOffset(timePoint, simStartTime);
+      const displayData = formatTimeFromOffset(timePoint, simStartTime);
+      const displayDate = displayData?.date || "";
+      const displayTime = displayData?.time || "";
 
       return columnHelper.accessor(row => row[timePoint], {
         id: String(timePoint),
@@ -242,16 +231,16 @@ export function LabPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] w-[calc(100vw-16rem)] bg-gray-100 justify-center items-center px-4 pt-4 ">
-      <div className="w-full h-full border border-gray-200 rounded-t-lg overflow-auto">
+      <div className="w-full h-full border border-gray-200 rounded-t-lg overflow-hidden flex flex-col">
         <Table className="w-full overflow-x-auto">
-          <TableHeader className=" bg-gray-50 sticky top-0">
+          <TableHeader className=" bg-gray-50">
             {ptTable.getHeaderGroups().map(headerGroup => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
                   <TableHead
-                    style={getPinnedStyles(header.column)}
+                    style={getPinnedStyles(header.column, 240, true)}
                     key={header.id}
-                    className="border-b-2 border-gray-200 p-0"
+                    className="bg-gray-50 p-0 shadow-[inset_0_-1px_0_0_#e5e7eb]"
                   >
                     {header.isPlaceholder
                       ? null
@@ -273,7 +262,7 @@ export function LabPage() {
 
                   return (
                     <TableCell
-                      style={getPinnedStyles(cell.column)}
+                      style={getPinnedStyles(cell.column, 240)}
                       key={`${cell.id}-${row.original.field}`}
                       className={`p-0 min-w-24 border-separate border-gray-200 border-b ${rowType === "divider" ? "bg-blue-50" : "bg-white border-r border-separate"}`}
                     >

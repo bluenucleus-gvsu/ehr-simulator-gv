@@ -13,6 +13,7 @@ const supabase = createBrowserClient(
 export interface SimSessionContextType {
   userName: string | null;
   userId: string | null;
+  userRole: string | null;
   loading: boolean;
   simStartTime: number | null;
   groupId: string | null;
@@ -24,6 +25,7 @@ export interface SimSessionContextType {
 const SimContext = createContext<SimSessionContextType>({
   userName: null,
   userId: null,
+  userRole: null,
   groupId: null,
   loading: true,
   simStartTime: null,
@@ -35,6 +37,7 @@ const SimContext = createContext<SimSessionContextType>({
 export function SimSessionProvider({ children }: { children: React.ReactNode }) {
   const [userName, setUserName] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [groupId, setGroupId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [simStartTime, setSimStartTime] = useState<number | null>(null);
@@ -57,6 +60,8 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
         if (response.success) {
           setUserName(response.data?.full_name)
           setGroupId(response.data?.group_id)
+          setUserRole(response.data?.role)
+
         }
       }
 
@@ -94,6 +99,7 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
   const value = {
     userName,
     userId,
+    userRole,
     loading,
     simStartTime,
     groupId,
