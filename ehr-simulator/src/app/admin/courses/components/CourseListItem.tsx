@@ -2,13 +2,14 @@
 
 import Link from "next/link"
 import { Course } from "@/actions/courses";
+import { format } from "date-fns";
 
 interface CourseListItemProps {
   course: Course;
 }
 
 export default function CourseListItem({ course }: CourseListItemProps) {
-  const { id, name, code, active } = course;
+  const { id, name, code, active, created_at } = course;
 
   return (
     <Link href={`/admin/courses/${id}`}>
@@ -17,6 +18,9 @@ export default function CourseListItem({ course }: CourseListItemProps) {
       >
         <h2 className="text-2xl font-semibold">{code}</h2>
         <p className="text-md text-gray-500">{name}</p>
+        {created_at && (
+          <p className="text-md text-gray-500">Created at: {format(created_at, 'Pp')}</p>
+        )}
       </div>
     </Link>
   );
