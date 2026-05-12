@@ -159,7 +159,7 @@ function buildDocumentationResultsFromDraft(
     };
     for (const item of charting.data ?? []) {
       const key = resolveDocumentationDbColumn(item.id);
-      const value = timeColumnCell(item as Record<string | number | symbol, unknown>, offset);
+      const value = timeColumnCell(item as unknown as Record<string | number | symbol, unknown>, offset);
       if (value !== undefined && value !== null && value !== "") {
         row[key] = value;
       }

@@ -11,20 +11,7 @@ import { getTesterCases, getTesterSectionAssignments } from "@/utils/testerLocal
 import { isTesterModeClient } from "@/utils/testerMode";
 import { CasesData, SectionSimulationsData } from "@/actions/cases";
 import { getTesterCourseDraft } from "@/utils/testerLocalStore";
-
-interface SimAssignment {
-  id: string;
-  simTime: string;
-  presimTime: string;
-  sessionId: string | null;
-  sessionStatus: string | null;
-  sectionName: string;
-  sectionId: string;
-  caseName: string;
-  caseId: string;
-  caseDescription: string;
-  caseDiagnosis: string;
-}
+import type { SimAssignment } from "./simAssignmentTypes";
 
 interface CourseAssignmentsClientProps {
   courseId: string;

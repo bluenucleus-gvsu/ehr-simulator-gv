@@ -332,7 +332,7 @@ export default function MarView({
 
     if (isTesterModeClient()) {
       appendTesterMedicationAdministrations(sessionKey, payload);
-      setTesterAdministrations(payload as DatabaseMedAdministration[]);
+      setTesterAdministrations(payload as unknown as DatabaseMedAdministration[]);
       setIsMedAdminPanelOpen(false);
       toast.success("Medications saved locally (tester mode).");
       handleClearAllSelections();

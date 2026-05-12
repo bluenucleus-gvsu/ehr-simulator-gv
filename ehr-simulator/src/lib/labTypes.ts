@@ -182,7 +182,7 @@ export function transformLabTableToSchema(
     for (const row of data) {
       if (row.rowType === "divider") continue
 
-      const cellValue = timeColumnCell(row as Record<string | number | symbol, unknown>, timePoint)
+      const cellValue = timeColumnCell(row as unknown as Record<string | number | symbol, unknown>, timePoint)
 
       if (row.rowType === "results") {
         const columnName = LAB_FIELD_TO_COLUMN[row.field]

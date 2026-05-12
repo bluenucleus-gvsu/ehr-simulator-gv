@@ -26,7 +26,7 @@ import { Badge } from "@/components/ui/badge"
 import { PatientStatusBadge } from "./marHelpers"
 import { DatabaseMedAdministration, StudentMedicationAdministration } from "@/actions/simulation"
 
-type NewAdministrationData = Record<string, MedAdministrationInstance>;
+type NewAdministrationData = Record<string, StudentMedicationAdministration>;
 
 interface MedAdministrationProps {
   readOnly?: boolean;
@@ -38,7 +38,7 @@ interface MedAdministrationProps {
   onPtScan: (scan: boolean) => void;
   newAdministrations: NewAdministrationData;
   onUpdateAdministration: (orderId: string, field: keyof StudentMedicationAdministration, value: string | number) => void;
-  onAdministerMeds: (meds: NewAdministrationData) => void;
+  onAdministerMeds: (meds: NewAdministrationData) => void | Promise<void>;
   onClearAll: () => void;
   handlePopoverClose: (x: boolean) => void;
   isOpen: boolean;
@@ -63,36 +63,22 @@ const MedAdministrationPanel = ({
   onAdministerMeds: handleAdministerMeds,
   isOpen,
   handlePopoverClose,
-  isPresim,
+  isPresim: _isPresim,
   onOrderRemove
 }: MedAdministrationProps) => {
   const [isLoading] = useState(false)
   const hasSelections = selectedOrders.length > 0;
   const hasOverdose = selectedOrders.some(order => {
     const na = newAdministrations[order.id];
-    return na && order.dose < na.administeredDose;
+    return na && order.dose < (na.administered_dose ?? 0);
   })
 
   const handleSubmit = async () => {
     if (readOnly) return;
-    const payload = Object.keys(newAdministrations).map(orderId => {
-      const currentAdmin = newAdministrations[orderId];
-
-      return {
-        ...currentAdmin,
-        medicationOrderId: orderId,
-        administratorId: "StudentID",
-        adminTimeMinuteOffset: elapsedMinutes,
-        status: currentAdmin.status     // status always initialized as 'given' by default 
-      };
-    });
-
     try {
-      handleAdministerMeds(payload)
-      console.log(payload)
+      await handleAdministerMeds(newAdministrations);
       handlePopoverClose(false);
       toast.success("Medications successfully documented");
-
     } catch (err) {
       console.error("Failed to save administrations", err);
       toast.error("Failed to save administrations");
@@ -178,7 +164,7 @@ const MedAdministrationPanel = ({
                   onDoseChange={(value) => {
                     onUpdateAdministration(order.id, "administered_dose", value);
                   }}
-                  currentDose={currentAdminData.administered_dose || 0}
+                  currentDose={currentAdminData.administered_dose ?? 0}
                   onCommentChange={(value) => {
                     onUpdateAdministration(order.id, 'notes', value)
                   }}

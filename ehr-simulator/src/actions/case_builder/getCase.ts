@@ -113,8 +113,7 @@ export async function getCaseBundle(
     supabase
       .from("medication_orders")
       .select("*")
-      .eq("case_id", caseId)
-      .order("id", { ascending: true }),
+      .eq("case_id", caseId),
   ])
 
   if (caseRes.error) throw caseRes.error

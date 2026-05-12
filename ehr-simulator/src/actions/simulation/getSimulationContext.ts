@@ -9,13 +9,17 @@ export interface SimulationRouteContext {
   source: "section_assignment" | "case_session" | "case";
 }
 
+/**
+ * Resolve the chart URL `[sessionId]` segment to a `cases.id`.
+ * Production links have used different foreign keys for that segment over time
+ * (`section_assignments`, `case_sessions`); tester/dev may also use `cases.id`.
+ */
 export async function resolveSimulationRouteContext(routeId: string): Promise<SimulationRouteContext> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  // Primary path: student simulation links currently pass section_assignments.id.
   const { data: assignment, error: assignmentError } = await supabase
     .from("section_assignments")
     .select("id, case_id")
@@ -27,7 +31,6 @@ export async function resolveSimulationRouteContext(routeId: string): Promise<Si
     return { routeId, caseId: assignment.case_id, source: "section_assignment" };
   }
 
-  // Fallback path: completed-session ids can be case_sessions.id.
   const { data: session, error: sessionError } = await supabase
     .from("case_sessions")
     .select("id, case_id")
@@ -39,7 +42,6 @@ export async function resolveSimulationRouteContext(routeId: string): Promise<Si
     return { routeId, caseId: session.case_id, source: "case_session" };
   }
 
-  // Dev fallback: direct case id in URL.
   const { data: caseRow, error: caseError } = await supabase
     .from("cases")
     .select("id")
