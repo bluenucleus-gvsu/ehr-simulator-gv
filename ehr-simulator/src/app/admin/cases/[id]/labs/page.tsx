@@ -15,67 +15,13 @@ import { LabTableImagingReport, LabTableInputCell, LabTableMicrobioReport } from
 import { TableFormHeader } from "@/app/admin/case-builder/components/tableFormHeader"
 import { FormTable } from "@/app/admin/case-builder/components/FormTable"
 import { Button } from "@/components/ui/button"
-import { getLabResultsForCase, replaceLabResults, type LabResultRow, type LabResultInsert } from "@/actions/labs"
+import { getLabResultsForCase, replaceLabResults, type LabResultRow } from "@/actions/labs"
+import { LAB_FIELD_TO_COLUMN, transformLabTableToSchema } from "@/lib/labTypes"
+import { Json } from "../../../../../../database.types"
 
 const columnHelper = createColumnHelper<LabTableData>()
 
-// Map from labTemplate field name → DB column name
-const FIELD_TO_DB_COL: Record<string, string> = {
-  "Sodium": "sodium",
-  "Potassium": "potassium",
-  "Chloride": "chloride",
-  "BUN": "bun",
-  "Creatinine": "creatinine",
-  "Glucose": "glucose",
-  "CO2": "co2",
-  "Calcium": "calcium",
-  "Lactate": "lactate",
-  "RBC": "rbc",
-  "Hemoglobin": "hemoglobin",
-  "Hematocrit": "hematocrit",
-  "MCV": "mcv",
-  "MCH": "mch",
-  "MCHC": "mchc",
-  "WBC": "wbc",
-  "Platelets": "platelets",
-  "pCO2": "pco2",
-  "pO2": "po2",
-  "HCO3": "hco3",
-  "AST": "ast",
-  "ALT": "alt",
-  "ALP": "alp",
-  "Troponin": "troponin",
-  "CKMB": "ckmb",
-  "Myoglobin": "myoglobin",
-  "Total Cholesterol": "total_cholesterol",
-  "HDL Cholesterol": "hdl_cholesterol",
-  "LDL Cholesterol": "ldl_cholesterol",
-  "Triglycerides": "triglycerides",
-  "Total Bilirubin": "total_bilirubin",
-  "Albumin": "albumin",
-  "Ammonia": "ammonia",
-  "Lipase": "lipase",
-  "Amylase": "amylase",
-  "ESR": "esr",
-  "CRP": "crp",
-  "Magnesium": "magnesium",
-  "Phosphate": "phosphate",
-  "Free T3": "free_t3",
-  "Free T4": "free_t4",
-  "TSH": "tsh",
-  "PT": "pt",
-  "PTT": "ptt",
-  "Urine pH": "urine_ph",
-  "Urine Glucose": "urine_glucose",
-  "Protein": "protein",
-  "Ketones": "ketones",
-  "Blood": "blood",
-  "Nitrites": "nitrites",
-  "Leukocyte Esterase": "leukocyte_esterase",
-  "Specific Gravity": "specific_gravity",
-}
-
-// Overlay DB rows onto the static labTemplate structure
+// Overlay DB rows onto the static labTemplate structure using LAB_FIELD_TO_COLUMN
 function buildTableData(rows: LabResultRow[]): LabTableData[] {
   return labTemplate.map(templateRow => {
     const row: LabTableData = {
@@ -88,7 +34,7 @@ function buildTableData(rows: LabResultRow[]): LabTableData[] {
     }
 
     if (templateRow.rowType === "results") {
-      const dbCol = FIELD_TO_DB_COL[templateRow.field]
+      const dbCol = LAB_FIELD_TO_COLUMN[templateRow.field]
       for (const dbRow of rows) {
         const val = dbCol ? (dbRow as Record<string, unknown>)[dbCol] : null
         row[dbRow.time_offset] = (val !== null && val !== undefined) ? String(val) : ''
@@ -105,41 +51,6 @@ function buildTableData(rows: LabResultRow[]): LabTableData[] {
     }
 
     return row
-  })
-}
-
-// Convert current table state back to insert rows (one per time column)
-function tableDataToInsertRows(
-  labTableData: LabTableData[],
-  timePoints: number[],
-  timePointsInPresim: Set<number>
-): Omit<LabResultInsert, 'case_id'>[] {
-  return timePoints.map(timePoint => {
-    const scalarFields: Record<string, unknown> = {}
-    const complexFields: Record<string, unknown> = {}
-
-    for (const row of labTableData) {
-      if (row.rowType === 'divider') continue
-      const val = row[timePoint as unknown as keyof LabTableData]
-      if (val === undefined || val === null || val === '') continue
-
-      if (row.rowType === 'results') {
-        const dbCol = FIELD_TO_DB_COL[row.field]
-        if (dbCol) scalarFields[dbCol] = val
-      } else {
-        // imaging / microbiology → data Json column
-        if (typeof val === 'object' && Object.keys(val as object).length > 0) {
-          complexFields[row.field] = val
-        }
-      }
-    }
-
-    return {
-      time_offset: timePoint,
-      is_in_presim: timePointsInPresim.has(timePoint),
-      ...(Object.keys(complexFields).length > 0 && { data: complexFields }),
-      ...scalarFields,
-    } as Omit<LabResultInsert, 'case_id'>
   })
 }
 
@@ -223,8 +134,39 @@ export default function EditLabsPage() {
 
   const handleSave = async () => {
     setIsSaving(true)
-    const insertRows = tableDataToInsertRows(labTableData, timePoints, timePointsInPresim)
-    const result = await replaceLabResults(caseId, insertRows.map(row => ({ ...row, case_id: caseId })))
+
+    // Use transformLabTableToSchema from labTypes — same path as the case builder
+    const { labResults, imagingReports, microbiologyReports } = transformLabTableToSchema(caseId, {
+      data: labTableData,
+      timePoints,
+      timePointsInPreSim: timePointsInPresim,
+      visibleItems,
+    })
+
+    // Merge imaging and microbiology back into the data Json column per lab row,
+    // since replaceLabResults expects a flat LabResultInsert[]
+    const imagingByOffset = new Map<number, Record<string, unknown>>()
+    for (const report of imagingReports) {
+      const existing = imagingByOffset.get(report.time_offset) ?? {}
+      imagingByOffset.set(report.time_offset, { ...existing, [report.name]: report.raw })
+    }
+
+    const microbiologyByOffset = new Map<number, Record<string, unknown>>()
+    for (const report of microbiologyReports) {
+      const existing = microbiologyByOffset.get(report.time_offset) ?? {}
+      microbiologyByOffset.set(report.time_offset, { ...existing, [report.name]: report.raw })
+    }
+
+    const insertRows = labResults.map(row => ({
+      ...row,
+      data: {
+        ...(row.data ?? {}),
+        ...(imagingByOffset.get(row.time_offset) ?? {}),
+        ...(microbiologyByOffset.get(row.time_offset) ?? {}),
+      } as Json,
+    }))
+
+    const result = await replaceLabResults(caseId, insertRows)
     setIsSaving(false)
     if (result.success) {
       router.push(`/admin/cases/${caseId}`)
