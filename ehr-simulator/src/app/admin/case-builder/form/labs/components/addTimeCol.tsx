@@ -16,7 +16,7 @@ export function AddTableColumn({ handleColumnAdd }: AddTimeColumnButtonProps) {
   const [minutes, setMinutes] = useState<number | ''>('');
 
   const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false);
-  const timeOffset = ((days || 0) * 24 * 60) + ((hours || 0) * 60) + (minutes || 0)
+  const timeOffset = -1 * (((days || 0) * 24 * 60) + ((hours || 0) * 60) + (minutes || 0))
 
   const handleTimeChange = (
     event: React.ChangeEvent<HTMLInputElement>,

@@ -440,11 +440,13 @@ export type Database = {
           ambulatory_aid: number | null
           anxiety: number | null
           appearance: string | null
+          assessment_tool_selections: string | null
           body_language: number | null
           bowel_sounds: string | null
           bp: string | null
           bp_source: string | null
           breathing_independent_of_vocalization: number | null
+          cardiovascular_selections: string | null
           case_id: string
           chest_appearance: string | null
           consolability: number | null
@@ -460,14 +462,20 @@ export type Database = {
           fall_risk_gait: number | null
           friction_and_shear: number | null
           gait: string | null
+          general_appearance_selections: string | null
+          genitourinary_selections: string | null
+          gi_selections: string | null
           hair_and_nails: string | null
           head_and_scalp: string | null
           headache: number | null
           heart_sounds: string | null
+          heent_selections: string | null
           history_of_falling: number | null
           hr: string | null
           hr_source: string | null
           id: string
+          intake_selections: string | null
+          integument_selections: string | null
           integument_status: string | null
           intravenous: string | null
           is_in_presim: boolean
@@ -483,15 +491,18 @@ export type Database = {
           mood_and_affect: string | null
           motor_function: string | null
           mouth_and_throat: string | null
+          musculoskeletal_selections: string | null
           nausea: string | null
           nausea_vomiting: number | null
           negative_vocalization: number | null
+          neuro_selections: string | null
           nose: string | null
           nursing_care_provided: string | null
           nutrition: number | null
           oral: string | null
           orientation: string | null
           orientation2: number | null
+          output_selections: string | null
           pain: string | null
           pain_aggravating_factors: string | null
           pain_alleviating_factors: string | null
@@ -500,6 +511,8 @@ export type Database = {
           pain_location: string | null
           parenteral_nutrition: string | null
           paroxysmal_sweats: number | null
+          psychosocial_selections: string | null
+          respiratory_selections: string | null
           rr: string | null
           safety_check: string | null
           secondary_diagnosis: number | null
@@ -530,11 +543,13 @@ export type Database = {
           ambulatory_aid?: number | null
           anxiety?: number | null
           appearance?: string | null
+          assessment_tool_selections?: string | null
           body_language?: number | null
           bowel_sounds?: string | null
           bp?: string | null
           bp_source?: string | null
           breathing_independent_of_vocalization?: number | null
+          cardiovascular_selections?: string | null
           case_id: string
           chest_appearance?: string | null
           consolability?: number | null
@@ -550,14 +565,20 @@ export type Database = {
           fall_risk_gait?: number | null
           friction_and_shear?: number | null
           gait?: string | null
+          general_appearance_selections?: string | null
+          genitourinary_selections?: string | null
+          gi_selections?: string | null
           hair_and_nails?: string | null
           head_and_scalp?: string | null
           headache?: number | null
           heart_sounds?: string | null
+          heent_selections?: string | null
           history_of_falling?: number | null
           hr?: string | null
           hr_source?: string | null
           id?: string
+          intake_selections?: string | null
+          integument_selections?: string | null
           integument_status?: string | null
           intravenous?: string | null
           is_in_presim?: boolean
@@ -573,15 +594,18 @@ export type Database = {
           mood_and_affect?: string | null
           motor_function?: string | null
           mouth_and_throat?: string | null
+          musculoskeletal_selections?: string | null
           nausea?: string | null
           nausea_vomiting?: number | null
           negative_vocalization?: number | null
+          neuro_selections?: string | null
           nose?: string | null
           nursing_care_provided?: string | null
           nutrition?: number | null
           oral?: string | null
           orientation?: string | null
           orientation2?: number | null
+          output_selections?: string | null
           pain?: string | null
           pain_aggravating_factors?: string | null
           pain_alleviating_factors?: string | null
@@ -590,6 +614,8 @@ export type Database = {
           pain_location?: string | null
           parenteral_nutrition?: string | null
           paroxysmal_sweats?: number | null
+          psychosocial_selections?: string | null
+          respiratory_selections?: string | null
           rr?: string | null
           safety_check?: string | null
           secondary_diagnosis?: number | null
@@ -620,11 +646,13 @@ export type Database = {
           ambulatory_aid?: number | null
           anxiety?: number | null
           appearance?: string | null
+          assessment_tool_selections?: string | null
           body_language?: number | null
           bowel_sounds?: string | null
           bp?: string | null
           bp_source?: string | null
           breathing_independent_of_vocalization?: number | null
+          cardiovascular_selections?: string | null
           case_id?: string
           chest_appearance?: string | null
           consolability?: number | null
@@ -640,14 +668,20 @@ export type Database = {
           fall_risk_gait?: number | null
           friction_and_shear?: number | null
           gait?: string | null
+          general_appearance_selections?: string | null
+          genitourinary_selections?: string | null
+          gi_selections?: string | null
           hair_and_nails?: string | null
           head_and_scalp?: string | null
           headache?: number | null
           heart_sounds?: string | null
+          heent_selections?: string | null
           history_of_falling?: number | null
           hr?: string | null
           hr_source?: string | null
           id?: string
+          intake_selections?: string | null
+          integument_selections?: string | null
           integument_status?: string | null
           intravenous?: string | null
           is_in_presim?: boolean
@@ -663,15 +697,18 @@ export type Database = {
           mood_and_affect?: string | null
           motor_function?: string | null
           mouth_and_throat?: string | null
+          musculoskeletal_selections?: string | null
           nausea?: string | null
           nausea_vomiting?: number | null
           negative_vocalization?: number | null
+          neuro_selections?: string | null
           nose?: string | null
           nursing_care_provided?: string | null
           nutrition?: number | null
           oral?: string | null
           orientation?: string | null
           orientation2?: number | null
+          output_selections?: string | null
           pain?: string | null
           pain_aggravating_factors?: string | null
           pain_alleviating_factors?: string | null
@@ -680,6 +717,8 @@ export type Database = {
           pain_location?: string | null
           parenteral_nutrition?: string | null
           paroxysmal_sweats?: number | null
+          psychosocial_selections?: string | null
+          respiratory_selections?: string | null
           rr?: string | null
           safety_check?: string | null
           secondary_diagnosis?: number | null
@@ -795,11 +834,13 @@ export type Database = {
           ambulatory_aid: number | null
           anxiety: number | null
           appearance: string | null
+          assessment_tool_selections: string | null
           body_language: number | null
           bowel_sounds: string | null
           bp: string | null
           bp_source: string | null
           breathing_independent_of_vocalization: number | null
+          cardiovascular_selections: string | null
           case_id: string
           case_session_id: string
           chest_appearance: string | null
@@ -816,15 +857,21 @@ export type Database = {
           fall_risk_gait: number | null
           friction_and_shear: number | null
           gait: string | null
+          general_appearance_selections: string | null
+          genitourinary_selections: string | null
+          gi_selections: string | null
           group_id: string
           hair_and_nails: string | null
           head_and_scalp: string | null
           headache: number | null
           heart_sounds: string | null
+          heent_selections: string | null
           history_of_falling: number | null
           hr: string | null
           hr_source: string | null
           id: string
+          intake_selections: string | null
+          integument_selections: string | null
           integument_status: string | null
           intravenous: string | null
           is_in_presim: boolean
@@ -840,15 +887,18 @@ export type Database = {
           mood_and_affect: string | null
           motor_function: string | null
           mouth_and_throat: string | null
+          musculoskeletal_selections: string | null
           nausea: string | null
           nausea_vomiting: number | null
           negative_vocalization: number | null
+          neuro_selections: string | null
           nose: string | null
           nursing_care_provided: string | null
           nutrition: number | null
           oral: string | null
           orientation: string | null
           orientation2: number | null
+          output_selections: string | null
           pain: string | null
           pain_aggravating_factors: string | null
           pain_alleviating_factors: string | null
@@ -857,6 +907,8 @@ export type Database = {
           pain_location: string | null
           parenteral_nutrition: string | null
           paroxysmal_sweats: number | null
+          psychosocial_selections: string | null
+          respiratory_selections: string | null
           rr: string | null
           safety_check: string | null
           secondary_diagnosis: number | null
@@ -888,11 +940,13 @@ export type Database = {
           ambulatory_aid?: number | null
           anxiety?: number | null
           appearance?: string | null
+          assessment_tool_selections?: string | null
           body_language?: number | null
           bowel_sounds?: string | null
           bp?: string | null
           bp_source?: string | null
           breathing_independent_of_vocalization?: number | null
+          cardiovascular_selections?: string | null
           case_id: string
           case_session_id: string
           chest_appearance?: string | null
@@ -909,15 +963,21 @@ export type Database = {
           fall_risk_gait?: number | null
           friction_and_shear?: number | null
           gait?: string | null
+          general_appearance_selections?: string | null
+          genitourinary_selections?: string | null
+          gi_selections?: string | null
           group_id: string
           hair_and_nails?: string | null
           head_and_scalp?: string | null
           headache?: number | null
           heart_sounds?: string | null
+          heent_selections?: string | null
           history_of_falling?: number | null
           hr?: string | null
           hr_source?: string | null
           id?: string
+          intake_selections?: string | null
+          integument_selections?: string | null
           integument_status?: string | null
           intravenous?: string | null
           is_in_presim?: boolean
@@ -933,15 +993,18 @@ export type Database = {
           mood_and_affect?: string | null
           motor_function?: string | null
           mouth_and_throat?: string | null
+          musculoskeletal_selections?: string | null
           nausea?: string | null
           nausea_vomiting?: number | null
           negative_vocalization?: number | null
+          neuro_selections?: string | null
           nose?: string | null
           nursing_care_provided?: string | null
           nutrition?: number | null
           oral?: string | null
           orientation?: string | null
           orientation2?: number | null
+          output_selections?: string | null
           pain?: string | null
           pain_aggravating_factors?: string | null
           pain_alleviating_factors?: string | null
@@ -950,6 +1013,8 @@ export type Database = {
           pain_location?: string | null
           parenteral_nutrition?: string | null
           paroxysmal_sweats?: number | null
+          psychosocial_selections?: string | null
+          respiratory_selections?: string | null
           rr?: string | null
           safety_check?: string | null
           secondary_diagnosis?: number | null
@@ -981,11 +1046,13 @@ export type Database = {
           ambulatory_aid?: number | null
           anxiety?: number | null
           appearance?: string | null
+          assessment_tool_selections?: string | null
           body_language?: number | null
           bowel_sounds?: string | null
           bp?: string | null
           bp_source?: string | null
           breathing_independent_of_vocalization?: number | null
+          cardiovascular_selections?: string | null
           case_id?: string
           case_session_id?: string
           chest_appearance?: string | null
@@ -1002,15 +1069,21 @@ export type Database = {
           fall_risk_gait?: number | null
           friction_and_shear?: number | null
           gait?: string | null
+          general_appearance_selections?: string | null
+          genitourinary_selections?: string | null
+          gi_selections?: string | null
           group_id?: string
           hair_and_nails?: string | null
           head_and_scalp?: string | null
           headache?: number | null
           heart_sounds?: string | null
+          heent_selections?: string | null
           history_of_falling?: number | null
           hr?: string | null
           hr_source?: string | null
           id?: string
+          intake_selections?: string | null
+          integument_selections?: string | null
           integument_status?: string | null
           intravenous?: string | null
           is_in_presim?: boolean
@@ -1026,15 +1099,18 @@ export type Database = {
           mood_and_affect?: string | null
           motor_function?: string | null
           mouth_and_throat?: string | null
+          musculoskeletal_selections?: string | null
           nausea?: string | null
           nausea_vomiting?: number | null
           negative_vocalization?: number | null
+          neuro_selections?: string | null
           nose?: string | null
           nursing_care_provided?: string | null
           nutrition?: number | null
           oral?: string | null
           orientation?: string | null
           orientation2?: number | null
+          output_selections?: string | null
           pain?: string | null
           pain_aggravating_factors?: string | null
           pain_alleviating_factors?: string | null
@@ -1043,6 +1119,8 @@ export type Database = {
           pain_location?: string | null
           parenteral_nutrition?: string | null
           paroxysmal_sweats?: number | null
+          psychosocial_selections?: string | null
+          respiratory_selections?: string | null
           rr?: string | null
           safety_check?: string | null
           secondary_diagnosis?: number | null
@@ -2050,11 +2128,13 @@ export type Database = {
           ambulatory_aid: number | null
           anxiety: number | null
           appearance: string | null
+          assessment_tool_selections: string | null
           body_language: number | null
           bowel_sounds: string | null
           bp: string | null
           bp_source: string | null
           breathing_independent_of_vocalization: number | null
+          cardiovascular_selections: string | null
           case_id: string | null
           case_session_id: string | null
           chest_appearance: string | null
@@ -2071,15 +2151,21 @@ export type Database = {
           fall_risk_gait: number | null
           friction_and_shear: number | null
           gait: string | null
+          general_appearance_selections: string | null
+          genitourinary_selections: string | null
+          gi_selections: string | null
           group_id: string | null
           hair_and_nails: string | null
           head_and_scalp: string | null
           headache: number | null
           heart_sounds: string | null
+          heent_selections: string | null
           history_of_falling: number | null
           hr: string | null
           hr_source: string | null
           id: string | null
+          intake_selections: string | null
+          integument_selections: string | null
           integument_status: string | null
           intravenous: string | null
           is_in_presim: boolean | null
@@ -2095,18 +2181,23 @@ export type Database = {
           mood_and_affect: string | null
           motor_function: string | null
           mouth_and_throat: string | null
+          musculoskeletal_selections: string | null
           nausea: string | null
           nausea_vomiting: number | null
           negative_vocalization: number | null
+          neuro_selections: string | null
           nose: string | null
           nursing_care_provided: string | null
           nutrition: number | null
           oral: string | null
           orientation: string | null
           orientation2: number | null
+          output_selections: string | null
           pain: string | null
           parenteral_nutrition: string | null
           paroxysmal_sweats: number | null
+          psychosocial_selections: string | null
+          respiratory_selections: string | null
           rr: string | null
           safety_check: string | null
           secondary_diagnosis: number | null

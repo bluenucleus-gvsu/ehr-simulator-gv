@@ -273,7 +273,7 @@ export function LabForm() {
             </div>
           </div>
         </div>
-        <div className="flex-1 w-full border border-gray-300 rounded-t-lg overflow-auto bg-white shadow-sm relative">
+        <div className="flex flex-col overflow-hidden flex-1 w-full border border-gray-300 rounded-t-lg bg-white shadow-sm relative">
           <FormTable
             table={ptTable}
             getCellClassName={(row) => {
