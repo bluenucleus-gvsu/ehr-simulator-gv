@@ -5,9 +5,11 @@ import Header from "@/app/simulation/[caseId]/[sessionId]/chart/components/heade
 import SimulationModeBanner from "@/app/simulation/[caseId]/[sessionId]/chart/components/simulationModeBanner"
 import SimulationShell from "@/app/simulation/[caseId]/[sessionId]/chart/components/simulationShell"
 import { SimSessionProvider } from "@/context/SimSessionContext";
-import { SimulationCaseProvider } from "@/context/SimulationCaseContext";
 import { resolveSimulationRouteContext } from "@/actions/simulation/getSimulationContext";
 import { getCaseBundle } from "@/actions/case_builder/getCase";
+import { isTesterModeServer } from "@/utils/testerModeServer";
+import type { CaseBundle } from "@/actions/case_builder/getCase";
+import { ChartSimulationBootstrap } from "./chartSimulationBootstrap";
 
 type ChartLayoutProps = {
   children: React.ReactNode;
@@ -20,10 +22,17 @@ type ChartLayoutProps = {
 const ChartLayout = async ({ children, params }: ChartLayoutProps) => {
   const { caseId } = await params;
   const routeContext = await resolveSimulationRouteContext(caseId);
-  const caseBundle = await getCaseBundle(routeContext.caseId);
+  const tester = await isTesterModeServer();
+
+  let serverCaseBundle: CaseBundle | null = null;
+  try {
+    serverCaseBundle = await getCaseBundle(routeContext.caseId);
+  } catch {
+    if (!tester) throw new Error(`Case not available for simulation: ${routeContext.caseId}`);
+  }
 
   return (
-    <SimulationCaseProvider routeContext={routeContext} caseBundle={caseBundle}>
+    <ChartSimulationBootstrap routeContext={routeContext} serverCaseBundle={serverCaseBundle}>
       <SimSessionProvider>
         <SimulationShell>
           <Toaster position="top-right" />
@@ -37,7 +46,7 @@ const ChartLayout = async ({ children, params }: ChartLayoutProps) => {
           </div>
         </SimulationShell>
       </SimSessionProvider>
-    </SimulationCaseProvider>
+    </ChartSimulationBootstrap>
   )
 }
 

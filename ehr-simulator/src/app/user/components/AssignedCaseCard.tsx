@@ -4,6 +4,9 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation"; // Use Next.js router
 import { markSessionInProgress } from "@/actions/simulation"; // Adjust import path
+import { getAssignedSimulationLifecycle } from "@/utils/assignedSimulationLifecycle";
+import { isTesterModeClient } from "@/utils/testerMode";
+import { setTesterSessionStatus } from "@/utils/testerLocalStore";
 
 type Props = {
   id: string;
@@ -19,20 +22,14 @@ export default function AssignedCaseCard({ id, caseId, sessionId, name, simTime,
   const router = useRouter();
   const [isStarting, setIsStarting] = useState(false); // Add a loading state
 
-  const now = new Date();
-  const sim = simTime ? new Date(simTime) : null;
-  const presim = presimTime ? new Date(presimTime) : null;
-
-  // Three states based on both dates:
-  // 1. presim_time hasn't arrived yet (or no dates) → Not Available
-  // 2. presim_time passed, sim_time is future        → View Case Report (highlighted)
-  // 3. sim_time is today                             → Start Simulation (highlighted)
-
-  const isSimDay = sim
-    ? sim.getFullYear() === now.getFullYear() && sim.getMonth() === now.getMonth() && sim.getDate() === now.getDate()
-    : false;
-
-  const isPresimPhase = sim && sim > now && presim ? presim <= now : false;
+  const lifecycle = getAssignedSimulationLifecycle({
+    simTime,
+    presimTime,
+  });
+  const sim = lifecycle.simDate;
+  const presim = lifecycle.presimDate;
+  const isActivePhase = lifecycle.availability === "active";
+  const isPresimPhase = lifecycle.availability === "presim";
   const handleRoute = async (pathSuffix: string, isStartingSim: boolean = false) => {
     if (!sessionId) {
       toast.error("Session is still being generated. Please try again later.");
@@ -41,6 +38,9 @@ export default function AssignedCaseCard({ id, caseId, sessionId, name, simTime,
 
     if (isStartingSim) {
       setIsStarting(true);
+      if (isTesterModeClient()) {
+        setTesterSessionStatus(sessionId, "in progress");
+      }
       const { success } = await markSessionInProgress(sessionId);
 
       if (!success) {
@@ -65,7 +65,7 @@ export default function AssignedCaseCard({ id, caseId, sessionId, name, simTime,
         <div className="text-sm text-muted-foreground">
           Group: {groupMembers.length ? groupMembers.join(", ") : "No members"}
         </div>
-        {isSimDay && !isPresimPhase ? (
+        {isActivePhase ? (
           <div className="text-xs font-medium text-green-700">Mode: Active Simulation</div>
         ) : isPresimPhase ? (
           <div className="text-xs font-medium text-indigo-700">Mode: Pre-Sim</div>
@@ -73,7 +73,7 @@ export default function AssignedCaseCard({ id, caseId, sessionId, name, simTime,
       </div>
 
       <div className="ml-4 flex items-center gap-2">
-        {isSimDay && !isPresimPhase ? (
+        {isActivePhase ? (
           <button
             className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
             // Pass `true` here to trigger the server action!

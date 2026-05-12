@@ -7,6 +7,8 @@ import { OrderType } from '@/app/simulation/[caseId]/[sessionId]/chart/orders/co
 import { LabTableData, labTemplate } from '@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData';
 import { FlexSheetData, flexSheetTemplate } from '@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData';
 import { MedAdministrationInstance } from '@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData';
+import { isTesterModeClient } from '@/utils/testerMode';
+import { setTesterCaseDraft } from '@/utils/testerLocalStore';
 
 interface FormContextType {
   demographicData: DemographicFormData;
@@ -97,6 +99,24 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
   const [medAdministrationData, setMedAdministrationData] = useState<MedAdministrationInstance[]>([])
 
   const onDataChange = (key: keyof FormBlob, value: CompleteFormType) => {
+    if (caseId && isTesterModeClient()) {
+      const nextDraft: FormBlob = {
+        demographics: key === "demographics" ? (value as DemographicFormData) : demographicData,
+        history: key === "history" ? (value as HistoryFormData) : historyData,
+        notes: key === "notes" ? (value as ClinicalNote[]) : noteData,
+        orders: key === "orders" ? (value as OrderType[]) : orderData,
+        labs: key === "labs" ? (value as TableFormData<LabTableData>) : labData,
+        charting: key === "charting" ? (value as TableFormData<FlexSheetData>) : chartingData,
+        intakeOutput: key === "intakeOutput" ? (value as IntakeOutputFormData[]) : ioData,
+        medOrders: key === "medOrders" ? (value as MedOrderFormData) : medOrderData,
+        medAdministrationInstances:
+          key === "medAdministrationInstances"
+            ? (value as MedAdministrationInstance[])
+            : medAdministrationData,
+      };
+      setTesterCaseDraft(caseId, nextDraft as unknown as Record<string, unknown>);
+    }
+
     switch (key) {
       case 'demographics':
         setDemographicData(value as DemographicFormData);

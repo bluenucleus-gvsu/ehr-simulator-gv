@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
+import { isTesterModeServer } from "@/utils/testerModeServer";
 
 export interface SimulationRouteContext {
   routeId: string;
@@ -48,6 +49,10 @@ export async function resolveSimulationRouteContext(routeId: string): Promise<Si
   if (caseError) throw caseError;
   if (caseRow?.id) {
     return { routeId, caseId: caseRow.id, source: "case" };
+  }
+
+  if (await isTesterModeServer()) {
+    return { routeId, caseId: routeId, source: "case" };
   }
 
   throw new Error(`Unable to resolve simulation route id: ${routeId}`);

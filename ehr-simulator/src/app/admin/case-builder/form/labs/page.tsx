@@ -23,10 +23,28 @@ import { CaseSection } from "@/lib/saveCase";
 
 const columnHelper = createColumnHelper<LabTableData>();
 
+function ensureStringSet(input: unknown): Set<string> {
+  if (input instanceof Set) return input;
+  if (Array.isArray(input)) return new Set(input.filter((v): v is string => typeof v === "string"));
+  return new Set<string>();
+}
+
+function ensureNumberSet(input: unknown): Set<number> {
+  if (input instanceof Set) return input;
+  if (Array.isArray(input)) {
+    return new Set(
+      input
+        .map((v) => Number(v))
+        .filter((v) => Number.isFinite(v)),
+    );
+  }
+  return new Set<number>();
+}
+
 export function LabForm() {
   const { onDataChange, labData, caseId } = useFormContext()
   const [labTableData, setLabTableData] = useState<LabTableData[]>(labData.data);
-  const [visibleItems, setVisibleItems] = useState<Set<string>>(labData.visibleItems ?? new Set());
+  const [visibleItems, setVisibleItems] = useState<Set<string>>(ensureStringSet(labData.visibleItems));
   const [comboboxValue, setComboboxValue] = useState<string>('');
   const {
     timePoints,
@@ -34,7 +52,7 @@ export function LabForm() {
     togglePresimInclusion,
     addTimePoint,
     removeTimePoint
-  } = useTimePoints(labData.timePoints, labData.timePointsInPreSim)
+  } = useTimePoints(labData.timePoints, ensureNumberSet(labData.timePointsInPreSim))
 
   const router = useRouter()
 
