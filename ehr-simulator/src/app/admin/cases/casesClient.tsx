@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CaseListItem from "./CaseListItem";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -8,6 +8,8 @@ import Link from "next/link";
 import { SimCase } from "@/actions/cases";
 import { Search } from "lucide-react";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { getTesterCases } from "@/utils/testerLocalStore";
+import { isTesterModeClient } from "@/utils/testerMode";
 
 interface CaseClientProps {
   cases: SimCase[];
@@ -33,13 +35,29 @@ function filterCases(
 
 export default function CasesClient({ cases }: CaseClientProps) {
   const [filterText, setFilterText] = useState('');
+  const [hydrated, setHydrated] = useState(false);
   // const [selectedCourse, setSelectedCourse] = useState<string>("all");
   // const [selectedSpecialty, setSelectedSpecialty] = useState<string>("all");
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   const handleFilterTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilterText(e.target.value);
   };
-  const filteredAssignments = filterCases(cases, filterText);
+
+  /** Until mounted, match SSR (no `document` / localStorage merge) to avoid hydration mismatch. */
+  const mergedCases = useMemo(() => {
+    if (!hydrated) return cases;
+    if (!isTesterModeClient()) return cases;
+    const localCases = getTesterCases<SimCase>();
+    const byId = new Map<string, SimCase>();
+    [...cases, ...localCases].forEach((simCase) => byId.set(simCase.id, simCase));
+    return Array.from(byId.values());
+  }, [hydrated, cases]);
+
+  const filteredAssignments = filterCases(mergedCases, filterText);
 
   return (
     <div className="w-full">
@@ -113,7 +131,7 @@ export default function CasesClient({ cases }: CaseClientProps) {
       <div className="flex flex-col gap-4 p-4">
         {
           filteredAssignments.length > 0 ? (
-            cases.map((simCase) => <CaseListItem key={simCase.id} courseCaseAssignment={simCase} />)
+            filteredAssignments.map((simCase) => <CaseListItem key={simCase.id} courseCaseAssignment={simCase} />)
 
           ) : (
             <div className="flex justify-center items-center border border-dashed border-gray-300 rounded-md h-20">

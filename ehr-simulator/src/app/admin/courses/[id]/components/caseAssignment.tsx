@@ -17,8 +17,12 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { CasesData, createSectionCaseAssignment, deleteSectionCaseAssignment, SectionAssignmentInsert, SectionSimulationsData } from "@/actions/cases";
 import { toast } from "sonner";
+import { isTesterModeClient } from "@/utils/testerMode";
+import { removeTesterSectionAssignment, upsertTesterSectionAssignment } from "@/utils/testerLocalStore";
+import { createBrowserClient } from "@supabase/ssr";
 
 interface CaseAssignmentProps {
+  courseId: string
   sections: SectionSimulationsData
   cases: CasesData
   isEditMode: boolean
@@ -31,7 +35,7 @@ interface CaseAssignmentProps {
   }
 }
 
-const CaseAssignment = ({ sections, cases, isEditMode, existing_id, initialData }: CaseAssignmentProps) => {
+const CaseAssignment = ({ courseId, sections, cases, isEditMode, existing_id, initialData }: CaseAssignmentProps) => {
   const [selectedCaseId, setSelectedCaseId] = useState<string>(initialData?.caseId || '');
   const [selectedSectionId, setSelectedSectionId] = useState<string>(initialData?.sectionId || '');
   const [presimDate, setPresimDate] = useState(
@@ -71,6 +75,25 @@ const CaseAssignment = ({ sections, cases, isEditMode, existing_id, initialData 
       return;
     }
 
+    if (isTesterModeClient() && result.data?.id) {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      );
+      const { data: authData } = await supabase.auth.getUser();
+      const testerUserId = authData.user?.id ?? null;
+      upsertTesterSectionAssignment(courseId, {
+        id: result.data.id,
+        section_id: selectedSectionId,
+        case_id: selectedCaseId,
+        sim_time: simDate.toISOString(),
+        presim_time: presimDate.toISOString(),
+        session_id: crypto.randomUUID(),
+        session_status: "assigned",
+        tester_user_id: testerUserId,
+      });
+    }
+
     toast.success(result.message);
     setIsOpen(false);
     setIsSubmitting(false);
@@ -85,6 +108,10 @@ const CaseAssignment = ({ sections, cases, isEditMode, existing_id, initialData 
       toast.error(result.message);
       setIsSubmitting(false);
       return;
+    }
+
+    if (isTesterModeClient()) {
+      removeTesterSectionAssignment(courseId, id);
     }
 
     setIsOpen(false);
@@ -170,8 +197,9 @@ const CaseAssignment = ({ sections, cases, isEditMode, existing_id, initialData 
                         if (!c.id) {
                           return null
                         }
+                        const displayName = c.name || `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() || "Unknown Sim";
                         return (
-                          <SelectItem key={`${index}`} value={c.id}>{c.first_name + " " + c.last_name || "Unknown Sim"}</SelectItem>
+                          <SelectItem key={`${index}`} value={c.id}>{displayName}</SelectItem>
                         )
                       }
                       )) : (

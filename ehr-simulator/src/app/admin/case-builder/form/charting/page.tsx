@@ -20,6 +20,18 @@ import CheckBoxList from "@/app/simulation/[caseId]/[sessionId]/chart/charting/c
 
 const columnHelper = createColumnHelper<FlexSheetData>();
 
+function ensureNumberSet(input: unknown): Set<number> {
+  if (input instanceof Set) return input;
+  if (Array.isArray(input)) {
+    return new Set(
+      input
+        .map((v) => Number(v))
+        .filter((v) => Number.isFinite(v)),
+    );
+  }
+  return new Set<number>();
+}
+
 export function ChartingForm() {
   const { onDataChange, chartingData: initialChartingData, caseId } = useFormContext()
   const [chartingData, setChartingData] = useState<FlexSheetData[]>(initialChartingData.data)
@@ -29,7 +41,7 @@ export function ChartingForm() {
     addTimePoint,
     removeTimePoint,
     togglePresimInclusion
-  } = useTimePoints(initialChartingData.timePoints, initialChartingData.timePointsInPreSim)
+  } = useTimePoints(initialChartingData.timePoints, ensureNumberSet(initialChartingData.timePointsInPreSim))
 
   const router = useRouter()
 

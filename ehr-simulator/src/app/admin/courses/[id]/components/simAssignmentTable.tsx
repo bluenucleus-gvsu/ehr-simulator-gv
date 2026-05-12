@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calendar, Users, UserRoundX } from "lucide-react";
 import { format } from "date-fns";
-import { SimAssignment } from "../page";
+import type { SimAssignment } from "./simAssignmentTypes";
 
 
 interface SimulationsTableProps {

@@ -1,4 +1,5 @@
 import { ImagingData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
+import { timeColumnCell } from "@/utils/timeColumnCell";
 import { LabTableData } from '@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData';
 import { MicrobiologyReportData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
 
@@ -181,7 +182,7 @@ export function transformLabTableToSchema(
     for (const row of data) {
       if (row.rowType === "divider") continue
 
-      const cellValue = row[timePoint]
+      const cellValue = timeColumnCell(row as unknown as Record<string | number | symbol, unknown>, timePoint)
 
       if (row.rowType === "results") {
         const columnName = LAB_FIELD_TO_COLUMN[row.field]

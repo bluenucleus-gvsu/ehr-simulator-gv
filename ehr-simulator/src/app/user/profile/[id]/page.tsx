@@ -3,10 +3,12 @@ import { notFound, redirect } from "next/navigation";
 import ProfileHeader from "@/app/user/components/ProfileHeader";
 import CompletedCaseCard from "@/app/user/components/CompletedCaseCard";
 import AssignedCaseCard from "@/app/user/components/AssignedCaseCard";
+import TesterAssignedCasesPanel from "@/app/user/components/TesterAssignedCasesPanel";
 import { createServerSupabase } from "@/utils/supabase/server";
 import { getUserCourses } from "@/actions/getUserCourses";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { isTesterModeServer } from "@/utils/testerModeServer";
 
 export default async function ProfilePage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
   const { id } = await params;
@@ -31,7 +33,8 @@ export default async function ProfilePage({ params }: { params: { id: string } |
     studentName = profile?.full_name || profile?.email || "Student";
 
     const profileRole = profile?.role as string | undefined;
-    if (profileRole && profileRole !== "student") {
+    const testerMode = await isTesterModeServer();
+    if (profileRole && profileRole !== "student" && !testerMode) {
       redirect("/admin");
     }
   }
@@ -39,26 +42,11 @@ export default async function ProfilePage({ params }: { params: { id: string } |
   const { activeCourses, inactiveCourses } = await getUserCourses(id);
   const allCourses = [...activeCourses, ...inactiveCourses];
 
-  // Split assigned cases: today/future stay in Assigned, past go into Completed
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
+  // Keep completed cases authoritative from backend session lifecycle state.
   const partitionCourses = (courses: typeof activeCourses) =>
     courses.map((c) => {
-      const upcomingAssigned = c.assigned.filter(
-        (a) => a.sim_time && new Date(a.sim_time) >= startOfToday
-      );
-      const pastAssigned = c.assigned
-        .filter((a) => !a.sim_time || new Date(a.sim_time) < startOfToday)
-        .map((a) => ({
-          id: a.id,
-          name: a.name,
-          completed_at: a.sim_time,
-          feedback: null,
-          teamMembers: a.groupMembers,
-        }));
-      const mergedCompleted = [...c.completed, ...pastAssigned];
       const seen = new Set<string>();
-      const dedupedCompleted = mergedCompleted.filter((item) => {
+      const dedupedCompleted = c.completed.filter((item) => {
         const k = `${item.id}|${item.completed_at ?? ""}`;
         if (seen.has(k)) return false;
         seen.add(k);
@@ -66,9 +54,12 @@ export default async function ProfilePage({ params }: { params: { id: string } |
       });
       return {
         ...c,
-        assigned: upcomingAssigned,
+        assigned: c.assigned,
         completed: dedupedCompleted.sort(
           (a, b) => new Date(b.completed_at ?? 0).getTime() - new Date(a.completed_at ?? 0).getTime()
+        ),
+        expired: (c.expired ?? []).sort(
+          (a, b) => new Date(b.expired_at ?? 0).getTime() - new Date(a.expired_at ?? 0).getTime()
         ),
       };
     });
@@ -84,6 +75,7 @@ export default async function ProfilePage({ params }: { params: { id: string } |
       />
 
       <section>
+        <TesterAssignedCasesPanel />
         <div className="bg-white rounded-lg shadow p-4 mb-6">
           <h3 className="text-lg font-semibold mb-3">Active Courses</h3>
           {filteredActive.length === 0 ? (
@@ -143,6 +135,29 @@ export default async function ProfilePage({ params }: { params: { id: string } |
                       )}
                     </div>
                   </details>
+
+                  <details className="bg-slate-50 p-2 rounded mt-2">
+                    <summary className="cursor-pointer font-medium">Expired Cases</summary>
+                    <div className="mt-2">
+                      {course.expired.length === 0 ? (
+                        <div className="text-sm text-muted-foreground">No expired cases.</div>
+                      ) : (
+                        <ul className="list-disc pl-5 space-y-1">
+                          {course.expired.map((s, idx) => (
+                            <li key={`${course.id}:${s.id}:${s.expired_at ?? "na"}:${idx}`} className="text-sm">
+                              <CompletedCaseCard
+                                id={s.id}
+                                name={s.name}
+                                groupMembers={s.teamMembers}
+                                date={s.expired_at}
+                                feedback={s.feedback ?? "Marked as expired."}
+                              />
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </details>
                 </li>
               ))}
             </ul>
@@ -176,6 +191,29 @@ export default async function ProfilePage({ params }: { params: { id: string } |
                                 groupMembers={s.teamMembers}
                                 date={s.completed_at}
                                 feedback={s.feedback}
+                              />
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </details>
+
+                  <details className="bg-slate-50 p-2 rounded mt-2">
+                    <summary className="cursor-pointer font-medium">Expired Cases</summary>
+                    <div className="mt-2">
+                      {course.expired.length === 0 ? (
+                        <div className="text-sm text-muted-foreground">No expired cases.</div>
+                      ) : (
+                        <ul className="list-disc pl-5 space-y-1">
+                          {course.expired.map((s, idx) => (
+                            <li key={`${course.id}:${s.id}:${s.expired_at ?? "na"}:${idx}`} className="text-sm">
+                              <CompletedCaseCard
+                                id={s.id}
+                                name={s.name}
+                                groupMembers={s.teamMembers}
+                                date={s.expired_at}
+                                feedback={s.feedback ?? "Marked as expired."}
                               />
                             </li>
                           ))}
