@@ -21,7 +21,7 @@ import type { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/
 import { flexSheetTemplate } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData"
 import { useMemo } from "react"
 import StyledTitle from "./styledTitle"
-import { formatTimeFromOffset } from "../../charting/chartingView"
+import { formatTimeFromOffset } from "../../charting/components/flexSheetHelpers"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
 import { buildChartingRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/chartingFromBundle"
 import { useSimSessionContext } from "@/context/SimSessionContext"
@@ -58,11 +58,6 @@ function mostRecentVitals(
 
   return activeOffsets.slice(-1 * limit);
 }
-interface VitalsOverviewProps {
-  dbDocumentation: DatabaseDocumentation[]
-}
-
-
 
 export function VitalsOverview() {
   const { caseBundle } = useSimulationCase();

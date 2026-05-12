@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import StyledTitle from "./styledTitle"
-import { formatTimeFromOffset } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/chartingView"
+import { formatTimeFromOffset } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetHelpers"
 import { getResultStatus } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/page"
 import { AlertTriangle } from "lucide-react"
 import { useMemo } from "react"
