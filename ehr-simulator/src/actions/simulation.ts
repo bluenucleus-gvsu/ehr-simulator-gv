@@ -184,6 +184,35 @@ export async function getAllClinicalDocuments(caseId: string, caseSessionId: str
     message: 'Successfully retrieved clinical documents'
   }
 }
+export async function getAllMedications() {
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  const { data, error } = await supabase
+    .from('medications')
+    .select(`*,
+        dispense_units(
+          name
+        )
+      `)
+    .order('generic_name')
+
+  if (error) {
+    return {
+      success: false,
+      message: 'Failed to retrieve medications',
+      error
+    }
+  }
+
+  return {
+    success: true,
+    data,
+    message: 'Successfully retrieved medications'
+  }
+}
 
 export async function getMedicationOrders(caseId: string) {
   const supabase = createClient<Database>(
