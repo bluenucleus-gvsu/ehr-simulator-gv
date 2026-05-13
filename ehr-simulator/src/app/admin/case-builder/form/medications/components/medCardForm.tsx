@@ -1,7 +1,6 @@
-import { type AllMedicationTypes, type MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData"
+import { AllMedicationTypes, type MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData"
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { isSlidingScaleInsulin } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers";
 import { Textarea } from "@/components/ui/textarea";
 import { renderMedFormDetails, renderMedFormTitle } from "./medFormHelpers";
 import { X } from "lucide-react";
@@ -42,7 +41,7 @@ const MedCardForm = ({
   onOrderChange
 }: MedAdminCardProps) => {
 
-  const isSlidingScaleInsulinMed = isSlidingScaleInsulin(medication)
+  const isVariableDose = medication.isVariableDose;
 
   return (
     <div className="border bg-white rounded-2xl w-full p-0 overflow-hidden flex-shrink-0 relative shadow">
@@ -79,34 +78,9 @@ const MedCardForm = ({
             </div>
           </div>
 
-          {(isSlidingScaleInsulinMed) && (
-            <div className="overflow-hidden rounded-lg border w-fit">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      BG Range (mg/dL)
-                    </th>
-                    <th scope="col" className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                      Correction Units
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {medication.bgDosing.map((dose, index) => (
-                    <tr key={`${index}-${medication.id}`} className={index % 2 === 0 ? '' : 'bg-gray-50'}>
-                      <td className="whitespace-nowrap px-2 py-1 text-xs text-gray-800 font-mono">{dose.bgRange}</td>
-                      <td className="whitespace-nowrap px-2 py-1 text-xs text-gray-800 font-mono">{dose.units}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
         </div>
         <div className="grid grid-cols-2 py-4 px-2 gap-x-2 gap-y-6 place-items-start-start">
-          {!isSlidingScaleInsulinMed &&
+          {!isVariableDose &&
             <div className="w-full space-y-1">
               <Label>Dose</Label>
               <div className="flex items-end">
@@ -122,7 +96,7 @@ const MedCardForm = ({
             </div>
           }
 
-          {medication.route === "IV" && medication.infusionRateUnit &&
+          {medication.route === "IV" && medication.infusionRateUnit && !isVariableDose &&
             <div className="w-full space-y-1">
               <Label>Rate</Label>
               <div className="flex items-end">

@@ -2,32 +2,7 @@
 
 import { SupabaseClient } from "@supabase/supabase-js";
 import { allMedications, MedAdministrationInstance, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
-
-type MedicationOrderInsert = {
-  id: string;
-  case_id: string;
-  medication_id: string;
-  dose: number;
-  frequency: string;
-  priority: string;
-  instructions: string | null;
-  indication: string | null;
-  ordering_provider: string | null;
-  infusion_rate: number | null;
-  is_in_presim: boolean;
-}
-
-type MedicationAdministrationInsert = {
-  case_id: string;
-  medication_id: string | null;
-  medication_order_id: string | null;
-  administrator?: string;
-  time_offset: number;
-  status: string;
-  notes?: string;
-  administered_dose: number;
-  is_in_presim: boolean;
-}
+import { FrequencyEnum, MedicationAdministrationInsert, MedicationOrderInsert } from "@/lib/medicationTypes";
 
 export async function updateMedications(
   supabase: SupabaseClient,
@@ -57,11 +32,6 @@ async function deleteMedications(supabase: SupabaseClient, caseId: string) {
   if (deleteOrderErr) throw new Error(deleteOrderErr.message)
 }
 
-function normalizeInfusionRate(raw: unknown): number | null {
-  if (raw == null || raw === "") return null
-  const n = typeof raw === "number" ? raw : Number(String(raw).trim())
-  return Number.isFinite(n) ? n : null
-}
 
 function transformMedicationOrdersToSchema(
   caseId: string,
@@ -75,12 +45,12 @@ function transformMedicationOrdersToSchema(
       case_id: caseId,
       medication_id: medicationIdMap.get(order.medicationId)!,
       dose: Number(order.dose) || 0,
-      frequency: order.frequency,
-      priority: order.priority,
+      frequency: order.frequency as FrequencyEnum,
+      priority: order.priority as MedicationOrderInsert['priority'],
       instructions: order.instructions?.trim() || null,
       indication: order.indication?.trim() || null,
       ordering_provider: order.orderingProvider?.trim() || null,
-      infusion_rate: normalizeInfusionRate(order.infusionRate),
+      infusion_rate: order.infusionRate || null,
       is_in_presim: Boolean(order.visibleInPresim),
     }))
 }
@@ -112,6 +82,8 @@ function transformMedicationAdministrationsToSchema(
     }))
 }
 
+
+// need to remove this function 
 async function resolveDatabaseMedicationIds(
   supabase: SupabaseClient,
   orders: MedicationOrder[],

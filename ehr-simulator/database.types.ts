@@ -1598,6 +1598,7 @@ export type Database = {
           administrator: string | null
           case_id: string
           created_at: string
+          infusion_rate: number | null
           is_in_presim: boolean
           medication_id: string | null
           medication_order_id: string | null
@@ -1611,6 +1612,7 @@ export type Database = {
           administrator?: string | null
           case_id: string
           created_at?: string
+          infusion_rate?: number | null
           is_in_presim?: boolean
           medication_id?: string | null
           medication_order_id?: string | null
@@ -1624,6 +1626,7 @@ export type Database = {
           administrator?: string | null
           case_id?: string
           created_at?: string
+          infusion_rate?: number | null
           is_in_presim?: boolean
           medication_id?: string | null
           medication_order_id?: string | null
@@ -1652,7 +1655,7 @@ export type Database = {
       medication_orders: {
         Row: {
           case_id: string
-          dose: number
+          dose: number | null
           frequency: Database["public"]["Enums"]["medication_frequencies"]
           id: string
           indication: string | null
@@ -1666,7 +1669,7 @@ export type Database = {
         }
         Insert: {
           case_id: string
-          dose: number
+          dose?: number | null
           frequency: Database["public"]["Enums"]["medication_frequencies"]
           id?: string
           indication?: string | null
@@ -1680,7 +1683,7 @@ export type Database = {
         }
         Update: {
           case_id?: string
-          dose?: number
+          dose?: number | null
           frequency?: Database["public"]["Enums"]["medication_frequencies"]
           id?: string
           indication?: string | null
@@ -1719,7 +1722,7 @@ export type Database = {
           infusion_rate_unit:
             | Database["public"]["Enums"]["iv_infusion_rate_type"]
             | null
-          is_continuous: boolean
+          is_variable_dose: boolean
           route: Database["public"]["Enums"]["medication_route_type"]
           strength: number
           strength_unit: string
@@ -1734,7 +1737,7 @@ export type Database = {
           infusion_rate_unit?:
             | Database["public"]["Enums"]["iv_infusion_rate_type"]
             | null
-          is_continuous?: boolean
+          is_variable_dose?: boolean
           route: Database["public"]["Enums"]["medication_route_type"]
           strength: number
           strength_unit: string
@@ -1749,7 +1752,7 @@ export type Database = {
           infusion_rate_unit?:
             | Database["public"]["Enums"]["iv_infusion_rate_type"]
             | null
-          is_continuous?: boolean
+          is_variable_dose?: boolean
           route?: Database["public"]["Enums"]["medication_route_type"]
           strength?: number
           strength_unit?: string
@@ -2038,6 +2041,7 @@ export type Database = {
           case_session_id: string
           created_at: string
           group_id: string
+          infusion_rate: number | null
           is_in_presim: boolean
           medication_id: string | null
           medication_order_id: string | null
@@ -2053,6 +2057,7 @@ export type Database = {
           case_session_id: string
           created_at?: string
           group_id: string
+          infusion_rate?: number | null
           is_in_presim?: boolean
           medication_id?: string | null
           medication_order_id?: string | null
@@ -2068,6 +2073,7 @@ export type Database = {
           case_session_id?: string
           created_at?: string
           group_id?: string
+          infusion_rate?: number | null
           is_in_presim?: boolean
           medication_id?: string | null
           medication_order_id?: string | null
@@ -2276,6 +2282,7 @@ export type Database = {
           administrator: string | null
           case_id: string | null
           case_session_id: string | null
+          infusion_rate: number | null
           is_in_presim: boolean | null
           medication_order_id: string | null
           notes: string | null

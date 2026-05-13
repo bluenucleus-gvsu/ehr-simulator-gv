@@ -69,8 +69,12 @@ const MedAdministrationPanel = ({
   const [isLoading] = useState(false)
   const hasSelections = selectedOrders.length > 0;
   const hasOverdose = selectedOrders.some(order => {
-    const na = newAdministrations[order.id];
-    return na && order.dose < (na.administered_dose ?? 0);
+
+    const administeredDose = newAdministrations[order.id]?.administered_dose
+    if (!administeredDose || !order.dose) {
+      return false
+    }
+    return order.dose < administeredDose
   })
 
   const mustConfirmPatient = isPresim === false;
@@ -107,7 +111,7 @@ const MedAdministrationPanel = ({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="flex flex-col md:max-w-3xl xl:max-w-4xl max-w-5xl h-[90vh] p-0 gap-0 overflow-hidden bg-white border-slate-200">
+      <DialogContent className="flex flex-col sm:max-w-3xl md:max-w-4xl xl:max-w-5xl max-w-5xl h-[90vh] p-0 gap-0 overflow-hidden bg-white border-slate-200">
 
         <DialogHeader className="px-6 py-4 bg-gray-100 border-b border-gray-300 flex-shrink-0 shadow-[0_2px_4px_-1px_rgba(0,0,0,0.1)]">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -164,7 +168,7 @@ const MedAdministrationPanel = ({
           )}
           <div className="grid gap-6 pb-10">
             {selectedOrders.map(order => {
-              const currentAdminData = newAdministrations[order.id] || { status: "Given", administered_dose: 666 };
+              const currentAdminData = newAdministrations[order.id] || { status: "Given", administered_dose: 0 };
 
               return (
                 <MedAdminCard
@@ -189,6 +193,10 @@ const MedAdministrationPanel = ({
                     onUpdateAdministration(order.id, 'notes', value)
                   }}
                   currentComment={currentAdminData.notes || ''}
+                  administrationInfusionRate={currentAdminData.infusion_rate || 0}
+                  onInfusionRateChange={(value) => {
+                    onUpdateAdministration(order.id, 'infusion_rate', value)
+                  }}
                 />
               )
             })}

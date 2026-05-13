@@ -1,17 +1,16 @@
-import { MedAdministrationInstance } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
+import { MedAdministrationInstance, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
+import { TablesInsert } from "../../database.types";
+import { Database } from '../../database.types'
 
-export type MedicationAdministrationInsert = {
-  case_id: string,
-  medication_id: string,
-  administrator?: string,
-  time_offset: number,
-  status: string,
-  notes?: string,
-  administered_dose: number,
-  is_in_presim: boolean
-}
+export type MedicationFrequency = Database['public']['Enums']['medication_frequencies'];
+export type MedicationPriority = Database['public']['Enums']['medication_priorities'];
 
-export function transformMedicationOrdersToSchema(
+export type MedicationOrderInsert = TablesInsert<"medication_orders">
+export type MedicationAdministrationInsert = TablesInsert<'medication_administrations'>;
+export type FrequencyEnum = Database['public']['Enums']['medication_frequencies'];
+
+
+export function transformMedicationAdministrationsToSchema(
   caseId: string,
   medAdministrations: MedAdministrationInstance[],
 ): MedicationAdministrationInsert[] {
@@ -30,5 +29,29 @@ export function transformMedicationOrdersToSchema(
   })
   return medAdministrationsInsert
 }
+
+export function transformMedicationOrdersToSchema(
+  caseId: string,
+  medOrders: MedicationOrder[],
+): MedicationOrderInsert[] {
+  const dbMedOrders: MedicationOrderInsert[] = []
+  medOrders.forEach(order => {
+
+    dbMedOrders.push({
+      case_id: caseId,
+      dose: order.dose,
+      frequency: order.frequency as MedicationFrequency,
+      indication: order.indication ?? "",
+      infusion_rate: order.infusionRate || null,
+      instructions: order.instructions || null,
+      medication_id: order.medicationId,
+      ordering_provider: order.orderingProvider || null,
+      priority: order.priority as MedicationPriority,
+      is_in_presim: order.visibleInPresim
+    })
+  })
+  return dbMedOrders
+}
+
 
 

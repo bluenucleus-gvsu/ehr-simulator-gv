@@ -72,6 +72,7 @@ function placeholderMedication(id: string, label: string): OralMedication {
     strength: 0,
     strengthUnit: "",
     dispenseUnit: "dose",
+    isVariableDose: false
   };
 }
 
