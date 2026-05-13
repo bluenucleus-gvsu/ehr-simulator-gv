@@ -1,4 +1,5 @@
 'use client'
+import { useEffect } from "react"
 import { useFormContext } from "@/context/FormContext"
 import { useRouter } from "next/navigation"
 import { ClipboardCheck } from "lucide-react"
@@ -19,9 +20,15 @@ const FormReview = () => {
     medOrderData,
     medAdministrationData,
     caseId,
+    registerCaseBuilderLocalOverlay,
   } = useFormContext()
 
   const router = useRouter();
+
+  useEffect(() => {
+    registerCaseBuilderLocalOverlay(null);
+    return () => registerCaseBuilderLocalOverlay(null);
+  }, [registerCaseBuilderLocalOverlay]);
 
   const goBack = () => {
     router.push("/admin/case-builder/form/medication-administrations");
@@ -59,7 +66,7 @@ const FormReview = () => {
   return (
     <FormShell
       title="Review & Submit Case"
-      stepDescription="Step 10 of 9: Review case before submitting"
+      stepDescription="Step 10 of 10: Review case before submitting"
       icon={<ClipboardCheck className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}

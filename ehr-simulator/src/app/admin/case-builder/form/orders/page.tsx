@@ -63,7 +63,7 @@ const getCategoryColor = (cat: string | undefined) => {
 
 export default function OrdersForm() {
   const router = useRouter();
-  const { onDataChange, orderData, caseId } = useFormContext();
+  const { onDataChange, orderData, caseId, registerCaseBuilderLocalOverlay } = useFormContext();
 
   const [orders, setOrders] = useState<OrderType[]>(orderData);
 
@@ -106,6 +106,11 @@ export default function OrdersForm() {
     setOrders(orders.filter((_, i) => i !== index))
   }
 
+  useEffect(() => {
+    registerCaseBuilderLocalOverlay(() => ({ orders }));
+    return () => registerCaseBuilderLocalOverlay(null);
+  }, [orders, registerCaseBuilderLocalOverlay]);
+
   const goBack = () => {
     onDataChange('orders', orders)
     router.push("/admin/case-builder/form/notes");
@@ -134,7 +139,7 @@ export default function OrdersForm() {
     <FormShell
       title="Order Entry"
       icon={<ClipboardList className="text-slate-400" />}
-      stepDescription="Step 4 of 9: Create provider and nursing orders"
+      stepDescription="Step 4 of 10: Create provider and nursing orders"
       onSubmit={handleSubmit}
       goBack={goBack}
       continueButtonText={"Continue"}

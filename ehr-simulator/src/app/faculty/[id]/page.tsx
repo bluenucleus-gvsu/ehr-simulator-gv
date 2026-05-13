@@ -139,7 +139,7 @@ function getDummyCourses(): Course[] {
 export default async function FacultyPage({
   params,
 }: {
-  params: { id: string } | Promise<{ id: string }>;
+  params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
 

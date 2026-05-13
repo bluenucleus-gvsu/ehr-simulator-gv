@@ -8,7 +8,7 @@ import { isTesterModeServer } from "@/utils/testerModeServer";
 
 
 interface CoursePageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export type Course = Database['public']['Tables']['courses']['Row'];

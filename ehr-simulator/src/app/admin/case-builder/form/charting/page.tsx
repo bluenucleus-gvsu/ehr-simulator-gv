@@ -1,7 +1,7 @@
 'use client'
 
 import { useReactTable, getCoreRowModel, createColumnHelper } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AddTableColumn } from "../labs/components/addTimeCol";
 import { useRouter } from "next/navigation";
 import { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
@@ -32,8 +32,8 @@ function ensureNumberSet(input: unknown): Set<number> {
   return new Set<number>();
 }
 
-export function ChartingForm() {
-  const { onDataChange, chartingData: initialChartingData, caseId } = useFormContext()
+function ChartingForm() {
+  const { onDataChange, chartingData: initialChartingData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
   const [chartingData, setChartingData] = useState<FlexSheetData[]>(initialChartingData.data)
   const {
     timePoints,
@@ -44,6 +44,24 @@ export function ChartingForm() {
   } = useTimePoints(initialChartingData.timePoints, ensureNumberSet(initialChartingData.timePointsInPreSim))
 
   const router = useRouter()
+
+  useEffect(() => {
+    registerCaseBuilderLocalOverlay(() => ({
+      charting: {
+        data: chartingData,
+        timePoints,
+        timePointsInPreSim: timePointsInPresim,
+        visibleItems: initialChartingData.visibleItems,
+      },
+    }));
+    return () => registerCaseBuilderLocalOverlay(null);
+  }, [
+    chartingData,
+    timePoints,
+    timePointsInPresim,
+    initialChartingData.visibleItems,
+    registerCaseBuilderLocalOverlay,
+  ]);
 
   const goBack = () => {
     onDataChange('charting', {
@@ -215,7 +233,7 @@ export function ChartingForm() {
   return (
     <FormShell
       title="Documentation"
-      stepDescription="Step 6 of 9: Enter laboratory and imaging results"
+      stepDescription="Step 6 of 10: Nursing charting and assessments"
       icon={<Clipboard className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}

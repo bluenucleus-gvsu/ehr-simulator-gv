@@ -6,11 +6,10 @@ import AssignedCaseCard from "@/app/user/components/AssignedCaseCard";
 import TesterAssignedCasesPanel from "@/app/user/components/TesterAssignedCasesPanel";
 import { createServerSupabase } from "@/utils/supabase/server";
 import { getUserCourses } from "@/actions/getUserCourses";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import ProfileSimulationEntryButtons from "@/app/user/components/ProfileSimulationEntryButtons";
 import { isTesterModeServer } from "@/utils/testerModeServer";
 
-export default async function ProfilePage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
+export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   const supabase = await createServerSupabase();
@@ -65,6 +64,19 @@ export default async function ProfilePage({ params }: { params: { id: string } |
     });
   const filteredActive = partitionCourses(activeCourses);
   const filteredInactive = partitionCourses(inactiveCourses);
+
+  const profileSimulationAssignments = filteredActive.flatMap((course) => {
+    const courseLabel = [course.code, course.name].filter(Boolean).join(" - ") || "Course";
+    return course.assigned.map((a) => ({
+      id: a.id,
+      caseId: a.case_id,
+      sessionId: a.session_id,
+      name: a.name,
+      simTime: a.sim_time,
+      presimTime: a.presim_time,
+      courseLabel,
+    }));
+  });
 
   return (
     <main className="p-6 max-w-6xl mx-auto space-y-6">
@@ -228,9 +240,7 @@ export default async function ProfilePage({ params }: { params: { id: string } |
         </div>
         <div className="bg-white rounded-lg shadow mt-6 p-4 mb-6">
           <h3 className="text-lg font-semibold mb-3">Simulations</h3>
-          <Link href="/simulation/123/chart/overview" passHref className="p-4">
-            <Button> Enter Presim </Button>
-          </Link>
+          <ProfileSimulationEntryButtons assignments={profileSimulationAssignments} />
         </div>
       </section>
     </main>

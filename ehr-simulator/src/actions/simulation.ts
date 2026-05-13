@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type PostgrestError } from "@supabase/supabase-js";
 import { Database } from "../../database.types";
 import { ActionResponse, ExtractData } from "./cases";
 import { UUID } from "crypto";
@@ -9,13 +9,14 @@ import { runWriteForMode } from "@/utils/testerWriteGateway";
 import { isTesterModeServer } from "@/utils/testerModeServer";
 
 export type EditableStudentNoteUpsert = Database['public']['Tables']['editable_clinical_documents']['Insert'];
-export type EditableStudentNote = Database['public']['Tables']['editable_clinical_documents'];
-export type ClinicalDocument = Database['public']['Tables']['clinical_documents'];
+export type EditableStudentNote = Database['public']['Tables']['editable_clinical_documents']['Row'];
+export type ClinicalDocument = Database['public']['Tables']['clinical_documents']['Row'];
 export type DatabaseMedicationOrder = Database['public']['Tables']['medication_orders'];
 export type DatabaseMedAdministration = Database['public']['Views']['all_medication_administrations']['Row'];
 export type DatabaseDocumentationInsert = Database['public']['Tables']['documentation_results']['Insert'];
 
 export type StudentMedicationAdministration = Database['public']['Tables']['student_medication_administrations']['Insert'];
+export type StudentMedicationAdministrationRow = Database['public']['Tables']['student_medication_administrations']['Row'];
 export type DatabaseDocumentation = Database['public']['Views']['all_documentation_results']['Row'];
 
 export type StudentDatabaseDocumentation = Database['public']['Tables']['editable_documentation_results']['Insert'];
@@ -318,7 +319,12 @@ export async function submitMedicationAdministrations(
   caseId: string,
   sessionId: string
 ) {
-  return runWriteForMode(async () => {
+  return runWriteForMode<{
+    success: boolean;
+    message: string;
+    data?: StudentMedicationAdministrationRow[];
+    error?: PostgrestError | null;
+  }>(async () => {
     const supabase = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -348,12 +354,12 @@ export async function submitMedicationAdministrations(
 
     return {
       success: true,
-      data,
+      data: (data ?? []) as StudentMedicationAdministrationRow[],
       message: 'Medications successfully documented'
     }
   }, async () => ({
     success: true,
-    data: medAdministrations,
+    data: medAdministrations as unknown as StudentMedicationAdministrationRow[],
     message: "Medication administrations saved locally for tester mode.",
   }));
 }
@@ -433,7 +439,7 @@ export async function getAllDocumentationData(caseId: string, sessionId: string)
 
 
 export async function upsertDocumentationRows(payload: StudentDatabaseDocumentation[]) {
-  return runWriteForMode(async () => {
+  return runWriteForMode<{ data: unknown; error: PostgrestError | null }>(async () => {
     const supabase = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!

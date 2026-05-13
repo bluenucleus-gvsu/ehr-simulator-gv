@@ -63,7 +63,7 @@ const MedAdministrationPanel = ({
   onAdministerMeds: handleAdministerMeds,
   isOpen,
   handlePopoverClose,
-  isPresim: _isPresim,
+  isPresim,
   onOrderRemove
 }: MedAdministrationProps) => {
   const [isLoading] = useState(false)
@@ -73,12 +73,14 @@ const MedAdministrationPanel = ({
     return na && order.dose < (na.administered_dose ?? 0);
   })
 
+  const mustConfirmPatient = isPresim === false;
+  const canSign =
+    !readOnly && !isLoading && !hasOverdose && (isScanned || !mustConfirmPatient);
+
   const handleSubmit = async () => {
     if (readOnly) return;
     try {
       await handleAdministerMeds(newAdministrations);
-      handlePopoverClose(false);
-      toast.success("Medications successfully documented");
     } catch (err) {
       console.error("Failed to save administrations", err);
       toast.error("Failed to save administrations");
@@ -127,6 +129,7 @@ const MedAdministrationPanel = ({
                   onClick={() => onPtScan(!isScanned)}
                   className="text-xs border size-6 border-blue-600 hover:bg-blue-100"
                   type="button"
+                  title="Toggle patient wristband scan (simulation)"
                 >
                   <ScanBarcode className="text-blue-600" />
                 </Button>
@@ -136,6 +139,23 @@ const MedAdministrationPanel = ({
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-6">
+          {!readOnly && mustConfirmPatient && !isScanned && (
+            <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+              <p className="font-medium">Confirm patient identity</p>
+              <p className="mt-1 text-xs text-amber-900/90">
+                Scan the simulated wristband, or use the button below to record the same bedside check when you do not have a scanner.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3 border-amber-300 bg-white hover:bg-amber-100"
+                onClick={() => onPtScan(true)}
+              >
+                Confirm patient identity
+              </Button>
+            </div>
+          )}
           {selectedOrders.length === 0 && (
             <div className="h-48 mt-4 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center text-slate-400">
               <PillBottle className="w-8 h-8 mb-2 opacity-50" />
@@ -193,10 +213,16 @@ const MedAdministrationPanel = ({
               </Button>
             </DialogClose>
             <Button
-              disabled={readOnly || isLoading || !isScanned || hasOverdose}
+              disabled={!canSign}
               onClick={handleSubmit}
               className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm min-w-[120px]"
-              title={readOnly ? "Documentation is view-only in simulation" : undefined}
+              title={
+                readOnly
+                  ? "Documentation is view-only in simulation"
+                  : mustConfirmPatient && !isScanned
+                    ? "Confirm patient identity first"
+                    : undefined
+              }
             >
               {isLoading ? "Signing..." : "Sign & Accept"}
             </Button>

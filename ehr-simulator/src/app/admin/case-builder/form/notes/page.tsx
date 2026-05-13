@@ -30,7 +30,7 @@ import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/saveCase";
 
 export default function NotesForm() {
-  const { onDataChange, noteData, caseId } = useFormContext()
+  const { onDataChange, noteData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
   const [notes, setNotes] = useState<ClinicalNote[]>(noteData);
 
   // individual note data
@@ -109,12 +109,17 @@ export default function NotesForm() {
     router.push("/admin/case-builder/form/orders");
   }
 
+  useEffect(() => {
+    registerCaseBuilderLocalOverlay(() => ({ notes }));
+    return () => registerCaseBuilderLocalOverlay(null);
+  }, [notes, registerCaseBuilderLocalOverlay]);
+
   const sortedNotes = notes.sort((a, b) => b.timeOffset - a.timeOffset)
 
   return (
     <FormShell
       title="Clinical Documentation"
-      stepDescription="Step 3 of 9: Add all relevant notes"
+      stepDescription="Step 3 of 10: Add all relevant notes"
       icon={<FilePlus className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}

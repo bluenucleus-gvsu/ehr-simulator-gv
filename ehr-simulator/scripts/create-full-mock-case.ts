@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { saveCaseData } from "../src/actions/case_builder/caseBuilder";
 import { CaseSection } from "../src/lib/saveCase";
@@ -454,6 +454,7 @@ async function runCreateFullMockCase() {
       "72-year-old female admitted with fever, productive cough, pleuritic chest pain, worsening dyspnea, and hypoxemia. Clinical course concerning for severe CAP with early sepsis physiology.",
     contact: "Daniel Hart",
     contactRelationship: "Son",
+    contactPhone: "(616) 555-0100",
   };
 
   const created = await saveCaseData({
@@ -514,7 +515,6 @@ async function runCreateFullMockCase() {
   const notes: ClinicalNote[] = [
     {
       title: "Admission Note",
-      category: "Admission",
       author: "Dr. Maya Reynolds",
       specialty: "Internal Medicine",
       timeOffset: 360,
@@ -523,7 +523,6 @@ async function runCreateFullMockCase() {
     },
     {
       title: "History & Physical Note",
-      category: "History & Physical",
       author: "Dr. Maya Reynolds",
       specialty: "Internal Medicine",
       timeOffset: 300,
@@ -532,7 +531,6 @@ async function runCreateFullMockCase() {
     },
     {
       title: "Consult Note",
-      category: "Consult",
       author: "Dr. Henry Cole",
       specialty: "Pulmonology",
       timeOffset: 180,
@@ -541,7 +539,6 @@ async function runCreateFullMockCase() {
     },
     {
       title: "Progress Note",
-      category: "Progress",
       author: "Dr. Maya Reynolds",
       specialty: "Internal Medicine",
       timeOffset: 90,
@@ -550,7 +547,6 @@ async function runCreateFullMockCase() {
     },
     {
       title: "Nursing Note",
-      category: "Nursing",
       author: "S. Patel, RN",
       specialty: "Nursing",
       timeOffset: 30,
@@ -614,7 +610,7 @@ async function runCreateFullMockCase() {
   }, null, 2));
 }
 
-async function fetchCaseSectionCounts(supabase: ReturnType<typeof createClient>, caseId: string) {
+async function fetchCaseSectionCounts(supabase: SupabaseClient, caseId: string) {
   const [
     notes,
     ordersCount,

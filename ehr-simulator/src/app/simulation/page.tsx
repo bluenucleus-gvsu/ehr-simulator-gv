@@ -7,8 +7,8 @@ export default function StartSimulationPage() {
   const router = useRouter();
 
   const handleStartNewSession = () => {
-    const newSessionId = '123'
-    router.push(`/simulation/${newSessionId}/chart/overview`);
+    // Chart lives at /simulation/[caseId]/[sessionId]/chart/...; real IDs come from course assignments (profile).
+    router.push('/user/profile');
   };
 
   return (

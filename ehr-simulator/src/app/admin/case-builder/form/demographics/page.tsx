@@ -44,11 +44,16 @@ import { isTesterModeClient } from "@/utils/testerMode";
 import { getTesterCaseDraft, setTesterCaseDraft, upsertTesterCase } from "@/utils/testerLocalStore";
 
 export default function DemographicsForm() {
-  const { onDataChange, demographicData: initialData, setCaseId, caseId } = useFormContext();
+  const { onDataChange, demographicData: initialData, setCaseId, caseId, registerCaseBuilderLocalOverlay } = useFormContext();
   const [demographicsData, setDemographicsData] = useState<DemographicFormData>(initialData);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showCancelAlert, setShowCancelAlert] = useState<boolean>(false);
+
+  useEffect(() => {
+    registerCaseBuilderLocalOverlay(() => ({ demographics: demographicsData }));
+    return () => registerCaseBuilderLocalOverlay(null);
+  }, [demographicsData, registerCaseBuilderLocalOverlay]);
 
   useEffect(() => {
     const editCaseId = searchParams.get("caseId");
@@ -366,7 +371,7 @@ export default function DemographicsForm() {
     <FormShell
       title="Patient Demographics"
       icon={<User className="text-slate-400" />}
-      stepDescription="Step 1 of 9: Basic identification and admission details"
+      stepDescription="Step 1 of 10: Basic identification and admission details"
       onSubmit={handleSubmit}
       goBack={goBack}
       continueButtonText="Continue"

@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import {
   Pill,
   Search,
@@ -32,7 +32,7 @@ function getComboboxData(medications: AllMedicationTypes[]) {
 
 export default function MedicationOrderForm() {
   const router = useRouter()
-  const { onDataChange, medOrderData, medAdministrationData, caseId } = useFormContext()
+  const { onDataChange, medOrderData, medAdministrationData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
   const [selectedMed, setSelectedMed] = useState('')
   const [selectedMeds, setSelectedMeds] = useState<AllMedicationTypes[]>(medOrderData.selectedMeds)
   const [medOrders, setMedOrders] = useState<MedicationOrder[]>(medOrderData.createdOrders)
@@ -93,6 +93,13 @@ export default function MedicationOrderForm() {
     return getComboboxData(allMedications);
   }, []);
 
+  useEffect(() => {
+    registerCaseBuilderLocalOverlay(() => ({
+      medOrders: { createdOrders: medOrders, selectedMeds: selectedMeds },
+    }));
+    return () => registerCaseBuilderLocalOverlay(null);
+  }, [medOrders, selectedMeds, registerCaseBuilderLocalOverlay]);
+
   const goBack = () => {
     onDataChange('medOrders', {
       createdOrders: medOrders,
@@ -118,7 +125,7 @@ export default function MedicationOrderForm() {
   return (
     <FormShell
       title="Medication Orders"
-      stepDescription="Step 8 of 9: Create Medication Orders"
+      stepDescription="Step 8 of 10: Create Medication Orders"
       icon={<Pill className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}
