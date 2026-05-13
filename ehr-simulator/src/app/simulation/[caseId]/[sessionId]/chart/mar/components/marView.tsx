@@ -238,7 +238,7 @@ export default function MarView({
 
   useSymbologyScanner(handleScan,
     {
-      scannerOptions: { prefix: '#LS', suffix: '', maxDelay: 40 },
+      scannerOptions: { prefix: '', suffix: '', maxDelay: 40 },
       symbologies: ["Data Matrix"]
     },
   )

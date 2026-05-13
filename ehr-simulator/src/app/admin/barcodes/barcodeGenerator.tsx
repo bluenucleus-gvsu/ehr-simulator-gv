@@ -54,7 +54,7 @@ const BardcodeGenerator = ({ medications, simCases }: BarcodeGeneratorProps) => 
     setCaseQuantities(prev => ({ ...prev, [id]: safeValue }));
   };
 
-  const generateDataMatrixSVG = (text: string): string => {
+  const generateMedBarcodeSvg = (text: string): string => {
     return bwipjs.toSVG({
       bcid: 'datamatrix',
       text: text,
@@ -64,7 +64,7 @@ const BardcodeGenerator = ({ medications, simCases }: BarcodeGeneratorProps) => 
     });
   }
 
-  const generateQRCodeSVG = (text: string): string => {
+  const generateWristbandSvg = (text: string): string => {
     return bwipjs.toSVG({
       bcid: 'datamatrix',
       text: text,
@@ -97,7 +97,7 @@ const BardcodeGenerator = ({ medications, simCases }: BarcodeGeneratorProps) => 
         // --- MEDICATION LABELS HTML ---
         const medsToPrint = medications.filter(med => selectedMeds.includes(med.id));
         const medsWithBarcodes = await Promise.all(medsToPrint.map(async (med) => {
-          return { ...med, barcodeDataUrl: generateDataMatrixSVG(med.id) };
+          return { ...med, barcodeDataUrl: generateMedBarcodeSvg(med.id) };
         }));
 
         printHTML = `
@@ -143,7 +143,7 @@ const BardcodeGenerator = ({ medications, simCases }: BarcodeGeneratorProps) => 
         const casesToPrint = simCases.filter(c => selectedCases.includes(c.id));
         const casesWithBarcodes = await Promise.all(casesToPrint.map(async (c) => {
           const barcodeContent = '~pt' + c.id
-          return { ...c, qrDataUrl: generateQRCodeSVG(barcodeContent) };
+          return { ...c, qrDataUrl: generateWristbandSvg(barcodeContent) };
         }));
 
         printHTML = `
