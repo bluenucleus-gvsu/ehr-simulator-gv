@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Droplets, GlassWater } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,8 @@ import {
 import { useFormContext } from "@/context/FormContext";
 import { IntakeOutputFormData } from "@/utils/form";
 import { FormShell } from "../../components/formShell";
+import { saveCaseData } from "@/actions/case_builder/caseBuilder";
+import { CaseSection } from "@/lib/saveCase";
 
 const chartConfig = {
   intake: { label: "Intake", color: "hsl(var(--chart-6))" },
@@ -74,7 +76,7 @@ function getBlocks() {
 }
 
 export default function IntakeOutputForm() {
-  const { onDataChange, ioData } = useFormContext();
+  const { onDataChange, ioData, caseId, registerCaseBuilderLocalOverlay } = useFormContext();
 
   const blocks = useMemo(() => getBlocks(), []);
 
@@ -116,20 +118,36 @@ export default function IntakeOutputForm() {
 
   const router = useRouter();
 
-  const goBack = () => {
-    onDataChange("intakeOutput", intakeOutput)
-    router.push("/admin/case-builder/form/charting");
-  }
+  useEffect(() => {
+    registerCaseBuilderLocalOverlay(() => ({ intakeOutput }));
+    return () => registerCaseBuilderLocalOverlay(null);
+  }, [intakeOutput, registerCaseBuilderLocalOverlay]);
 
-  const handleSubmit = () => {
-    onDataChange("intakeOutput", intakeOutput)
+  const persistIo = async () => {
+    onDataChange("intakeOutput", intakeOutput);
+    if (caseId) {
+      await saveCaseData({
+        payload: intakeOutput,
+        section: CaseSection.INTAKE_OUTPUT,
+        caseId,
+      });
+    }
+  };
+
+  const goBack = async () => {
+    await persistIo();
+    router.push("/admin/case-builder/form/charting");
+  };
+
+  const handleSubmit = async () => {
+    await persistIo();
     router.push("/admin/case-builder/form/medications");
-  }
+  };
 
   return (
     <FormShell
       title="Intake & Output"
-      stepDescription="Step 7 of 9: Record patient intake and output"
+      stepDescription="Step 7 of 10: Record patient intake and output"
       icon={<Droplets className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}

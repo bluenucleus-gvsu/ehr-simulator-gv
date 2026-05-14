@@ -1,10 +1,10 @@
 import { columns, StudentInfo } from "./columns"
 import { DataTable } from "./data-table"
 import { AdminQuickActionsList } from "./components/AdminQuickActionsList"
-import { getAllUsers } from "@/actions/users"
+import { getAllStudentUsers } from "@/actions/users"
 
 async function getData(): Promise<StudentInfo[]> {
-  return await getAllUsers();
+  return await getAllStudentUsers();
 }
 
 export default async function AdminPage() {

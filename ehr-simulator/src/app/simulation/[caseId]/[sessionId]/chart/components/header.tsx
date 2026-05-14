@@ -13,8 +13,14 @@ interface HeaderProps {
 
 const Header = ({ tabs }: HeaderProps) => {
   const [isFullscreen, setIsFullScreen] = useState(false)
-  const { userId, userRole } = useSimSessionContext()
+  const { userId, userRole, isPresim, loading } = useSimSessionContext();
   const router = useRouter()
+  const isPreSimMode = isPresim ?? true;
+  const modeLabel = isPreSimMode ? "PRE-SIM" : "ACTIVE SIM";
+  const modeSubtext = isPreSimMode ? "Preparation Mode" : "Live Simulation";
+  const modeClasses = isPreSimMode
+    ? "border-violet-200/80 bg-violet-500 text-white shadow-violet-900/30"
+    : "border-emerald-200/80 bg-emerald-500 text-white shadow-emerald-900/30";
 
   useEffect(() => {
     const onFullscreenChange = () => {
@@ -32,9 +38,9 @@ const Header = ({ tabs }: HeaderProps) => {
       destination = '/admin'
     } else if (userRole === 'faculty' && userId) {
       destination = `/faculty/${userId}`
-    } else (
+    } else {
       destination = '/'
-    )
+    }
     router.push(destination)
   }
 
@@ -48,18 +54,29 @@ const Header = ({ tabs }: HeaderProps) => {
     }
   };
   return (
-    <header className="border-b h-(--header-height)">
-      <div className="flex h-(--header-height) justify-between items-center pl-12 gap-2">
-        <div className="flex items-center gap-2">
+    <header className="border-b border-white/20 h-(--header-height) bg-black/5 backdrop-blur-[2px]">
+      <div className="flex h-(--header-height) justify-between items-center pl-8 gap-3">
+        <div className="flex items-center gap-3">
           <Stethoscope color="white" size={26} strokeWidth={2.5} />
-          <Link href="#" >
-            <h1 className="text-3xl font-bold text-white hover:underline">
+          <Link href="#">
+            <h1 className="text-3xl font-bold text-white hover:opacity-90 transition-opacity leading-none">
               <span>Flex</span>
               <span className="font-normal">Chart</span>
             </h1>
           </Link>
+          <div
+            className={`rounded-xl border px-3 py-1.5 shadow-lg transition-all duration-200 ${modeClasses}`}
+            aria-live="polite"
+          >
+            <p className="text-[12px] font-bold leading-tight tracking-[0.1em]">
+              {loading ? "LOADING..." : modeLabel}
+            </p>
+            <p className="text-[10px] font-medium leading-tight opacity-95">{modeSubtext}</p>
+          </div>
         </div>
-        {tabs}
+        <div className="flex items-center gap-4">
+          {tabs}
+        </div>
         <div className="flex pr-8 gap-4">
           <Button
             variant='secondary'
@@ -71,15 +88,13 @@ const Header = ({ tabs }: HeaderProps) => {
           <Button
             onClick={toggleFullScreen}
             variant='secondary'
-            className="p-0 size-6 hover:text-blue-600 hover:ring-2"
+            className="p-0 size-7 bg-white/90 hover:bg-white text-slate-700 hover:text-blue-600 border border-white/70 shadow-sm"
           >
             {!isFullscreen ? (
               <Expand className="!size-4" />
             ) : (
               <Minimize className="!size-4" />
-            )
-            }
-
+            )}
           </Button>
         </div>
       </div>

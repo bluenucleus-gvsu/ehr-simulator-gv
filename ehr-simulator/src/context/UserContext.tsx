@@ -2,13 +2,15 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
+import { emailIsDevAdminAllowlist } from '@/lib/devAdminEmails'
+import { isTesterModeClient, setTesterModeCookies } from '@/utils/testerMode'
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-type UserRoles = "student" | "admin" | "faculty"
+type UserRoles = "student" | "admin" | "faculty" | "tester"
 
 interface UserContextType {
   user: any;
@@ -25,9 +27,7 @@ const UserContext = createContext<UserContextType>({
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any>(null)
   const [role, setRole] = useState<UserRoles | null>(null)
-  const [loading, setLoading] = useState<boolean>(
-    typeof window !== "undefined" && window.localStorage.getItem("role") ? false : true
-  );
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     async function loadUser() {
@@ -38,10 +38,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUser(user)
-        const newRole = user.user_metadata?.role || null
+        const devBypass = emailIsDevAdminAllowlist(user.email ?? undefined)
+        const cachedTesterMode = typeof window !== 'undefined' && isTesterModeClient()
+        const newRole = cachedTesterMode ? 'tester' : ((devBypass ? 'admin' : user.user_metadata?.role) || null)
         if (newRole && typeof window !== 'undefined') {
           window.localStorage.setItem('role', newRole)
-          setRole(newRole)
+          // Only enable tester cookies here. Never clear them from this effect — calling
+          // setTesterModeCookies(false) races with auth/metadata and strips tester mode
+          // on random navigations (banner / switch side disappears intermittently).
+          if (newRole === 'tester') {
+            setTesterModeCookies(true)
+          }
+          setRole(newRole as UserRoles)
         }
       }
       setLoading(false)

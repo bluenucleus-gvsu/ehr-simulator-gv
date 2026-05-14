@@ -13,6 +13,8 @@ export interface CaseBundle {
   microbiologyReports: any[]
   documentationResults: any[]
   medicationAdministrations: any[]
+  /** Structured med orders + joined medication rows (when present in DB). */
+  medicationOrders: any[]
 }
 
 export async function getCaseBundle(
@@ -35,6 +37,7 @@ export async function getCaseBundle(
     microbiologyReportsRes,
     documentationResultsRes,
     medicationAdministrationsRes,
+    medicationOrdersRes,
   ] = await Promise.all([
     supabase
       .from("cases")
@@ -106,6 +109,11 @@ export async function getCaseBundle(
       .eq("case_id", caseId)
       .order("time_offset", { ascending: true })
       .order("created_at", { ascending: true }),
+
+    supabase
+      .from("medication_orders")
+      .select("*")
+      .eq("case_id", caseId),
   ])
 
   if (caseRes.error) throw caseRes.error
@@ -121,10 +129,31 @@ export async function getCaseBundle(
     microbiologyReportsRes.error,
     documentationResultsRes.error,
     medicationAdministrationsRes.error,
+    medicationOrdersRes.error,
   ].filter(Boolean)
 
   if (errors.length > 0) {
     throw errors[0]
+  }
+
+  const rawOrders = medicationOrdersRes.data ?? []
+  const medicationIds = [
+    ...new Set(
+      rawOrders
+        .map((row: { medication_id?: string | null }) => row.medication_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ]
+
+  let medicationOrders = rawOrders
+  if (medicationIds.length > 0) {
+    const medsRes = await supabase.from("medications").select("*").in("id", medicationIds)
+    if (medsRes.error) throw medsRes.error
+    const byId = new Map((medsRes.data ?? []).map((m: { id: string }) => [m.id, m]))
+    medicationOrders = rawOrders.map((row: { medication_id?: string | null }) => ({
+      ...row,
+      medications: row.medication_id ? byId.get(row.medication_id) ?? null : null,
+    }))
   }
 
   return {
@@ -138,5 +167,6 @@ export async function getCaseBundle(
     microbiologyReports: microbiologyReportsRes.data ?? [],
     documentationResults: documentationResultsRes.data ?? [],
     medicationAdministrations: medicationAdministrationsRes.data ?? [],
+    medicationOrders,
   }
 }

@@ -1,9 +1,12 @@
 'use client'
+import { useEffect } from "react"
 import { useFormContext } from "@/context/FormContext"
 import { useRouter } from "next/navigation"
 import { ClipboardCheck } from "lucide-react"
 import { FormShell } from "../../components/formShell"
 import { saveCaseJsonBlob } from "../../api/dump_case_json"
+import { saveCaseData } from "@/actions/case_builder/caseBuilder"
+import { CaseSection } from "@/lib/saveCase"
 
 const FormReview = () => {
   const {
@@ -15,10 +18,17 @@ const FormReview = () => {
     chartingData,
     ioData,
     medOrderData,
-    medAdministrationData
+    medAdministrationData,
+    caseId,
+    registerCaseBuilderLocalOverlay,
   } = useFormContext()
 
   const router = useRouter();
+
+  useEffect(() => {
+    registerCaseBuilderLocalOverlay(null);
+    return () => registerCaseBuilderLocalOverlay(null);
+  }, [registerCaseBuilderLocalOverlay]);
 
   const goBack = () => {
     router.push("/admin/case-builder/form/medication-administrations");
@@ -26,6 +36,13 @@ const FormReview = () => {
 
   const handleSubmit = async () => {
     try {
+      if (caseId) {
+        await saveCaseData({
+          payload: ioData,
+          section: CaseSection.INTAKE_OUTPUT,
+          caseId,
+        })
+      }
       const fullCasePayload = {
         demographics: demographicData,
         history: historyData,
@@ -49,7 +66,7 @@ const FormReview = () => {
   return (
     <FormShell
       title="Review & Submit Case"
-      stepDescription="Step 10 of 9: Review case before submitting"
+      stepDescription="Step 10 of 10: Review case before submitting"
       icon={<ClipboardCheck className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}

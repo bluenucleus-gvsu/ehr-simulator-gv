@@ -2,12 +2,14 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import StyledTitle from "./styledTitle"
-// import CardSkeleton from "./cardSkeleton"
 import { formatTimeFromOffset } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetHelpers"
-import { getResultStatus } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/page"
+import { getResultStatus } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData"
 import { AlertTriangle } from "lucide-react"
-import { useState } from "react"
-import { generateAllInitialLabTimes, generateInitialLabData, labTemplate } from "../../labs/components/labsData"
+import { useMemo } from "react"
+import { labTemplate } from "../../labs/components/labsData"
+import { buildLabRowsFromBundle } from "../../labs/components/labsFromBundle"
+import { useSimulationCase } from "@/context/SimulationCaseContext"
+import { useSimSessionContext } from "@/context/SimSessionContext"
 
 
 const selectedLabs = [
@@ -21,34 +23,20 @@ const selectedLabs = [
 ];
 
 export function SelectedLabs() {
-  const [startTime] = useState(new Date().getTime())
-  const [labTimes] = useState(generateAllInitialLabTimes(startTime))
-  const [initialLabTableData] = useState(generateInitialLabData(labTimes, labTemplate));
+  const { caseBundle } = useSimulationCase()
+  const { simStartTime } = useSimSessionContext()
+  const startTime = simStartTime ?? Date.now()
 
-
-
-  // if (isLoading || isFetching || skip) {
-  //   return (
-  //     <Card className="relative pt-2 overflow-hidden h-fit gap-3">
-  //       <StyledTitle color="bg-lime-200" firstLetter="S" secondLetter="elected Labs" />
-  //       <CardSkeleton />
-  //     </Card>
-  //   )
-  // }
-
-
-  // if (!data || Object.keys(data).length === 0) {
-  //   return (
-  //     <Card className="relative col-span-1 pt-2 overflow-hidden h-fit gap-3">
-  //       <StyledTitle color="bg-red-200" firstLetter="A" secondLetter="ctive Problems" />
-  //       <p>No data exists</p>
-  //     </Card>
-  //   )
-  // }
-
-  const filteredData = initialLabTableData.filter(row => {
-    return selectedLabs.includes(row.field)
-  })
+  const { filteredData, labTimesMostRecentFirst } = useMemo(() => {
+    const { rows, timePoints } = buildLabRowsFromBundle(caseBundle, labTemplate)
+    // timePoints from bundle are sorted descending (largest offset = furthest in the past).
+    // Smaller offset = closer to sim "now" → most recent; iterate ascending to pick latest result.
+    const labTimesMostRecentFirst = [...timePoints].sort((a, b) => a - b)
+    return {
+      filteredData: rows.filter(row => row.rowType === "results" && selectedLabs.includes(row.field)),
+      labTimesMostRecentFirst,
+    }
+  }, [caseBundle])
 
   const selectedLabData = filteredData.map(row => {
     const selectedLab = {
@@ -59,17 +47,13 @@ export function SelectedLabs() {
       criticalRange: row.criticalRange
     }
 
-    // Iterate backwards through time
-    for (let i = 0; i < labTimes.length; i++) {
-      const timePoint = labTimes[i];
-      const timestampKey = timePoint.dateKey;
-
+    for (let i = 0; i < labTimesMostRecentFirst.length; i++) {
+      const timestampKey = labTimesMostRecentFirst[i];
       const valueAtTime = row[timestampKey];
-
       if (valueAtTime) {
         selectedLab.value = valueAtTime as string;
         selectedLab.dateKey = timestampKey;
-        break
+        break;
       }
     }
     if (selectedLab.value) {
@@ -85,9 +69,9 @@ export function SelectedLabs() {
         {selectedLabData.map(labData => {
           if (!labData) return null
 
-          const timeData = formatTimeFromOffset(labData.dateKey, startTime)
-          const displayDate = timeData?.date || "Unknown";
-          const displayTime = timeData?.time || "Unknown";
+          const timeLabel = formatTimeFromOffset(labData.dateKey, startTime)
+          if (!timeLabel) return null
+          const { date: displayDate, time: displayTime } = timeLabel
 
           const normalRange = labData.normalRange
           const criticalRange = labData.criticalRange

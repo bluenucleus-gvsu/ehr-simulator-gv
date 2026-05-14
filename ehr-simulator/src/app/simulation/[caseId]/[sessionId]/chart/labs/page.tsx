@@ -21,64 +21,28 @@ import {
   type ImagingData,
   type LabTableData,
   type MicrobiologyReportData,
-  generateAllInitialLabTimes,
-  generateInitialLabData,
-  labTemplate
+  labTemplate,
+  getResultStatus,
 } from "./components/labsData"
-
-export const getResultStatus = (initialValue: string, normalRange: { low: number, high: number } | undefined, criticalRange: { low: number, high: number } | undefined) => {
-  const numericValue = parseFloat(initialValue)
-
-  if (isNaN(numericValue)) {
-    return 'invalid';
-  }
-  if (criticalRange && (numericValue < criticalRange.low || numericValue > criticalRange.high)) {
-    return "critical";
-  }
-  if (normalRange && (numericValue < normalRange.low || numericValue > normalRange.high)) {
-    return "abnormal";
-  }
-  return "normal";
-}
+import { buildLabRowsFromBundle } from "./components/labsFromBundle";
+import { useSimulationCase } from "@/context/SimulationCaseContext";
 
 const columnHelper = createColumnHelper<LabTableData>();
 
-export function LabPage() {
+function LabPage() {
+  const { caseBundle } = useSimulationCase();
   const [simStartTime] = useState(new Date().getTime());
   const [labTableData, setLabTableData] = useState<LabTableData[]>([]);
   const [timePoints, setTimePoints] = useState<number[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const generateData = async () => {
-      setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      const allTimePoints = generateAllInitialLabTimes(simStartTime);
-
-      const timeColumnDateKeys = allTimePoints.map(timePoint => timePoint.dateKey);
-
-      const initialLabTableData = generateInitialLabData(allTimePoints, labTemplate);
-
-      const filteredLabTableData = initialLabTableData.filter(row => {
-        if (!row.hideable) {
-          return true;
-        }
-        // Check if every column for this row is empty
-        const allValuesEmpty = timeColumnDateKeys.every(dateKey => {
-          const labValue = row[dateKey];
-          return !labValue; // Returns true if value is empty/undefined
-        });
-        return !allValuesEmpty; // Keep row if NOT all values are empty
-      });
-
-      setLabTableData(filteredLabTableData);
-      setTimePoints(timeColumnDateKeys);
-      setIsLoading(false);
-    };
-
-    generateData();
-  }, [simStartTime]);
+    setIsLoading(true);
+    const { rows, timePoints: dbTimePoints } = buildLabRowsFromBundle(caseBundle, labTemplate);
+    setLabTableData(rows);
+    setTimePoints(dbTimePoints);
+    setIsLoading(false);
+  }, [caseBundle]);
 
 
   const columns = useMemo(() => [

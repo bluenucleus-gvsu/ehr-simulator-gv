@@ -17,7 +17,7 @@ async function updateMedicalHistory(supabase: SupabaseClient, h: any, caseId: st
     medical_history: h.medicalHistory,
     surgical_history: h.surgicalHistory,
     allergies: h.allergies,
-    social_habits: h.socialHabits,
+    social_habits: h.socialHistory,
     living_situation: h.livingSituation,
     updated_at: new Date().toISOString(),
   };

@@ -3,12 +3,12 @@
 import { Phone } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import StyledTitle from "./styledTitle"
-// import CardSkeleton from "./cardSkeleton"
-import { jamesAllen, type ChartData } from "@/app/simulation/[caseId]/[sessionId]/chart/components/chartData"
+import { buildChartDataFromCaseRow } from "@/app/simulation/[caseId]/[sessionId]/chart/components/chartData"
+import { useSimulationCase } from "@/context/SimulationCaseContext"
 
 const Visitors = () => {
-
-  const chartData: ChartData | undefined = jamesAllen
+  const { caseBundle } = useSimulationCase()
+  const chartData = buildChartDataFromCaseRow((caseBundle?.caseRow as Record<string, unknown> | null | undefined) ?? null)
 
   if (!chartData || Object.keys(chartData).length === 0) {
     return (
@@ -19,7 +19,9 @@ const Visitors = () => {
     )
   }
 
-  const contactItems = chartData.supportPersons.value
+  const contactItems = chartData.supportPersons.value.length
+    ? chartData.supportPersons.value
+    : [{ name: "No contact on file", relationship: "N/A", phone: "N/A" }]
 
   return (
     <Card className="relative pt-2 overflow-hidden h-fit gap-3">

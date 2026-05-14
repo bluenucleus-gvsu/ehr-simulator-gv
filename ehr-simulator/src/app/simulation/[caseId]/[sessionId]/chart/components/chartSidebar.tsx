@@ -1,14 +1,11 @@
-import { CircleUserRound } from "lucide-react";
-import { useState, useEffect } from "react";
-import type { ChartData } from "./chartData";
-import { Skeleton } from "@/components/ui/skeleton";
-// import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { format, subDays, subYears } from "date-fns";
+"use client";
 
-// You need to import your mock data sources here
-// Adjust paths as necessary based on your project structure
-import { jamesAllen } from "./chartData";
-import { medicationOrders } from "../mar/components/marData"; // Adjust path to where medicationOrders lives
+import { CircleUserRound } from "lucide-react";
+import { useMemo } from "react";
+import { buildChartDataFromCaseRow } from "./chartData";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useSimulationCase } from "@/context/SimulationCaseContext";
+import { useSimSessionContext } from "@/context/SimSessionContext";
 
 // Define types for local state
 interface MarCounts {
@@ -35,61 +32,43 @@ function ChartSidebarSkeleton() {
 }
 
 export default function ChartSidebar() {
-  const [sidebarData, setSidebarData] = useState<ChartData | null>(null);
-  const [marData, setMarData] = useState<MarCounts | null>(null);
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
-  const [sessionStartTime] = useState(new Date().getTime());
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Perform the MAR calculations (formerly done in queryFn)
-        const orderCounts = medicationOrders.reduce((acc, order) => {
-          if (order.priority === "PRN") {
-            acc["prn"]++;
-          } else if (order.frequency === "Continuous") {
-            acc['continuous']++;
-          } else {
-            acc['scheduled']++;
-          }
-          return acc;
-        }, { prn: 0, continuous: 0, scheduled: 0 });
-
-        setSidebarData(jamesAllen);
-        setMarData(orderCounts);
-        setIsLoading(false);
-
-      } catch (err) {
-        console.error("Failed to load chart data", err);
-        setIsError(true);
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
+  const { caseBundle } = useSimulationCase();
+  const { simStartTime } = useSimSessionContext();
+  const referenceTime = useMemo(
+    () => new Date(simStartTime ?? Date.now()),
+    [simStartTime],
+  );
+  const sidebarData = useMemo(
+    () =>
+      buildChartDataFromCaseRow((caseBundle?.caseRow as Record<string, unknown> | null | undefined) ?? null, {
+        referenceTime,
+      }),
+    [caseBundle?.caseRow, referenceTime],
+  );
+  const marData = useMemo<MarCounts>(() => {
+    const orders = (caseBundle?.medicationOrders ?? []) as Array<{ priority?: string | null; frequency?: string | null }>;
+    return orders.reduce(
+      (acc, order) => {
+        if ((order.priority ?? "").toUpperCase() === "PRN") {
+          acc.prn += 1;
+        } else if ((order.frequency ?? "").toUpperCase() === "CONTINUOUS") {
+          acc.continuous += 1;
+        } else {
+          acc.scheduled += 1;
+        }
+        return acc;
+      },
+      { prn: 0, continuous: 0, scheduled: 0 },
+    );
+  }, [caseBundle?.medicationOrders]);
   // --- Render Logic ---
 
-  if (isLoading) {
+  if (!caseBundle) {
     return (
       <div className="w-64 h-[calc(100vh-4rem)] flex flex-col justify-start items-center bg-gray-200 border-r border-gray-300 p-2 flex-shrink-0">
         <ChartSidebarSkeleton />
       </div>
     )
-  }
-
-  if (isError) {
-    return (
-      <div className="w-64 h-[calc(100vh-4rem)] flex flex-col justify-start items-center bg-gray-200 border-r border-gray-300 p-2 flex-shrink-0">
-        <p className="text-red-600 mt-10">Failed to load data</p>
-      </div>
-    );
   }
 
   if (!sidebarData || Object.keys(sidebarData).length === 0) {
@@ -101,16 +80,6 @@ export default function ChartSidebar() {
   }
 
   // --- Helper Functions ---
-
-  const displayDob = (sessionStartDate: number, age: number) => {
-    const birthDate = subYears(sessionStartDate, age);
-    return format(birthDate, 'P')
-  };
-
-  const displayAdmissionDate = (currDate: number, daysIp: number) => {
-    const admissionDate = subDays(currDate, daysIp)
-    return format(admissionDate, "P")
-  };
 
   const displayOrderCount = (count: number | undefined) => {
     if (count === undefined) return '';
@@ -128,16 +97,26 @@ export default function ChartSidebar() {
       <div className="flex flex-col items-center">
         <h1 className="text-purple-900 text-lg font-medium tracking-tight">{sidebarData.name.value}</h1>
         <p className="text-purple-900 text-sm tracking-tight">
-          {sidebarData.gender.value},
-          <span className="pl-2 font-normal">{sidebarData.age.value} y.o.</span>
+          {sidebarData.gender.value && sidebarData.gender.value !== "N/A" ? (
+            <>
+              {sidebarData.gender.value}
+              <span className="pl-2 font-normal">
+                {sidebarData.dob.value !== "—" ? `${sidebarData.age.value} y.o.` : "—"}
+              </span>
+            </>
+          ) : (
+            <span className="font-normal">
+              {sidebarData.dob.value !== "—" ? `${sidebarData.age.value} y.o.` : "—"}
+            </span>
+          )}
         </p>
         <p className="text-purple-900 text-sm font-light tracking-tight">
-          {sidebarData.age.label}:
-          <span className="pl-2 font-normal">{displayDob(sessionStartTime, sidebarData.age.value)}</span>
+          {sidebarData.dob.label}:
+          <span className="pl-2 font-normal">{sidebarData.dob.value}</span>
         </p>
         <p className="text-purple-900 text-sm font-light tracking-tight">
-          {sidebarData.mrn.label ?? 'N/A'}:
-          <span className="pl-2 font-normal">{sidebarData.mrn.value ?? "N/A"}</span>
+          {sidebarData.mrn.label}:
+          <span className="pl-2 font-normal font-mono text-xs break-all">{sidebarData.mrn.value}</span>
         </p>
 
         <p className="text-purple-900 text-sm font-light tracking-tight">
@@ -153,7 +132,7 @@ export default function ChartSidebar() {
 
           <p className="text-purple-900 text-xs font-light tracking-tight">
             <span className="underline">{sidebarData.admissionDate.label}:</span>
-            <span className="pl-2 font-normal">{displayAdmissionDate(sessionStartTime, sidebarData.admissionDate.value)}</span>
+            <span className="pl-2 font-normal">{sidebarData.admissionDate.value}</span>
           </p>
           <p className="text-purple-900 text-xs font-light tracking-tight">
             <span className="underline">{sidebarData.attending.label}:</span>
@@ -195,13 +174,13 @@ export default function ChartSidebar() {
           <p className="text-purple-900 text-xs font-light tracking-tight">
             <span className="underline text-nowrap">{sidebarData.allergies.label}:</span>
             <span className='font-normal decoration-none no-underline px-2  rounded-md'>
-              {sidebarData.allergies.value.join(", ")}
+              {sidebarData.allergies.value.length ? sidebarData.allergies.value.join(", ") : "N/A"}
             </span>
           </p>
           <p className="text-purple-900 text-xs font-light tracking-tight">
             <span className="underline pr-2 text-nowrap">{sidebarData.pmh.label}:</span>
             <span className='font-normal decoration-none no-underline rounded-md'>
-              {sidebarData.pmh.value.join(", ")}
+              {sidebarData.pmh.value.length ? sidebarData.pmh.value.join(", ") : "N/A"}
             </span>
           </p>
 

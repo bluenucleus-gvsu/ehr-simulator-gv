@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import NursingNoteEntry from "./nursingNoteEntry";
 import NoteDisplay from "./noteDisplay";
 import { toast } from "sonner";
@@ -10,10 +10,13 @@ import { Filter } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import FilterBadges from "./filterBadges";
-import { differenceInMinutes, format } from "date-fns";
+import { differenceInMinutes } from "date-fns";
 import { ClinicalDocumentView, EditableStudentNoteUpsert, submitStudentNote } from "@/actions/simulation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { appendTesterNote, getTesterNotes } from "@/utils/testerLocalStore";
+import { isTesterModeClient } from "@/utils/testerMode";
+import { useSimulationCase } from "@/context/SimulationCaseContext";
 
 export interface NoteViewProps {
   isError: boolean;
@@ -30,20 +33,35 @@ const NoteView = ({
   caseId,
   sessionId
 }: NoteViewProps) => {
+  const { caseBundle } = useSimulationCase();
   const { simStartTime, userName, userId, groupId, isPresim } = useSimSessionContext();
   const [filteredSpecialties, setFilteredSpecialties] = useState<string[]>([]);
+  const [testerNotes, setTesterNotes] = useState<ClinicalDocumentView[]>([]);
+  const sessionKey = `${caseId}:${sessionId}`;
+  const fallbackCaseNotes = (caseBundle?.clinicalDocuments ?? []) as ClinicalDocumentView[];
+  const sourceNotes = clinicalDocuments.length > 0 ? clinicalDocuments : fallbackCaseNotes;
+
+  useEffect(() => {
+    if (!isTesterModeClient()) return;
+    setTesterNotes(getTesterNotes(sessionKey) as ClinicalDocumentView[]);
+  }, [sessionKey]);
+
+  const mergedNotes = useMemo(
+    () => [...sourceNotes, ...testerNotes],
+    [sourceNotes, testerNotes],
+  );
 
   const specialties = useMemo(() => {
-    return [...new Set(clinicalDocuments.map((note) => note.specialty))];
-  }, [clinicalDocuments]);
+    return [...new Set(mergedNotes.map((note) => note.specialty))];
+  }, [mergedNotes]);
 
   const filteredNotesData = useMemo(() => {
-    const sorted_notes = clinicalDocuments.sort((a, b) => b.time_offset - a.time_offset);
+    const sorted_notes = [...mergedNotes].sort((a, b) => b.time_offset - a.time_offset);
     if (filteredSpecialties.length === 0) {
       return sorted_notes;
     }
     return sorted_notes.filter(note => filteredSpecialties.includes(note.specialty))
-  }, [clinicalDocuments, filteredSpecialties]);
+  }, [mergedNotes, filteredSpecialties]);
 
   const handleFilterChange = (specialty: string, checked: boolean | "indeterminate") => {
     setFilteredSpecialties(prev => {
@@ -59,15 +77,19 @@ const NoteView = ({
     setFilteredSpecialties([]);
   };
 
-  const onSubmitNote = async (noteContent: string) => {
+  const onSubmitNote = async (noteContent: string): Promise<boolean> => {
     const now = differenceInMinutes(new Date(), simStartTime ?? 0)
-    if (!groupId || !userId || !caseId || !sessionId) {
+    if (!userId || !caseId || !sessionId) {
       toast.error("Still loading session data. Please try again in a moment.");
-      return;
+      return false;
+    }
+    if (!isTesterModeClient() && !groupId) {
+      toast.error("Still loading session data. Please try again in a moment.");
+      return false;
     }
 
     const newNote: EditableStudentNoteUpsert = {
-      group_id: groupId,
+      group_id: groupId ?? "",
       user_id: userId,
       case_id: caseId,
       case_session_id: sessionId,
@@ -79,13 +101,28 @@ const NoteView = ({
       is_in_presim: false
     }
 
+    if (isTesterModeClient()) {
+      const localNote = {
+        ...newNote,
+        id: crypto.randomUUID(),
+        source_type: "student_document",
+      } as ClinicalDocumentView;
+      appendTesterNote(sessionKey, localNote);
+      setTesterNotes((prev) => [...prev, localNote]);
+      toast.success("Nursing note saved locally (tester mode).");
+      return true;
+    }
+
     const result = await submitStudentNote(newNote);
     if (result.success) {
-      toast.success(`Nursing note submitted at ${format(now, 'HH:mm')}`);
+      toast.success("Nursing note submitted.");
+      return true;
     }
     else if (!result.success) {
       toast.error(result.message)
+      return false;
     }
+    return false;
   };
 
   if (isLoading) {

@@ -20,7 +20,7 @@ interface AddMicrobiologyReportProps {
 const AddMicrobiologyReport = ({ handleAddMicrobiologyReport, initialData, field }: AddMicrobiologyReportProps) => {
   const isEditMode = !!initialData;
 
-  const [sampleType, setSampleType] = useState(field)
+  const [sampleType, setSampleType] = useState(initialData?.sampleType || field || '')
   const [appearance, setAppearance] = useState(initialData?.appearance || '')
   const [microscopy, setMicroscopy] = useState(initialData?.microscopy || '')
   const [cultureResults, setCultureResults] = useState(initialData?.cultureResults || '')

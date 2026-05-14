@@ -21,12 +21,15 @@ import {
 import { useState } from "react"
 import { type AllMedicationTypes, type MedicationOrder } from "./marData";
 import MedAdminCard from "./medAdminCard";
-import type { NewAdministrationData } from "./marView";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge"
 import { PatientStatusBadge } from "./marHelpers"
 import { DatabaseMedAdministration, StudentMedicationAdministration } from "@/actions/simulation"
 
+type NewAdministrationData = Record<string, StudentMedicationAdministration>;
+
 interface MedAdministrationProps {
+  readOnly?: boolean;
   selectedOrders: MedicationOrder[];
   administrationsLookup: { [key: string]: DatabaseMedAdministration[] };
   medicationLookup: { [key: string]: AllMedicationTypes };
@@ -35,7 +38,7 @@ interface MedAdministrationProps {
   onPtScan: (scan: boolean) => void;
   newAdministrations: NewAdministrationData;
   onUpdateAdministration: (orderId: string, field: keyof StudentMedicationAdministration, value: string | number) => void;
-  onAdministerMeds: (meds: NewAdministrationData) => void;
+  onAdministerMeds: (meds: NewAdministrationData) => void | Promise<void>;
   onClearAll: () => void;
   handlePopoverClose: (x: boolean) => void;
   isOpen: boolean;
@@ -47,6 +50,7 @@ interface MedAdministrationProps {
 
 
 const MedAdministrationPanel = ({
+  readOnly = false,
   selectedOrders,
   medicationLookup,
   administrationsLookup,
@@ -65,18 +69,22 @@ const MedAdministrationPanel = ({
   const [isLoading] = useState(false)
   const hasSelections = selectedOrders.length > 0;
   const hasOverdose = selectedOrders.some(order => {
-    const administeredDose = newAdministrations[order.id]?.administered_dose
-    if (!administeredDose) {
-      return false
-    }
-    return order.dose < administeredDose
+    const na = newAdministrations[order.id];
+    return na && order.dose < (na.administered_dose ?? 0);
   })
-  const handleFakeScan = (scan: boolean) => {
-    onPtScan(scan)
-  }
 
-  const handleSubmit = async (newAdministrations: NewAdministrationData) => {
-    handleAdministerMeds(newAdministrations)
+  const mustConfirmPatient = isPresim === false;
+  const canSign =
+    !readOnly && !isLoading && !hasOverdose && (isScanned || !mustConfirmPatient);
+
+  const handleSubmit = async () => {
+    if (readOnly) return;
+    try {
+      await handleAdministerMeds(newAdministrations);
+    } catch (err) {
+      console.error("Failed to save administrations", err);
+      toast.error("Failed to save administrations");
+    }
   };
 
   return (
@@ -86,7 +94,8 @@ const MedAdministrationPanel = ({
         <Button
           onClick={() => handlePopoverClose(true)}
           className="h-9 bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-2 px-4"
-          disabled={!hasSelections || isPresim}
+          disabled={readOnly || !hasSelections}
+          title={readOnly ? "Documentation is view-only in simulation" : undefined}
         >
           <PencilLine className="w-4 h-4" />
           <span className="">Document</span>
@@ -113,19 +122,40 @@ const MedAdministrationPanel = ({
 
             <div className="flex items-center gap-3 mr-6">
               <PatientStatusBadge isScanned={isScanned} />
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => handleFakeScan(!isScanned)}
-                className="text-xs border size-6 border-blue-600 hover:bg-blue-100"
-              >
-                <ScanBarcode className="text-blue-600" />
-              </Button>
+              {!readOnly && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => onPtScan(!isScanned)}
+                  className="text-xs border size-6 border-blue-600 hover:bg-blue-100"
+                  type="button"
+                  title="Toggle patient wristband scan (simulation)"
+                >
+                  <ScanBarcode className="text-blue-600" />
+                </Button>
+              )}
             </div>
           </div>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-6">
+          {!readOnly && mustConfirmPatient && !isScanned && (
+            <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+              <p className="font-medium">Confirm patient identity</p>
+              <p className="mt-1 text-xs text-amber-900/90">
+                Scan the simulated wristband, or use the button below to record the same bedside check when you do not have a scanner.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3 border-amber-300 bg-white hover:bg-amber-100"
+                onClick={() => onPtScan(true)}
+              >
+                Confirm patient identity
+              </Button>
+            </div>
+          )}
           {selectedOrders.length === 0 && (
             <div className="h-48 mt-4 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center text-slate-400">
               <PillBottle className="w-8 h-8 mb-2 opacity-50" />
@@ -154,7 +184,7 @@ const MedAdministrationPanel = ({
                   onDoseChange={(value) => {
                     onUpdateAdministration(order.id, "administered_dose", value);
                   }}
-                  currentDose={currentAdminData.administered_dose || 0}
+                  currentDose={currentAdminData.administered_dose ?? 0}
                   onCommentChange={(value) => {
                     onUpdateAdministration(order.id, 'notes', value)
                   }}
@@ -183,9 +213,16 @@ const MedAdministrationPanel = ({
               </Button>
             </DialogClose>
             <Button
-              disabled={isLoading || !isScanned || hasOverdose}
-              onClick={() => handleSubmit(newAdministrations)}
+              disabled={!canSign}
+              onClick={handleSubmit}
               className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm min-w-[120px]"
+              title={
+                readOnly
+                  ? "Documentation is view-only in simulation"
+                  : mustConfirmPatient && !isScanned
+                    ? "Confirm patient identity first"
+                    : undefined
+              }
             >
               {isLoading ? "Signing..." : "Sign & Accept"}
             </Button>

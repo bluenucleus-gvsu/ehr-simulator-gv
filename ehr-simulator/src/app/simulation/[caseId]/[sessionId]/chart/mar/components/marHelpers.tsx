@@ -1,9 +1,22 @@
-import { addHours, addMinutes, format, isSameDay, startOfHour } from "date-fns";
-import type { AllMedicationTypes, InjectableMedication, InsulinMedication, IvMedication, MedAdministrationInstance, MedicationOrder, OralMedication } from "./marData";
+import { addHours, addMinutes, format, isSameDay, startOfHour, endOfHour } from "date-fns";
+import type { AllMedicationTypes, InsulinMedication, MedAdministrationInstance, MedicationOrder } from "./marData";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { UserCheck, UserX } from "lucide-react";
-import { DatabaseMedAdministration, DatabaseMedication } from "@/actions/simulation";
+
+type DatabaseMedicationLike = {
+  id: string;
+  generic_name: string;
+  brand_name?: string | null;
+  route: AllMedicationTypes["route"] | "Otic" | "Ophthalmic";
+  strength: number;
+  strength_unit: string;
+  dispense_units?: { name?: string | null } | Array<{ name?: string | null }> | null;
+  infusion_rate_unit?: "mL/hr" | "mg/hr" | "units/hr" | null;
+  diluent?: string | null;
+  total_volume?: number | null;
+  is_continuous?: boolean | null;
+};
 
 export interface MedCardColumn {
   startTime: Date;
@@ -16,7 +29,77 @@ export const pluralize = (unitsOrdered: number, unitName: string) => {
   return unitsOrdered > 1 ? unitName + 's' : unitName
 };
 
-export const isSlidingScaleInsulin = (medication: AllMedicationTypes | DatabaseMedication): medication is InsulinMedication => {
+export function mapDatabaseMedToFrontend(dbMed: DatabaseMedicationLike): AllMedicationTypes {
+  const rawDispenseUnit = Array.isArray(dbMed.dispense_units)
+    ? dbMed.dispense_units[0]?.name
+    : dbMed.dispense_units?.name;
+  const dispenseUnit = rawDispenseUnit?.trim() || "dose";
+
+  const base = {
+    id: dbMed.id,
+    genericName: dbMed.generic_name,
+    brandName: dbMed.brand_name ?? undefined,
+    route: dbMed.route,
+    strength: Number(dbMed.strength ?? 0),
+    strengthUnit: dbMed.strength_unit ?? "",
+    dispenseUnit,
+  } as const;
+
+  switch (dbMed.route) {
+    case "IV":
+      return {
+        ...base,
+        route: "IV",
+        infusionRateUnit: dbMed.infusion_rate_unit ?? undefined,
+        diluent: dbMed.diluent ?? undefined,
+        totalVolume: dbMed.total_volume ?? undefined,
+        isContinuous: Boolean(dbMed.is_continuous),
+      };
+    case "SC":
+    case "IM":
+      return {
+        ...base,
+        route: dbMed.route,
+      };
+    case "Inhalation":
+      return {
+        ...base,
+        route: "Inhalation",
+        deviceType: "MDI",
+        inhalationsPerDose: 1,
+      };
+    case "Topical":
+      return {
+        ...base,
+        route: "Topical",
+        applicationArea: "",
+      };
+    case "SL":
+      return {
+        ...base,
+        route: "SL",
+      };
+    case "PO":
+    default:
+      return {
+        ...base,
+        route: "PO",
+      };
+  }
+}
+
+function safeDoseRatio(orderDose: number, strength: number): number | null {
+  if (!Number.isFinite(orderDose) || !Number.isFinite(strength) || strength <= 0) return null;
+  const ratio = orderDose / strength;
+  return Number.isFinite(ratio) ? ratio : null;
+}
+
+function doseWithUnit(value: number, unit: string | undefined): string {
+  const trimmedUnit = (unit ?? "").trim();
+  return trimmedUnit ? `${value}${trimmedUnit}` : String(value);
+}
+
+export const isSlidingScaleInsulin = (medication: AllMedicationTypes): medication is InsulinMedication => {
   return (
     medication.route === "SC" &&
     'bgDosing' in medication &&
@@ -29,23 +112,24 @@ export function getMedDose(medication: AllMedicationTypes, order: MedicationOrde
   if (isSlidingScaleInsulin(medication)) {
     return "Variable"
   } else {
-    return `${(order.dose / medication.strength) * medication.strength}${medication.strengthUnit}`
+    return doseWithUnit(order.dose, medication.strengthUnit)
   }
 }
+
 
 export const renderMedTitleRow = (medication: AllMedicationTypes, order: MedicationOrder) => {
   const brandNameDisplay = `(${medication.brandName})`
   switch (medication.route) {
     case 'IV':
       if (medication.isContinuous) {
-        const medTitle = `${medication.genericName} ${medication.brandName ? brandNameDisplay : ''} ${order.dose}${medication.strengthUnit} `
+        const medTitle = `${medication.genericName} ${medication.brandName ? brandNameDisplay : ''} ${doseWithUnit(order.dose, medication.strengthUnit)} `
         return (
           <p className="font-semibold">{medTitle}</p>
         )
       }
       else {
         const diluent = `in ${medication.diluent} ${medication.totalVolume}mL`
-        const medTitle = `${medication.genericName} ${medication.brandName ? brandNameDisplay : ""} ${order.dose}${medication.strengthUnit} ${medication.diluent ? diluent : ''}`
+        const medTitle = `${medication.genericName} ${medication.brandName ? brandNameDisplay : ""} ${doseWithUnit(order.dose, medication.strengthUnit)} ${medication.diluent ? diluent : ''}`
         return (
           <p className="font-semibold">{medTitle}</p>
         )
@@ -58,14 +142,14 @@ export const renderMedTitleRow = (medication: AllMedicationTypes, order: Medicat
         )
       }
       else {
-        const strengthUnit = `${medication.strengthUnit === 'units' ? " units" : medication.strengthUnit}`
-        const medTitle = `${medication.genericName} ${medication.brandName ? brandNameDisplay : ''} ${order.dose}${strengthUnit}`
+        const strengthUnit = medication.strengthUnit === 'units' ? ' units' : medication.strengthUnit
+        const medTitle = `${medication.genericName} ${medication.brandName ? brandNameDisplay : ''} ${doseWithUnit(order.dose, strengthUnit)}`
         return (
           <p className="font font-semibold">{medTitle}</p>
         )
       }
     default:
-      const medTitle = `${medication.genericName} ${medication.brandName ? brandNameDisplay : ''} ${order.dose}${medication.strengthUnit}`
+      const medTitle = `${medication.genericName} ${medication.brandName ? brandNameDisplay : ''} ${doseWithUnit(order.dose, medication.strengthUnit)}`
       return (
         <p className="font font-semibold">{medTitle}</p>
 
@@ -84,7 +168,14 @@ export const renderMedCardDetails = (medication: AllMedicationTypes, order: Medi
           <div className="h-5">
             <Separator className="bg-gray-300" orientation="vertical" />
           </div>
-          <span className="text-nowrap">{order.dose / medication.strength} {pluralize(order.dose / medication.strength, medication.dispenseUnit)}</span>
+          {(() => {
+            const ratio = safeDoseRatio(order.dose, medication.strength)
+            return (
+              <span className="text-nowrap">
+                {ratio == null ? doseWithUnit(order.dose, medication.strengthUnit) : `${ratio} ${pluralize(ratio, medication.dispenseUnit)}`}
+              </span>
+            )
+          })()}
           <div className="h-5">
             <Separator className="bg-gray-300" orientation="vertical" />
           </div>
@@ -106,7 +197,14 @@ export const renderMedCardDetails = (medication: AllMedicationTypes, order: Medi
           <div className="h-5">
             <Separator className="bg-gray-300" orientation="vertical" />
           </div>
-          <span className="text-nowrap">{order.dose / medication.strength} {pluralize(order.dose / medication.strength, medication.dispenseUnit)}</span>
+          {(() => {
+            const ratio = safeDoseRatio(order.dose, medication.strength)
+            return (
+              <span className="text-nowrap">
+                {ratio == null ? doseWithUnit(order.dose, medication.strengthUnit) : `${ratio} ${pluralize(ratio, medication.dispenseUnit)}`}
+              </span>
+            )
+          })()}
           {order.infusionRate && medication.infusionRateUnit &&
             <>
               <div className="h-5">
@@ -162,7 +260,14 @@ export const renderMedCardDetails = (medication: AllMedicationTypes, order: Medi
           <div className="h-5">
             <Separator className="bg-gray-300" orientation="vertical" />
           </div>
-          <span className="text-nowrap">{order.dose / medication.strength} {pluralize(order.dose / medication.strength, medication.dispenseUnit)}</span>
+          {(() => {
+            const ratio = safeDoseRatio(order.dose, medication.strength)
+            return (
+              <span className="text-nowrap">
+                {ratio == null ? doseWithUnit(order.dose, medication.strengthUnit) : `${ratio} ${pluralize(ratio, medication.dispenseUnit)}`}
+              </span>
+            )
+          })()}
           <div className="h-5">
             <Separator className="bg-gray-300" orientation="vertical" />
           </div>
@@ -182,7 +287,13 @@ export const renderMedCardDetails = (medication: AllMedicationTypes, order: Medi
   }
 }
 
-export function findLastAdminTime(administrations: DatabaseMedAdministration[], sessionStartTime: Date) {
+type AdminTimeLike = {
+  status?: string | null;
+  adminTimeMinuteOffset?: number;
+  time_offset?: number | null;
+};
+
+export function findLastAdminTime(administrations: AdminTimeLike[], sessionStartTime: Date) {
   if (!administrations || administrations.length === 0) {
     return (
       <div className="flex w-full justify-end gap-2 pr-4">
@@ -191,42 +302,36 @@ export function findLastAdminTime(administrations: DatabaseMedAdministration[], 
       </div>
     )
   }
+  const filteredAdmins = administrations.filter((admin) => admin.status === "Given")
 
-  const validAdmins = administrations.filter(
-    (admin: DatabaseMedAdministration) => admin.status === "Given" && admin.time_offset != null
-  )
-
-  if (validAdmins.length === 0) {
+  if (filteredAdmins.length !== 0) {
+    const lastAdmin = filteredAdmins.reduce((latest, current) => {
+      const currentOffset = current.adminTimeMinuteOffset ?? current.time_offset ?? Number.NEGATIVE_INFINITY;
+      const latestOffset = latest.adminTimeMinuteOffset ?? latest.time_offset ?? Number.NEGATIVE_INFINITY;
+      return currentOffset > latestOffset ? current : latest;
+    })
+    const lastAdminOffset = lastAdmin.adminTimeMinuteOffset ?? lastAdmin.time_offset ?? 0;
+    const lastAdminDate = addMinutes(sessionStartTime, lastAdminOffset);
+    const lastAdminTime = format(lastAdminDate, 'HHmm')
+    const lastAdminDay = format(lastAdminDate, 'LL/dd')
     return (
-      <div className="flex w-full justify-end gap-2 pr-4">
+      <div className="flex w-full justify-end items-end gap-2 pr-4">
         <p className="text-sm">Last Administered:</p>
-        <p className="text-sm font-light">Never</p>
+        <div className="grid place-items-center">
+          <p className="text-xs font-medium underline">{lastAdminDay}</p>
+          <p className="text-sm font-mono tracking-tight">{lastAdminTime}</p>
+        </div>
       </div>
+
     )
   }
-
-  const lastAdmin = validAdmins.reduce((latest, current) => {
-    const currentOffset = current.time_offset ?? -1;
-    const latestOffset = latest.time_offset ?? -1;
-
-    return currentOffset > latestOffset ? current : latest;
-  })
-
-  const lastAdminDate = addMinutes(sessionStartTime, lastAdmin.time_offset ?? 0);
-  const lastAdminTime = format(lastAdminDate, 'HHmm')
-  const lastAdminDay = format(lastAdminDate, 'LL/dd')
-
   return (
-    <div className="flex w-full justify-end items-end gap-2 pr-4">
+    <div className="flex w-full justify-end gap-2 pr-4">
       <p className="text-sm">Last Administered:</p>
-      <div className="grid place-items-center">
-        <p className="text-xs font-medium underline">{lastAdminDay}</p>
-        <p className="text-sm font-mono tracking-tight">{lastAdminTime}</p>
-      </div>
+      <p className="text-sm font-light">Never</p>
     </div>
   )
 }
-
 
 // Helper for wristband scan badge
 export const PatientStatusBadge = ({ isScanned }: { isScanned: boolean }) => {
@@ -264,7 +369,7 @@ export const createColumns = (currentTime: Date, offsetHours: number, futureColC
     const currentOffset = startOffset + i;
 
     const colStart = addHours(columnAnchor, currentOffset);
-    const colEnd = addMinutes(addHours(colStart, 1), -1);
+    const colEnd = endOfHour(colStart);
 
     displayColumns.push({
       startTime: colStart,
@@ -275,53 +380,3 @@ export const createColumns = (currentTime: Date, offsetHours: number, futureColC
 
   return displayColumns;
 };
-
-export function mapDatabaseMedToFrontend(dbMed: DatabaseMedication): AllMedicationTypes {
-  // 1. Extract the base properties common to ALL medications
-  const baseMed = {
-    id: dbMed.id,
-    genericName: dbMed.generic_name,
-    brandName: dbMed.brand_name || undefined,
-    route: dbMed.route,
-    strength: dbMed.strength,
-    strengthUnit: dbMed.strength_unit,
-    dispenseUnit: dbMed.dispense_units.name || "Unknown",
-  };
-
-  // 2. Narrow based on the route
-  switch (dbMed.route) {
-    case "IV":
-      return {
-        ...baseMed,
-        route: "IV",
-        infusionRateUnit: (dbMed.infusion_rate_unit as "mL/hr" | "mg/hr" | "units/hr") || undefined,
-        diluent: dbMed.diluent || undefined,
-        totalVolume: dbMed.total_volume || undefined,
-        isContinuous: dbMed.is_continuous,
-      } as IvMedication;
-
-    case "PO":
-      return {
-        ...baseMed,
-        route: "PO",
-        dispenseUnit: dbMed.dispense_units.name,
-      } as OralMedication;
-
-    case "SC":
-      if (isSlidingScaleInsulin(dbMed)) {
-        return {
-          ...baseMed,
-          bgDosing: dbMed.bgDosing
-        } as InsulinMedication;
-      }
-      return {
-        ...baseMed,
-        route: "SC",
-      } as InjectableMedication;
-
-    // Additional med types to handle in future
-
-    default:
-      return baseMed as AllMedicationTypes;
-  }
-}

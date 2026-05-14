@@ -3,10 +3,13 @@ import { notFound, redirect } from "next/navigation";
 import ProfileHeader from "@/app/user/components/ProfileHeader";
 import CompletedCaseCard from "@/app/user/components/CompletedCaseCard";
 import AssignedCaseCard from "@/app/user/components/AssignedCaseCard";
+import TesterAssignedCasesPanel from "@/app/user/components/TesterAssignedCasesPanel";
 import { createServerSupabase } from "@/utils/supabase/server";
 import { getUserCourses } from "@/actions/getUserCourses";
+import ProfileSimulationEntryButtons from "@/app/user/components/ProfileSimulationEntryButtons";
+import { isTesterModeServer } from "@/utils/testerModeServer";
 
-export default async function ProfilePage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
+export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   const supabase = await createServerSupabase();
@@ -29,7 +32,8 @@ export default async function ProfilePage({ params }: { params: { id: string } |
     studentName = profile?.full_name || profile?.email || "Student";
 
     const profileRole = profile?.role as string | undefined;
-    if (profileRole && profileRole !== "student") {
+    const testerMode = await isTesterModeServer();
+    if (profileRole && profileRole !== "student" && !testerMode) {
       redirect("/admin");
     }
   }
@@ -37,33 +41,42 @@ export default async function ProfilePage({ params }: { params: { id: string } |
   const { activeCourses, inactiveCourses } = await getUserCourses(id);
   const allCourses = [...activeCourses, ...inactiveCourses];
 
-  // Split assigned cases: today/future stay in Assigned, past go into Completed
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
+  // Keep completed cases authoritative from backend session lifecycle state.
   const partitionCourses = (courses: typeof activeCourses) =>
     courses.map((c) => {
-      const upcomingAssigned = c.assigned.filter(
-        (a) => a.sim_time && new Date(a.sim_time) >= startOfToday
-      );
-      const pastAssigned = c.assigned
-        .filter((a) => !a.sim_time || new Date(a.sim_time) < startOfToday)
-        .map((a) => ({
-          id: a.id,
-          name: a.name,
-          completed_at: a.sim_time,
-          feedback: null,
-          teamMembers: a.groupMembers,
-        }));
+      const seen = new Set<string>();
+      const dedupedCompleted = c.completed.filter((item) => {
+        const k = `${item.id}|${item.completed_at ?? ""}`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
       return {
         ...c,
-        assigned: upcomingAssigned,
-        completed: [...c.completed, ...pastAssigned].sort(
+        assigned: c.assigned,
+        completed: dedupedCompleted.sort(
           (a, b) => new Date(b.completed_at ?? 0).getTime() - new Date(a.completed_at ?? 0).getTime()
+        ),
+        expired: (c.expired ?? []).sort(
+          (a, b) => new Date(b.expired_at ?? 0).getTime() - new Date(a.expired_at ?? 0).getTime()
         ),
       };
     });
   const filteredActive = partitionCourses(activeCourses);
   const filteredInactive = partitionCourses(inactiveCourses);
+
+  const profileSimulationAssignments = filteredActive.flatMap((course) => {
+    const courseLabel = [course.code, course.name].filter(Boolean).join(" - ") || "Course";
+    return course.assigned.map((a) => ({
+      id: a.id,
+      caseId: a.case_id,
+      sessionId: a.session_id,
+      name: a.name,
+      simTime: a.sim_time,
+      presimTime: a.presim_time,
+      courseLabel,
+    }));
+  });
 
   return (
     <main className="p-6 max-w-6xl mx-auto space-y-6">
@@ -74,6 +87,7 @@ export default async function ProfilePage({ params }: { params: { id: string } |
       />
 
       <section>
+        <TesterAssignedCasesPanel />
         <div className="bg-white rounded-lg shadow p-4 mb-6">
           <h3 className="text-lg font-semibold mb-3">Active Courses</h3>
           {filteredActive.length === 0 ? (
@@ -86,7 +100,7 @@ export default async function ProfilePage({ params }: { params: { id: string } |
                     {course.code ?? ""}{course.code && course.name ? " - " : ""}{course.name ?? "Unnamed Course"}
                   </div>
 
-                  <details open className="mb-2 bg-slate-50 p-2 rounded">
+                  <details className="mb-2 bg-slate-50 p-2 rounded">
                     <summary className="cursor-pointer font-medium">Assigned Cases</summary>
                     <div className="mt-2">
                       {course.assigned.length === 0 ? (
@@ -94,7 +108,7 @@ export default async function ProfilePage({ params }: { params: { id: string } |
                       ) : (
                         <ul className="space-y-2">
                           {course.assigned.map((a) => (
-                            <li key={`${a.id}-${a.session_id}`} className="text-sm">
+                            <li key={`${a.id}:${a.session_id ?? "no-session"}`} className="text-sm">
                               <AssignedCaseCard
                                 id={a.id}
                                 caseId={a.case_id}
@@ -118,14 +132,37 @@ export default async function ProfilePage({ params }: { params: { id: string } |
                         <div className="text-sm text-muted-foreground">No completed cases.</div>
                       ) : (
                         <ul className="list-disc pl-5 space-y-1">
-                          {course.completed.map((s) => (
-                            <li key={`${s.id}`} className="text-sm">
+                          {course.completed.map((s, idx) => (
+                            <li key={`${course.id}:${s.id}:${s.completed_at ?? "na"}:${idx}`} className="text-sm">
                               <CompletedCaseCard
                                 id={s.id}
                                 name={s.name}
                                 groupMembers={s.teamMembers}
                                 date={s.completed_at}
                                 feedback={s.feedback}
+                              />
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </details>
+
+                  <details className="bg-slate-50 p-2 rounded mt-2">
+                    <summary className="cursor-pointer font-medium">Expired Cases</summary>
+                    <div className="mt-2">
+                      {course.expired.length === 0 ? (
+                        <div className="text-sm text-muted-foreground">No expired cases.</div>
+                      ) : (
+                        <ul className="list-disc pl-5 space-y-1">
+                          {course.expired.map((s, idx) => (
+                            <li key={`${course.id}:${s.id}:${s.expired_at ?? "na"}:${idx}`} className="text-sm">
+                              <CompletedCaseCard
+                                id={s.id}
+                                name={s.name}
+                                groupMembers={s.teamMembers}
+                                date={s.expired_at}
+                                feedback={s.feedback ?? "Marked as expired."}
                               />
                             </li>
                           ))}
@@ -158,8 +195,8 @@ export default async function ProfilePage({ params }: { params: { id: string } |
                         <div className="text-sm text-muted-foreground">No completed cases.</div>
                       ) : (
                         <ul className="list-disc pl-5 space-y-1">
-                          {course.completed.map((s) => (
-                            <li key={s.id} className="text-sm">
+                          {course.completed.map((s, idx) => (
+                            <li key={`${course.id}:${s.id}:${s.completed_at ?? "na"}:${idx}`} className="text-sm">
                               <CompletedCaseCard
                                 id={s.id}
                                 name={s.name}
@@ -173,10 +210,37 @@ export default async function ProfilePage({ params }: { params: { id: string } |
                       )}
                     </div>
                   </details>
+
+                  <details className="bg-slate-50 p-2 rounded mt-2">
+                    <summary className="cursor-pointer font-medium">Expired Cases</summary>
+                    <div className="mt-2">
+                      {course.expired.length === 0 ? (
+                        <div className="text-sm text-muted-foreground">No expired cases.</div>
+                      ) : (
+                        <ul className="list-disc pl-5 space-y-1">
+                          {course.expired.map((s, idx) => (
+                            <li key={`${course.id}:${s.id}:${s.expired_at ?? "na"}:${idx}`} className="text-sm">
+                              <CompletedCaseCard
+                                id={s.id}
+                                name={s.name}
+                                groupMembers={s.teamMembers}
+                                date={s.expired_at}
+                                feedback={s.feedback ?? "Marked as expired."}
+                              />
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </details>
                 </li>
               ))}
             </ul>
           )}
+        </div>
+        <div className="bg-white rounded-lg shadow mt-6 p-4 mb-6">
+          <h3 className="text-lg font-semibold mb-3">Simulations</h3>
+          <ProfileSimulationEntryButtons assignments={profileSimulationAssignments} />
         </div>
       </section>
     </main>

@@ -2,7 +2,7 @@
 
 import { type LabTableData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData"
 import { useReactTable, getCoreRowModel, createColumnHelper } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { TooltipContent } from "@radix-ui/react-tooltip";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
@@ -23,10 +23,28 @@ import { CaseSection } from "@/lib/saveCase";
 
 const columnHelper = createColumnHelper<LabTableData>();
 
-export function LabForm() {
-  const { onDataChange, labData, caseId } = useFormContext()
+function ensureStringSet(input: unknown): Set<string> {
+  if (input instanceof Set) return input;
+  if (Array.isArray(input)) return new Set(input.filter((v): v is string => typeof v === "string"));
+  return new Set<string>();
+}
+
+function ensureNumberSet(input: unknown): Set<number> {
+  if (input instanceof Set) return input;
+  if (Array.isArray(input)) {
+    return new Set(
+      input
+        .map((v) => Number(v))
+        .filter((v) => Number.isFinite(v)),
+    );
+  }
+  return new Set<number>();
+}
+
+function LabForm() {
+  const { onDataChange, labData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
   const [labTableData, setLabTableData] = useState<LabTableData[]>(labData.data);
-  const [visibleItems, setVisibleItems] = useState<Set<string>>(labData.visibleItems ?? new Set());
+  const [visibleItems, setVisibleItems] = useState<Set<string>>(ensureStringSet(labData.visibleItems));
   const [comboboxValue, setComboboxValue] = useState<string>('');
   const {
     timePoints,
@@ -34,9 +52,27 @@ export function LabForm() {
     togglePresimInclusion,
     addTimePoint,
     removeTimePoint
-  } = useTimePoints(labData.timePoints, labData.timePointsInPreSim)
+  } = useTimePoints(labData.timePoints, ensureNumberSet(labData.timePointsInPreSim))
 
   const router = useRouter()
+
+  useEffect(() => {
+    registerCaseBuilderLocalOverlay(() => ({
+      labs: {
+        data: labTableData,
+        timePoints,
+        timePointsInPreSim: timePointsInPresim,
+        visibleItems,
+      },
+    }));
+    return () => registerCaseBuilderLocalOverlay(null);
+  }, [
+    labTableData,
+    timePoints,
+    timePointsInPresim,
+    visibleItems,
+    registerCaseBuilderLocalOverlay,
+  ]);
 
   // Get all hideable options for Combobox selector
   const hideableOptions = useMemo(() => {
@@ -246,7 +282,7 @@ export function LabForm() {
   return (
     <FormShell
       title="Lab Results"
-      stepDescription="Step 5 of 9: Enter laboratory and imaging results"
+      stepDescription="Step 5 of 10: Enter laboratory and imaging results"
       icon={<TestTube2 className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}

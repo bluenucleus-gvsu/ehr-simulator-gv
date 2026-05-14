@@ -13,22 +13,9 @@ const NotePage = async ({ params }: PageProps) => {
   const { caseId, sessionId } = await params;
   const documentData = await getAllClinicalDocuments(caseId, sessionId);
 
-  if (!documentData.success) {
-    console.log(documentData.error!.message)
-    return (
-      <NoteView
-        isError={true}
-        isLoading={false}
-        clinicalDocuments={documentData.data || []}
-        caseId={caseId}
-        sessionId={sessionId}
-      />
-    )
-  }
-
   return (
     <NoteView
-      isError={!documentData.success}
+      isError={false}
       isLoading={false}
       clinicalDocuments={documentData.data || []}
       caseId={caseId}

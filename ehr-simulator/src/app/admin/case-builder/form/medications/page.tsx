@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import {
   Pill,
   Search,
@@ -13,6 +13,8 @@ import MedCardForm from "./components/medCardForm"
 import { useRouter } from "next/navigation"
 import { useFormContext } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
+import { CaseSection } from "@/lib/saveCase"
+import { saveCaseData } from "@/actions/case_builder/caseBuilder"
 
 function getComboboxData(medications: AllMedicationTypes[]) {
   return medications.map(med => {
@@ -30,7 +32,7 @@ function getComboboxData(medications: AllMedicationTypes[]) {
 
 export default function MedicationOrderForm() {
   const router = useRouter()
-  const { onDataChange, medOrderData } = useFormContext()
+  const { onDataChange, medOrderData, medAdministrationData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
   const [selectedMed, setSelectedMed] = useState('')
   const [selectedMeds, setSelectedMeds] = useState<AllMedicationTypes[]>(medOrderData.selectedMeds)
   const [medOrders, setMedOrders] = useState<MedicationOrder[]>(medOrderData.createdOrders)
@@ -91,6 +93,13 @@ export default function MedicationOrderForm() {
     return getComboboxData(allMedications);
   }, []);
 
+  useEffect(() => {
+    registerCaseBuilderLocalOverlay(() => ({
+      medOrders: { createdOrders: medOrders, selectedMeds: selectedMeds },
+    }));
+    return () => registerCaseBuilderLocalOverlay(null);
+  }, [medOrders, selectedMeds, registerCaseBuilderLocalOverlay]);
+
   const goBack = () => {
     onDataChange('medOrders', {
       createdOrders: medOrders,
@@ -104,12 +113,19 @@ export default function MedicationOrderForm() {
       createdOrders: medOrders,
       selectedMeds: selectedMeds
     });
+    if (caseId) {
+      await saveCaseData({
+        payload: { orders: medOrders, administrations: medAdministrationData },
+        section: CaseSection.MEDICATION_ORDERS,
+        caseId,
+      })
+    }
     router.push('/admin/case-builder/form/medication-administrations');
   }
   return (
     <FormShell
       title="Medication Orders"
-      stepDescription="Step 8 of 9: Create Medication Orders"
+      stepDescription="Step 8 of 10: Create Medication Orders"
       icon={<Pill className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}

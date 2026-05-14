@@ -1,5 +1,5 @@
 'use client'
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Pill,
   Clock,
@@ -52,7 +52,7 @@ function getComboboxData(orders: MedicationOrder[]) {
 }
 
 export default function MedicationAdministrationsForm() {
-  const { onDataChange, medAdministrationData, medOrderData, caseId } = useFormContext()
+  const { onDataChange, medAdministrationData, medOrderData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
 
   const [medAdministrations, setMedAdministrations] = useState<MedAdministrationInstance[]>(medAdministrationData.filter(admin => {
     return medOrderData.createdOrders.find(med => med.id === admin.medicationOrderId) !== undefined;
@@ -76,6 +76,13 @@ export default function MedicationAdministrationsForm() {
   const [timeColumnOffset, setTimeColumnOffset] = useState(0);
 
   const router = useRouter()
+
+  useEffect(() => {
+    registerCaseBuilderLocalOverlay(() => ({
+      medAdministrationInstances: medAdministrations,
+    }));
+    return () => registerCaseBuilderLocalOverlay(null);
+  }, [medAdministrations, registerCaseBuilderLocalOverlay]);
 
   const comboboxData = getComboboxData(medOrderData.createdOrders)
   const linkedMed = selectedOrder ? allMedications.find(med => med.id === selectedOrder.medicationId) : undefined
@@ -148,9 +155,12 @@ export default function MedicationAdministrationsForm() {
     onDataChange('medAdministrationInstances', medAdministrations)
 
     await saveCaseData({
-      payload: medAdministrations,
+      payload: {
+        orders: medOrderData.createdOrders,
+        administrations: medAdministrations,
+      },
       section: CaseSection.MEDICATION_ORDERS,
-      caseId: caseId
+      caseId: caseId,
     })
 
     router.push('/admin/case-builder/form/review')
@@ -172,7 +182,7 @@ export default function MedicationAdministrationsForm() {
   return (
     <FormShell
       title="Medication History"
-      stepDescription="Step 9 of 9: Document past administrations and Due times"
+      stepDescription="Step 9 of 10: Document past administrations and Due times"
       icon={<Syringe className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}

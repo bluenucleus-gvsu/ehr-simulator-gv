@@ -15,6 +15,7 @@ interface MedCardProps {
   onSelectionChange: (order: MedicationOrder, checked: boolean) => void;
   isHighlightableColumn: boolean;
   isPresim: boolean;
+  selectionDisabled?: boolean;
 }
 
 const MedCard = ({
@@ -26,18 +27,19 @@ const MedCard = ({
   onSelectionChange,
   isSelected,
   isHighlightableColumn,
-  isPresim
+  isPresim,
+  selectionDisabled,
 }: MedCardProps) => {
 
   const handleCheckboxChange = (checked: boolean) => {
+    if (selectionDisabled) return;
     onSelectionChange(order, checked);
   };
 
   const visibleAdministrations = administrations.filter(currentAdmin => {
-    if (isPresim && !currentAdmin.is_in_presim) {
-      return false
+    if (isPresim && currentAdmin.is_in_presim === false) {
+      return false;
     }
-
     if (currentAdmin.status !== "Due") return true;
 
     const successfullAdministration = administrations.some(otherAdmin => {
@@ -77,6 +79,7 @@ const MedCard = ({
         checked={isSelected}
         id={`checkbox-${order.id}`}
         className="absolute top-4 left-3"
+        disabled={selectionDisabled}
       />
       <div className="px-4 py-3 md:w-80 lg:w-110 2xl:w-140 border-b md:border-b-0 md:border-r border-slate-100 bg-slate-50/30 flex flex-col justify-between">
         <div >
@@ -123,6 +126,7 @@ const MedCard = ({
                   else if (admin.status === "Held") statusStyle = "bg-amber-100 text-amber-700 border-amber-200";
                   else if (admin.status === "Due") statusStyle = 'bg-blue-100 text-blue-700 border-blue-200';
                   else if (admin.status === "Missed") statusStyle = "bg-red-100 text-red-700 border-red-200";
+                  else if (admin.status === "Refused") statusStyle = "bg-orange-100 text-orange-800 border-orange-200";
 
                   return (
                     <div key={`${admin.medication_order_id}-${index}`} className={`w-fit text-center p-1 rounded border text-xs ${statusStyle}`}>
