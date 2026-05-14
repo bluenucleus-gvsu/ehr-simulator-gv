@@ -419,11 +419,15 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   });
 
   return (
-    <SidebarProvider open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
-      <SidebarInset>
-        <div className="flex flex-col bg-gray-100 w-[calc(100vw-16rem)] h-[calc(100vh-4rem)] px-4">
-          <div className="flex flex-col w-full h-full justify-center items-center gap-2 pt-2 ">
-            <div className="w-full flex justify-start gap-3 ">
+    <SidebarProvider
+      open={isSidebarOpen}
+      onOpenChange={setIsSidebarOpen}
+      className="h-full min-h-0 max-h-full overflow-hidden"
+    >
+      <SidebarInset className="h-full min-h-0 overflow-hidden">
+        <div className="flex h-full min-h-0 w-full max-w-full flex-col bg-gray-100 px-4">
+          <div className="flex h-full min-h-0 w-full flex-col items-stretch justify-start gap-2 pt-2">
+            <div className="flex w-full shrink-0 justify-start gap-3">
               <AddTimeColumnButton
                 onColumnAdd={handleColumnAdd}
                 existingTimeColumns={timeOffsets}
@@ -450,7 +454,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
                 simStartTime={simStartTime}
               />
             </div>
-            <div className="flex-grow w-full overflow-hidden border border-gray-200 rounded-md flex flex-col ">
+            <div className="flex min-h-0 w-full flex-1 flex-col overflow-auto rounded-md border border-gray-200">
               <Table className="w-full rounded-md">
                 <TableHeader className=" bg-gray-50">
                   {ptTable.getHeaderGroups().map((headerGroup) => (

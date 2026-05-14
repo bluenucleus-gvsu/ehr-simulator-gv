@@ -6,6 +6,8 @@ export interface AssignedCase {
   id: string;
   case_id: string;
   session_id: string | null;
+  /** From `case_sessions.status` for the group's open session. */
+  session_status?: string | null;
   name: string | null;
   sim_time: string | null;
   presim_time: string | null;

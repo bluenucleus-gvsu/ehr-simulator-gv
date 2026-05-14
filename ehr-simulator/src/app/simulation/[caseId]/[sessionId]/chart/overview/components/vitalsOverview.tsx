@@ -157,11 +157,11 @@ export function VitalsOverview() {
   }
 
   return (
-    <Card className="relative col-span-1 p-0 gap-3 pt-2 h-fit overflow-hidden">
+    <Card className="relative col-span-1 h-fit max-w-full min-w-0 gap-3 overflow-hidden p-0 pt-2">
       <StyledTitle color="bg-sky-200" firstLetter="R" secondLetter="ecent Vitals" />
-      <div className="h-fit px-2 pb-6">
-        <div className="rounded-md border h-full border-sky-200">
-          <Table className="rounded-md h-full">
+      <div className="h-fit max-w-full min-w-0 px-2 pb-6">
+        <div className="max-w-full overflow-x-auto rounded-md border border-sky-200">
+          <Table className="h-full min-w-full w-max rounded-md">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="border-sky-200">

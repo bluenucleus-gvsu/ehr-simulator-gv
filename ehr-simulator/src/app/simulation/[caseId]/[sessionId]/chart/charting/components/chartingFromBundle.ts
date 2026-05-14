@@ -152,7 +152,7 @@ export function buildChartingRowsFromBundle(
         .map((row) => row.time_offset)
         .filter((offset): offset is number => typeof offset === "number"),
     ),
-  ).sort((a, b) => b - a);
+  ).sort((a, b) => a - b);
   const timePointsInPreSim = new Set(
     docs
       .filter((row) => Boolean(row?.is_in_presim))

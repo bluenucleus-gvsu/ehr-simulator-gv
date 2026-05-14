@@ -54,7 +54,7 @@ const Header = ({ tabs }: HeaderProps) => {
     }
   };
   return (
-    <header className="border-b border-white/20 h-(--header-height) bg-black/5 backdrop-blur-[2px]">
+    <header className="shrink-0 border-b border-white/20 h-(--header-height) bg-black/5 backdrop-blur-[2px]">
       <div className="flex h-(--header-height) justify-between items-center pl-8 gap-3">
         <div className="flex items-center gap-3">
           <Stethoscope color="white" size={26} strokeWidth={2.5} />

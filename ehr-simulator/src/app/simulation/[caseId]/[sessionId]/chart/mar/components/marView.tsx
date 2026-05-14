@@ -21,6 +21,7 @@ import { PatientStatusBadge } from './marHelpers';
 import ColumnShiftControl from './columnShiftControl';
 import { DatabaseMedAdministration, StudentMedicationAdministration, submitMedicationAdministrations } from '@/actions/simulation';
 import { useSimSessionContext } from '@/context/SimSessionContext';
+import { useSimulationCase } from '@/context/SimulationCaseContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { appendTesterMedicationAdministrations, getTesterMedicationAdministrations } from '@/utils/testerLocalStore';
 import { isTesterModeClient } from '@/utils/testerMode';
@@ -50,7 +51,9 @@ export default function MarView({
   params
 }: MarViewData) {
   const router = useRouter();
-  const sessionKey = `${params.caseId}:${params.sessionId}`;
+  const { routeContext } = useSimulationCase();
+  const resolvedCaseId = routeContext?.caseId ?? params.caseId;
+  const sessionKey = `${resolvedCaseId}:${params.sessionId}`;
   // context
   const { userId, groupId, isPresim, userName, simStartTime, loading } = useSimSessionContext();
   // med data
@@ -160,7 +163,7 @@ export default function MarView({
       setNewAdministrations(prev => ({
         ...prev,
         [targetOrder.id]: {
-          case_id: params.caseId,
+          case_id: resolvedCaseId,
           case_session_id: params.sessionId,
           medication_order_id: targetOrder.id,
           user_id: userId,
@@ -186,7 +189,7 @@ export default function MarView({
     setNewAdministrations(prev => ({
       ...prev,
       [order.id]: {
-        case_id: params.caseId,
+        case_id: resolvedCaseId,
         case_session_id: params.sessionId,
         medication_order_id: order.id,
         user_id: userId,
@@ -249,7 +252,7 @@ export default function MarView({
       setNewAdministrations(prev => ({
         ...prev,
         [order.id]: {
-          case_id: params.caseId,
+          case_id: resolvedCaseId,
           case_session_id: params.sessionId,
           medication_order_id: order.id,
           user_id: userId,
@@ -339,7 +342,7 @@ export default function MarView({
       return;
     }
 
-    const result = await submitMedicationAdministrations(payload, params.caseId, params.sessionId)
+    const result = await submitMedicationAdministrations(payload, resolvedCaseId, params.sessionId)
 
     if (!result.success) {
       toast.error(result.message ?? "Failed to save administrations");
@@ -358,66 +361,15 @@ export default function MarView({
     [medicationAdministrations, testerAdministrations],
   );
 
-  const timelineAdministrations = useMemo(() => {
-    const numericOffsets = medicationAdministrations
-      .map((admin) => admin.time_offset)
-      .filter((offset): offset is number => typeof offset === "number");
-
-    if (numericOffsets.length <= 1) {
-      return mergedAdministrations;
-    }
-
-    const sortedOffsets = [...numericOffsets].sort((a, b) => a - b);
-    const clusters: number[][] = [];
-    for (const offset of sortedOffsets) {
-      const lastCluster = clusters[clusters.length - 1];
-      if (!lastCluster) {
-        clusters.push([offset]);
-        continue;
-      }
-      const prev = lastCluster[lastCluster.length - 1];
-      if (Math.abs(offset - prev) <= 6 * 60) {
-        lastCluster.push(offset);
-      } else {
-        clusters.push([offset]);
-      }
-    }
-
-    if (clusters.length <= 1) {
-      return mergedAdministrations;
-    }
-
-    // Pick the dominant timeline cluster, then prefer one near "case baseline" (around offset 0).
-    const selectedCluster = clusters.reduce((best, current) => {
-      if (current.length !== best.length) {
-        return current.length > best.length ? current : best;
-      }
-      const bestMean = best.reduce((sum, v) => sum + v, 0) / best.length;
-      const currentMean = current.reduce((sum, v) => sum + v, 0) / current.length;
-      return Math.abs(currentMean) < Math.abs(bestMean) ? current : best;
-    }, clusters[0]);
-
-    const min = selectedCluster[0];
-    const max = selectedCluster[selectedCluster.length - 1];
-    const bufferMinutes = 60;
-
-    return mergedAdministrations.filter((admin) => {
-      if (typeof admin.time_offset !== "number") {
-        return false;
-      }
-      return admin.time_offset >= (min - bufferMinutes) && admin.time_offset <= (max + bufferMinutes);
-    });
-  }, [mergedAdministrations]);
-
   const groupedAdministrationsByOrder = useMemo(() => {
-    return timelineAdministrations.reduce((acc, admin) => {
+    return mergedAdministrations.reduce((acc, admin) => {
       if (!acc[admin.medication_order_id || 'no_associated_order']) {
         acc[admin.medication_order_id || 'no_associated_order'] = [];
       }
       acc[admin.medication_order_id || 'no_associated_order'].push(admin)
       return acc
     }, {} as { [orderId: string]: DatabaseMedAdministration[] })
-  }, [timelineAdministrations]);
+  }, [mergedAdministrations]);
 
   const medsById = useMemo(() => {
     return medications.reduce((acc, med) => {
@@ -470,47 +422,22 @@ export default function MarView({
   }, [anchorDate]);
 
   const displayTimeOffsetMinutes = useMemo(() => {
-    const nonDueOffsets = timelineAdministrations
+    const nonDueOffsets = mergedAdministrations
       .filter((admin) => admin.status !== "Due")
       .map((admin) => admin.time_offset)
       .filter((offset): offset is number => typeof offset === "number");
 
-    const allOffsets = timelineAdministrations
+    const allOffsets = mergedAdministrations
       .map((admin) => admin.time_offset)
       .filter((offset): offset is number => typeof offset === "number");
 
-    const rawOffsets = nonDueOffsets.length > 0 ? nonDueOffsets : allOffsets;
-
-    // Split offsets into contiguous clusters so a single extreme outlier
-    // (e.g. a stale historical session write) does not hijack the viewport.
-    const sortedOffsets = [...rawOffsets].sort((a, b) => a - b);
-    const clusters: number[][] = [];
-    for (const offset of sortedOffsets) {
-      const lastCluster = clusters[clusters.length - 1];
-      if (!lastCluster) {
-        clusters.push([offset]);
-        continue;
-      }
-      const prev = lastCluster[lastCluster.length - 1];
-      if (Math.abs(offset - prev) <= 6 * 60) {
-        lastCluster.push(offset);
-      } else {
-        clusters.push([offset]);
-      }
-    }
-    const adminOffsets = clusters.length === 0
-      ? rawOffsets
-      : clusters.reduce((best, current) =>
-        current.length > best.length ? current : best
-      , clusters[0]);
+    const adminOffsets = nonDueOffsets.length > 0 ? nonDueOffsets : allOffsets;
 
     if (adminOffsets.length === 0) {
       return elapsedMinutes;
     }
 
-    // Six columns currently represent roughly 6 hours centered near "now".
-    // If no administrations fall in that window, snap to the latest administration
-    // so records don't disappear from view after session context loads.
+    // Six columns represent ~6h centered near sim "now"; if administrations fall in that window, stay on elapsed time.
     const windowStart = elapsedMinutes - (3 * 60);
     const windowEnd = elapsedMinutes + (2 * 60);
     const hasVisibleRangeHit = adminOffsets.some(
@@ -526,7 +453,7 @@ export default function MarView({
       const closestDistance = Math.abs(closest - elapsedMinutes);
       return currentDistance < closestDistance ? offset : closest;
     }, adminOffsets[0]);
-  }, [elapsedMinutes, timelineAdministrations]);
+  }, [elapsedMinutes, mergedAdministrations]);
 
   const currentSimTime = anchorDate
     ? addMinutes(anchorDate, displayTimeOffsetMinutes)
@@ -536,7 +463,7 @@ export default function MarView({
 
   if (loading || !simStartTime) {
     return (
-      <div className="flex flex-col p-3 gap-3 w-full h-[calc(100vh-4rem)] bg-gray-100">
+      <div className="flex flex-col p-3 gap-3 w-full h-full min-h-0 bg-gray-100">
         <Skeleton className="h-10 w-72 bg-gray-200" />
         <Skeleton className="h-28 w-full bg-gray-200" />
         <Skeleton className="h-28 w-full bg-gray-200" />
@@ -546,7 +473,7 @@ export default function MarView({
   }
 
   return (
-    <div className="flex flex-col p-2 pt-0 w-full h-[calc(100vh-4rem)] bg-gray-100 overflow-y-auto">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-gray-100 p-2 pt-0">
       {associatedOrders.length > 0 &&
         <MultiMedPopover
           isOpen={isMultiOrderPopoverOpen}
@@ -560,7 +487,7 @@ export default function MarView({
         scanStatus={isWrongPtScan}
         onWrongScanChange={setIsWrongPtScan}
       />
-      <div className='flex gap-2 py-3 items-start justify-between mr-6'>
+      <div className="mr-6 flex shrink-0 items-start justify-between gap-2 py-3">
         <div className="space-x-4">
           <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
             <PopoverTrigger asChild>
@@ -640,7 +567,7 @@ export default function MarView({
         </div>
       </div>
 
-      <div className="flex w-full h-full flex-col flex-1 gap-4 px-2 py-3 overflow-y-auto border border-gray-300 rounded-tl-lg inset-shadow-sm">
+      <div className="flex min-h-0 flex-1 w-full flex-col gap-4 overflow-y-auto rounded-tl-lg border border-gray-300 px-2 py-3 inset-shadow-sm">
         {filteredMedOrders.length === 0 && (
           <div className="h-52 border-2 mt-8 mx-4 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center text-gray-500 bg-gray-50/50">
             <PillBottle className="w-10 h-10 mb-3 opacity-20" />
@@ -669,6 +596,7 @@ export default function MarView({
               onSelectionChange={handleMedCheckboxChange}
               isSelected={isSelected}
               isHighlightableColumn={timeColumnOffset === 0}
+              elapsedSimMinutes={elapsedMinutes}
               isPresim={isPresim ?? false}
             />
           )

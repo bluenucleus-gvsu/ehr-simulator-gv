@@ -20,6 +20,57 @@ type OrderRow = {
   isImportant: boolean;
 }
 
+/** `medication_orders` rows from case bundle (may include joined `medications`). */
+type BundleMedOrder = {
+  dose?: number | null;
+  frequency?: string | null;
+  priority?: string | null;
+  indication?: string | null;
+  instructions?: string | null;
+  ordering_provider?: string | null;
+  infusion_rate?: number | null;
+  medications?: {
+    generic_name?: string | null;
+    brand_name?: string | null;
+    strength?: number | null;
+    strength_unit?: string | null;
+  } | null;
+};
+
+function orderRowFromMedicationOrder(row: BundleMedOrder): OrderRow {
+  const med = row.medications;
+  const generic = (med?.generic_name ?? "").trim() || "Medication";
+  const brand = (med?.brand_name ?? "").trim();
+  const title = brand ? `${generic} (${brand})` : generic;
+
+  const strength =
+    med?.strength != null && med?.strength_unit
+      ? `${med.strength} ${med.strength_unit}`
+      : "";
+  const parts: string[] = [];
+  if (row.dose != null) {
+    parts.push(strength ? `Dose ${row.dose} (${strength} per unit)` : `Dose ${row.dose}`);
+  }
+  if (row.frequency) parts.push(`Frequency: ${row.frequency}`);
+  if (row.indication?.trim()) parts.push(row.indication.trim());
+  if (row.instructions?.trim()) parts.push(row.instructions.trim());
+  if (row.infusion_rate != null && row.infusion_rate > 0) {
+    parts.push(`Infusion: ${row.infusion_rate}`);
+  }
+  const details = parts.length ? parts.join(" · ") : "N/A";
+
+  const priority = String(row.priority ?? "").trim();
+  const status = priority || "Ordered";
+
+  return {
+    title,
+    details,
+    status,
+    orderingProvider: (row.ordering_provider ?? "").trim() || "N/A",
+    isImportant: priority === "STAT" || priority === "NOW",
+  };
+}
+
 const createHeaderNames = (title: string) => ({
   title,
   details: "Details",
@@ -51,13 +102,17 @@ const OrdersPage = () => {
   const dietData = filterByCategory(["Diet", "Nutrition"]);
   const laboratoryData = filterByCategory(["Laboratory", "Lab", "Labs"]);
   const consultData = filterByCategory(["Consult"]);
-  const medicationData = filterByCategory(["Medication", "Medications"]);
+  const medicationDataFromClinicalOrders = filterByCategory(["Medication", "Medications"]);
+  const medicationDataFromMedOrders = ((caseBundle?.medicationOrders ?? []) as BundleMedOrder[]).map(
+    orderRowFromMedicationOrder,
+  );
+  const medicationData = [...medicationDataFromClinicalOrders, ...medicationDataFromMedOrders];
 
   const orderColumns = ["details", "status", "orderingProvider"]
 
   return (
-    <div className="px-2 pt-4 w-full h-[calc(100vh-4rem)] flex flex-col gap-4 justify-start items-center bg-gray-100 overflow-y-auto">
-      <div className="flex w-full h-full flex-col gap-4 px-2 py-3 overflow-y-auto border border-gray-300 rounded-tl-lg inset-shadow-sm">
+    <div className="flex h-full min-h-0 w-full flex-col gap-4 overflow-hidden bg-gray-100 px-2 pt-4">
+      <div className="flex min-h-0 flex-1 w-full flex-col gap-4 overflow-y-auto rounded-tl-lg border border-gray-300 px-2 py-3 inset-shadow-sm">
         <OrdersTable color="bg-blue-300" columnNames={orderColumns} headerNames={createHeaderNames("Nursing")} data={nursingData} />
         <OrdersTable color="bg-lime-200" columnNames={orderColumns} headerNames={createHeaderNames("Respiratory")} data={respiratoryData} />
         <OrdersTable color="bg-emerald-200" columnNames={orderColumns} headerNames={createHeaderNames("Diet")} data={dietData} />

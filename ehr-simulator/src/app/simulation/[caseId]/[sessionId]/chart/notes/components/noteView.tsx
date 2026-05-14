@@ -127,7 +127,7 @@ const NoteView = ({
 
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full w-full pt-16 bg-gray-100 justify-start items-center gap-6">
+      <div className="flex h-full min-h-0 w-full flex-col items-center justify-start gap-6 bg-gray-100 pt-16">
         <Skeleton className="w-5/6 h-16 rounded-xl bg-gray-200" />
         <Skeleton className="w-5/6 h-8 rounded-xl bg-gray-200" />
         <Skeleton className="w-5/6 h-8 rounded-xl bg-gray-200" />
@@ -139,15 +139,15 @@ const NoteView = ({
 
   if (isError) {
     return (
-      <div className="w-full h-full flex flex-col px-4 gap-3 bg-gray-100 justify-center items-center">
+      <div className="flex h-full min-h-0 w-full flex-col items-center justify-center gap-3 bg-gray-100 px-4">
         <p className="text-red-600">Error loading notes.</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-[calc(100vh-4rem)] flex flex-col px-4  gap-3 bg-gray-100">
-      <div className="w-full flex flex-shrink-0 justify-between py-2">
+    <div className="flex h-full min-h-0 w-full flex-col gap-3 overflow-hidden bg-gray-100 px-4">
+      <div className="flex w-full shrink-0 justify-between py-2">
         <div className="flex h-full flex-col gap-2">
           <Popover>
             <PopoverTrigger asChild>
@@ -195,7 +195,7 @@ const NoteView = ({
         <NursingNoteEntry isPresim={isPresim} submitNote={onSubmitNote} />
       </div>
 
-      <div className="flex flex-col flex-grow gap-4 p-2 rounded-t-lg overflow-y-auto border inset-shadow-sm bg-gray-100">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto rounded-t-lg border bg-gray-100 p-2 inset-shadow-sm">
         {filteredNotesData.length === 0 ? (
           <p className="text-center text-gray-500 mt-10">No notes found.</p>
         ) : (
