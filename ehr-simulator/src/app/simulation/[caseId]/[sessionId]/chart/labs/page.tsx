@@ -21,29 +21,15 @@ import {
   type ImagingData,
   type LabTableData,
   type MicrobiologyReportData,
-  labTemplate
+  labTemplate,
+  getResultStatus,
 } from "./components/labsData"
 import { buildLabRowsFromBundle } from "./components/labsFromBundle";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
 
-export const getResultStatus = (initialValue: string, normalRange: { low: number, high: number } | undefined, criticalRange: { low: number, high: number } | undefined) => {
-  const numericValue = parseFloat(initialValue)
-
-  if (isNaN(numericValue)) {
-    return 'invalid';
-  }
-  if (criticalRange && (numericValue < criticalRange.low || numericValue > criticalRange.high)) {
-    return "critical";
-  }
-  if (normalRange && (numericValue < normalRange.low || numericValue > normalRange.high)) {
-    return "abnormal";
-  }
-  return "normal";
-}
-
 const columnHelper = createColumnHelper<LabTableData>();
 
-export function LabPage() {
+function LabPage() {
   const { caseBundle } = useSimulationCase();
   const [simStartTime] = useState(new Date().getTime());
   const [labTableData, setLabTableData] = useState<LabTableData[]>([]);

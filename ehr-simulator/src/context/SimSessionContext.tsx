@@ -54,52 +54,75 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
     async function loadSimData() {
       setLoading(true);
 
-      // 1. Load User Details
+      let nextUserName: string | null = null;
+      let nextUserRole: string | null = null;
+      let nextGroupId: string | null = null;
+      let nextSimStart: number | null = null;
+      let nextIsPresim: boolean | null = true;
+
       const { data: { user } } = await supabase.auth.getUser();
-      if (user && user.id) {
-        setUserId(user.id)
-        const response = await getUsersGroupId(user.id)
-        if (response.success) {
-          setUserName(response.data?.full_name)
-          setGroupId(response.data?.group_id)
-          setUserRole(response.data?.role)
+      if (user?.id) {
+        setUserId(user.id);
+        const response = await getUsersGroupId(user.id);
+        if (response.success && response.data) {
+          nextUserName = response.data.full_name ?? null;
+          nextUserRole = response.data.role ?? null;
+          nextGroupId = response.data.group_id ?? null;
         } else if (isTesterModeClient()) {
-          const meta = user.user_metadata as Record<string, string> | undefined
-          setUserName(meta?.full_name ?? meta?.name ?? meta?.email ?? "Tester")
-          setGroupId(`tester-sim:${user.id}`)
+          const meta = user.user_metadata as Record<string, string> | undefined;
+          nextUserName = meta?.full_name ?? meta?.name ?? meta?.email ?? "Tester";
+          nextGroupId = `tester-sim:${user.id}`;
         }
       }
 
-      // 2. Load Session Details to determine Pre-sim vs Active Sim
       if (sessionId) {
         const { data: sessionData, error } = await supabase
-          .from('case_sessions')
-          .select('started_at, status')
-          .eq('id', sessionId)
-          .single();
+          .from("case_sessions")
+          .select("started_at, status, group_id")
+          .eq("id", sessionId)
+          .maybeSingle();
 
         if (!error && sessionData) {
-          const normalizedStatus = sessionData.status?.toLowerCase();
+          if (sessionData.group_id) {
+            nextGroupId = sessionData.group_id;
+          }
+
+          const normalizedStatus = (sessionData.status ?? "").toLowerCase();
           const hasStarted =
             Boolean(sessionData.started_at) ||
-            normalizedStatus === 'in progress' ||
-            normalizedStatus === 'completed';
-          setIsPresim(!hasStarted);
+            normalizedStatus === "in progress" ||
+            normalizedStatus === "completed";
+          nextIsPresim = !hasStarted;
 
           if (hasStarted) {
-            setSimStartTime(new Date(sessionData.started_at).getTime());
+            const startedMs = sessionData.started_at
+              ? new Date(sessionData.started_at).getTime()
+              : Date.now();
+            nextSimStart = Number.isFinite(startedMs) ? startedMs : Date.now();
           } else {
-            // PRE-SIM: align with case-builder timeline behavior (relative to current time).
-            setSimStartTime(Date.now());
+            nextSimStart = Date.now();
           }
         } else if (isTesterModeClient()) {
           const localStatus = (getTesterSessionStatus(sessionId) ?? "").toLowerCase();
           const hasStarted =
             localStatus === "in progress" || localStatus === "completed";
-          setIsPresim(!hasStarted);
-          setSimStartTime(Date.now());
+          nextIsPresim = !hasStarted;
+          nextSimStart = Date.now();
+        } else {
+          nextSimStart = Date.now();
+          nextIsPresim = false;
         }
       }
+
+      if (nextSimStart === null) {
+        nextSimStart = Date.now();
+      }
+
+      setUserName(nextUserName);
+      setUserRole(nextUserRole);
+      setGroupId(nextGroupId);
+      setSimStartTime(nextSimStart);
+      setIsPresim(nextIsPresim);
       setLoading(false);
     }
     loadSimData();

@@ -11,8 +11,6 @@ export async function upsertCaseDemographics(
     supabase,
     d.relationshipStatus,
   )
-  const insurance = normalizeInsuranceEnum(d.insurance)
-
   const row = {
     ...(caseId ? { id: caseId } : {}),
     name: "Case " + d.firstName + " " + d.lastName,
@@ -25,7 +23,7 @@ export async function upsertCaseDemographics(
     height_in: toNumeric(d.heightInches),
     weight_kg: toNumeric(d.dosingWeight),
     language: d.language ?? null,
-    insurance,
+    insurance: d.insurance ?? null,
     employment: d.employment ?? null,
     religion: d.religion ?? null,
     relationship_status_id,
@@ -70,15 +68,6 @@ async function resolveRelationshipStatusId(
     return null
   }
   return data?.id ?? null
-}
-
-/** `cases.insurance` is Postgres enum insurance_type — must match seeded values. */
-function normalizeInsuranceEnum(
-  raw: string | null | undefined,
-): "Medicare" | "Medicaid" | "Private" | null {
-  const v = (raw ?? "").trim()
-  if (v === "Medicare" || v === "Medicaid" || v === "Private") return v
-  return null
 }
 
 /**

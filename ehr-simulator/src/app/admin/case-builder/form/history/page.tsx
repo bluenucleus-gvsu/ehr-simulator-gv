@@ -1,5 +1,5 @@
 "use client"
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Home,
   AlertTriangle,
@@ -57,7 +57,7 @@ const FormSection = ({
 const HistoryForm = () => {
   const router = useRouter();
 
-  const { onDataChange, historyData, caseId } = useFormContext();
+  const { onDataChange, historyData, caseId, registerCaseBuilderLocalOverlay } = useFormContext();
   const [medicalHistory, setMedicalHistory] = useState<string[]>(historyData.medicalHistory);
   const [surgicalHistory, setSurgicalHistory] = useState<string[]>(historyData.surgicalHistory);
   const [familyHistory, setFamilyHistory] = useState<FamilyHistoryData[]>(historyData.familyHistory);
@@ -99,6 +99,20 @@ const HistoryForm = () => {
     allergies: allergies,
     alerts: alerts,
   }
+
+  useEffect(() => {
+    registerCaseBuilderLocalOverlay(() => ({ history: newHistoryData }));
+    return () => registerCaseBuilderLocalOverlay(null);
+  }, [
+    registerCaseBuilderLocalOverlay,
+    medicalHistory,
+    surgicalHistory,
+    familyHistory,
+    socialHistory,
+    livingSituation,
+    allergies,
+    alerts,
+  ]);
 
   const goBack = () => {
     if (checkUnsaved()) {
@@ -167,7 +181,7 @@ const HistoryForm = () => {
   return (
     <FormShell
       title="Patient History"
-      stepDescription="Step 2 of 9: Document medical history and social context"
+      stepDescription="Step 2 of 10: Document medical history and social context"
       icon={<FileClock className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}

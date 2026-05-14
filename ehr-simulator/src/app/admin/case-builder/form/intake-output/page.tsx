@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Droplets, GlassWater } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,7 +76,7 @@ function getBlocks() {
 }
 
 export default function IntakeOutputForm() {
-  const { onDataChange, ioData, caseId } = useFormContext();
+  const { onDataChange, ioData, caseId, registerCaseBuilderLocalOverlay } = useFormContext();
 
   const blocks = useMemo(() => getBlocks(), []);
 
@@ -118,6 +118,11 @@ export default function IntakeOutputForm() {
 
   const router = useRouter();
 
+  useEffect(() => {
+    registerCaseBuilderLocalOverlay(() => ({ intakeOutput }));
+    return () => registerCaseBuilderLocalOverlay(null);
+  }, [intakeOutput, registerCaseBuilderLocalOverlay]);
+
   const persistIo = async () => {
     onDataChange("intakeOutput", intakeOutput);
     if (caseId) {
@@ -142,7 +147,7 @@ export default function IntakeOutputForm() {
   return (
     <FormShell
       title="Intake & Output"
-      stepDescription="Step 7 of 9: Record patient intake and output"
+      stepDescription="Step 7 of 10: Record patient intake and output"
       icon={<Droplets className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}

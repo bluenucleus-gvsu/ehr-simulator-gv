@@ -36,6 +36,25 @@ export interface LabTableData {
   [key: string | number]: string | number | boolean | undefined | object | ImagingData | MicrobiologyReportData | LabCellValue;
 }
 
+export function getResultStatus(
+  initialValue: string,
+  normalRange: { low: number; high: number } | undefined,
+  criticalRange: { low: number; high: number } | undefined,
+) {
+  const numericValue = parseFloat(initialValue);
+
+  if (isNaN(numericValue)) {
+    return "invalid";
+  }
+  if (criticalRange && (numericValue < criticalRange.low || numericValue > criticalRange.high)) {
+    return "critical";
+  }
+  if (normalRange && (numericValue < normalRange.low || numericValue > normalRange.high)) {
+    return "abnormal";
+  }
+  return "normal";
+}
+
 export const labTemplate: LabTableData[] = [
   {
     field: "Metabolic",

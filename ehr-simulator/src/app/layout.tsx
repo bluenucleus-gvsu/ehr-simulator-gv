@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { Roboto_Mono } from "next/font/google";
 import "./globals.css";
+import TesterSessionBanner from "@/components/TesterSessionBanner";
 
 
 const robotoMono = Roboto_Mono({
@@ -26,6 +27,7 @@ export default function RootLayout({
       <body>
         <UserProvider>
           <Toaster position="top-right" />
+          <TesterSessionBanner />
           <main className="w-full">
             {children}
           </main>

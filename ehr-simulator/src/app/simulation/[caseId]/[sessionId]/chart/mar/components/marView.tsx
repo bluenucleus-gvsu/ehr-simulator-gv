@@ -22,6 +22,8 @@ import ColumnShiftControl from './columnShiftControl';
 import { DatabaseMedAdministration, StudentMedicationAdministration, submitMedicationAdministrations } from '@/actions/simulation';
 import { useSimSessionContext } from '@/context/SimSessionContext';
 import { Skeleton } from '@/components/ui/skeleton';
+import { appendTesterMedicationAdministrations, getTesterMedicationAdministrations } from '@/utils/testerLocalStore';
+import { isTesterModeClient } from '@/utils/testerMode';
 
 
 export interface NewAdministrationData {
@@ -48,6 +50,7 @@ export default function MarView({
   params
 }: MarViewData) {
   const router = useRouter();
+  const sessionKey = `${params.caseId}:${params.sessionId}`;
   // context
   const { userId, groupId, isPresim, userName, simStartTime, loading } = useSimSessionContext();
   // med data
@@ -63,6 +66,7 @@ export default function MarView({
   const [isMultiOrderPopoverOpen, setIsMultiOrderPopoverOpen] = useState<boolean>(false)
   const [isWrongPtScan, setIsWrongPtScan] = useState<boolean>(false)
   const [isMedAdminPanelOpen, setIsMedAdminPanelOpen] = useState(false);
+  const [testerAdministrations, setTesterAdministrations] = useState<DatabaseMedAdministration[]>([]);
   // temp time management
   const [timeColumnOffset, setTimeColumnOffset] = useState(0)
   const [localTimelineAnchor] = useState(() => new Date());
@@ -229,6 +233,11 @@ export default function MarView({
     },
   )
 
+  useEffect(() => {
+    if (!isTesterModeClient()) return;
+    setTesterAdministrations(getTesterMedicationAdministrations(sessionKey) as DatabaseMedAdministration[]);
+  }, [sessionKey]);
+
   const handleMedCheckboxChange = (order: MedicationOrder, checked: boolean) => {
     if (!groupId || !userId) {
       toast.error('missing an id')
@@ -321,6 +330,15 @@ export default function MarView({
       };
     });
 
+    if (isTesterModeClient()) {
+      appendTesterMedicationAdministrations(sessionKey, payload);
+      setTesterAdministrations(payload as unknown as DatabaseMedAdministration[]);
+      setIsMedAdminPanelOpen(false);
+      toast.success("Medications saved locally (tester mode).");
+      handleClearAllSelections();
+      return;
+    }
+
     const result = await submitMedicationAdministrations(payload, params.caseId, params.sessionId)
 
     if (!result.success) {
@@ -335,13 +353,18 @@ export default function MarView({
   }
 
 
+  const mergedAdministrations = useMemo(
+    () => [...medicationAdministrations, ...testerAdministrations],
+    [medicationAdministrations, testerAdministrations],
+  );
+
   const timelineAdministrations = useMemo(() => {
     const numericOffsets = medicationAdministrations
       .map((admin) => admin.time_offset)
       .filter((offset): offset is number => typeof offset === "number");
 
     if (numericOffsets.length <= 1) {
-      return medicationAdministrations;
+      return mergedAdministrations;
     }
 
     const sortedOffsets = [...numericOffsets].sort((a, b) => a - b);
@@ -361,7 +384,7 @@ export default function MarView({
     }
 
     if (clusters.length <= 1) {
-      return medicationAdministrations;
+      return mergedAdministrations;
     }
 
     // Pick the dominant timeline cluster, then prefer one near "case baseline" (around offset 0).
@@ -378,13 +401,13 @@ export default function MarView({
     const max = selectedCluster[selectedCluster.length - 1];
     const bufferMinutes = 60;
 
-    return medicationAdministrations.filter((admin) => {
+    return mergedAdministrations.filter((admin) => {
       if (typeof admin.time_offset !== "number") {
         return false;
       }
       return admin.time_offset >= (min - bufferMinutes) && admin.time_offset <= (max + bufferMinutes);
     });
-  }, [medicationAdministrations]);
+  }, [mergedAdministrations]);
 
   const groupedAdministrationsByOrder = useMemo(() => {
     return timelineAdministrations.reduce((acc, admin) => {

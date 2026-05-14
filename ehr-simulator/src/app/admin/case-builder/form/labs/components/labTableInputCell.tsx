@@ -1,5 +1,5 @@
 import { ImagingData, LabCellValue, LabTableData, MicrobiologyReportData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
-import { getResultStatus } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/page";
+import { getResultStatus } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
 import { Dialog, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Column, Row, Table } from "@tanstack/react-table";

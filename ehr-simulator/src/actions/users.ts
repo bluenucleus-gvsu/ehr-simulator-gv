@@ -28,6 +28,7 @@ export async function getAllStudentUsers() {
     .from("users")
     .select("*")
     .eq("role", "student")
+    .ilike("email", "%@mail.gvsu.edu")
   if (error) throw new Error(error.message);
 
   return data || []
