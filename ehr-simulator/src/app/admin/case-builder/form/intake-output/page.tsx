@@ -21,6 +21,8 @@ import {
 import { useFormContext } from "@/context/FormContext";
 import { IntakeOutputFormData } from "@/utils/form";
 import { FormShell } from "../../components/formShell";
+import { saveCaseData } from "@/actions/case_builder/caseBuilder";
+import { CaseSection } from "@/lib/saveCase";
 
 const chartConfig = {
   intake: { label: "Intake", color: "hsl(var(--chart-6))" },
@@ -74,7 +76,7 @@ function getBlocks() {
 }
 
 export default function IntakeOutputForm() {
-  const { onDataChange, ioData } = useFormContext();
+  const { onDataChange, ioData, caseId } = useFormContext();
 
   const blocks = useMemo(() => getBlocks(), []);
 
@@ -116,15 +118,26 @@ export default function IntakeOutputForm() {
 
   const router = useRouter();
 
-  const goBack = () => {
-    onDataChange("intakeOutput", intakeOutput)
-    router.push("/admin/case-builder/form/charting");
-  }
+  const persistIo = async () => {
+    onDataChange("intakeOutput", intakeOutput);
+    if (caseId) {
+      await saveCaseData({
+        payload: intakeOutput,
+        section: CaseSection.INTAKE_OUTPUT,
+        caseId,
+      });
+    }
+  };
 
-  const handleSubmit = () => {
-    onDataChange("intakeOutput", intakeOutput)
+  const goBack = async () => {
+    await persistIo();
+    router.push("/admin/case-builder/form/charting");
+  };
+
+  const handleSubmit = async () => {
+    await persistIo();
     router.push("/admin/case-builder/form/medications");
-  }
+  };
 
   return (
     <FormShell

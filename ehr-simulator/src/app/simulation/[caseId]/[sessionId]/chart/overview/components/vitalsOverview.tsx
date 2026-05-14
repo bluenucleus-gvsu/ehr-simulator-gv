@@ -18,11 +18,12 @@ import {
 } from "@/components/ui/table"
 import { Card } from "@/components/ui/card"
 import type { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData"
+import { flexSheetTemplate } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData"
 import { useMemo } from "react"
 import StyledTitle from "./styledTitle"
-import { generateChartingDataFromDB, getAllTimeOffsets } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData"
 import { formatTimeFromOffset } from "../../charting/components/flexSheetHelpers"
-import { DatabaseDocumentation } from "@/actions/simulation"
+import { useSimulationCase } from "@/context/SimulationCaseContext"
+import { buildChartingRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/chartingFromBundle"
 import { useSimSessionContext } from "@/context/SimSessionContext"
 
 export type vitalsOverviewTable = {
@@ -33,11 +34,11 @@ export type vitalsOverviewTable = {
 const vitalSignIds = [
   "hr",
   "bp",
-  "map",
   "rr",
   "temp",
   "spo2",
-  "weightKg",
+  "pain",
+  "weight_kg",
 ];
 
 function mostRecentVitals(
@@ -57,21 +58,18 @@ function mostRecentVitals(
 
   return activeOffsets.slice(-1 * limit);
 }
-interface VitalsOverviewProps {
-  dbDocumentation: DatabaseDocumentation[]
-}
 
-
-export function VitalsOverview({ dbDocumentation = [] }: VitalsOverviewProps) {
-  const { simStartTime } = useSimSessionContext()
+export function VitalsOverview() {
+  const { caseBundle } = useSimulationCase();
+  const { simStartTime } = useSimSessionContext();
 
   const { allTimeOffsets, fullChartingData } = useMemo(() => {
-    if (!simStartTime) return { allTimeOffsets: [], fullChartingData: [] };
-
-    const offsets = getAllTimeOffsets(simStartTime, dbDocumentation);
-    const data = generateChartingDataFromDB(dbDocumentation, offsets);
-    return { allTimeOffsets: offsets, fullChartingData: data };
-  }, [simStartTime, dbDocumentation]);
+    const mapped = buildChartingRowsFromBundle(
+      caseBundle?.documentationResults ?? [],
+      flexSheetTemplate,
+    );
+    return { allTimeOffsets: mapped.timeOffsets, fullChartingData: mapped.rows };
+  }, [caseBundle]);
 
   const filteredData = useMemo(() => {
     return fullChartingData.filter(row => vitalSignIds.includes(row.id));

@@ -27,6 +27,15 @@ const displayDate = (startTime: number | null, offset: number) => {
 
 };
 
+/** Title uses document category (e.g. Admission → "Admission Note"), not specialty (e.g. Internal Medicine). */
+function noteDisplayTitle(note: ClinicalDocumentView): string {
+  const cat = note.category?.trim();
+  if (cat) return `${cat} Note`;
+  const spec = note.specialty?.trim();
+  if (spec) return `${spec} Note`;
+  return "Note";
+}
+
 interface NoteDisplayProps {
   note: ClinicalDocumentView;
   startTime: number | null;
@@ -57,7 +66,7 @@ export default function NoteDisplay({ note, startTime }: NoteDisplayProps) {
 
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-slate-900 truncate">{note.specialty} Note</h3>
+              <h3 className="text-sm font-bold text-slate-900 truncate">{noteDisplayTitle(note)}</h3>
               {note.specialty === "Student Note" && <Badge variant="outline" className="text-[10px] h-5 px-1.5 text-blue-600 border-blue-200 bg-blue-50">Student</Badge>}
             </div>
 

@@ -25,20 +25,193 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import InfoTooltip from "../../components/helpTooltip";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { differenceInYears } from "date-fns";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useFormContext } from "@/context/FormContext";
-import { relationshipStatuses, precautions, months, codeStatuses, days, insuranceOptions, DemographicFormData } from "@/utils/form";
+import { relationshipStatuses, precautions, months, codeStatuses, days, insuranceOptions, DemographicFormData, intakeOutputBlocksFromCaseRow } from "@/utils/form";
 import { buttonVariants } from "@/components/ui/button";
 import { FormShell } from "../../components/formShell";
 import { CaseSection } from "@/lib/saveCase";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
+import { getCaseBundle } from "@/actions/case_builder/getCase";
+import { labTemplate } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
+import { buildLabRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsFromBundle";
+import { medOrderFormStateFromCaseBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marFromBundle";
+import { flexSheetTemplate } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
+import { buildChartingRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/chartingFromBundle";
 
 export default function DemographicsForm() {
   const { onDataChange, demographicData: initialData, setCaseId, caseId } = useFormContext();
   const [demographicsData, setDemographicsData] = useState<DemographicFormData>(initialData);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showCancelAlert, setShowCancelAlert] = useState<boolean>(false);
+
+  useEffect(() => {
+    const editCaseId = searchParams.get("caseId");
+    if (!editCaseId || editCaseId === caseId) return;
+
+    const loadCaseForEditing = async () => {
+      const bundle = await getCaseBundle(editCaseId);
+      const caseRow = bundle.caseRow ?? {};
+
+      const dob = typeof caseRow.date_of_birth === "string" ? caseRow.date_of_birth : "";
+      const [, month = "", day = ""] = dob.split("-");
+      const monthIdx = Number(month);
+      const dobMonth = monthIdx >= 1 && monthIdx <= 12 ? months[monthIdx - 1] : "";
+      const dobDay = day ? String(Number(day)) : "";
+      let age = "";
+      if (dob) {
+        const ym = /^(\d{4})-(\d{2})-(\d{2})/.exec(dob.trim());
+        if (ym) {
+          const y = Number(ym[1]);
+          const mo = Number(ym[2]);
+          const d = Number(ym[3]);
+          if (Number.isFinite(y) && mo >= 1 && mo <= 12 && d >= 1 && d <= 31) {
+            const dobDate = new Date(y, mo - 1, d);
+            if (!isNaN(dobDate.getTime())) {
+              age = String(differenceInYears(new Date(), dobDate));
+            }
+          }
+        }
+      }
+
+      const providerRaw = String(caseRow.attending_provider ?? "").trim();
+      const providerTokens = providerRaw.split(/\s+/).filter(Boolean);
+      const titles = new Set(["MD", "DO", "NP", "PA"]);
+      let attendingProviderTitle = "";
+      let attendingProviderName = providerRaw;
+      if (providerTokens.length > 1) {
+        const first = providerTokens[0] ?? "";
+        const last = providerTokens[providerTokens.length - 1] ?? "";
+        if (titles.has(first)) {
+          attendingProviderTitle = first;
+          attendingProviderName = providerTokens.slice(1).join(" ");
+        } else if (titles.has(last)) {
+          attendingProviderTitle = last;
+          attendingProviderName = providerTokens.slice(0, -1).join(" ");
+        }
+      }
+
+      const mappedDemographics: DemographicFormData = {
+        DOBDay: dobDay,
+        DOBMonth: dobMonth,
+        admissionDateOffest: String(caseRow.inpatient_duration_days ?? ""),
+        admissionTime: String(caseRow.time_of_admission ?? "").slice(0, 5),
+        admittingDiagnosis: caseRow.admitting_diagnosis ?? "",
+        age,
+        attendingProviderName,
+        attendingProviderTitle,
+        codeStatus: caseRow.code_status ?? "",
+        dosingWeight: String(caseRow.weight_kg ?? ""),
+        employment: caseRow.employment ?? "",
+        firstName: caseRow.first_name ?? "",
+        heightFeet: String(caseRow.height_ft ?? ""),
+        heightInches: String(caseRow.height_in ?? ""),
+        insurance: caseRow.insurance ?? "",
+        language: caseRow.language ?? "",
+        needsInterpreter: Boolean(caseRow.requires_interpreter),
+        lastName: caseRow.last_name ?? "",
+        precautions: caseRow.isolation_precautions?.name ?? "",
+        relationshipStatus: caseRow.relationship_status?.name ?? "",
+        religion: caseRow.religion ?? "",
+        summary: caseRow.description ?? "",
+        contact: caseRow.emergency_contact_name ?? "",
+        contactRelationship: caseRow.emergency_contact_relationship ?? "",
+        contactPhone: caseRow.emergency_contact_phone ?? "",
+      };
+
+      onDataChange("demographics", mappedDemographics);
+      setDemographicsData(mappedDemographics);
+
+      onDataChange("history", {
+        medicalHistory: caseRow.medical_history ?? [],
+        surgicalHistory: caseRow.surgical_history ?? [],
+        allergies: caseRow.allergies ?? [],
+        socialHistory: caseRow.social_habits ?? [],
+        livingSituation: caseRow.living_situation ?? [],
+        alerts: (bundle.safetyAlerts ?? []).map((x: any) => x?.safety_alert?.name).filter(Boolean),
+        familyHistory: (bundle.familyHistory ?? []).map((x: any) => ({
+          relation: x?.relationship?.name ?? "",
+          condition: x?.condition ?? "",
+        })).filter((x: { relation: string; condition: string }) => x.relation && x.condition),
+      });
+
+      onDataChange("notes", (bundle.clinicalDocuments ?? []).map((n: any) => ({
+        title: `${n.category ?? "Progress"} Note`,
+        author: n.author ?? "",
+        specialty: n.specialty ?? "",
+        timeOffset: Number(n.time_offset ?? 0),
+        excludedFromPresim: !Boolean(n.is_in_presim),
+        content: n.doc_text ?? "<p></p>",
+      })));
+
+      onDataChange("orders", (bundle.orders ?? []).map((o: any) => ({
+        category: o.category,
+        title: o.title ?? "",
+        details: o.details ?? "",
+        status: o.status ?? "Active",
+        orderingProvider: o.provider ?? "",
+        important: Boolean(o.is_important),
+        visibleInPresim: Boolean(o.is_in_presim),
+      })));
+
+      const hydratedLabs = buildLabRowsFromBundle(
+        {
+          labResults: bundle.labResults ?? [],
+          imagingReports: bundle.imagingReports ?? [],
+          microbiologyReports: bundle.microbiologyReports ?? [],
+        },
+        labTemplate,
+      );
+      onDataChange("labs", {
+        data: hydratedLabs.rows,
+        timePoints: hydratedLabs.timePoints,
+        timePointsInPreSim: new Set(
+          (bundle.labResults ?? [])
+            .filter((row: any) => Boolean(row?.is_in_presim))
+            .map((row: any) => Number(row?.time_offset))
+            .filter((offset: number) => Number.isFinite(offset)),
+        ),
+        visibleItems: new Set(
+          hydratedLabs.rows
+            .filter((row) => row.hideable)
+            .map((row) => row.field),
+        ),
+      });
+
+      const hydratedCharting = buildChartingRowsFromBundle(bundle.documentationResults ?? [], flexSheetTemplate);
+      onDataChange("charting", {
+        data: hydratedCharting.rows,
+        timePoints: hydratedCharting.timeOffsets,
+        timePointsInPreSim: hydratedCharting.timePointsInPreSim,
+        visibleItems: hydratedCharting.visibleItems,
+      });
+
+      onDataChange(
+        "intakeOutput",
+        intakeOutputBlocksFromCaseRow(bundle.caseRow?.intake_output_blocks),
+      );
+
+      onDataChange("medOrders", medOrderFormStateFromCaseBundle(bundle));
+
+      onDataChange("medAdministrationInstances", (bundle.medicationAdministrations ?? []).map((m: any) => ({
+        id: m.id,
+        medicationOrderId: String(m.medication_order_id ?? m.medication_id ?? ""),
+        administratorId: m.administrator ?? "",
+        adminTimeMinuteOffset: Number(m.time_offset ?? 0),
+        status: m.status ?? "Due",
+        notes: m.notes ?? "",
+        administeredDose: Number(m.administered_dose ?? 0),
+        visibleInPresim: Boolean(m.is_in_presim),
+      })));
+
+      setCaseId(editCaseId);
+    };
+
+    void loadCaseForEditing();
+  }, [searchParams, caseId, onDataChange, setCaseId]);
 
   const goBack = () => {
     setShowCancelAlert(true);
@@ -533,6 +706,19 @@ export default function DemographicsForm() {
                     id="contactRelationship"
                     onChange={(e) => { setDemographicsData({ ...demographicsData, ["contactRelationship"]: e.target.value }) }}
                     value={demographicsData.contactRelationship}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="contactPhone">Contact phone</Label>
+                  <Input
+                    name="contactPhone"
+                    id="contactPhone"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="e.g. (555) 123-4567"
+                    onChange={(e) => { setDemographicsData({ ...demographicsData, contactPhone: e.target.value }) }}
+                    value={demographicsData.contactPhone}
                   />
                 </div>
               </CardContent>

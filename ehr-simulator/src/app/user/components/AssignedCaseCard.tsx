@@ -65,6 +65,11 @@ export default function AssignedCaseCard({ id, caseId, sessionId, name, simTime,
         <div className="text-sm text-muted-foreground">
           Group: {groupMembers.length ? groupMembers.join(", ") : "No members"}
         </div>
+        {isSimDay && !isPresimPhase ? (
+          <div className="text-xs font-medium text-green-700">Mode: Active Simulation</div>
+        ) : isPresimPhase ? (
+          <div className="text-xs font-medium text-indigo-700">Mode: Pre-Sim</div>
+        ) : null}
       </div>
 
       <div className="ml-4 flex items-center gap-2">
@@ -76,7 +81,7 @@ export default function AssignedCaseCard({ id, caseId, sessionId, name, simTime,
             disabled={isStarting}
             aria-label={`Start simulation ${name ?? id}`}
           >
-            {isStarting ? "Loading..." : "Start Simulation"}
+            {isStarting ? "Loading..." : "Enter Active Simulation"}
           </button>
         ) : isPresimPhase ? (
           <button
@@ -85,7 +90,7 @@ export default function AssignedCaseCard({ id, caseId, sessionId, name, simTime,
             onClick={() => handleRoute('chart/overview', false)}
             aria-label={`View pre-sim chart for ${name ?? id}`}
           >
-            View Pre-Sim Chart
+            Enter Pre-Sim Mode
           </button>
         ) : (
           <button

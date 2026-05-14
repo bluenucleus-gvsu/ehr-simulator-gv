@@ -21,12 +21,15 @@ import {
 import { useState } from "react"
 import { type AllMedicationTypes, type MedicationOrder } from "./marData";
 import MedAdminCard from "./medAdminCard";
-import type { NewAdministrationData } from "./marView";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge"
 import { PatientStatusBadge } from "./marHelpers"
 import { DatabaseMedAdministration, StudentMedicationAdministration } from "@/actions/simulation"
 
+type NewAdministrationData = Record<string, MedAdministrationInstance>;
+
 interface MedAdministrationProps {
+  readOnly?: boolean;
   selectedOrders: MedicationOrder[];
   administrationsLookup: { [key: string]: DatabaseMedAdministration[] };
   medicationLookup: { [key: string]: AllMedicationTypes };
@@ -47,6 +50,7 @@ interface MedAdministrationProps {
 
 
 const MedAdministrationPanel = ({
+  readOnly = false,
   selectedOrders,
   medicationLookup,
   administrationsLookup,
@@ -65,18 +69,34 @@ const MedAdministrationPanel = ({
   const [isLoading] = useState(false)
   const hasSelections = selectedOrders.length > 0;
   const hasOverdose = selectedOrders.some(order => {
-    const administeredDose = newAdministrations[order.id]?.administered_dose
-    if (!administeredDose) {
-      return false
-    }
-    return order.dose < administeredDose
+    const na = newAdministrations[order.id];
+    return na && order.dose < na.administeredDose;
   })
-  const handleFakeScan = (scan: boolean) => {
-    onPtScan(scan)
-  }
 
-  const handleSubmit = async (newAdministrations: NewAdministrationData) => {
-    handleAdministerMeds(newAdministrations)
+  const handleSubmit = async () => {
+    if (readOnly) return;
+    const payload = Object.keys(newAdministrations).map(orderId => {
+      const currentAdmin = newAdministrations[orderId];
+
+      return {
+        ...currentAdmin,
+        medicationOrderId: orderId,
+        administratorId: "StudentID",
+        adminTimeMinuteOffset: elapsedMinutes,
+        status: currentAdmin.status     // status always initialized as 'given' by default 
+      };
+    });
+
+    try {
+      handleAdministerMeds(payload)
+      console.log(payload)
+      handlePopoverClose(false);
+      toast.success("Medications successfully documented");
+
+    } catch (err) {
+      console.error("Failed to save administrations", err);
+      toast.error("Failed to save administrations");
+    }
   };
 
   return (
@@ -86,7 +106,8 @@ const MedAdministrationPanel = ({
         <Button
           onClick={() => handlePopoverClose(true)}
           className="h-9 bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-2 px-4"
-          disabled={!hasSelections || isPresim}
+          disabled={readOnly || !hasSelections}
+          title={readOnly ? "Documentation is view-only in simulation" : undefined}
         >
           <PencilLine className="w-4 h-4" />
           <span className="">Document</span>
@@ -113,14 +134,17 @@ const MedAdministrationPanel = ({
 
             <div className="flex items-center gap-3 mr-6">
               <PatientStatusBadge isScanned={isScanned} />
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => handleFakeScan(!isScanned)}
-                className="text-xs border size-6 border-blue-600 hover:bg-blue-100"
-              >
-                <ScanBarcode className="text-blue-600" />
-              </Button>
+              {!readOnly && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => onPtScan(!isScanned)}
+                  className="text-xs border size-6 border-blue-600 hover:bg-blue-100"
+                  type="button"
+                >
+                  <ScanBarcode className="text-blue-600" />
+                </Button>
+              )}
             </div>
           </div>
         </DialogHeader>
@@ -183,9 +207,10 @@ const MedAdministrationPanel = ({
               </Button>
             </DialogClose>
             <Button
-              disabled={isLoading || !isScanned || hasOverdose}
-              onClick={() => handleSubmit(newAdministrations)}
+              disabled={readOnly || isLoading || !isScanned || hasOverdose}
+              onClick={handleSubmit}
               className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm min-w-[120px]"
+              title={readOnly ? "Documentation is view-only in simulation" : undefined}
             >
               {isLoading ? "Signing..." : "Sign & Accept"}
             </Button>

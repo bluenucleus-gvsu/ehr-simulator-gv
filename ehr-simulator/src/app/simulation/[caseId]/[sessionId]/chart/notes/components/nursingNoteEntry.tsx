@@ -24,7 +24,7 @@ const templateStudentNote = `
 `
 
 interface NursingNoteEntryProps {
-  submitNote: (userNote: string) => void,
+  submitNote: (userNote: string) => Promise<boolean>,
   isPresim: boolean | null;
 }
 
@@ -36,8 +36,11 @@ const NursingNoteEntry = ({ submitNote, isPresim }: NursingNoteEntryProps) => {
     setNewNote(noteContent);
   }
 
-  const handleSubmitNote = () => {
-    submitNote(newNote);
+  const handleSubmitNote = async () => {
+    const success = await submitNote(newNote);
+    if (!success) {
+      return;
+    }
     setNewNote(templateStudentNote);
     setIsOpen(false);
   }

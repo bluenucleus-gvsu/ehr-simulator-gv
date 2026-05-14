@@ -59,11 +59,11 @@ const NoteView = ({
     setFilteredSpecialties([]);
   };
 
-  const onSubmitNote = async (noteContent: string) => {
+  const onSubmitNote = async (noteContent: string): Promise<boolean> => {
     const now = differenceInMinutes(new Date(), simStartTime ?? 0)
     if (!groupId || !userId || !caseId || !sessionId) {
       toast.error("Still loading session data. Please try again in a moment.");
-      return;
+      return false;
     }
 
     const newNote: EditableStudentNoteUpsert = {
@@ -81,11 +81,14 @@ const NoteView = ({
 
     const result = await submitStudentNote(newNote);
     if (result.success) {
-      toast.success(`Nursing note submitted at ${format(now, 'HH:mm')}`);
+      toast.success("Nursing note submitted.");
+      return true;
     }
     else if (!result.success) {
       toast.error(result.message)
+      return false;
     }
+    return false;
   };
 
   if (isLoading) {

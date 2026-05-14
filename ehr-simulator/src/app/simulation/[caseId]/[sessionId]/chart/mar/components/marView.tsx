@@ -3,6 +3,7 @@
 import { addMinutes, differenceInMinutes } from 'date-fns'
 import MedCard from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/medCard";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { AllMedicationTypes, MedicationOrder } from "./marData";
 import MedAdministrationPanel from "./medAdministrationPanel";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -20,6 +21,7 @@ import { PatientStatusBadge } from './marHelpers';
 import ColumnShiftControl from './columnShiftControl';
 import { DatabaseMedAdministration, StudentMedicationAdministration, submitMedicationAdministrations } from '@/actions/simulation';
 import { useSimSessionContext } from '@/context/SimSessionContext';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 export interface NewAdministrationData {
@@ -45,8 +47,9 @@ export default function MarView({
   medicationAdministrations,
   params
 }: MarViewData) {
+  const router = useRouter();
   // context
-  const { userId, groupId, isPresim, userName, simStartTime } = useSimSessionContext();
+  const { userId, groupId, isPresim, userName, simStartTime, loading } = useSimSessionContext();
   // med data
   const [selectedOrders, setSelectedOrders] = useState<MedicationOrder[]>([]);
   const [newAdministrations, setNewAdministrations] = useState<NewAdministrationData>({});
@@ -62,9 +65,24 @@ export default function MarView({
   const [isMedAdminPanelOpen, setIsMedAdminPanelOpen] = useState(false);
   // temp time management
   const [timeColumnOffset, setTimeColumnOffset] = useState(0)
+  const [localTimelineAnchor] = useState(() => new Date());
   const anchorDate = useMemo(() => {
-    return simStartTime ? new Date(simStartTime) : new Date();
-  }, [simStartTime]);
+    if (!simStartTime) {
+      return localTimelineAnchor;
+    }
+
+    const sessionAnchor = new Date(simStartTime);
+    const minutesSinceSessionStart = Math.abs(differenceInMinutes(new Date(), sessionAnchor));
+
+    // Some sessions remain "in progress" for days. Using that old started_at
+    // makes MAR times diverge from case baseline timelines.
+    // For stale sessions, use a stable local anchor for this page load.
+    if (minutesSinceSessionStart > 12 * 60) {
+      return localTimelineAnchor;
+    }
+
+    return sessionAnchor;
+  }, [simStartTime, localTimelineAnchor]);
 
   const [elapsedMinutes, setElapsedMinutes] = useState(() => {
     return differenceInMinutes(new Date(), anchorDate);
@@ -148,7 +166,7 @@ export default function MarView({
           administrator: userName,
           time_offset: 0,
           administered_dose: targetOrder.dose,
-          is_in_presim: false,
+          is_in_presim: isPresim ?? false,
           notes: '',
         }
       }));
@@ -174,7 +192,7 @@ export default function MarView({
         administrator: userName,
         time_offset: 0,
         administered_dose: order.dose,
-        is_in_presim: false,
+        is_in_presim: isPresim ?? false,
         notes: '',
       }
     }))
@@ -232,7 +250,7 @@ export default function MarView({
           administrator: userName,
           time_offset: 0,
           administered_dose: order.dose,
-          is_in_presim: false,
+          is_in_presim: isPresim ?? false,
           notes: '',
         }
       }));
@@ -299,31 +317,84 @@ export default function MarView({
       const currentAdmin = newAdministrations[orderId]
       return {
         ...currentAdmin,
-        time_offset: elapsedMinutes,
+        time_offset: displayTimeOffsetMinutes,
       };
     });
 
-    const { error } = await submitMedicationAdministrations(payload, params.caseId, params.sessionId)
+    const result = await submitMedicationAdministrations(payload, params.caseId, params.sessionId)
 
-    if (error) {
-      toast.error("Failed to save administrations");
+    if (!result.success) {
+      toast.error(result.message ?? "Failed to save administrations");
       return
     }
     setIsMedAdminPanelOpen(false);
-    toast.success("Medications successfully documented");
+    toast.success(result.message ?? "Medications successfully documented");
     handleClearAllSelections()
+    // Pull fresh server data so newly documented administrations appear in the MAR table immediately.
+    router.refresh();
   }
 
 
+  const timelineAdministrations = useMemo(() => {
+    const numericOffsets = medicationAdministrations
+      .map((admin) => admin.time_offset)
+      .filter((offset): offset is number => typeof offset === "number");
+
+    if (numericOffsets.length <= 1) {
+      return medicationAdministrations;
+    }
+
+    const sortedOffsets = [...numericOffsets].sort((a, b) => a - b);
+    const clusters: number[][] = [];
+    for (const offset of sortedOffsets) {
+      const lastCluster = clusters[clusters.length - 1];
+      if (!lastCluster) {
+        clusters.push([offset]);
+        continue;
+      }
+      const prev = lastCluster[lastCluster.length - 1];
+      if (Math.abs(offset - prev) <= 6 * 60) {
+        lastCluster.push(offset);
+      } else {
+        clusters.push([offset]);
+      }
+    }
+
+    if (clusters.length <= 1) {
+      return medicationAdministrations;
+    }
+
+    // Pick the dominant timeline cluster, then prefer one near "case baseline" (around offset 0).
+    const selectedCluster = clusters.reduce((best, current) => {
+      if (current.length !== best.length) {
+        return current.length > best.length ? current : best;
+      }
+      const bestMean = best.reduce((sum, v) => sum + v, 0) / best.length;
+      const currentMean = current.reduce((sum, v) => sum + v, 0) / current.length;
+      return Math.abs(currentMean) < Math.abs(bestMean) ? current : best;
+    }, clusters[0]);
+
+    const min = selectedCluster[0];
+    const max = selectedCluster[selectedCluster.length - 1];
+    const bufferMinutes = 60;
+
+    return medicationAdministrations.filter((admin) => {
+      if (typeof admin.time_offset !== "number") {
+        return false;
+      }
+      return admin.time_offset >= (min - bufferMinutes) && admin.time_offset <= (max + bufferMinutes);
+    });
+  }, [medicationAdministrations]);
+
   const groupedAdministrationsByOrder = useMemo(() => {
-    return medicationAdministrations.reduce((acc, admin) => {
+    return timelineAdministrations.reduce((acc, admin) => {
       if (!acc[admin.medication_order_id || 'no_associated_order']) {
         acc[admin.medication_order_id || 'no_associated_order'] = [];
       }
       acc[admin.medication_order_id || 'no_associated_order'].push(admin)
       return acc
     }, {} as { [orderId: string]: DatabaseMedAdministration[] })
-  }, [medicationAdministrations]);
+  }, [timelineAdministrations]);
 
   const medsById = useMemo(() => {
     return medications.reduce((acc, med) => {
@@ -375,11 +446,81 @@ export default function MarView({
     return () => clearInterval(interval);
   }, [anchorDate]);
 
+  const displayTimeOffsetMinutes = useMemo(() => {
+    const nonDueOffsets = timelineAdministrations
+      .filter((admin) => admin.status !== "Due")
+      .map((admin) => admin.time_offset)
+      .filter((offset): offset is number => typeof offset === "number");
+
+    const allOffsets = timelineAdministrations
+      .map((admin) => admin.time_offset)
+      .filter((offset): offset is number => typeof offset === "number");
+
+    const rawOffsets = nonDueOffsets.length > 0 ? nonDueOffsets : allOffsets;
+
+    // Split offsets into contiguous clusters so a single extreme outlier
+    // (e.g. a stale historical session write) does not hijack the viewport.
+    const sortedOffsets = [...rawOffsets].sort((a, b) => a - b);
+    const clusters: number[][] = [];
+    for (const offset of sortedOffsets) {
+      const lastCluster = clusters[clusters.length - 1];
+      if (!lastCluster) {
+        clusters.push([offset]);
+        continue;
+      }
+      const prev = lastCluster[lastCluster.length - 1];
+      if (Math.abs(offset - prev) <= 6 * 60) {
+        lastCluster.push(offset);
+      } else {
+        clusters.push([offset]);
+      }
+    }
+    const adminOffsets = clusters.length === 0
+      ? rawOffsets
+      : clusters.reduce((best, current) =>
+        current.length > best.length ? current : best
+      , clusters[0]);
+
+    if (adminOffsets.length === 0) {
+      return elapsedMinutes;
+    }
+
+    // Six columns currently represent roughly 6 hours centered near "now".
+    // If no administrations fall in that window, snap to the latest administration
+    // so records don't disappear from view after session context loads.
+    const windowStart = elapsedMinutes - (3 * 60);
+    const windowEnd = elapsedMinutes + (2 * 60);
+    const hasVisibleRangeHit = adminOffsets.some(
+      (offset) => offset >= windowStart && offset <= windowEnd,
+    );
+
+    if (hasVisibleRangeHit) {
+      return elapsedMinutes;
+    }
+
+    return adminOffsets.reduce((closest, offset) => {
+      const currentDistance = Math.abs(offset - elapsedMinutes);
+      const closestDistance = Math.abs(closest - elapsedMinutes);
+      return currentDistance < closestDistance ? offset : closest;
+    }, adminOffsets[0]);
+  }, [elapsedMinutes, timelineAdministrations]);
+
   const currentSimTime = anchorDate
-    ? addMinutes(anchorDate, elapsedMinutes)
+    ? addMinutes(anchorDate, displayTimeOffsetMinutes)
     : new Date();
 
   const displayColumns = createColumns(currentSimTime, timeColumnOffset);
+
+  if (loading || !simStartTime) {
+    return (
+      <div className="flex flex-col p-3 gap-3 w-full h-[calc(100vh-4rem)] bg-gray-100">
+        <Skeleton className="h-10 w-72 bg-gray-200" />
+        <Skeleton className="h-28 w-full bg-gray-200" />
+        <Skeleton className="h-28 w-full bg-gray-200" />
+        <Skeleton className="h-28 w-full bg-gray-200" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col p-2 pt-0 w-full h-[calc(100vh-4rem)] bg-gray-100 overflow-y-auto">

@@ -9,8 +9,10 @@ import { updateOrders } from "@/actions/case_builder/updateOrders";
 import { updateLabs } from "@/actions/case_builder/updateLabs";
 import { updateDocumentationResults } from "@/actions/case_builder/updateDocumentationResults";
 import { updateMedications } from "@/actions/case_builder/updateMedications";
+import { updateCaseIntakeOutput } from "@/actions/case_builder/updateCaseIntakeOutput";
 
-import { MedAdministrationInstance } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
+import { MedAdministrationInstance, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
+import type { IntakeOutputFormData } from "@/utils/form";
 
 // TODO: Narrow type definitions for each section & enforce at runtime.
 type SaveCaseArgs =
@@ -20,7 +22,8 @@ type SaveCaseArgs =
   | { section: typeof CaseSection.ORDERS; payload: any; caseId?: string | null }
   | { section: typeof CaseSection.LABS; payload: any; caseId?: string | null }
   | { section: typeof CaseSection.DOCUMENTATION; payload: any; caseId?: string | null }
-  | { section: typeof CaseSection.MEDICATION_ORDERS; payload: MedAdministrationInstance[]; caseId?: string | null }
+  | { section: typeof CaseSection.INTAKE_OUTPUT; payload: IntakeOutputFormData[]; caseId?: string | null }
+  | { section: typeof CaseSection.MEDICATION_ORDERS; payload: { orders: MedicationOrder[]; administrations: MedAdministrationInstance[] }; caseId?: string | null }
 
 export async function saveCaseData({ payload, section, caseId }: SaveCaseArgs) {
   const supabase = createClient(
@@ -45,6 +48,8 @@ export async function saveCaseData({ payload, section, caseId }: SaveCaseArgs) {
       return await updateLabs(supabase, payload, caseId);
     case CaseSection.DOCUMENTATION:
       return await updateDocumentationResults(supabase, payload, caseId);
+    case CaseSection.INTAKE_OUTPUT:
+      return await updateCaseIntakeOutput(supabase, payload, caseId);
     case CaseSection.MEDICATION_ORDERS:
       return await updateMedications(supabase, payload, caseId);
   }

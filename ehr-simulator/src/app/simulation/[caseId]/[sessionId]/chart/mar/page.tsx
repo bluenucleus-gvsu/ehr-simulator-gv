@@ -18,7 +18,7 @@ const mar = async ({ params }: PageProps) => {
     getMedicationAdministrations(caseId, sessionId)
   ])
 
-  if (!medData.success || !medData.data || !administrationData.success || !administrationData.data) {
+  if (!medData.success || !medData.data) {
     return <MarView
       medicationOrders={[]}
       medications={[]}
@@ -27,13 +27,21 @@ const mar = async ({ params }: PageProps) => {
     />
   }
 
+  const medicationAdministrations =
+    administrationData.success && administrationData.data
+      ? administrationData.data
+      : [];
+
   const uniqueMedsMap = new Map<string, AllMedicationTypes>();
   const formattedOrders: MedicationOrder[] = [];
 
   medData.data.forEach((dbOrder) => {
     const dbMed = dbOrder.medications;
+    if (!dbMed) {
+      return;
+    }
     // only add unique medications, no duplicates
-    if (dbMed && !uniqueMedsMap.has(dbMed.id)) {
+    if (!uniqueMedsMap.has(dbMed.id)) {
       uniqueMedsMap.set(dbMed.id, mapDatabaseMedToFrontend(dbMed));
     }
 
@@ -46,7 +54,8 @@ const mar = async ({ params }: PageProps) => {
       instructions: dbOrder.instructions || undefined,
       indication: dbOrder.indication || '',
       orderingProvider: dbOrder.ordering_provider || 'Unknown Provider',
-      visibleInPresim: dbOrder.is_in_presim,
+      // Treat null/undefined as visible in pre-sim so rows are not hidden when the flag is unset.
+      visibleInPresim: dbOrder.is_in_presim !== false,
       infusionRate: dbOrder.infusion_rate || undefined
     });
   });
@@ -58,7 +67,7 @@ const mar = async ({ params }: PageProps) => {
     <MarView
       medicationOrders={formattedOrders}
       medications={formattedMedications}
-      medicationAdministrations={administrationData.data}
+      medicationAdministrations={medicationAdministrations}
       params={awaitedParams}
     />
   )

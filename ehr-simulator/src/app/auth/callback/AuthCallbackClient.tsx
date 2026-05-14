@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
+import { emailIsDevAdminAllowlist } from '@/lib/devAdminEmails'
 
 export default function AuthCallbackPage() {
   const router = useRouter()
@@ -35,18 +36,20 @@ export default function AuthCallbackPage() {
       if (session) {
         const fallbackRole = session.user?.user_metadata?.role as string | undefined
         const role = await getRoleForUser(session.user.id, fallbackRole)
-        if (typeof window !== 'undefined' && role) {
+        const devBypass = emailIsDevAdminAllowlist(session.user.email ?? undefined)
+        const resolvedRole = devBypass ? 'admin' : role
+        if (typeof window !== 'undefined' && resolvedRole) {
           try {
-            window.localStorage.setItem('role', role)
+            window.localStorage.setItem('role', resolvedRole)
           } catch {
             // ignore storage errors
           }
         }
 
         const destination =
-          role === 'admin'
+          resolvedRole === 'admin'
             ? '/admin'
-            : role === 'faculty'
+            : resolvedRole === 'faculty'
             ? `/faculty/${session.user.id}`
             : `/user/profile/${session.user.id}`
         router.replace(destination)
@@ -56,15 +59,17 @@ export default function AuthCallbackPage() {
             if (sess) {
               const fallbackRole = sess.user?.user_metadata?.role as string | undefined
               const role = await getRoleForUser(sess.user.id, fallbackRole)
-              if (typeof window !== 'undefined' && role) {
+              const devBypass = emailIsDevAdminAllowlist(sess.user.email ?? undefined)
+              const resolvedRole = devBypass ? 'admin' : role
+              if (typeof window !== 'undefined' && resolvedRole) {
                 try {
-                  window.localStorage.setItem('role', role)
+                  window.localStorage.setItem('role', resolvedRole)
                 } catch {}
               }
               const destination =
-                role === 'admin'
+                resolvedRole === 'admin'
                   ? '/admin'
-                  : role === 'faculty'
+                  : resolvedRole === 'faculty'
                   ? `/faculty/${sess.user.id}`
                   : `/user/profile/${sess.user.id}`
               router.replace(destination)

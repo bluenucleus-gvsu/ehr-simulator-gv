@@ -174,6 +174,7 @@ export type Database = {
           date_of_birth: string | null
           description: string | null
           emergency_contact_name: string | null
+          emergency_contact_phone: string | null
           emergency_contact_relationship: string | null
           employment: string | null
           first_name: string
@@ -207,6 +208,7 @@ export type Database = {
           date_of_birth?: string | null
           description?: string | null
           emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           emergency_contact_relationship?: string | null
           employment?: string | null
           first_name: string
@@ -240,6 +242,7 @@ export type Database = {
           date_of_birth?: string | null
           description?: string | null
           emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
           emergency_contact_relationship?: string | null
           employment?: string | null
           first_name?: string

@@ -148,9 +148,12 @@ export default function MedicationAdministrationsForm() {
     onDataChange('medAdministrationInstances', medAdministrations)
 
     await saveCaseData({
-      payload: medAdministrations,
+      payload: {
+        orders: medOrderData.createdOrders,
+        administrations: medAdministrations,
+      },
       section: CaseSection.MEDICATION_ORDERS,
-      caseId: caseId
+      caseId: caseId,
     })
 
     router.push('/admin/case-builder/form/review')
