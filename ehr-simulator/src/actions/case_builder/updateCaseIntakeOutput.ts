@@ -22,5 +22,5 @@ export async function updateCaseIntakeOutput(
     .update({ intake_output_blocks: blocks })
     .eq("id", caseId)
 
-  if (error) throw error
+  if (error) throw new Error(error.message)
 }
