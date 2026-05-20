@@ -32,6 +32,7 @@ import { calculateColTotal, formatTimeFromOffset, getPinnedStyles } from "./comp
 import { appendTesterDocumentationRows, getTesterDocumentationRows } from "@/utils/testerLocalStore";
 import { isTesterModeClient } from "@/utils/testerMode";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
+import { useStudentSimulationEditAccess } from "@/utils/studentSimulationEditAccess";
 
 interface FlexSheetViewProps {
   dbDocumentation: DatabaseDocumentation[];
@@ -59,6 +60,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
     ? dbDocumentation
     : ((caseBundle?.documentationResults ?? []) as DatabaseDocumentation[]);
   const { groupId, userId, simStartTime, handleUnsavedCharting } = useSimSessionContext();
+  const { canEdit } = useStudentSimulationEditAccess();
   const initialCharting = useMemo(
     () => buildChartingRowsFromBundle(sourceDocumentation, flexSheetTemplate),
     [sourceDocumentation],
@@ -135,6 +137,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   }, [data, visibleSubsetIds, timeOffsets]);
 
   const handleCellUpdate = useCallback((rowIndex: number, columnId: string, value: string | string[]) => {
+    if (!canEdit) return;
     setData((prevData) =>
       prevData.map((row, index) => {
         if (index === rowIndex) {
@@ -149,9 +152,10 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
       newSet.add(columnId);
       return newSet;
     });
-  }, []);
+  }, [canEdit]);
 
   const handleSubsetSelection = useCallback((rowId: string, columnId: string, selectedIdsForField: string[]) => {
+    if (!canEdit) return;
     const selectionKey = `${rowId}-${columnId}`;
 
     setFieldSelections((prev) => ({
@@ -167,9 +171,13 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
         return row;
       }),
     );
-  }, []);
+  }, [canEdit]);
 
   const handleColumnAdd = (newTime: number) => {
+    if (!canEdit) {
+      toast.error("FlexSheets are view-only in pre-simulation.");
+      return;
+    }
     if (timeOffsets.includes(newTime)) {
       toast.error(`A column for time ${newTime} already exists.`);
       return;
@@ -197,6 +205,10 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   };
 
   const handleSave = async () => {
+    if (!canEdit) {
+      toast.error("FlexSheets are view-only in pre-simulation.");
+      return;
+    }
     if (dirtyColumns.size === 0) {
       toast.info("No changes to save.");
       return;
@@ -371,11 +383,27 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
               case "static":
                 return <p></p>;
               case "input":
-                return <TableInputCell row={row} column={column} getValue={getValue} table={table} />;
+                return (
+                  <TableInputCell
+                    row={row}
+                    column={column}
+                    getValue={getValue}
+                    table={table}
+                    readOnly={!canEdit}
+                  />
+                );
               case "totalScoreRow":
                 return <p className="text-right pr-2 py-0 text-xs font-semibold">{initialValue}</p>;
               case "assessmentselect":
-                return <TableAssessmentSelectCell row={row} column={column} getValue={getValue} table={table} />;
+                return (
+                  <TableAssessmentSelectCell
+                    row={row}
+                    column={column}
+                    getValue={getValue}
+                    table={table}
+                    readOnly={!canEdit}
+                  />
+                );
               case "checkboxlist": {
                 const selectionKey = `${row.original.id}-${column.id}`;
                 const currentSelectedSubsets = fieldSelections[selectionKey] || [];
@@ -386,6 +414,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
                     rowId={row.original.id}
                     columnId={column.id}
                     onSelectionChange={handleSubsetSelection}
+                    disabled={!canEdit}
                   />
                 );
               }
@@ -396,7 +425,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
         });
       }),
     ],
-    [slicedTimeOffsets, simStartTime, fieldSelections, handleSubsetSelection],
+    [slicedTimeOffsets, simStartTime, fieldSelections, handleSubsetSelection, canEdit],
   );
 
   const ptTable = useReactTable({
@@ -406,6 +435,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
     initialState: { columnPinning: { left: ["pinned"] } },
     meta: {
       updateData: (rowIndex, columnId, value) => {
+        if (!canEdit) return;
         const rowId = filteredData[rowIndex]?.id;
         if (!rowId) return;
 
@@ -432,10 +462,12 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
                 onColumnAdd={handleColumnAdd}
                 existingTimeColumns={timeOffsets}
                 sessionStartTime={simStartTime}
+                disabled={!canEdit}
               />
               <Button
                 onClick={handleSave}
-                disabled={isSaving || !canSubmit}
+                disabled={!canEdit || isSaving || !canSubmit}
+                title={!canEdit ? "View-only in pre-simulation" : undefined}
                 className="h-6 bg-lime-500 text-white hover:bg-lime-600 shadow"
               >
                 {isSaving ? "Saving..." : "File"}

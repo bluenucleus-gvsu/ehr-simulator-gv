@@ -24,11 +24,12 @@ const templateStudentNote = `
 `
 
 interface NursingNoteEntryProps {
-  submitNote: (userNote: string) => Promise<boolean>,
-  isPresim: boolean | null;
+  submitNote: (userNote: string) => Promise<boolean>;
+  /** When true, students cannot add or submit notes (pre-sim view only). */
+  disabled?: boolean;
 }
 
-const NursingNoteEntry = ({ submitNote, isPresim }: NursingNoteEntryProps) => {
+const NursingNoteEntry = ({ submitNote, disabled = false }: NursingNoteEntryProps) => {
   const [newNote, setNewNote] = useState<string>(templateStudentNote);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -49,7 +50,7 @@ const NursingNoteEntry = ({ submitNote, isPresim }: NursingNoteEntryProps) => {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
-          disabled={isPresim ?? true}
+          disabled={disabled}
           variant="outline"
           onClick={() => setIsOpen(true)}
           className="bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm gap-2"

@@ -13,6 +13,7 @@ import FilterBadges from "./filterBadges";
 import { differenceInMinutes } from "date-fns";
 import { ClinicalDocumentView, EditableStudentNoteUpsert, submitStudentNote } from "@/actions/simulation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
+import { useStudentSimulationEditAccess } from "@/utils/studentSimulationEditAccess";
 import { Skeleton } from "@/components/ui/skeleton";
 import { appendTesterNote, getTesterNotes } from "@/utils/testerLocalStore";
 import { isTesterModeClient } from "@/utils/testerMode";
@@ -34,7 +35,8 @@ const NoteView = ({
   sessionId
 }: NoteViewProps) => {
   const { caseBundle } = useSimulationCase();
-  const { simStartTime, userName, userId, groupId, isPresim } = useSimSessionContext();
+  const { simStartTime, userName, userId, groupId } = useSimSessionContext();
+  const { canEdit } = useStudentSimulationEditAccess();
   const [filteredSpecialties, setFilteredSpecialties] = useState<string[]>([]);
   const [testerNotes, setTesterNotes] = useState<ClinicalDocumentView[]>([]);
   const sessionKey = `${caseId}:${sessionId}`;
@@ -78,6 +80,10 @@ const NoteView = ({
   };
 
   const onSubmitNote = async (noteContent: string): Promise<boolean> => {
+    if (!canEdit) {
+      toast.error("Notes are view-only in pre-simulation. Enter the active simulation to document.");
+      return false;
+    }
     const now = differenceInMinutes(new Date(), simStartTime ?? 0)
     if (!userId || !caseId || !sessionId) {
       toast.error("Still loading session data. Please try again in a moment.");
@@ -102,6 +108,10 @@ const NoteView = ({
     }
 
     if (isTesterModeClient()) {
+      if (!canEdit) {
+        toast.error("Notes are view-only in pre-simulation.");
+        return false;
+      }
       const localNote = {
         ...newNote,
         id: crypto.randomUUID(),
@@ -192,7 +202,7 @@ const NoteView = ({
             handleClearFilters={clearAllFilters}
           />
         </div>
-        <NursingNoteEntry isPresim={isPresim} submitNote={onSubmitNote} />
+        <NursingNoteEntry disabled={!canEdit} submitNote={onSubmitNote} />
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto rounded-t-lg border bg-gray-100 p-2 inset-shadow-sm">

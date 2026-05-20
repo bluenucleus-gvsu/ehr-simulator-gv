@@ -25,6 +25,7 @@ import { useSimulationCase } from '@/context/SimulationCaseContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { appendTesterMedicationAdministrations, getTesterMedicationAdministrations } from '@/utils/testerLocalStore';
 import { isTesterModeClient } from '@/utils/testerMode';
+import { useStudentSimulationEditAccess } from '@/utils/studentSimulationEditAccess';
 
 
 export interface NewAdministrationData {
@@ -56,6 +57,7 @@ export default function MarView({
   const sessionKey = `${resolvedCaseId}:${params.sessionId}`;
   // context
   const { userId, groupId, isPresim, userName, simStartTime, loading } = useSimSessionContext();
+  const { canEdit } = useStudentSimulationEditAccess();
   // med data
   const [selectedOrders, setSelectedOrders] = useState<MedicationOrder[]>([]);
   const [newAdministrations, setNewAdministrations] = useState<NewAdministrationData>({});
@@ -98,6 +100,10 @@ export default function MarView({
   // const [scannedSymbol, setScannedSymbol] = useState('')
 
   const handleScan = (symbol: string) => {
+    if (!canEdit) {
+      toast.info("Medication documentation is view-only in pre-simulation.");
+      return;
+    }
     // handle patient wristband scans
     if (symbol.slice(0, 2) === 'pt') {
       if (symbol === patientMRN) {
@@ -242,6 +248,10 @@ export default function MarView({
   }, [sessionKey]);
 
   const handleMedCheckboxChange = (order: MedicationOrder, checked: boolean) => {
+    if (!canEdit) {
+      toast.info("Medication documentation is view-only in pre-simulation.");
+      return;
+    }
     if (!groupId || !userId) {
       toast.error('missing an id')
       return
@@ -324,6 +334,10 @@ export default function MarView({
 
 
   const handleAdministerMeds = async (newAdministrations: NewAdministrationData) => {
+    if (!canEdit) {
+      toast.error("Medication documentation is view-only in pre-simulation.");
+      return;
+    }
     // Update administration time
     const payload = Object.keys(newAdministrations).map(orderId => {
       const currentAdmin = newAdministrations[orderId]
@@ -562,6 +576,7 @@ export default function MarView({
             handlePopoverClose={setIsMedAdminPanelOpen}
             onOrderRemove={handleRemoveOrder}
             isPresim={isPresim ?? true}
+            readOnly={!canEdit}
             elapsedMinutes={elapsedMinutes}
           />
         </div>
@@ -598,6 +613,7 @@ export default function MarView({
               isHighlightableColumn={timeColumnOffset === 0}
               elapsedSimMinutes={elapsedMinutes}
               isPresim={isPresim ?? false}
+              selectionDisabled={!canEdit}
             />
           )
         })}
