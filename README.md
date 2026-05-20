@@ -26,17 +26,13 @@ This app is a **Next.js 15** frontend in the `ehr-simulator` folder. It talks to
 
 ## 1. Prerequisites
 
-### Both platforms
-
 |Requirement|Notes|
 |---|---|
 |**Git**|To clone the repository.|
 |**Node.js**|**20.x or newer** (LTS recommended). Check with `node -v`.|
 |**npm**|Comes with Node. Check with `npm -v`.|
----
+> Install Node from [nodejs.org](https://nodejs.org/) or use a version manager ([nvm](https://github.com/nvm-sh/nvm) on Mac/Linux, [nvm-windows](https://github.com/coreybutler/nvm-windows) or [fnm](https://github.com/Schniz/fnm) on Windows).
 
-
-Install Node from [nodejs.org](https://nodejs.org/) or use a version manager ([nvm](https://github.com/nvm-sh/nvm) on Mac/Linux, [nvm-windows](https://github.com/coreybutler/nvm-windows) or [fnm](https://github.com/Schniz/fnm) on Windows).
 ---
 
 ## 2. Get the code
@@ -116,7 +112,9 @@ npx supabase stop
 ---
 ## <mark>Supabase Important Note</mark>:
 
-> **Note:** When you set up Supabase, your login credentials are automatically set to **student**. Go to the **Supabase Studio Table Editor**, then go to the users table, you can search or query on email and change your role to any other role:(admin, faculty, etc.).
+- **Note:** When you set up Supabase, your login credentials are automatically set to **student**. 
+
+- **Quick Fix**: Go to the **Supabase Studio Table Editor**, then go to the users table, you can search or query on email and change your role to any other role: (admin, faculty, etc.).
 
 ---
 ## 6. Google Cloud OAuth setup (required for Google sign-in)
