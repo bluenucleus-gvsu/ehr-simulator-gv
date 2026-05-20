@@ -69,18 +69,20 @@ npm install
 ### Path A — Hosted Supabase (typical for shared dev/staging)
 
 1. Create or open a project in the [Supabase dashboard](https://supabase.com/dashboard).
-2. **Project Settings → API**: copy **Project URL**, **anon public** key, and **service_role** key into `.env.local`:
+2. Copy the **Project URL**, found on the Project Overview page, into `.env.local`:
     - URL → `NEXT_PUBLIC_SUPABASE_URL`
+3. **Project Settings → API Keys**: copy **anon public** key, and **service_role** key into `.env.local`:
     - anon public → `NEXT_PUBLIC_SUPABASE_ANON_KEY` and usually also `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (unless your project uses a distinct publishable key)
     - service_role → `SUPABASE_SERVICE_ROLE_KEY`
-3. Ensure **Auth → URL configuration** includes your local app URL, e.g. `http://localhost:3000`, and the auth callback path your app uses (e.g. `/auth/callback`).
-4. **Google sign-in**: enable the Google provider under **Authentication → Providers** and follow Supabase’s Google OAuth setup (Google Cloud OAuth client, redirect URIs Supabase provides).
+4. Ensure **Authenticatoin → URL configuration** includes your local app URL, e.g. `http://localhost:3000`, then add the auth callback path your app uses (e.g. `/auth/callback`).
+5. **Google sign-in**: enable the Google provider under **Authentication → Providers** and follow these steps [Google Cloud OAuth Setup](#6-google-cloud-oauth-setup-required-for-google-sign-in) and copy the Client Secret and Client ID for this page.
+(This may need updating...)
 
 Apply any SQL migrations your team uses (for example from `supabase/migrations/`) via the Supabase SQL editor or linked CI, so your schema matches the app.
 
 ### Path B — Local Supabase (full stack on your machine)
 
-1. Install **Docker Desktop** and ensure it is running.
+1. Install **Docker Desktop** and ensure it is open and running.
     
 2. The Supabase CLI is already a **devDependency** of this project. Use it via `npx`:
     
@@ -108,14 +110,6 @@ To stop local Supabase:
 ```bash
 npx supabase stop
 ```
-
----
-## <mark>Supabase Important Note</mark>:
-
-- **Note:** When you set up Supabase, your login credentials are automatically set to **student**. 
-
-- **Quick Fix**: Go to the **Supabase Studio Table Editor**, then go to the users table, you can search or query on email and change your role to any other role: (admin, faculty, etc.).
-
 ---
 ## 6. Google Cloud OAuth setup (required for Google sign-in)
 
@@ -129,7 +123,7 @@ Both hosted and local Supabase paths require a Google OAuth client.
     
 4. Once created, copy your **Client ID** and **Client Secret**.
 
-> **Note:** For hosted Supabase (Path A) skip steps 5 and 6, then enter the Client ID and Client Secret directly in the Supabase dashboard under **Authentication → Providers → Google** instead of `config.toml`.
+> **Note:** For hosted Supabase ([Path A](#path-a--hosted-supabase-typical-for-shared-devstaging)) skip steps 5 and 6, then enter the Client ID and Client Secret directly in the Supabase dashboard under **Authentication → Providers → Google** instead of `config.toml`.
     
 5. Add the **Client Secret** to `.env.local` (local development only):
     
@@ -176,6 +170,7 @@ npm run dev
 |Auth / Google redirect errors|Supabase **Site URL** and **Redirect URLs** include `http://localhost:3000` and your callback route; Google OAuth client matches Supabase’s redirect URI.|
 |Local Supabase won’t start|Docker running; enough disk/RAM; ports free; try `npx supabase stop` then `npx supabase start`.|
 |`npm run build` fails|Node version ≥ 20; run `npm install` again; read the full Next.js / TypeScript error output.|
+|Can't access admin or faculty portals | When you set up Supabase, your login credentials are automatically set to **student**. Go to your project in **Supabase Studio**, you can search or query on your login email for the sign in method and change your role to any other role: (admin, faculty, etc.). Be sure to look at the databse schema to determine the best table.|
 
 ---
 
