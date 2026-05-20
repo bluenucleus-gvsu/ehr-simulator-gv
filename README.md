@@ -3,12 +3,10 @@
 **Project Mission**: Develop a software to aid in medical simulation, mimicking medical standards, such as EPIC. 
 
 ---
-<mark>Live Demo: [Yet to come]</mark>
-
 
 # Run the EHR Simulator from scratch (macOS and Windows)
 
-This app is a **Next.js 15** frontend in the `ehr-simulator` folder. It talks to **Supabase** (Postgres, Auth, and server actions that use the service role key). You can point it at a **hosted Supabase project** or run **Supabase locally** with Docker.
+This app is a **Next.js 15** frontend in the `ehr-simulator` folder. It talks to **Supabase** (Postgres, Auth, and server actions that use the service role key). You can point it at a **hosted Supabase project** or run **Supabase locally** with Docker all found at [Supabase Setup](#5-supabase-choose-one-path).
 
 ---
 
@@ -18,12 +16,11 @@ This app is a **Next.js 15** frontend in the `ehr-simulator` folder. It talks to
 3. [Install Dependencies](#3-install-dependencies)
 4. [Environment Variables](#4-environment-variables)
 5. [Supabase Setup (Choose One Path)](#5-supabase-choose-one-path)
-6. [Google Cloud OAuth Setup](#6-google-cloud-oauth-setup)
-7. [Running the Development Server](#7-running-the-development-server)
-8. [Production-like Run (Optional)](#8-production-like-run-optional)
-9. [Platform-Specific Tips](#9-platform-specific-tips)
-10. [Quick Troubleshooting](#10-quick-troubleshooting)
-11. [Reference Files](#11-reference-files)
+6. [Google Cloud OAuth Setup](#6-google-cloud-oauth-setup-required-for-google-sign-in)
+7. [Running the Development Server](#7-run-the-development-server)
+8. [Platform-Specific Tips](#8-platform-specific-tips)
+9. [Quick Troubleshooting](#9-quick-troubleshooting)
+
 
 ---
 
@@ -40,17 +37,6 @@ This app is a **Next.js 15** frontend in the `ehr-simulator` folder. It talks to
 
 
 Install Node from [nodejs.org](https://nodejs.org/) or use a version manager ([nvm](https://github.com/nvm-sh/nvm) on Mac/Linux, [nvm-windows](https://github.com/coreybutler/nvm-windows) or [fnm](https://github.com/Schniz/fnm) on Windows).
-
-### macOS extras (local Supabase only)
-
-- **Docker Desktop for Mac** — required for `supabase start`. Install from [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/), start Docker before running Supabase CLI commands.
-
-### Windows extras (local Supabase only)
-
-(Might not be needed.. I did not need this for development)
-- **Docker Desktop for Windows** — use the **WSL 2** backend when prompted; it is the most reliable setup for the Supabase stack. Install from the same Docker link as above.
-- If you develop inside **WSL**, install Node and Git inside that Linux distro and run all commands there; use Docker Desktop’s WSL integration.
-
 ---
 
 ## 2. Get the code
@@ -79,27 +65,8 @@ npm install
     ```bash
     cp .env.example .env.local
     ```
-    
-    <mark>On Windows PowerShell:</mark>
-    
-    ```powershell
-    copy .env.example .env.local
-    ```
+> **NOTE**: All variables are listed in the `env.local`.
 
-2. <mark>Fill in values (see the next section). The app expects at least:</mark>
-    
-    - `NEXT_PUBLIC_SUPABASE_URL`
-    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — used by the server client and login flow (often the same value as the **anon** key from the Supabase dashboard or CLI output).
-    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — used by browser clients and some components.
-    - `SUPABASE_SERVICE_ROLE_KEY` — **server-only**; never expose to the client. Required for server actions that talk to Supabase with elevated privileges.
-
-
-3. <mark>Optional (local development only):</mark>
-    
-    - `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET` — if your team uses this for Google OAuth wiring with Supabase.
-    - **Dev admin bypass** (see `src/lib/devAdminEmails.ts`):
-        - `DEV_ADMIN_BYPASS_ENABLED` or `NEXT_PUBLIC_DEV_ADMIN_BYPASS_ENABLED` — e.g. `true`
-        - `DEV_ADMIN_EMAILS` or `NEXT_PUBLIC_DEV_ADMIN_EMAILS` — comma-separated allowlisted emails
 ---
 ## 5. Supabase: choose one path
 
@@ -147,12 +114,12 @@ npx supabase stop
 ```
 
 ---
-<mark>### Supabase Side Note:</mark>
+## <mark>Supabase Important Note</mark>:
 
 > **Note:** When you set up Supabase, your login credentials are automatically set to **student**. Go to the **Supabase Studio Table Editor**, then go to the users table, you can search or query on email and change your role to any other role:(admin, faculty, etc.).
 
 ---
-## 6. <mark>Google Cloud OAuth setup (required for Google sign-in)</mark>
+## 6. Google Cloud OAuth setup (required for Google sign-in)
 
 Both hosted and local Supabase paths require a Google OAuth client.
 
@@ -188,40 +155,22 @@ Both hosted and local Supabase paths require a Google OAuth client.
 ```bash
 npm run dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000/). 
-
-<mark>The dev script uses **Turbopack** (`next dev --turbopack`).</mark>
-
 ---
 
-## 8. <mark>Production-like run (optional)</mark>
-
-```bash
-npm run build
-npm run start
-```
-
-Use this to verify a production build locally.
-
----
-
-## 9. Platform-specific tips
+## 8. Platform-specific tips
 
 ### macOS
 
 - If `npx supabase start` fails, confirm Docker is running and ports **54320–54322** (and related ports in `supabase/config.toml`) are not used by another Postgres or Supabase project.
 
 ### Windows
-
-- <mark>Prefer **Docker Desktop + WSL 2** for Supabase.</mark>
 - If antivirus software blocks Docker networking, allow Docker Desktop or add exclusions as needed.
 - Use the same terminal (PowerShell, cmd, or WSL) consistently for `npm` and `npx supabase` so paths and env files resolve the same way.
 - Line endings: Git `core.autocrlf` can sometimes confuse scripts; if a shell script fails, check the file’s line endings (LF vs CRLF).
 
 ---
 
-## 10. Quick troubleshooting
+## 9. Quick troubleshooting
 
 |Symptom|Things to check|
 |---|---|
@@ -231,12 +180,4 @@ Use this to verify a production build locally.
 |`npm run build` fails|Node version ≥ 20; run `npm install` again; read the full Next.js / TypeScript error output.|
 
 ---
-
-## <mark>11. Reference files</mark>
-
-- Example env: `.env.example`
-- NPM scripts: `package.json`
-- Local Supabase ports and DB version: `supabase/config.toml`
-- Optional dev admin bypass: `src/lib/devAdminEmails.ts`
-
 
