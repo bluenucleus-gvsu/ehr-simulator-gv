@@ -20,6 +20,7 @@ export type ProfileAssignmentEntry = {
   id: string;
   caseId: string;
   sessionId: string | null;
+  sessionStatus?: string | null;
   name: string | null;
   simTime: string | null;
   presimTime: string | null;
@@ -68,6 +69,7 @@ export default function ProfileSimulationEntryButtons({ assignments }: Props) {
     lifecycle: getAssignedSimulationLifecycle({
       simTime: a.simTime,
       presimTime: a.presimTime,
+      sessionStatus: a.sessionStatus,
     }),
   }));
 

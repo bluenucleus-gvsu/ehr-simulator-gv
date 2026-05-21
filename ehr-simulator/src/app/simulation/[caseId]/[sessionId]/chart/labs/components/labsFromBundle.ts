@@ -101,7 +101,7 @@ export function buildLabRowsFromBundle(
         .map((row) => row.time_offset)
         .filter((offset): offset is number => typeof offset === "number"),
     ),
-  ).sort((a, b) => b - a);
+  ).sort((a, b) => a - b);
 
   const labByOffset = new Map<number, DbLabResult>();
   const labOffsetById = new Map<string, number>();

@@ -71,6 +71,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       id: a.id,
       caseId: a.case_id,
       sessionId: a.session_id,
+      sessionStatus: a.session_status ?? null,
       name: a.name,
       simTime: a.sim_time,
       presimTime: a.presim_time,
@@ -113,6 +114,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                                 id={a.id}
                                 caseId={a.case_id}
                                 sessionId={a.session_id}
+                                sessionStatus={a.session_status ?? null}
                                 name={a.name}
                                 simTime={a.sim_time}
                                 presimTime={a.presim_time}

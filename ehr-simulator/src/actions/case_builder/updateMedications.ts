@@ -48,13 +48,13 @@ async function deleteMedications(supabase: SupabaseClient, caseId: string) {
     .from("medication_administrations")
     .delete()
     .eq("case_id", caseId)
-  if (deleteAdminErr) throw deleteAdminErr
+  if (deleteAdminErr) throw new Error(deleteAdminErr.message)
 
   const { error: deleteOrderErr } = await supabase
     .from("medication_orders")
     .delete()
     .eq("case_id", caseId)
-  if (deleteOrderErr) throw deleteOrderErr
+  if (deleteOrderErr) throw new Error(deleteOrderErr.message)
 }
 
 function normalizeInfusionRate(raw: unknown): number | null {
@@ -131,7 +131,7 @@ async function resolveDatabaseMedicationIds(
     .select("id, generic_name, route, strength")
     .in("generic_name", genericNames)
 
-  if (error) throw error
+  if (error) throw new Error(error.message)
 
   const dbBySignature = new Map(
     (data ?? []).map((row) => [
@@ -156,7 +156,7 @@ async function insertMedicationOrders(
 ) {
   if (medicationOrders.length === 0) return
   const { error: insertErr } = await supabase.from("medication_orders").insert(medicationOrders)
-  if (insertErr) throw insertErr
+  if (insertErr) throw new Error(insertErr.message)
 }
 
 async function insertMedicationAdministrations(
@@ -165,5 +165,5 @@ async function insertMedicationAdministrations(
 ) {
   if (medAdministrations.length === 0) return
   const { error: insertErr } = await supabase.from("medication_administrations").insert(medAdministrations)
-  if (insertErr) throw insertErr
+  if (insertErr) throw new Error(insertErr.message)
 }

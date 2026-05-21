@@ -13,6 +13,7 @@ interface CheckBoxListProps {
   rowId: string;
   columnId: string;
   onSelectionChange: (rowId: string, columnId: string, selectedValues: string[]) => void;
+  disabled?: boolean;
 }
 
 const CheckBoxList: React.FC<CheckBoxListProps> = ({
@@ -21,6 +22,7 @@ const CheckBoxList: React.FC<CheckBoxListProps> = ({
   rowId,
   onSelectionChange,
   columnId,
+  disabled = false,
 }) => {
   // Only track the IDs in state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(selectedOptions));
@@ -47,6 +49,7 @@ const CheckBoxList: React.FC<CheckBoxListProps> = ({
   };
 
   const handleApplyClick = () => {
+    if (disabled) return;
     onSelectionChange(rowId, columnId, Array.from(selectedIds));
     setIsPopoverOpen(false);
   };
@@ -56,6 +59,14 @@ const CheckBoxList: React.FC<CheckBoxListProps> = ({
     setSelectedIds(new Set(selectedOptions));
     setIsPopoverOpen(false);
   };
+
+  if (disabled) {
+    return (
+      <p className="h-6 w-full truncate px-2 text-left text-xs text-neutral-700">
+        {displayLabels || ""}
+      </p>
+    );
+  }
 
   return (
     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>

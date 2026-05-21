@@ -10,6 +10,7 @@ import ContinueButton from "./continueButton";
 import BackButton from "./goBackButton";
 import { CASE_BUILDER_STEPS } from "../caseBuilderSteps";
 import { saveAllCaseBuilderProgress } from "@/lib/caseBuilder/saveCaseBuilderProgress";
+import { extractErrorMessage } from "@/lib/caseBuilder/serializeFormBlob";
 import { useFormContext } from "@/context/FormContext";
 import { isTesterModeClient } from "@/utils/testerMode";
 import { Button } from "@/components/ui/button";
@@ -238,8 +239,8 @@ export function FormShell({
       applyCaseBuilderOverlayToContext();
       toast.success("Case saved.");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Save failed.";
-      toast.error(message);
+      console.error("Case builder save failed:", err);
+      toast.error(extractErrorMessage(err));
     } finally {
       setIsSaving(false);
     }
