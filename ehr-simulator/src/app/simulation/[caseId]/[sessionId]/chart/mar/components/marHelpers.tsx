@@ -1,21 +1,29 @@
 import { addHours, addMinutes, format, isSameDay, startOfHour, endOfHour } from "date-fns";
+import type { Database } from "../../../../../../../../database.types";
 import type { AllMedicationTypes, InsulinMedication, MedAdministrationInstance, MedicationOrder } from "./marData";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { UserCheck, UserX } from "lucide-react";
 
-type DatabaseMedicationLike = {
-  id: string;
-  generic_name: string;
-  brand_name?: string | null;
-  route: AllMedicationTypes["route"] | "Otic" | "Ophthalmic";
-  strength: number;
-  strength_unit: string;
-  dispense_units?: { name?: string | null } | Array<{ name?: string | null }> | null;
-  infusion_rate_unit?: "mL/hr" | "mg/hr" | "units/hr" | null;
-  diluent?: string | null;
-  total_volume?: number | null;
-  is_continuous?: boolean | null;
+type MedicationsRow = Database["public"]["Tables"]["medications"]["Row"];
+type DispenseUnitName = Pick<Database["public"]["Tables"]["dispense_units"]["Row"], "name">;
+type MedAdministrationViewRow = Database["public"]["Views"]["all_medication_administrations"]["Row"];
+
+/** Nested `medications` from medication_orders select: table columns + joined dispense_units (PostgREST). */
+export type MarMedicationFromDatabase = Pick<
+  MedicationsRow,
+  | "id"
+  | "generic_name"
+  | "brand_name"
+  | "route"
+  | "strength"
+  | "strength_unit"
+  | "infusion_rate_unit"
+  | "diluent"
+  | "total_volume"
+  | "is_continuous"
+> & {
+  dispense_units?: DispenseUnitName | DispenseUnitName[] | null;
 };
 
 export interface MedCardColumn {
@@ -29,7 +37,7 @@ export const pluralize = (unitsOrdered: number, unitName: string) => {
   return unitsOrdered > 1 ? unitName + 's' : unitName
 };
 
-export function mapDatabaseMedToFrontend(dbMed: DatabaseMedicationLike): AllMedicationTypes {
+export function mapDatabaseMedToFrontend(dbMed: MarMedicationFromDatabase): AllMedicationTypes {
   const rawDispenseUnit = Array.isArray(dbMed.dispense_units)
     ? dbMed.dispense_units[0]?.name
     : dbMed.dispense_units?.name;
@@ -287,10 +295,8 @@ export const renderMedCardDetails = (medication: AllMedicationTypes, order: Medi
   }
 }
 
-type AdminTimeLike = {
-  status?: string | null;
+type AdminTimeLike = Pick<MedAdministrationViewRow, "status" | "time_offset"> & {
   adminTimeMinuteOffset?: number;
-  time_offset?: number | null;
 };
 
 export function findLastAdminTime(administrations: AdminTimeLike[], sessionStartTime: Date) {

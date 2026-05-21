@@ -12,24 +12,36 @@ type Props = {
   id: string;
   caseId: string;
   sessionId: string | null;
+  sessionStatus?: string | null;
   name?: string | null;
   simTime?: string | null;
   presimTime?: string | null;
   groupMembers?: string[];
 };
 
-export default function AssignedCaseCard({ id, caseId, sessionId, name, simTime, presimTime, groupMembers = [] }: Props) {
+export default function AssignedCaseCard({
+  id,
+  caseId,
+  sessionId,
+  sessionStatus,
+  name,
+  simTime,
+  presimTime,
+  groupMembers = [],
+}: Props) {
   const router = useRouter();
   const [isStarting, setIsStarting] = useState(false); // Add a loading state
 
   const lifecycle = getAssignedSimulationLifecycle({
     simTime,
     presimTime,
+    sessionStatus,
   });
   const sim = lifecycle.simDate;
   const presim = lifecycle.presimDate;
   const isActivePhase = lifecycle.availability === "active";
   const isPresimPhase = lifecycle.availability === "presim";
+  const isCompletedPhase = lifecycle.availability === "completed";
   const handleRoute = async (pathSuffix: string, isStartingSim: boolean = false) => {
     if (!sessionId) {
       toast.error("Session is still being generated. Please try again later.");
@@ -69,6 +81,8 @@ export default function AssignedCaseCard({ id, caseId, sessionId, name, simTime,
           <div className="text-xs font-medium text-green-700">Mode: Active Simulation</div>
         ) : isPresimPhase ? (
           <div className="text-xs font-medium text-indigo-700">Mode: Pre-Sim</div>
+        ) : isCompletedPhase ? (
+          <div className="text-xs font-medium text-slate-600">Mode: Simulation ended</div>
         ) : null}
       </div>
 
@@ -91,6 +105,15 @@ export default function AssignedCaseCard({ id, caseId, sessionId, name, simTime,
             aria-label={`View pre-sim chart for ${name ?? id}`}
           >
             Enter Pre-Sim Mode
+          </button>
+        ) : isCompletedPhase ? (
+          <button
+            type="button"
+            className="px-3 py-1 text-sm bg-slate-600 text-white rounded hover:bg-slate-700"
+            onClick={() => handleRoute("chart/overview", false)}
+            aria-label={`Open chart for ${name ?? id}`}
+          >
+            Open chart
           </button>
         ) : (
           <button

@@ -37,12 +37,13 @@ export async function updateLabs(
 }
 
 async function deleteLabs(supabase: SupabaseClient, caseId: string, timePoints: number[]) {
+  const offsets = timePoints.length > 0 ? timePoints : [0];
   const { error: delErr } = await supabase
     .from("lab_results")
     .delete()
     .eq("case_id", caseId)
-    .not("time_offset", "in", `(${timePoints.join(",")})`)
-  if (delErr) throw delErr
+    .not("time_offset", "in", `(${offsets.join(",")})`)
+  if (delErr) throw new Error(delErr.message)
 }
 
 async function saveLabs(supabase: SupabaseClient, labResults: LabResultInsert[]) {
@@ -85,7 +86,7 @@ async function deleteImagingReports(supabase: SupabaseClient, labIds: string[]) 
     .from("imaging_reports")
     .delete()
     .in("lab_id", labIds)
-  if (delErr) throw delErr
+  if (delErr) throw new Error(delErr.message)
 }
 
 async function saveImagingReports(supabase: SupabaseClient, imagingRows: any[]) {
@@ -128,7 +129,7 @@ async function deleteMicrobiologyReports(supabase: SupabaseClient, labIds: strin
     .from("microbiology_reports")
     .delete()
     .in("lab_id", labIds)
-  if (delErr) throw delErr
+  if (delErr) throw new Error(delErr.message)
 }
 
 async function saveMicrobiologyReports(supabase: SupabaseClient, microbiologyRows: any[]) {

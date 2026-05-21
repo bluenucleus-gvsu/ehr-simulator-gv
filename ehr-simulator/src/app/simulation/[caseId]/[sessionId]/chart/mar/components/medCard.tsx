@@ -14,6 +14,8 @@ interface MedCardProps {
   isSelected: boolean;
   onSelectionChange: (order: MedicationOrder, checked: boolean) => void;
   isHighlightableColumn: boolean;
+  /** Minutes since `sessionStart` for the live simulation clock (wall-clock “now” in sim). */
+  elapsedSimMinutes: number;
   isPresim: boolean;
   selectionDisabled?: boolean;
 }
@@ -27,9 +29,12 @@ const MedCard = ({
   onSelectionChange,
   isSelected,
   isHighlightableColumn,
+  elapsedSimMinutes,
   isPresim,
   selectionDisabled,
 }: MedCardProps) => {
+
+  const simNow = addMinutes(sessionStart, elapsedSimMinutes);
 
   const handleCheckboxChange = (checked: boolean) => {
     if (selectionDisabled) return;
@@ -103,15 +108,17 @@ const MedCard = ({
 
       <div className="flex-1 grid grid-cols-6 divide-x divide-slate-100 overflow-x-auto">
         {processedColumns.map((col, colIndex) => {
-          const isCurrentHour = colIndex === 3;
+          const isCurrentHourColumn =
+            isHighlightableColumn &&
+            isWithinInterval(simNow, { start: col.startTime, end: col.endTime });
 
           return (
-            <div key={colIndex} className={`flex flex-col min-w-[60px] ${isCurrentHour && isHighlightableColumn ? 'bg-blue-50/30' : ''}`}>
+            <div key={colIndex} className={`flex flex-col min-w-[60px] ${isCurrentHourColumn ? 'bg-blue-50/30' : ''}`}>
               <div
                 key={col.colHeader}
                 className="medCard-pulse"
               >
-                <div className={`text-xs text-center py-0.5 font-mono uppercase tracking-wider border-b border-slate-100 ${isCurrentHour && isHighlightableColumn ? 'text-blue-600 font-bold' : 'text-slate-500'}`}>
+                <div className={`text-xs text-center py-0.5 font-mono uppercase tracking-wider border-b border-slate-100 ${isCurrentHourColumn ? 'text-blue-600 font-bold' : 'text-slate-500'}`}>
                   {col.colHeader}
                 </div>
               </div>

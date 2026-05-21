@@ -63,9 +63,9 @@ export function SelectedLabs() {
   }).filter(Boolean)
 
   return (
-    <Card className="relative col-span-1 p-0 gap-3 pt-2 h-fit overflow-hidden">
+    <Card className="relative col-span-1 h-fit max-w-full min-w-0 gap-3 overflow-hidden p-0 pt-2">
       <StyledTitle color="bg-sky-200" firstLetter="S" secondLetter="elected Labs" />
-      <CardContent className="grid grid-cols-2 gap-2 px-6 pb-6">
+      <CardContent className="grid min-w-0 max-w-full grid-cols-2 gap-2 px-4 pb-6 sm:px-6">
         {selectedLabData.map(labData => {
           if (!labData) return null
 

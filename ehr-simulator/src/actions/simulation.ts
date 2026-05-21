@@ -7,6 +7,7 @@ import { UUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { runWriteForMode } from "@/utils/testerWriteGateway";
 import { isTesterModeServer } from "@/utils/testerModeServer";
+import { assertStudentActiveSessionWrite } from "@/actions/simulation/assertStudentActiveSessionWrite";
 
 export type EditableStudentNoteUpsert = Database['public']['Tables']['editable_clinical_documents']['Insert'];
 export type EditableStudentNote = Database['public']['Tables']['editable_clinical_documents']['Row'];
@@ -35,6 +36,11 @@ export type ClinicalDocumentView = {
 }
 
 export async function submitStudentNote(note: EditableStudentNoteUpsert): Promise<ActionResponse<EditableStudentNote | ClinicalDocument>> {
+  const writeGuard = await assertStudentActiveSessionWrite(note.case_session_id);
+  if (!writeGuard.allowed) {
+    return { success: false, message: writeGuard.message };
+  }
+
   return runWriteForMode(async () => {
     const supabase = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -319,6 +325,14 @@ export async function submitMedicationAdministrations(
   caseId: string,
   sessionId: string
 ) {
+  const writeGuard = await assertStudentActiveSessionWrite(sessionId);
+  if (!writeGuard.allowed) {
+    return {
+      success: false,
+      message: writeGuard.message,
+    };
+  }
+
   return runWriteForMode<{
     success: boolean;
     message: string;
@@ -439,6 +453,14 @@ export async function getAllDocumentationData(caseId: string, sessionId: string)
 
 
 export async function upsertDocumentationRows(payload: StudentDatabaseDocumentation[]) {
+  const sessionId = payload[0]?.case_session_id;
+  if (sessionId) {
+    const writeGuard = await assertStudentActiveSessionWrite(sessionId);
+    if (!writeGuard.allowed) {
+      return { data: null, error: { message: writeGuard.message } as PostgrestError };
+    }
+  }
+
   return runWriteForMode<{ data: unknown; error: PostgrestError | null }>(async () => {
     const supabase = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

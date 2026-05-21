@@ -15,8 +15,9 @@ interface CellProps {
   row: Row<FlexSheetData>;
   column: Column<FlexSheetData, unknown>;
   table: Table<FlexSheetData>;
+  readOnly?: boolean;
 }
-export const TableInputCell = ({ getValue, row, column, table }: CellProps) => {
+export const TableInputCell = ({ getValue, row, column, table, readOnly = false }: CellProps) => {
   const initialValue = (getValue() as string) || "";
   const [value, setValue] = useState(initialValue);
 
@@ -27,6 +28,7 @@ export const TableInputCell = ({ getValue, row, column, table }: CellProps) => {
   const alertFlag = getAlertFlag(row.original, value, row.original.componentType);
 
   const onBlur = () => {
+    if (readOnly) return;
     if (value != initialValue) {
       table.options.meta?.updateData(row.index, column.id, value);
     }
@@ -37,6 +39,14 @@ export const TableInputCell = ({ getValue, row, column, table }: CellProps) => {
       (e.target as HTMLInputElement).blur();
     }
   };
+
+  if (readOnly) {
+    return (
+      <p className={`w-full h-6 text-right pr-2 text-xs ${alertFlag ? "text-red-600 font-medium" : "text-neutral-700"}`}>
+        {value}
+      </p>
+    );
+  }
 
   return (
     <div className="flex h-6 items-center w-full hover:bg-gray-50">
@@ -51,7 +61,7 @@ export const TableInputCell = ({ getValue, row, column, table }: CellProps) => {
   );
 };
 
-export const TableAssessmentSelectCell = ({ getValue, row, column, table }: CellProps) => {
+export const TableAssessmentSelectCell = ({ getValue, row, column, table, readOnly = false }: CellProps) => {
   const initialValue = (getValue() as string) || "";
   const [selectedValue, setSelectedValue] = useState(initialValue);
   const chartingOptions = (row.original.chartingOptions || []) as chartingOptions[];
@@ -61,9 +71,18 @@ export const TableAssessmentSelectCell = ({ getValue, row, column, table }: Cell
   }, [initialValue]);
 
   const handleComponentChange = (newValue: string) => {
+    if (readOnly) return;
     setSelectedValue(newValue);
     table.options.meta?.updateData(row.index, column.id, newValue);
   };
+
+  if (readOnly) {
+    const label =
+      chartingOptions.find((opt) => opt.subsetId === selectedValue)?.label ?? selectedValue;
+    return (
+      <p className="h-6 w-full truncate pr-2 text-right text-xs text-neutral-700">{label}</p>
+    );
+  }
 
   return (
     <AssessmentSelect

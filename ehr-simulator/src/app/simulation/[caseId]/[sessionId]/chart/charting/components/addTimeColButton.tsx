@@ -12,6 +12,7 @@ interface AddTimeColumnButtonProps {
     onColumnAdd: (timeString: number) => void;
     existingTimeColumns: number[];
     sessionStartTime: number | null;
+    disabled?: boolean;
 }
 
 function handleConflictingTimes(timeOffset: number, sessionStartTime: number) {
@@ -30,7 +31,7 @@ function columnAddSuccess(timeOffset: number, sessionStartTime: number) {
     toast.success(`Column added at ${time + ' on ' + date}.`);
 }
 
-export function AddTimeColumnButton({ onColumnAdd, existingTimeColumns, sessionStartTime }: AddTimeColumnButtonProps) {
+export function AddTimeColumnButton({ onColumnAdd, existingTimeColumns, sessionStartTime, disabled = false }: AddTimeColumnButtonProps) {
     const [selectedTime, setSelectedTime] = useState<Date | undefined>(new Date());
     const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false);
 
@@ -74,14 +75,26 @@ export function AddTimeColumnButton({ onColumnAdd, existingTimeColumns, sessionS
 
     return (
         <div className="flex gap-4 pl-8">
-            <Button onClick={handleAddTime} className="bg-white h-6 text-black text-xs hover:bg-gray-100 shadow">
+            <Button
+                onClick={handleAddTime}
+                disabled={disabled}
+                className="bg-white h-6 text-black text-xs hover:bg-gray-100 shadow"
+            >
                 <Plus className="" />
                 Add Time
             </Button>
 
-            <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+            <Popover
+                open={disabled ? false : isPopoverOpen}
+                onOpenChange={(open) => {
+                    if (!disabled) setIsPopoverOpen(open);
+                }}
+            >
                 <PopoverTrigger asChild>
-                    <Button className="bg-white h-6 text-black text-xs hover:bg-gray-100 shadow shadow-black/20">
+                    <Button
+                        disabled={disabled}
+                        className="bg-white h-6 text-black text-xs hover:bg-gray-100 shadow shadow-black/20"
+                    >
                         <Clock className="mr-1" />
                         Insert Time
                     </Button>
