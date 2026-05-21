@@ -3,7 +3,8 @@ import { SupabaseClient } from "@supabase/supabase-js"
 export async function upsertCaseDemographics(
   supabase: SupabaseClient,
   payload: any,
-  caseId?: string | null
+  caseId?: string | null,
+  createdBy?: string | null,
 ) {
   const d = payload
 
@@ -13,6 +14,8 @@ export async function upsertCaseDemographics(
   )
   const row = {
     ...(caseId ? { id: caseId } : {}),
+    // Only stamp created_by on new cases; don't overwrite the original creator on edits.
+    ...(!caseId && createdBy ? { created_by: createdBy } : {}),
     name: "Case " + d.firstName + " " + d.lastName,
     description: d.summary,
     first_name: d.firstName,

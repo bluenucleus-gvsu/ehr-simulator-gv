@@ -1,12 +1,15 @@
 'use client'
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useFormContext } from "@/context/FormContext"
 import { useRouter } from "next/navigation"
 import { ClipboardCheck } from "lucide-react"
 import { FormShell } from "../../components/formShell"
 import { saveCaseJsonBlob } from "../../api/dump_case_json"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
+import { setTemplateFlag } from "@/actions/cases"
 import { CaseSection } from "@/lib/saveCase"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 
 const FormReview = () => {
   const {
@@ -24,6 +27,7 @@ const FormReview = () => {
   } = useFormContext()
 
   const router = useRouter();
+  const [saveAsTemplate, setSaveAsTemplate] = useState(false);
 
   useEffect(() => {
     registerCaseBuilderLocalOverlay(null);
@@ -56,6 +60,11 @@ const FormReview = () => {
       }
       const title = "Case " + demographicData.firstName + " " + demographicData.lastName;
       await saveCaseJsonBlob(fullCasePayload, title);
+
+      if (saveAsTemplate && caseId) {
+        await setTemplateFlag(caseId, true);
+      }
+
       router.push("/admin/case-builder/form/success");
     } catch (error) {
       console.error(error)
@@ -76,6 +85,19 @@ const FormReview = () => {
       backButtonTooltip="Return to Previous Page"
     >
       <div className="flex flex-col h-screen w-full bg-slate-50/50 overflow-hidden">
+        <div className="flex items-center gap-3 px-8 pt-6">
+          <Checkbox
+            id="saveAsTemplate"
+            checked={saveAsTemplate}
+            onCheckedChange={(v) => setSaveAsTemplate(v === true)}
+          />
+          <Label htmlFor="saveAsTemplate" className="font-medium cursor-pointer">
+            Save as template
+          </Label>
+          <span className="text-xs text-slate-500">
+            Other instructors will be able to use this case as a starting point.
+          </span>
+        </div>
         <main className="flex-1 overflow-y-auto p-6 md:px-8 lg:px-12">
           <div className="grid grid-cols-1 2xl:grid-cols-12 gap-6 h-full max-w-7xl mx-auto pb-20">
             <div className="flex flex-col gap-2">

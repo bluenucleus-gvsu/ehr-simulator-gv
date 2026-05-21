@@ -1,18 +1,27 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import CaseListItem from "./CaseListItem";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-// import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { SimCase } from "@/actions/cases";
-import { Search } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { SimCase, TemplateCase } from "@/actions/cases";
+import { ChevronDown, Search } from "lucide-react";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { getTesterCases } from "@/utils/testerLocalStore";
 import { isTesterModeClient } from "@/utils/testerMode";
 
 interface CaseClientProps {
   cases: SimCase[];
+  templates: TemplateCase[];
 }
 
 function filterCases(
@@ -33,9 +42,10 @@ function filterCases(
 
 // const specialties = [{ id: 'OB', value: 'OB' }, { id: 'Med-Surg', value: 'Med-Surg' }, { id: 'Mental Health', value: 'Mental Health' }, { id: 'Home Health', value: 'Home Health' }]
 
-export default function CasesClient({ cases }: CaseClientProps) {
+export default function CasesClient({ cases, templates }: CaseClientProps) {
   const [filterText, setFilterText] = useState('');
   const [hydrated, setHydrated] = useState(false);
+  const router = useRouter();
   // const [selectedCourse, setSelectedCourse] = useState<string>("all");
   // const [selectedSpecialty, setSelectedSpecialty] = useState<string>("all");
 
@@ -68,9 +78,37 @@ export default function CasesClient({ cases }: CaseClientProps) {
 
             <p className="text-xs text-gray-500">Manage all simulation cases</p>
           </div>
-          <Link href='/admin/case-builder/form/demographics'>
-            <Button>Create Case</Button>
-          </Link>
+          <div className="flex gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  New from Template
+                  <ChevronDown className="ml-1 w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel>Choose a template</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {templates.length > 0 ? (
+                  templates.map((t) => (
+                    <DropdownMenuItem
+                      key={t.id}
+                      onSelect={() =>
+                        router.push(`/admin/case-builder/form/demographics?templateId=${t.id}`)
+                      }
+                    >
+                      {t.name}
+                    </DropdownMenuItem>
+                  ))
+                ) : (
+                  <DropdownMenuItem disabled>No templates available</DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Link href='/admin/case-builder/form/demographics'>
+              <Button>Create Case</Button>
+            </Link>
+          </div>
         </div>
       </header>
 

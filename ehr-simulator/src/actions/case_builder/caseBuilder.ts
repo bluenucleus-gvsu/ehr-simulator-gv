@@ -2,6 +2,7 @@
 
 import { createClient } from "@supabase/supabase-js"
 import { CaseSection } from "@/lib/saveCase"
+import { createServerSupabase } from "@/utils/supabase/server"
 import { upsertCaseDemographics } from "@/actions/case_builder/upsertCaseDemographics";
 import { updatePatientHistory } from "@/actions/case_builder/updatePatientHistory";
 import { updateClinicalDocuments } from "@/actions/case_builder/updateClinicalDocuments";
@@ -35,7 +36,9 @@ export async function saveCaseData({ payload, section, caseId }: SaveCaseArgs) {
       );
 
       if (section === CaseSection.DEMOGRAPHICS) {
-        return await upsertCaseDemographics(supabase, payload, caseId)
+        const authClient = await createServerSupabase();
+        const { data: { user } } = await authClient.auth.getUser();
+        return await upsertCaseDemographics(supabase, payload, caseId, user?.id ?? null)
       }
 
       if (!caseId) throw new Error("Case ID is required");

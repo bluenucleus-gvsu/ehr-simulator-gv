@@ -171,6 +171,7 @@ export type Database = {
           case_creation_complete: boolean
           code_status: Database["public"]["Enums"]["code_status_type"]
           created_at: string | null
+          created_by: string | null
           date_of_birth: string | null
           description: string | null
           emergency_contact_name: string | null
@@ -183,6 +184,7 @@ export type Database = {
           id: string
           inpatient_duration_days: number | null
           insurance: Database["public"]["Enums"]["insurance_type"] | null
+          is_template: boolean
           isolation_precautions_id: string | null
           language: string | null
           last_name: string
@@ -205,6 +207,7 @@ export type Database = {
           case_creation_complete?: boolean
           code_status: Database["public"]["Enums"]["code_status_type"]
           created_at?: string | null
+          created_by?: string | null
           date_of_birth?: string | null
           description?: string | null
           emergency_contact_name?: string | null
@@ -217,6 +220,7 @@ export type Database = {
           id?: string
           inpatient_duration_days?: number | null
           insurance?: Database["public"]["Enums"]["insurance_type"] | null
+          is_template?: boolean
           isolation_precautions_id?: string | null
           language?: string | null
           last_name: string
@@ -239,6 +243,7 @@ export type Database = {
           case_creation_complete?: boolean
           code_status?: Database["public"]["Enums"]["code_status_type"]
           created_at?: string | null
+          created_by?: string | null
           date_of_birth?: string | null
           description?: string | null
           emergency_contact_name?: string | null
@@ -251,6 +256,7 @@ export type Database = {
           id?: string
           inpatient_duration_days?: number | null
           insurance?: Database["public"]["Enums"]["insurance_type"] | null
+          is_template?: boolean
           isolation_precautions_id?: string | null
           language?: string | null
           last_name?: string

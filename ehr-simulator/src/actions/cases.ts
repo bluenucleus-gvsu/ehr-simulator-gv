@@ -368,6 +368,107 @@ export async function updateCaseSession(session: CaseSessionUpsert) {
   );
 }
 
+export type TemplateCase = {
+  id: string;
+  name: string;
+  description: string | null;
+  admitting_diagnosis: string | null;
+  created_at: string | null;
+  created_by: string | null;
+  creator_name: string | null;
+};
+
+export async function getTemplates(): Promise<TemplateCase[]> {
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { data: templates, error } = await supabase
+    .from("cases")
+    .select("id, name, description, admitting_diagnosis, created_at, created_by")
+    .eq("is_template", true)
+    .order("created_at", { ascending: false });
+
+  if (error || !templates) return [];
+
+  const creatorIds = [
+    ...new Set(templates.map((t) => t.created_by).filter((id): id is string => Boolean(id))),
+  ];
+
+  const creatorMap = new Map<string, string>();
+  if (creatorIds.length > 0) {
+    const { data: users } = await supabase
+      .from("users")
+      .select("id, full_name, email")
+      .in("id", creatorIds);
+
+    (users ?? []).forEach((u) => {
+      creatorMap.set(u.id, u.full_name ?? u.email ?? "Unknown");
+    });
+  }
+
+  return templates.map((t) => ({
+    ...t,
+    creator_name: t.created_by ? (creatorMap.get(t.created_by) ?? "Unknown") : "System",
+  }));
+}
+
+export async function updateCaseName(caseId: string, name: string): Promise<ActionResponse> {
+  return runWriteForMode(
+    async () => {
+      const supabase = createClient<Database>(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+
+      const { error } = await supabase
+        .from("cases")
+        .update({ name: name.trim(), updated_at: new Date().toISOString() })
+        .eq("id", caseId);
+
+      if (error) {
+        return { success: false, message: "Failed to update case name.", error };
+      }
+
+      revalidatePath("/admin/templates");
+      return { success: true, message: "Case name updated." };
+    },
+    async () => ({ success: true, message: "Case name updated locally for tester mode." }),
+  );
+}
+
+export async function setTemplateFlag(caseId: string, isTemplate: boolean): Promise<ActionResponse> {
+  return runWriteForMode(
+    async () => {
+      const supabase = createClient<Database>(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+
+      const { error } = await supabase
+        .from("cases")
+        .update({ is_template: isTemplate })
+        .eq("id", caseId);
+
+      if (error) {
+        return { success: false, message: "Failed to update template flag.", error };
+      }
+
+      return {
+        success: true,
+        message: isTemplate ? "Case saved as template." : "Template flag removed.",
+      };
+    },
+    async () => ({
+      success: true,
+      message: isTemplate
+        ? "Case marked as template locally for tester mode."
+        : "Template flag removed locally for tester mode.",
+    }),
+  );
+}
+
 // extracts type of data from ActionResponse for use in frontend
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ExtractData<T extends (...args: any) => Promise<ActionResponse<any>>> =
