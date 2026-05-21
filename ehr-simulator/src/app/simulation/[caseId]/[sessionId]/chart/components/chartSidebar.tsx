@@ -33,7 +33,9 @@ function ChartSidebarSkeleton() {
 
 export default function ChartSidebar() {
   const { caseBundle } = useSimulationCase();
-  const { simStartTime } = useSimSessionContext();
+  const { simStartTime, userRole } = useSimSessionContext();
+  const showCaseIdentifier =
+    userRole != null && userRole.trim().toLowerCase() !== "student";
   const referenceTime = useMemo(
     () => new Date(simStartTime ?? Date.now()),
     [simStartTime],
@@ -65,7 +67,7 @@ export default function ChartSidebar() {
 
   if (!caseBundle) {
     return (
-      <div className="w-64 h-[calc(100vh-4rem)] flex flex-col justify-start items-center bg-gray-200 border-r border-gray-300 p-2 flex-shrink-0">
+      <div className="w-64 h-full min-h-0 flex flex-col justify-start items-center bg-gray-200 border-r border-gray-300 p-2 flex-shrink-0">
         <ChartSidebarSkeleton />
       </div>
     )
@@ -73,7 +75,7 @@ export default function ChartSidebar() {
 
   if (!sidebarData || Object.keys(sidebarData).length === 0) {
     return (
-      <div className="w-64 h-[calc(100vh-4rem)] flex flex-col justify-start items-center bg-gray-200 border-r border-gray-300 p-2 flex-shrink-0">
+      <div className="w-64 h-full min-h-0 flex flex-col justify-start items-center bg-gray-200 border-r border-gray-300 p-2 flex-shrink-0">
         <p className="mt-10">No patient data.</p>
       </div>
     )
@@ -90,7 +92,7 @@ export default function ChartSidebar() {
   }
 
   return (
-    <div className="w-64 h-[calc(100vh-4rem)] flex flex-col justify-start items-center bg-gray-200 border-r border-gray-300 p-2 flex-shrink-0">
+    <div className="w-64 h-full min-h-0 flex flex-col justify-start items-center bg-gray-200 border-r border-gray-300 p-2 flex-shrink-0">
       <span className="rounded-full p-1 bg-gray-100 shadow-md">
         <CircleUserRound size={100} strokeWidth={0.8} color="oklch(38% 0.189 293.745)" className="rounded-full bg-white" />
       </span>
@@ -114,10 +116,12 @@ export default function ChartSidebar() {
           {sidebarData.dob.label}:
           <span className="pl-2 font-normal">{sidebarData.dob.value}</span>
         </p>
-        <p className="text-purple-900 text-sm font-light tracking-tight">
-          {sidebarData.mrn.label}:
-          <span className="pl-2 font-normal font-mono text-xs break-all">{sidebarData.mrn.value}</span>
-        </p>
+        {showCaseIdentifier && (
+          <p className="text-purple-900 text-sm font-light tracking-tight">
+            {sidebarData.mrn.label}:
+            <span className="pl-2 font-normal font-mono text-xs break-all">{sidebarData.mrn.value}</span>
+          </p>
+        )}
 
         <p className="text-purple-900 text-sm font-light tracking-tight">
           {sidebarData.code.label}:

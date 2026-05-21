@@ -1,27 +1,17 @@
 "use client";
 
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
+import { saveCaseJsonBlob } from "@/app/admin/case-builder/api/dump_case_json";
 import { CaseSection } from "@/lib/saveCase";
 import type { FormBlob } from "@/utils/form";
 import { isTesterModeClient } from "@/utils/testerMode";
 import { setTesterCaseDraft, upsertTesterCase } from "@/utils/testerLocalStore";
-
-function labsPersistPayload(labs: FormBlob["labs"]) {
-  return {
-    data: labs.data,
-    timePoints: labs.timePoints,
-    timePointsInPreSim: Array.from(labs.timePointsInPreSim),
-    visibleItems: Array.from(labs.visibleItems ?? new Set<string>()),
-  };
-}
-
-function documentationPersistPayload(charting: FormBlob["charting"]) {
-  return {
-    data: charting.data,
-    timePoints: charting.timePoints,
-    timePointsInPreSim: Array.from(charting.timePointsInPreSim),
-  };
-}
+import {
+  documentationPersistPayload,
+  extractErrorMessage,
+  fullCasePayloadForBlob,
+  labsPersistPayload,
+} from "./serializeFormBlob";
 
 function syncTesterCaseMeta(caseId: string, data: FormBlob) {
   if (!isTesterModeClient()) return;
@@ -47,8 +37,19 @@ function syncTesterCaseMeta(caseId: string, data: FormBlob) {
   } as unknown as Record<string, unknown>);
 }
 
+async function saveSection(
+  label: string,
+  save: () => ReturnType<typeof saveCaseData>,
+): Promise<unknown> {
+  try {
+    return await save();
+  } catch (err) {
+    throw new Error(`${label}: ${extractErrorMessage(err)}`);
+  }
+}
+
 /**
- * Persists every case-builder section to the database (same payloads as each step’s Continue).
+ * Persists every case-builder section in wizard order (same as Continue on each step).
  * Demographics runs first so a new case row exists before other sections.
  */
 export async function saveAllCaseBuilderProgress(
@@ -56,11 +57,13 @@ export async function saveAllCaseBuilderProgress(
   caseId: string | undefined,
   setCaseId: (id: string) => void,
 ): Promise<string | undefined> {
-  const demoResult = await saveCaseData({
-    payload: data.demographics,
-    section: CaseSection.DEMOGRAPHICS,
-    caseId,
-  });
+  const demoResult = await saveSection("Demographics", () =>
+    saveCaseData({
+      payload: data.demographics,
+      section: CaseSection.DEMOGRAPHICS,
+      caseId,
+    }),
+  );
 
   let effectiveCaseId = caseId;
   const demoRow = demoResult as { id?: string } | undefined;
@@ -73,37 +76,55 @@ export async function saveAllCaseBuilderProgress(
     throw new Error("Complete demographics first so the case can be created.");
   }
 
-  await Promise.all([
+  await saveSection("History", () =>
     saveCaseData({
       payload: data.history,
       section: CaseSection.HISTORY,
       caseId: effectiveCaseId,
     }),
+  );
+
+  await saveSection("Clinical notes", () =>
     saveCaseData({
       payload: data.notes,
       section: CaseSection.CLINICAL_DOCUMENTS,
       caseId: effectiveCaseId,
     }),
+  );
+
+  await saveSection("Orders", () =>
     saveCaseData({
       payload: data.orders,
       section: CaseSection.ORDERS,
       caseId: effectiveCaseId,
     }),
+  );
+
+  await saveSection("Labs", () =>
     saveCaseData({
       payload: labsPersistPayload(data.labs),
       section: CaseSection.LABS,
       caseId: effectiveCaseId,
     }),
+  );
+
+  await saveSection("Charting", () =>
     saveCaseData({
       payload: documentationPersistPayload(data.charting),
       section: CaseSection.DOCUMENTATION,
       caseId: effectiveCaseId,
     }),
+  );
+
+  await saveSection("Intake & output", () =>
     saveCaseData({
       payload: data.intakeOutput,
       section: CaseSection.INTAKE_OUTPUT,
       caseId: effectiveCaseId,
     }),
+  );
+
+  await saveSection("Medications", () =>
     saveCaseData({
       payload: {
         orders: data.medOrders.createdOrders,
@@ -112,9 +133,15 @@ export async function saveAllCaseBuilderProgress(
       section: CaseSection.MEDICATION_ORDERS,
       caseId: effectiveCaseId,
     }),
-  ]);
+  );
 
   syncTesterCaseMeta(effectiveCaseId, data);
+
+  const d = data.demographics;
+  const title = `Case ${d.firstName ?? ""} ${d.lastName ?? ""}`.trim() || "Untitled Case";
+  await saveSection("Case archive", () =>
+    saveCaseJsonBlob(fullCasePayloadForBlob(data), title),
+  );
 
   return effectiveCaseId;
 }

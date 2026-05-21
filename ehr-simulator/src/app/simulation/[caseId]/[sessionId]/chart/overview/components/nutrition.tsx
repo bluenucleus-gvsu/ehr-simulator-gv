@@ -7,6 +7,25 @@ import { useSimulationCase } from "@/context/SimulationCaseContext"
 type DbOrder = {
   category?: string | null;
   title?: string | null;
+  details?: string | null;
+};
+
+/** Case Builder often saves category name as title; real diet text is usually in `details`. */
+function formatDietOrderDisplay(order: DbOrder): string {
+  const title = (order.title ?? "").trim();
+  const details = (order.details ?? "").trim();
+  const titleIsPlaceholder = !title || /^(diet|nutrition)s?$/i.test(title);
+
+  if (!titleIsPlaceholder && details && title.toLowerCase() !== details.toLowerCase()) {
+    return `${title} — ${details}`;
+  }
+  if (!titleIsPlaceholder) {
+    return title;
+  }
+  if (details) {
+    return details;
+  }
+  return "N/A";
 }
 
 const Nutrition = () => {
@@ -22,20 +41,15 @@ const Nutrition = () => {
       <StyledTitle color="bg-sky-200" firstLetter="N" secondLetter="utrition" />
       <CardContent className="grid gap-2 px-4">
         {dietOrders.length === 0 && (
-          <div className="flex flex-col gap-1 pl-2">
-            <div className="flex gap-3">
-              <p className="text-md font-light tracking-tight">Diet:</p>
-              <p className="text-md tracking-tight">N/A</p>
-            </div>
-            <p className="text-xs text-neutral-500">
-              To show a diet here, add an order in Case Builder → Orders with category <span className="font-medium">Diet</span>; the order title appears as the diet.
-            </p>
+          <div className="flex gap-3 pl-2">
+            <p className="text-md font-light tracking-tight">Diet:</p>
+            <p className="text-md tracking-tight">N/A</p>
           </div>
         )}
         {dietOrders.map((order, index) => (
           <div key={`${order.category}-${index}`} className="flex pl-2 gap-3">
             <p className="text-md  font-light tracking-tight">Diet:</p>
-            <p className=" text-md tracking-tight">{order.title ?? "N/A"}</p>
+            <p className="text-md tracking-tight">{formatDietOrderDisplay(order)}</p>
           </div>
         ))}
       </CardContent>

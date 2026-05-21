@@ -22,7 +22,7 @@ const Alerts = () => {
     : ["N/A"];
 
   return (
-    <Card className="relative col-span-2 pt-2 overflow-hidden h-fit gap-3">
+    <Card className="relative max-w-full min-w-0 gap-3 overflow-hidden pt-2 h-fit">
       <StyledTitle color="bg-yellow-200" firstLetter="A" secondLetter="lerts" />
       <CardContent className="">
         <div className="flex flex-col gap-4">

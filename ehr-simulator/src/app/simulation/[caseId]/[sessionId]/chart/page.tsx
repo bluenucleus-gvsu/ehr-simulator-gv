@@ -1,5 +1,5 @@
 export default function Page() {
   return (
-    <div className="w-full h-full bg-gray-200"></div>
+    <div className="h-full min-h-0 w-full bg-gray-200" />
   )
 }

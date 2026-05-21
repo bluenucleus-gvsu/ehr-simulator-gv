@@ -3,8 +3,8 @@ export type SimulationAvailability = "not_available" | "presim" | "active" | "co
 export interface AssignedSimulationLifecycleInput {
   simTime?: string | null;
   presimTime?: string | null;
+  /** `case_sessions.status` from the database (e.g. assigned, in progress). */
   sessionStatus?: string | null;
-  hasSessionStarted?: boolean;
   now?: Date;
 }
 
@@ -15,16 +15,20 @@ export interface AssignedSimulationLifecycle {
   isPastScheduled: boolean;
 }
 
-const COMPLETED_STATUS = "completed";
+/** After scheduled sim start, students may still join as "active" for this long. */
+const POST_SIM_JOIN_WINDOW_MS = 48 * 60 * 60 * 1000;
 
 export function getAssignedSimulationLifecycle(input: AssignedSimulationLifecycleInput): AssignedSimulationLifecycle {
   const now = input.now ?? new Date();
   const simDate = input.simTime ? new Date(input.simTime) : null;
   const presimDate = input.presimTime ? new Date(input.presimTime) : null;
-  const sessionStatus = input.sessionStatus?.toLowerCase() ?? null;
-  const hasSessionStarted = Boolean(input.hasSessionStarted);
+  const sessionStatus = input.sessionStatus?.trim().toLowerCase() ?? null;
 
-  if (sessionStatus === COMPLETED_STATUS) {
+  const simMs = simDate && Number.isFinite(simDate.getTime()) ? simDate.getTime() : null;
+  const profileWindowEndMs = simMs != null ? simMs + POST_SIM_JOIN_WINDOW_MS : null;
+  const isPastJoinWindow = profileWindowEndMs != null && now.getTime() > profileWindowEndMs;
+
+  if (sessionStatus === "completed" || sessionStatus === "archived") {
     return {
       availability: "completed",
       simDate,
@@ -33,7 +37,24 @@ export function getAssignedSimulationLifecycle(input: AssignedSimulationLifecycl
     };
   }
 
-  if (hasSessionStarted) {
+  if (isPastJoinWindow) {
+    if (sessionStatus === "in progress") {
+      return {
+        availability: "completed",
+        simDate,
+        presimDate,
+        isPastScheduled: true,
+      };
+    }
+    return {
+      availability: "not_available",
+      simDate,
+      presimDate,
+      isPastScheduled: true,
+    };
+  }
+
+  if (sessionStatus === "in progress") {
     return {
       availability: "active",
       simDate,
