@@ -191,6 +191,23 @@ function SimulationGroupsView({
                   );
                 })}
               </ul>
+              {/* Group Footer for Stage Change */}
+              <div className="flex flex-wrap gap-3 py-2">
+
+                {/* Change to map when schema is finalized... */}
+                {Array.from({ length: 3 }, (_, index) => (
+                <button 
+
+                  // Replace with Button Functionality...
+                  onClick={() => console.log("Moving stages...")}
+                  
+                  className="flex-auto min-w-[9rem] rounded-2xl bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 transition-colors duration-150"
+                  key={index}
+                >
+                  Stage {index + 1}
+                </button>
+                ))}
+              </div>
             </div>
           );
         })}
