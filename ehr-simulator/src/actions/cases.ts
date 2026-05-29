@@ -368,6 +368,37 @@ export async function updateCaseSession(session: CaseSessionUpsert) {
   );
 }
 
+export async function completeCaseSessionFromCaseID(caseId: string) {
+  // Changes the completed_at to the time exact time entered
+  // Connected to 
+
+  const supabase = createClient<Database>(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+  
+  const { error } = await supabase
+    .from("case_sessions")
+    .update({ completed_at: new Date().toISOString(),
+              status: 'completed'
+     })
+    .eq("case_id", caseId);
+
+  if (error) {
+    return {
+      success: false,
+      message: "Failed to update completed_at.",
+      error,
+      data: null
+    };
+  }
+  return {
+        success: true,
+        message: `completed_at updated for ${caseId}`,
+        data: null,
+  }
+}
+
 // extracts type of data from ActionResponse for use in frontend
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ExtractData<T extends (...args: any) => Promise<ActionResponse<any>>> =

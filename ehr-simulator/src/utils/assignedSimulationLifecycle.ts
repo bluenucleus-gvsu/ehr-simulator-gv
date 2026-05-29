@@ -16,7 +16,7 @@ export interface AssignedSimulationLifecycle {
 }
 
 /** After scheduled sim start, students may still join as "active" for this long. */
-const POST_SIM_JOIN_WINDOW_MS = 48 * 60 * 60 * 1000;
+const POST_SIM_JOIN_WINDOW_MS = 48 * 60 * 60 * 1000; // 2 days
 
 export function getAssignedSimulationLifecycle(input: AssignedSimulationLifecycleInput): AssignedSimulationLifecycle {
   const now = input.now ?? new Date();

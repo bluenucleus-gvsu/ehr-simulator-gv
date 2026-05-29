@@ -36,7 +36,7 @@ const ChartLayout = async ({ children, params }: ChartLayoutProps) => {
       <SimSessionProvider>
         <SimulationShell>
           <Toaster position="top-right" />
-          <Header tabs={<ChartTabs />} />
+          <Header tabs={<ChartTabs />} caseId={caseId} />
           <div className="flex min-h-0 flex-1 w-full min-w-0">
             <ChartSidebar />
             <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">

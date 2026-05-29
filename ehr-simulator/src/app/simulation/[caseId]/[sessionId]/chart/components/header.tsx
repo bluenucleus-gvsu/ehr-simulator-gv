@@ -6,12 +6,14 @@ import Link from 'next/link'
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
+import { completeCaseSessionFromCaseID } from "@/actions/cases";
 
 interface HeaderProps {
   tabs?: ReactNode;
+  caseId: string;
 }
 
-const Header = ({ tabs }: HeaderProps) => {
+const Header = ({ tabs, caseId}: HeaderProps) => {
   const [isFullscreen, setIsFullScreen] = useState(false)
   const { userId, userRole, isPresim, loading } = useSimSessionContext();
   const router = useRouter()
@@ -30,7 +32,14 @@ const Header = ({ tabs }: HeaderProps) => {
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
   }, [])
 
-  const handleHomeClick = () => {
+  const handleHomeClick = async () => {
+
+    // Add submission Logic here unless located somewhere else....
+    // Need to change the state of the simulation
+    const response = await completeCaseSessionFromCaseID(caseId)
+    console.log(response)
+
+
     let destination = '/'
     if (userRole === 'student' && userId) {
       destination = `/user/profile/${userId}`
