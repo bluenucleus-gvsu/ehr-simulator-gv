@@ -80,6 +80,10 @@ function SimulationGroupsView({
   const [feedbackTarget, setFeedbackTarget] = useState<FeedbackTarget | null>(null);
   const [submittedFeedback, setSubmittedFeedback] = useState<Record<string, string>>({});
 
+  // Test Data
+  const [groupStage, setGroupStage] = useState<Record<string, number>>({});
+
+
   const handleSubmit = (key: string, feedback: string) => {
     setSubmittedFeedback((prev) => ({ ...prev, [key]: feedback }));
     console.log(`[DUMMY] Feedback submitted for "${key}":`, feedback);
@@ -122,6 +126,10 @@ function SimulationGroupsView({
         {simulation.groups.map((group) => {
           const groupFeedbackKey = `group:${group.id}`;
           const hasGroupFeedback = !!submittedFeedback[groupFeedbackKey];
+
+          // Test Data
+          const currentStage = groupStage[group.id] ?? 0;
+          const stages = 5;
 
           return (
             <div
@@ -192,21 +200,46 @@ function SimulationGroupsView({
                 })}
               </ul>
               {/* Group Footer for Stage Change */}
-              <div className="flex flex-wrap gap-3 py-2">
+              <hr />
+              <div className="flex items-center justify-between gap-4 py-2">
+                <div className="flex items-center flex-wrap">
+                  {Array.from({ length: stages }, (_, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        // Using clipPath to create the Stage Layout... [Pn> >Pn+1>...
+                        clipPath: i === 0
+                          ? 'polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%)'
+                          : 'polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%)',
+                          marginLeft: i === 0 ? '0' : '-10px', 
+                          zIndex: i,
+                      }}
+                      className={`
+                        relative px-4 py-1.5 text-sm font-medium text-white
+                        ${i < currentStage
+                          ? 'bg-green-500'
+                          : i === currentStage
+                          ? 'bg-blue-500'
+                          : 'bg-slate-300'}
+                      `}
+                    >
+                      P{i + 1}
+                    </div>
+                  ))}
+                </div>
 
-                {/* Change to map when schema is finalized... */}
-                {Array.from({ length: 3 }, (_, index) => (
-                <button 
-
-                  // Replace with Button Functionality...
-                  onClick={() => console.log("Moving stages...")}
-                  
-                  className="flex-auto min-w-[9rem] rounded-2xl bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 transition-colors duration-150"
-                  key={index}
+                <button
+                  onClick={() =>
+                    setGroupStage((prev) => ({
+                      ...prev,
+                      [group.id]: Math.min((prev[group.id] ?? 0) + 1, stages - 1),
+                    }))
+                  }
+                  disabled={currentStage >= stages - 1}
+                  className="rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
                 >
-                  Stage {index + 1}
+                  Next Stage
                 </button>
-                ))}
               </div>
             </div>
           );
