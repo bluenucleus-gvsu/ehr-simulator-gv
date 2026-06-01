@@ -20,7 +20,7 @@ type ChartLayoutProps = {
 };
 
 const ChartLayout = async ({ children, params }: ChartLayoutProps) => {
-  const { caseId } = await params;
+  const { caseId, sessionId } = await params;
   const routeContext = await resolveSimulationRouteContext(caseId);
   const tester = await isTesterModeServer();
 
@@ -36,7 +36,7 @@ const ChartLayout = async ({ children, params }: ChartLayoutProps) => {
       <SimSessionProvider>
         <SimulationShell>
           <Toaster position="top-right" />
-          <Header tabs={<ChartTabs />} caseId={caseId} />
+          <Header tabs={<ChartTabs />} sessionId={sessionId} />
           <div className="flex min-h-0 flex-1 w-full min-w-0">
             <ChartSidebar />
             <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">

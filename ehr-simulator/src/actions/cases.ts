@@ -368,21 +368,21 @@ export async function updateCaseSession(session: CaseSessionUpsert) {
   );
 }
 
-export async function completeCaseSessionFromCaseID(caseId: string) {
+export async function completeCaseSessionFromSessionID(sessionId: string) {
   // Changes the completed_at to the time exact time entered
-  // Connected to 
+  // Connected to ../simulation/[caseId]/[sessionId]/components/header.tsx
 
   const supabase = createClient<Database>(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
-  
+
   const { error } = await supabase
     .from("case_sessions")
     .update({ completed_at: new Date().toISOString(),
               status: 'completed'
      })
-    .eq("case_id", caseId);
+    .eq("id", sessionId);
 
   if (error) {
     return {
@@ -394,7 +394,7 @@ export async function completeCaseSessionFromCaseID(caseId: string) {
   }
   return {
         success: true,
-        message: `completed_at updated for ${caseId}`,
+        message: `completed_at updated:${sessionId}`,
         data: null,
   }
 }

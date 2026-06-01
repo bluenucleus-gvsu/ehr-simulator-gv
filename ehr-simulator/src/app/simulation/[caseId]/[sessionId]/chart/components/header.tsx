@@ -6,14 +6,14 @@ import Link from 'next/link'
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
-import { completeCaseSessionFromCaseID } from "@/actions/cases";
+import { completeCaseSessionFromSessionID } from "@/actions/cases";
 
 interface HeaderProps {
   tabs?: ReactNode;
-  caseId: string;
+  sessionId: string;
 }
 
-const Header = ({ tabs, caseId}: HeaderProps) => {
+const Header = ({ tabs, sessionId}: HeaderProps) => {
   const [isFullscreen, setIsFullScreen] = useState(false)
   const { userId, userRole, isPresim, loading } = useSimSessionContext();
   const router = useRouter()
@@ -36,7 +36,7 @@ const Header = ({ tabs, caseId}: HeaderProps) => {
 
     // Add submission Logic here unless located somewhere else....
     // Need to change the state of the simulation
-    const response = await completeCaseSessionFromCaseID(caseId)
+    const response = await completeCaseSessionFromSessionID(sessionId)
     console.log(response)
 
 
