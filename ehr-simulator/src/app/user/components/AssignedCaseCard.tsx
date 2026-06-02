@@ -8,7 +8,6 @@ import { getAssignedSimulationLifecycle } from "@/utils/assignedSimulationLifecy
 import { isTesterModeClient } from "@/utils/testerMode";
 import { setTesterSessionStatus } from "@/utils/testerLocalStore";
 
-
 type Props = {
   id: string;
   caseId: string;

@@ -34,12 +34,14 @@ const Header = ({ tabs, sessionId}: HeaderProps) => {
 
   const handleHomeClick = async () => {
 
-    // Add submission Logic here unless located somewhere else....
-    // Need to change the state of the simulation
+    // Changes status and completed_at in case_sessions...
     const response = await completeCaseSessionFromSessionID(sessionId)
-    console.log(response)
 
-
+    // Error handle for response
+    if(response.error){
+      console.error('Failed to set complete', response)
+    }
+   
     let destination = '/'
     if (userRole === 'student' && userId) {
       destination = `/user/profile/${userId}`
