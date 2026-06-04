@@ -350,7 +350,7 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 enabled = true
 # client_id = "407381537949-okpll3lve00g0o3cdscdql42hnoqp0k3.apps.googleusercontent.com"
 # local below
-client_id="862528395488-pfdhagrqqifi035gguspcpc29eufjogm.apps.googleusercontent.com"
+client_id="847554905248-vu9rlpjq66t0goj9852fj3r3ua479for.apps.googleusercontent.com"
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET)"
 skip_nonce_check = false
 
