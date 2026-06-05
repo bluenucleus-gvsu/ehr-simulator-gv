@@ -13,9 +13,10 @@ import { Label } from "@/components/ui/label";
 import Combobox from "@/components/ui/combobox";
 import { useRouter } from "next/navigation";
 import { LabTableImagingReport, LabTableInputCell, LabTableMicrobioReport } from "./components/labTableInputCell";
-import { useFormContext } from "@/context/FormContext";
+import { useFormContext, usePhaseTab } from "@/context/FormContext";
 import { useTimePoints } from "../../components/useFormTableOffsets";
 import { FormShell } from "../../components/formShell";
+import { PhaseTabNav } from "../../components/phaseTabNav";
 import { TableFormHeader } from "../../components/tableFormHeader";
 import { FormTable } from "../../components/FormTable";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
@@ -41,8 +42,13 @@ function ensureNumberSet(input: unknown): Set<number> {
   return new Set<number>();
 }
 
-function LabForm() {
+function LabFormInner() {
   const { onDataChange, labData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
+  const { activePhase, registerPhaseScope } = usePhaseTab("labs");
+
+  useEffect(() => {
+    registerPhaseScope();
+  }, []);
   const [labTableData, setLabTableData] = useState<LabTableData[]>(labData.data);
   const [visibleItems, setVisibleItems] = useState<Set<string>>(ensureStringSet(labData.visibleItems));
   const [comboboxValue, setComboboxValue] = useState<string>('');
@@ -55,6 +61,11 @@ function LabForm() {
   } = useTimePoints(labData.timePoints, ensureNumberSet(labData.timePointsInPreSim))
 
   const router = useRouter()
+
+  useEffect(() => {
+    setLabTableData(labData.data);
+    setVisibleItems(ensureStringSet(labData.visibleItems));
+  }, [labData, activePhase]);
 
   useEffect(() => {
     registerCaseBuilderLocalOverlay(() => ({
@@ -128,7 +139,8 @@ function LabForm() {
         visibleItems: Array.from(visibleItems),
       },
       section: CaseSection.LABS,
-      caseId: caseId
+      caseId: caseId,
+      phase: activePhase,
     })
 
     router.push('/admin/case-builder/form/charting')
@@ -292,6 +304,7 @@ function LabForm() {
       backButtonTooltip="Return to Previous Page"
     >
       <div className="bg-slate-50/50 flex-1 flex flex-col min-h-0 px-6 pt-4">
+        <PhaseTabNav scope="labs" />
         <div className="h-12 px-4 w-full flex justify-start gap-12 mb-3 items-end">
           <AddTableColumn handleColumnAdd={addTimePoint} />
           <div>
@@ -326,5 +339,8 @@ function LabForm() {
   );
 }
 
-export default LabForm
+export default function LabForm() {
+  const { activePhase } = usePhaseTab("labs");
+  return <LabFormInner key={activePhase} />;
+}
 

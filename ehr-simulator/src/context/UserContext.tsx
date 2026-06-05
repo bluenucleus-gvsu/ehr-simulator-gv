@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { emailIsDevAdminAllowlist } from '@/lib/devAdminEmails'
+import { resolveAuthRole } from '@/lib/resolveAuthRole'
 import { isTesterModeClient, setTesterModeCookies } from '@/utils/testerMode'
 
 const supabase = createBrowserClient(
@@ -38,9 +38,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUser(user)
-        const devBypass = emailIsDevAdminAllowlist(user.email ?? undefined)
         const cachedTesterMode = typeof window !== 'undefined' && isTesterModeClient()
-        const newRole = cachedTesterMode ? 'tester' : ((devBypass ? 'admin' : user.user_metadata?.role) || null)
+        const newRole =
+          resolveAuthRole(user.email ?? undefined, {
+            isTesterLogin: cachedTesterMode,
+            dbOrMetadataRole: user.user_metadata?.role,
+          }) ?? null
         if (newRole && typeof window !== 'undefined') {
           window.localStorage.setItem('role', newRole)
           // Only enable tester cookies here. Never clear them from this effect — calling

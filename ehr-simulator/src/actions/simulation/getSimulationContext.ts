@@ -1,6 +1,10 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
+import {
+  resolveSimulationPhaseContext,
+  type SimulationPhaseContext,
+} from "@/lib/simPhases";
 import { isTesterModeServer } from "@/utils/testerModeServer";
 
 export interface SimulationRouteContext {
@@ -58,4 +62,34 @@ export async function resolveSimulationRouteContext(routeId: string): Promise<Si
   }
 
   throw new Error(`Unable to resolve simulation route id: ${routeId}`);
+}
+
+/** Session + case phase state for student chart (defaults to phase 1). */
+export async function getSimulationPhaseState(
+  routeContext: SimulationRouteContext,
+  casePhaseCount?: number | null,
+): Promise<SimulationPhaseContext> {
+  const phaseCount = casePhaseCount ?? 1;
+
+  if (routeContext.source !== "case_session") {
+    return resolveSimulationPhaseContext({ phaseCount, currentPhase: 1 });
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { data, error } = await supabase
+    .from("case_sessions")
+    .select("current_phase")
+    .eq("id", routeContext.routeId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  return resolveSimulationPhaseContext({
+    phaseCount,
+    currentPhase: data?.current_phase ?? 1,
+  });
 }

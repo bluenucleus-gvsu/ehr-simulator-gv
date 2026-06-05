@@ -35,16 +35,23 @@ import { FormShell } from "../../components/formShell";
 import { CaseSection } from "@/lib/saveCase";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { getCaseBundle } from "@/actions/case_builder/getCase";
-import { labTemplate } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
-import { buildLabRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsFromBundle";
-import { medOrderFormStateFromCaseBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marFromBundle";
 import { flexSheetTemplate } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
+import type { PhaseScopedCache } from "@/lib/casePhases";
 import { buildChartingRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/chartingFromBundle";
 import { isTesterModeClient } from "@/utils/testerMode";
 import { getTesterCaseDraft, setTesterCaseDraft, upsertTesterCase } from "@/utils/testerLocalStore";
 
 export default function DemographicsForm() {
-  const { onDataChange, demographicData: initialData, setCaseId, caseId, registerCaseBuilderLocalOverlay } = useFormContext();
+  const {
+    onDataChange,
+    demographicData: initialData,
+    setCaseId,
+    caseId,
+    registerCaseBuilderLocalOverlay,
+    initializeFromCaseBundle,
+    restorePhaseState,
+    applyPhaseCountChange,
+  } = useFormContext();
   const [demographicsData, setDemographicsData] = useState<DemographicFormData>(initialData);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -80,6 +87,10 @@ export default function DemographicsForm() {
           intakeOutput?: any[];
           medOrders?: any;
           medAdministrationInstances?: any[];
+          phaseCount?: number;
+          phaseByScope?: import("@/lib/casePhases").PhaseByScope;
+          activePhase?: number;
+          phaseCache?: PhaseScopedCache;
         }>(editCaseId);
         if (localDraft) {
           if (localDraft.demographics) {
@@ -125,6 +136,16 @@ export default function DemographicsForm() {
           if (localDraft.medOrders) onDataChange("medOrders", localDraft.medOrders);
           if (localDraft.medAdministrationInstances) {
             onDataChange("medAdministrationInstances", localDraft.medAdministrationInstances);
+          }
+          if (localDraft.phaseCache) {
+            restorePhaseState({
+              phaseCount: localDraft.phaseCount,
+              phaseByScope: localDraft.phaseByScope,
+              activePhase: localDraft.activePhase,
+              phaseCache: localDraft.phaseCache,
+            });
+          } else if (localDraft.phaseCount) {
+            applyPhaseCountChange(localDraft.phaseCount);
           }
           setCaseId(editCaseId);
           return;
@@ -225,39 +246,7 @@ export default function DemographicsForm() {
         content: n.doc_text ?? "<p></p>",
       })));
 
-      onDataChange("orders", (bundle.orders ?? []).map((o: any) => ({
-        category: o.category,
-        title: o.title ?? "",
-        details: o.details ?? "",
-        status: o.status ?? "Active",
-        orderingProvider: o.provider ?? "",
-        important: Boolean(o.is_important),
-        visibleInPresim: Boolean(o.is_in_presim),
-      })));
-
-      const hydratedLabs = buildLabRowsFromBundle(
-        {
-          labResults: bundle.labResults ?? [],
-          imagingReports: bundle.imagingReports ?? [],
-          microbiologyReports: bundle.microbiologyReports ?? [],
-        },
-        labTemplate,
-      );
-      onDataChange("labs", {
-        data: hydratedLabs.rows,
-        timePoints: hydratedLabs.timePoints,
-        timePointsInPreSim: new Set(
-          (bundle.labResults ?? [])
-            .filter((row: any) => Boolean(row?.is_in_presim))
-            .map((row: any) => Number(row?.time_offset))
-            .filter((offset: number) => Number.isFinite(offset)),
-        ),
-        visibleItems: new Set(
-          hydratedLabs.rows
-            .filter((row) => row.hideable)
-            .map((row) => row.field),
-        ),
-      });
+      initializeFromCaseBundle(bundle);
 
       const hydratedCharting = buildChartingRowsFromBundle(bundle.documentationResults ?? [], flexSheetTemplate);
       onDataChange("charting", {
@@ -272,24 +261,11 @@ export default function DemographicsForm() {
         intakeOutputBlocksFromCaseRow(bundle.caseRow?.intake_output_blocks),
       );
 
-      onDataChange("medOrders", medOrderFormStateFromCaseBundle(bundle));
-
-      onDataChange("medAdministrationInstances", (bundle.medicationAdministrations ?? []).map((m: any) => ({
-        id: m.id,
-        medicationOrderId: String(m.medication_order_id ?? m.medication_id ?? ""),
-        administratorId: m.administrator ?? "",
-        adminTimeMinuteOffset: Number(m.time_offset ?? 0),
-        status: m.status ?? "Due",
-        notes: m.notes ?? "",
-        administeredDose: Number(m.administered_dose ?? 0),
-        visibleInPresim: Boolean(m.is_in_presim),
-      })));
-
       setCaseId(editCaseId);
     };
 
     void loadCaseForEditing();
-  }, [searchParams, caseId, onDataChange, setCaseId]);
+  }, [searchParams, caseId, onDataChange, setCaseId, initializeFromCaseBundle, restorePhaseState, applyPhaseCountChange]);
 
   const goBack = () => {
     setShowCancelAlert(true);

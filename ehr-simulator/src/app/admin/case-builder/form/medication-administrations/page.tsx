@@ -28,8 +28,9 @@ import {
 import { createColumns } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers"
 import MedAdministrationFormCard from "./components/medAdministrationFormCard"
 import { Checkbox } from "@/components/ui/checkbox"
-import { useFormContext } from "@/context/FormContext"
+import { useFormContext, usePhaseTab } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
+import { PhaseTabNav } from "../../components/phaseTabNav"
 import ColumnShiftControl from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/columnShiftControl"
 import { CaseSection } from "@/lib/saveCase"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
@@ -53,10 +54,15 @@ function getComboboxData(orders: MedicationOrder[]) {
 
 export default function MedicationAdministrationsForm() {
   const { onDataChange, medAdministrationData, medOrderData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
+  const { activePhase, registerPhaseScope, getMedicationSavePayload } = usePhaseTab("mar");
 
-  const [medAdministrations, setMedAdministrations] = useState<MedAdministrationInstance[]>(medAdministrationData.filter(admin => {
-    return medOrderData.createdOrders.find(med => med.id === admin.medicationOrderId) !== undefined;
-  }))
+  useEffect(() => {
+    registerPhaseScope();
+  }, []);
+
+  const [medAdministrations, setMedAdministrations] = useState<MedAdministrationInstance[]>(
+    medAdministrationData,
+  );
   const [selectedOrder, setSelectedOrder] = useState<MedicationOrder>()
   const [selectedOrders, setSelectedOrders] = useState<MedicationOrder[]>(medOrderData.createdOrders)
 
@@ -76,6 +82,11 @@ export default function MedicationAdministrationsForm() {
   const [timeColumnOffset, setTimeColumnOffset] = useState(0);
 
   const router = useRouter()
+
+  useEffect(() => {
+    setMedAdministrations(medAdministrationData);
+    setSelectedOrders(medOrderData.createdOrders);
+  }, [medAdministrationData, medOrderData, activePhase]);
 
   useEffect(() => {
     registerCaseBuilderLocalOverlay(() => ({
@@ -154,14 +165,15 @@ export default function MedicationAdministrationsForm() {
   const handleSubmit = async () => {
     onDataChange('medAdministrationInstances', medAdministrations)
 
-    await saveCaseData({
-      payload: {
-        orders: medOrderData.createdOrders,
-        administrations: medAdministrations,
-      },
-      section: CaseSection.MEDICATION_ORDERS,
-      caseId: caseId,
-    })
+    if (caseId && getMedicationSavePayload) {
+      const { phase, orders, administrations } = getMedicationSavePayload();
+      await saveCaseData({
+        payload: { orders, administrations },
+        section: CaseSection.MEDICATION_ORDERS,
+        caseId,
+        phase,
+      })
+    }
 
     router.push('/admin/case-builder/form/review')
   }
@@ -194,6 +206,7 @@ export default function MedicationAdministrationsForm() {
       <div className="flex flex-col h-screen w-full bg-slate-50/50 overflow-hidden">
         <main className="flex-1 overflow-y-auto p-6 md:px-8 lg:px-12">
           <div className="max-w-6xl mx-auto space-y-8 pb-20">
+            <PhaseTabNav scope="mar" />
             <Card className="border-slate-200 shadow-sm overflow-hidden py-0">
               <CardHeader className="bg-slate-50/50 border-b border-slate-100 pt-4 !pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">

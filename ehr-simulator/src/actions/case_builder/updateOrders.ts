@@ -6,18 +6,21 @@ export async function updateOrders(
   supabase: SupabaseClient,
   orders: any[],
   caseId: string,
+  phase: number = 1,
 ) {
 
   const { error: delErr } = await supabase
     .from("orders")
     .delete()
-    .eq("case_id", caseId);
+    .eq("case_id", caseId)
+    .eq("phase", phase);
 
   if (delErr) throw new Error(delErr.message);
   if (orders.length === 0) return [];
 
   const rows = orders.map((order) => ({
     case_id: caseId,
+    phase,
     category: order.category,
     title: order.title,
     details: order.details,

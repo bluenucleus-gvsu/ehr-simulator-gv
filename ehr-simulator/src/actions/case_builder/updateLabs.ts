@@ -8,65 +8,91 @@ export async function updateLabs(
   supabase: SupabaseClient,
   payload: any,
   caseId: string,
+  phase: number = 1,
 ) {
-  const { labResults, imagingReports, microbiologyReports } = transformLabTableToSchema(caseId, {
-    data: payload.data ?? [],
-    timePoints: payload.timePoints ?? [],
-    timePointsInPreSim: new Set(payload.timePointsInPreSim ?? []),
-    visibleItems: new Set(payload.visibleItems ?? []),
-  })
+  const { labResults, imagingReports, microbiologyReports } = transformLabTableToSchema(
+    caseId,
+    {
+      data: payload.data ?? [],
+      timePoints: payload.timePoints ?? [],
+      timePointsInPreSim: new Set(payload.timePointsInPreSim ?? []),
+      visibleItems: new Set(payload.visibleItems ?? []),
+    },
+    phase,
+  );
 
-  await deleteLabs(supabase, caseId, payload.timePoints)
-  const savedLabs = await saveLabs(supabase, labResults)
+  await deleteLabsForPhase(supabase, caseId, phase);
+  const savedLabs = await saveLabs(supabase, labResults, phase);
 
   const labIdByOffset = new Map(
-    (savedLabs ?? []).map(lab => [
-      `${lab.case_id}|${lab.time_offset}`,
+    (savedLabs ?? []).map((lab) => [
+      `${lab.case_id}|${phase}|${lab.time_offset}`,
       lab.id,
-    ])
-  )
-  const savedLabIds = (savedLabs ?? []).map(x => x.id)
+    ]),
+  );
+  const savedLabIds = (savedLabs ?? []).map((x) => x.id);
 
-  await deleteImagingReports(supabase, savedLabIds)
-  const imagingRows = constructImagingRows(imagingReports, labIdByOffset)
-  await saveImagingReports(supabase, imagingRows)
+  await deleteImagingReports(supabase, savedLabIds);
+  const imagingRows = constructImagingRows(imagingReports, labIdByOffset, phase);
+  await saveImagingReports(supabase, imagingRows);
 
-  await deleteMicrobiologyReports(supabase, savedLabIds)
-  const microbiologyRows = constructMicrobiologyRows(microbiologyReports, labIdByOffset)
-  await saveMicrobiologyReports(supabase, microbiologyRows)
+  await deleteMicrobiologyReports(supabase, savedLabIds);
+  const microbiologyRows = constructMicrobiologyRows(microbiologyReports, labIdByOffset, phase);
+  await saveMicrobiologyReports(supabase, microbiologyRows);
 }
 
-async function deleteLabs(supabase: SupabaseClient, caseId: string, timePoints: number[]) {
-  const offsets = timePoints.length > 0 ? timePoints : [0];
+async function deleteLabsForPhase(supabase: SupabaseClient, caseId: string, phase: number) {
+  const { data: existing, error: fetchErr } = await supabase
+    .from("lab_results")
+    .select("id")
+    .eq("case_id", caseId)
+    .eq("phase", phase);
+
+  if (fetchErr) throw new Error(fetchErr.message);
+
+  const labIds = (existing ?? []).map((r) => r.id);
+  if (labIds.length > 0) {
+    await deleteImagingReports(supabase, labIds);
+    await deleteMicrobiologyReports(supabase, labIds);
+  }
+
   const { error: delErr } = await supabase
     .from("lab_results")
     .delete()
     .eq("case_id", caseId)
-    .not("time_offset", "in", `(${offsets.join(",")})`)
-  if (delErr) throw new Error(delErr.message)
+    .eq("phase", phase);
+
+  if (delErr) throw new Error(delErr.message);
 }
 
-async function saveLabs(supabase: SupabaseClient, labResults: LabResultInsert[]) {
+async function saveLabs(supabase: SupabaseClient, labResults: LabResultInsert[], phase: number) {
+  const rows = labResults.map((r) => ({ ...r, phase }));
+  if (rows.length === 0) return [];
+
   const { data: savedLabs, error: LabErr } = await supabase
     .from("lab_results")
-    .upsert(labResults, {
-      onConflict: "case_id, time_offset",
+    .upsert(rows, {
+      onConflict: "case_id, phase, time_offset",
     })
-    .select("id, case_id, time_offset")
+    .select("id, case_id, time_offset, phase");
+
   if (LabErr) {
-    console.error("error saving lab results", LabErr)
-    return
+    throw new Error(LabErr.message);
   }
-  return savedLabs
+  return savedLabs;
 }
 
-function constructImagingRows(imagingReports: ImagingReportDraft[], labIdByOffset: Map<string, string>) {
-  return imagingReports.map(report => {
-    const key = `${report.case_id}|${report.time_offset}`
-    const labId = labIdByOffset.get(key)
+function constructImagingRows(
+  imagingReports: ImagingReportDraft[],
+  labIdByOffset: Map<string, string>,
+  phase: number,
+) {
+  return imagingReports.map((report) => {
+    const key = `${report.case_id}|${phase}|${report.time_offset}`;
+    const labId = labIdByOffset.get(key);
 
     if (!labId) {
-      throw new Error(`No matching lab_result found for imaging report ${report.name}`)
+      throw new Error(`No matching lab_result found for imaging report ${report.name}`);
     }
 
     return {
@@ -77,34 +103,39 @@ function constructImagingRows(imagingReports: ImagingReportDraft[], labIdByOffse
       findings: report.raw.findings ?? {},
       impressions: report.raw.impressions ?? [],
       is_critical: report.raw.isCritical ?? false,
-    }
-  })
+    };
+  });
 }
 
 async function deleteImagingReports(supabase: SupabaseClient, labIds: string[]) {
+  if (labIds.length === 0) return;
   const { error: delErr } = await supabase
     .from("imaging_reports")
     .delete()
-    .in("lab_id", labIds)
-  if (delErr) throw new Error(delErr.message)
+    .in("lab_id", labIds);
+  if (delErr) throw new Error(delErr.message);
 }
 
 async function saveImagingReports(supabase: SupabaseClient, imagingRows: any[]) {
   if (imagingRows.length > 0) {
     const { error: imagingError } = await supabase
       .from("imaging_reports")
-      .insert(imagingRows)
-    if (imagingError) throw new Error(imagingError.message)
+      .insert(imagingRows);
+    if (imagingError) throw new Error(imagingError.message);
   }
 }
 
-function constructMicrobiologyRows(microbiologyReports: MicrobiologyReportDraft[], labIdByOffset: Map<string, string>) {
-  return microbiologyReports.map(report => {
-    const key = `${report.case_id}|${report.time_offset}`
-    const labId = labIdByOffset.get(key)
+function constructMicrobiologyRows(
+  microbiologyReports: MicrobiologyReportDraft[],
+  labIdByOffset: Map<string, string>,
+  phase: number,
+) {
+  return microbiologyReports.map((report) => {
+    const key = `${report.case_id}|${phase}|${report.time_offset}`;
+    const labId = labIdByOffset.get(key);
 
     if (!labId) {
-      throw new Error(`No matching lab_result found for imaging report ${report.name}`)
+      throw new Error(`No matching lab_result found for microbiology report ${report.name}`);
     }
 
     return {
@@ -120,23 +151,24 @@ function constructMicrobiologyRows(microbiologyReports: MicrobiologyReportDraft[
       comments: report.raw.comments,
       reporter: report.raw.reporter,
       is_critical: report.raw.isCritical,
-    }
-  })
+    };
+  });
 }
 
 async function deleteMicrobiologyReports(supabase: SupabaseClient, labIds: string[]) {
+  if (labIds.length === 0) return;
   const { error: delErr } = await supabase
     .from("microbiology_reports")
     .delete()
-    .in("lab_id", labIds)
-  if (delErr) throw new Error(delErr.message)
+    .in("lab_id", labIds);
+  if (delErr) throw new Error(delErr.message);
 }
 
 async function saveMicrobiologyReports(supabase: SupabaseClient, microbiologyRows: any[]) {
   if (microbiologyRows.length > 0) {
     const { error: microbiologyError } = await supabase
       .from("microbiology_reports")
-      .insert(microbiologyRows)
-    if (microbiologyError) throw new Error(microbiologyError.message)
+      .insert(microbiologyRows);
+    if (microbiologyError) throw new Error(microbiologyError.message);
   }
 }

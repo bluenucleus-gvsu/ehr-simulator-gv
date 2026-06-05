@@ -20,13 +20,21 @@ type SaveCaseArgs =
   | { section: typeof CaseSection.DEMOGRAPHICS; payload: any; caseId?: string | null }
   | { section: typeof CaseSection.HISTORY; payload: any; caseId?: string | null }
   | { section: typeof CaseSection.CLINICAL_DOCUMENTS; payload: any; caseId?: string | null }
-  | { section: typeof CaseSection.ORDERS; payload: any; caseId?: string | null }
-  | { section: typeof CaseSection.LABS; payload: any; caseId?: string | null }
+  | { section: typeof CaseSection.ORDERS; payload: any; caseId?: string | null; phase?: number }
+  | { section: typeof CaseSection.LABS; payload: any; caseId?: string | null; phase?: number }
   | { section: typeof CaseSection.DOCUMENTATION; payload: any; caseId?: string | null }
   | { section: typeof CaseSection.INTAKE_OUTPUT; payload: IntakeOutputFormData[]; caseId?: string | null }
-  | { section: typeof CaseSection.MEDICATION_ORDERS; payload: { orders: MedicationOrder[]; administrations: MedAdministrationInstance[] }; caseId?: string | null }
+  | {
+      section: typeof CaseSection.MEDICATION_ORDERS;
+      payload: { orders: MedicationOrder[]; administrations: MedAdministrationInstance[] };
+      caseId?: string | null;
+      phase?: number;
+    }
 
-export async function saveCaseData({ payload, section, caseId }: SaveCaseArgs) {
+export async function saveCaseData(args: SaveCaseArgs) {
+  const { payload, section, caseId } = args;
+  const phase = "phase" in args && typeof args.phase === "number" ? args.phase : 1;
+
   return runWriteForMode(
     async () => {
       const supabase = createClient(
@@ -46,25 +54,22 @@ export async function saveCaseData({ payload, section, caseId }: SaveCaseArgs) {
         case CaseSection.CLINICAL_DOCUMENTS:
           return await updateClinicalDocuments(supabase, payload, caseId);
         case CaseSection.ORDERS:
-          return await updateOrders(supabase, payload, caseId);
+          return await updateOrders(supabase, payload, caseId, phase);
         case CaseSection.LABS:
-          return await updateLabs(supabase, payload, caseId);
+          return await updateLabs(supabase, payload, caseId, phase);
         case CaseSection.DOCUMENTATION:
           return await updateDocumentationResults(supabase, payload, caseId);
         case CaseSection.INTAKE_OUTPUT:
           return await updateCaseIntakeOutput(supabase, payload, caseId);
         case CaseSection.MEDICATION_ORDERS:
-          return await updateMedications(supabase, payload, caseId);
+          return await updateMedications(supabase, payload, caseId, phase);
       }
     },
     async () => ({
       success: true,
       message: "Case section saved locally for tester mode.",
       id: caseId ?? crypto.randomUUID(),
-      data: { caseId: caseId ?? crypto.randomUUID(), section, payload },
+      data: { caseId: caseId ?? crypto.randomUUID(), section, payload, phase },
     }),
   );
 }
-
-
-

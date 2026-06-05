@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
-import { emailIsDevAdminAllowlist } from '@/lib/devAdminEmails'
+import { resolveAuthRole } from '@/lib/resolveAuthRole'
 import { setTesterModeCookies } from '@/utils/testerMode'
 
 export default function AuthCallbackPage() {
@@ -39,8 +39,10 @@ export default function AuthCallbackPage() {
       if (session) {
         const fallbackRole = session.user?.user_metadata?.role as string | undefined
         const role = await getRoleForUser(session.user.id, fallbackRole)
-        const devBypass = emailIsDevAdminAllowlist(session.user.email ?? undefined)
-        const resolvedRole = isTesterLogin ? 'tester' : (devBypass ? 'admin' : role)
+        const resolvedRole = resolveAuthRole(session.user.email ?? undefined, {
+          isTesterLogin,
+          dbOrMetadataRole: role,
+        })
         if (typeof window !== 'undefined' && resolvedRole) {
           try {
             window.localStorage.setItem('role', resolvedRole)
@@ -65,8 +67,10 @@ export default function AuthCallbackPage() {
             if (sess) {
               const fallbackRole = sess.user?.user_metadata?.role as string | undefined
               const role = await getRoleForUser(sess.user.id, fallbackRole)
-              const devBypass = emailIsDevAdminAllowlist(sess.user.email ?? undefined)
-              const resolvedRole = isTesterLogin ? 'tester' : (devBypass ? 'admin' : role)
+              const resolvedRole = resolveAuthRole(sess.user.email ?? undefined, {
+                isTesterLogin,
+                dbOrMetadataRole: role,
+              })
               if (typeof window !== 'undefined' && resolvedRole) {
                 try {
                   window.localStorage.setItem('role', resolvedRole)

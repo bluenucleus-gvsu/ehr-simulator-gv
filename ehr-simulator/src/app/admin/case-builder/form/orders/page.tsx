@@ -29,8 +29,9 @@ import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { OrderType } from "@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData"
-import { useFormContext } from "@/context/FormContext"
+import { useFormContext, usePhaseTab } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
+import { PhaseTabNav } from "../../components/phaseTabNav"
 import { Checkbox } from "@/components/ui/checkbox"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
 import { CaseSection } from "@/lib/saveCase"
@@ -64,6 +65,11 @@ const getCategoryColor = (cat: string | undefined) => {
 export default function OrdersForm() {
   const router = useRouter();
   const { onDataChange, orderData, caseId, registerCaseBuilderLocalOverlay } = useFormContext();
+  const { activePhase, registerPhaseScope } = usePhaseTab("orders");
+
+  useEffect(() => {
+    registerPhaseScope();
+  }, []);
 
   const [orders, setOrders] = useState<OrderType[]>(orderData);
 
@@ -107,6 +113,10 @@ export default function OrdersForm() {
   }
 
   useEffect(() => {
+    setOrders(orderData);
+  }, [orderData, activePhase]);
+
+  useEffect(() => {
     registerCaseBuilderLocalOverlay(() => ({ orders }));
     return () => registerCaseBuilderLocalOverlay(null);
   }, [orders, registerCaseBuilderLocalOverlay]);
@@ -122,7 +132,8 @@ export default function OrdersForm() {
     await saveCaseData({
       payload: orders,
       section: CaseSection.ORDERS,
-      caseId: caseId
+      caseId: caseId,
+      phase: activePhase,
     })
 
     router.push('/admin/case-builder/form/labs')
@@ -148,7 +159,8 @@ export default function OrdersForm() {
       backButtonTooltip="Return to Previous Page"
     >
       <div className="flex flex-col h-screen w-full bg-slate-50/50">
-        <div className="flex-1 grid grid-cols-1 2xl:grid-cols-12 gap-6 h-full w-full overflow-y-auto pt-6 pb-30 px-8 lg:px-12 mx-auto">
+        <PhaseTabNav scope="orders" />
+        <div className="flex-1 grid grid-cols-1 2xl:grid-cols-12 gap-6 h-full w-full overflow-y-auto pt-2 pb-30 px-8 lg:px-12 mx-auto">
           <div className="lg:col-span-5 space-y-6">
             <Card className="border-slate-200 shadow-sm h-fit pt-0">
               <CardHeader className="bg-slate-50/50 border-b border-slate-200/70 rounded-t-xl pt-3 !pb-3">

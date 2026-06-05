@@ -1,7 +1,9 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { useSimulationCase } from "@/context/SimulationCaseContext";
 import { useSimSessionContext } from "@/context/SimSessionContext";
+import { simulationPhaseLabel } from "@/lib/simPhases";
 import { useStudentSimulationEditAccess } from "@/utils/studentSimulationEditAccess";
 import { BookOpenCheck, HeartPulse } from "lucide-react";
 import { useParams } from "next/navigation";
@@ -11,6 +13,8 @@ const BANNER_AUTO_HIDE_MS = 15_000;
 
 const SimulationModeBanner = () => {
   const { isPresim, loading } = useSimSessionContext();
+  const { phaseContext } = useSimulationCase();
+  const phaseLabel = simulationPhaseLabel(phaseContext);
   const { isViewOnly } = useStudentSimulationEditAccess();
   const params = useParams();
   const caseId = params?.caseId as string | undefined;
@@ -54,7 +58,10 @@ const SimulationModeBanner = () => {
             <p className="text-sm font-semibold text-slate-900">
               {loading ? "Loading simulation mode..." : helperText}
             </p>
-            <p className="text-xs font-medium text-slate-700/90">{statusText}</p>
+            <p className="text-xs font-medium text-slate-700/90">
+              {statusText}
+              {phaseLabel && !isPreSimMode ? ` · ${phaseLabel}` : ""}
+            </p>
             {isViewOnly ? (
               <p className="mt-1 text-xs font-medium text-amber-900">
                 View only — charting, notes, and medication documentation unlock when you enter the active simulation.

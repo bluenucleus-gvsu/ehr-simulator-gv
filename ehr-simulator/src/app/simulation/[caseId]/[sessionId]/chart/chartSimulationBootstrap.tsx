@@ -3,6 +3,7 @@
 import type { CaseBundle } from "@/actions/case_builder/getCase";
 import type { SimulationRouteContext } from "@/actions/simulation/getSimulationContext";
 import { SimulationCaseProvider } from "@/context/SimulationCaseContext";
+import type { SimulationPhaseContext } from "@/lib/simPhases";
 import {
   buildTesterCaseBundleFromDraft,
   mergeTesterCaseBundlePreferDraft,
@@ -13,33 +14,42 @@ import { useEffect, useState } from "react";
 
 export function ChartSimulationBootstrap({
   routeContext,
+  phaseRouteContext,
   serverCaseBundle,
+  initialPhaseContext,
   children,
 }: {
   routeContext: SimulationRouteContext;
+  phaseRouteContext: SimulationRouteContext;
   serverCaseBundle: CaseBundle | null;
+  initialPhaseContext: SimulationPhaseContext;
   children: React.ReactNode;
 }) {
-  const [caseBundle, setCaseBundle] = useState<CaseBundle | null>(serverCaseBundle);
+  const [rawCaseBundle, setRawCaseBundle] = useState<CaseBundle | null>(serverCaseBundle);
 
   useEffect(() => {
     if (!isTesterModeClient()) {
-      setCaseBundle(serverCaseBundle);
+      setRawCaseBundle(serverCaseBundle);
       return;
     }
 
     const draft = getTesterCaseDraft(routeContext.caseId);
     if (!draft) {
-      setCaseBundle(serverCaseBundle);
+      setRawCaseBundle(serverCaseBundle);
       return;
     }
 
     const fromDraft = buildTesterCaseBundleFromDraft(routeContext.caseId);
-    setCaseBundle(mergeTesterCaseBundlePreferDraft(fromDraft, serverCaseBundle));
+    setRawCaseBundle(mergeTesterCaseBundlePreferDraft(fromDraft, serverCaseBundle));
   }, [serverCaseBundle, routeContext.caseId]);
 
   return (
-    <SimulationCaseProvider routeContext={routeContext} caseBundle={caseBundle}>
+    <SimulationCaseProvider
+      routeContext={routeContext}
+      phaseRouteContext={phaseRouteContext}
+      rawCaseBundle={rawCaseBundle}
+      initialPhaseContext={initialPhaseContext}
+    >
       {children}
     </SimulationCaseProvider>
   );

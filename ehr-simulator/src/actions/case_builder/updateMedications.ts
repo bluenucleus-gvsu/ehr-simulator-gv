@@ -6,6 +6,7 @@ import { allMedications, MedAdministrationInstance, MedicationOrder } from "@/ap
 type MedicationOrderInsert = {
   id: string;
   case_id: string;
+  phase: number;
   medication_id: string;
   dose: number;
   frequency: string;
@@ -19,6 +20,7 @@ type MedicationOrderInsert = {
 
 type MedicationAdministrationInsert = {
   case_id: string;
+  phase: number;
   medication_id: string | null;
   medication_order_id: string | null;
   administrator?: string;
@@ -32,75 +34,106 @@ type MedicationAdministrationInsert = {
 export async function updateMedications(
   supabase: SupabaseClient,
   payload: { orders: MedicationOrder[]; administrations: MedAdministrationInstance[] },
-  caseId: string
+  caseId: string,
+  phase: number = 1,
 ) {
-  const medicationIdMap = await resolveDatabaseMedicationIds(supabase, payload.orders)
-  await deleteMedications(supabase, caseId)
-  await insertMedicationOrders(supabase, transformMedicationOrdersToSchema(caseId, payload.orders, medicationIdMap))
+  const medicationIdMap = await resolveDatabaseMedicationIds(supabase, payload.orders);
+  await deleteMedications(supabase, caseId, phase);
+  await insertMedicationOrders(
+    supabase,
+    transformMedicationOrdersToSchema(caseId, phase, payload.orders, medicationIdMap),
+  );
   await insertMedicationAdministrations(
     supabase,
-    transformMedicationAdministrationsToSchema(caseId, payload.orders, payload.administrations, medicationIdMap),
-  )
+    transformMedicationAdministrationsToSchema(
+      caseId,
+      phase,
+      payload.orders,
+      payload.administrations,
+      medicationIdMap,
+    ),
+  );
 }
 
-async function deleteMedications(supabase: SupabaseClient, caseId: string) {
+async function deleteMedications(supabase: SupabaseClient, caseId: string, phase: number) {
   const { error: deleteAdminErr } = await supabase
     .from("medication_administrations")
     .delete()
     .eq("case_id", caseId)
-  if (deleteAdminErr) throw new Error(deleteAdminErr.message)
+    .eq("phase", phase);
+  if (deleteAdminErr) throw new Error(deleteAdminErr.message);
 
   const { error: deleteOrderErr } = await supabase
     .from("medication_orders")
     .delete()
     .eq("case_id", caseId)
-  if (deleteOrderErr) throw new Error(deleteOrderErr.message)
+    .eq("phase", phase);
+  if (deleteOrderErr) throw new Error(deleteOrderErr.message);
 }
 
 function normalizeInfusionRate(raw: unknown): number | null {
-  if (raw == null || raw === "") return null
-  const n = typeof raw === "number" ? raw : Number(String(raw).trim())
-  return Number.isFinite(n) ? n : null
+  if (raw == null || raw === "") return null;
+  const n = typeof raw === "number" ? raw : Number(String(raw).trim());
+  return Number.isFinite(n) ? n : null;
+}
+
+function isPersistableOrder(order: MedicationOrder, medicationIdMap: Map<string, string>): boolean {
+  return Boolean(order.id && medicationIdMap.has(order.medicationId));
+}
+
+function persistableOrderIds(
+  orders: MedicationOrder[],
+  medicationIdMap: Map<string, string>,
+): Set<string> {
+  return new Set(orders.filter((o) => isPersistableOrder(o, medicationIdMap)).map((o) => o.id));
 }
 
 function transformMedicationOrdersToSchema(
   caseId: string,
+  phase: number,
   orders: MedicationOrder[],
   medicationIdMap: Map<string, string>,
 ): MedicationOrderInsert[] {
   return orders
-    .filter((order) => order.id && medicationIdMap.has(order.medicationId) && order.frequency && order.priority)
+    .filter((order) => isPersistableOrder(order, medicationIdMap))
     .map((order) => ({
       id: order.id,
       case_id: caseId,
+      phase,
       medication_id: medicationIdMap.get(order.medicationId)!,
       dose: Number(order.dose) || 0,
-      frequency: order.frequency,
-      priority: order.priority,
+      frequency: order.frequency?.trim() || "QD",
+      priority: order.priority?.trim() || "Routine",
       instructions: order.instructions?.trim() || null,
       indication: order.indication?.trim() || null,
       ordering_provider: order.orderingProvider?.trim() || null,
       infusion_rate: normalizeInfusionRate(order.infusionRate),
       is_in_presim: Boolean(order.visibleInPresim),
-    }))
+    }));
 }
 
 function transformMedicationAdministrationsToSchema(
   caseId: string,
+  phase: number,
   orders: MedicationOrder[],
   medAdministrations: MedAdministrationInstance[],
   medicationIdMap: Map<string, string>,
 ): MedicationAdministrationInsert[] {
+  const savedOrderIds = persistableOrderIds(orders, medicationIdMap);
   const medicationIdByOrderId = new Map(
     orders
-      .filter((order) => medicationIdMap.has(order.medicationId))
+      .filter((order) => savedOrderIds.has(order.id))
       .map((order) => [order.id, medicationIdMap.get(order.medicationId)!]),
-  )
+  );
 
   return medAdministrations
-    .filter((medAdmin) => medAdmin.medicationOrderId)
+    .filter(
+      (medAdmin) =>
+        medAdmin.medicationOrderId && savedOrderIds.has(medAdmin.medicationOrderId),
+    )
     .map((medAdmin) => ({
       case_id: caseId,
+      phase,
       medication_id: medicationIdByOrderId.get(medAdmin.medicationOrderId) ?? null,
       medication_order_id: medAdmin.medicationOrderId,
       administrator: medAdmin.administratorId ?? "",
@@ -109,61 +142,61 @@ function transformMedicationAdministrationsToSchema(
       notes: medAdmin.notes ?? "",
       administered_dose: medAdmin.administeredDose,
       is_in_presim: medAdmin.visibleInPresim,
-    }))
+    }));
 }
 
 async function resolveDatabaseMedicationIds(
   supabase: SupabaseClient,
   orders: MedicationOrder[],
 ): Promise<Map<string, string>> {
-  const catalogById = new Map(allMedications.map((med) => [med.id, med]))
+  const catalogById = new Map(allMedications.map((med) => [med.id, med]));
   const requestedCatalogMeds = orders
     .map((order) => catalogById.get(order.medicationId))
-    .filter((med): med is NonNullable<typeof med> => Boolean(med))
+    .filter((med): med is NonNullable<typeof med> => Boolean(med));
 
   if (requestedCatalogMeds.length === 0) {
-    return new Map()
+    return new Map();
   }
 
-  const genericNames = Array.from(new Set(requestedCatalogMeds.map((med) => med.genericName)))
+  const genericNames = Array.from(new Set(requestedCatalogMeds.map((med) => med.genericName)));
   const { data, error } = await supabase
     .from("medications")
     .select("id, generic_name, route, strength")
-    .in("generic_name", genericNames)
+    .in("generic_name", genericNames);
 
-  if (error) throw new Error(error.message)
+  if (error) throw new Error(error.message);
 
   const dbBySignature = new Map(
     (data ?? []).map((row) => [
       `${row.generic_name.toLowerCase()}|${row.route}|${Number(row.strength)}`,
       row.id,
     ]),
-  )
+  );
 
-  const resolved = new Map<string, string>()
+  const resolved = new Map<string, string>();
   for (const med of requestedCatalogMeds) {
-    const signature = `${med.genericName.toLowerCase()}|${med.route}|${Number(med.strength)}`
-    const dbId = dbBySignature.get(signature)
-    if (dbId) resolved.set(med.id, dbId)
+    const signature = `${med.genericName.toLowerCase()}|${med.route}|${Number(med.strength)}`;
+    const dbId = dbBySignature.get(signature);
+    if (dbId) resolved.set(med.id, dbId);
   }
 
-  return resolved
+  return resolved;
 }
 
 async function insertMedicationOrders(
   supabase: SupabaseClient,
   medicationOrders: MedicationOrderInsert[],
 ) {
-  if (medicationOrders.length === 0) return
-  const { error: insertErr } = await supabase.from("medication_orders").insert(medicationOrders)
-  if (insertErr) throw new Error(insertErr.message)
+  if (medicationOrders.length === 0) return;
+  const { error: insertErr } = await supabase.from("medication_orders").insert(medicationOrders);
+  if (insertErr) throw new Error(insertErr.message);
 }
 
 async function insertMedicationAdministrations(
   supabase: SupabaseClient,
   medAdministrations: MedicationAdministrationInsert[],
 ) {
-  if (medAdministrations.length === 0) return
-  const { error: insertErr } = await supabase.from("medication_administrations").insert(medAdministrations)
-  if (insertErr) throw new Error(insertErr.message)
+  if (medAdministrations.length === 0) return;
+  const { error: insertErr } = await supabase.from("medication_administrations").insert(medAdministrations);
+  if (insertErr) throw new Error(insertErr.message);
 }

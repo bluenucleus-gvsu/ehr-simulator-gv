@@ -8,13 +8,21 @@ import {
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { allMedications, AllMedicationTypes, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData"
+
+function selectedMedsForOrders(orders: MedicationOrder[]): AllMedicationTypes[] {
+  return orders
+    .map((o) => allMedications.find((m) => m.id === o.medicationId))
+    .filter((m): m is AllMedicationTypes => Boolean(m));
+}
 import Combobox from "@/components/ui/combobox"
 import MedCardForm from "./components/medCardForm"
 import { useRouter } from "next/navigation"
-import { useFormContext } from "@/context/FormContext"
+import { useFormContext, usePhaseTab } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
+import { PhaseTabNav } from "../../components/phaseTabNav"
 import { CaseSection } from "@/lib/saveCase"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
+import { toast } from "sonner"
 
 function getComboboxData(medications: AllMedicationTypes[]) {
   return medications.map(med => {
@@ -32,7 +40,12 @@ function getComboboxData(medications: AllMedicationTypes[]) {
 
 export default function MedicationOrderForm() {
   const router = useRouter()
-  const { onDataChange, medOrderData, medAdministrationData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
+  const { onDataChange, medOrderData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
+  const { activePhase, registerPhaseScope, getMedicationSavePayload } = usePhaseTab("medOrders");
+
+  useEffect(() => {
+    registerPhaseScope();
+  }, []);
   const [selectedMed, setSelectedMed] = useState('')
   const [selectedMeds, setSelectedMeds] = useState<AllMedicationTypes[]>(medOrderData.selectedMeds)
   const [medOrders, setMedOrders] = useState<MedicationOrder[]>(medOrderData.createdOrders)
@@ -94,6 +107,16 @@ export default function MedicationOrderForm() {
   }, []);
 
   useEffect(() => {
+    const orders = medOrderData.createdOrders;
+    setMedOrders(orders);
+    setSelectedMeds(
+      medOrderData.selectedMeds.length > 0
+        ? medOrderData.selectedMeds
+        : selectedMedsForOrders(orders),
+    );
+  }, [medOrderData, activePhase]);
+
+  useEffect(() => {
     registerCaseBuilderLocalOverlay(() => ({
       medOrders: { createdOrders: medOrders, selectedMeds: selectedMeds },
     }));
@@ -113,12 +136,19 @@ export default function MedicationOrderForm() {
       createdOrders: medOrders,
       selectedMeds: selectedMeds
     });
-    if (caseId) {
+    if (caseId && getMedicationSavePayload) {
+      const { phase, orders, administrations } = getMedicationSavePayload();
+      if (orders.length === 0) {
+        toast.error("Add at least one medication order before continuing.");
+        return;
+      }
       await saveCaseData({
-        payload: { orders: medOrders, administrations: medAdministrationData },
+        payload: { orders, administrations },
         section: CaseSection.MEDICATION_ORDERS,
         caseId,
-      })
+        phase,
+      });
+      toast.success(`Medication orders saved (phase ${phase}).`);
     }
     router.push('/admin/case-builder/form/medication-administrations');
   }
@@ -137,6 +167,7 @@ export default function MedicationOrderForm() {
       <div className="flex overflow-y-auto flex-col w-full bg-slate-50/50">
         <div className="flex-1 p-6 md:px-12 lg:px-24">
           <div className="max-w-4xl mx-auto space-y-6 pb-20">
+            <PhaseTabNav scope="medOrders" />
             <Card className="p-4">
               <Label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                 <Search className="w-4 h-4 text-blue-600" />
