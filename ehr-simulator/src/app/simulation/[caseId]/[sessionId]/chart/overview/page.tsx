@@ -41,11 +41,11 @@ const OverviewPage = ({ params }: OverviewPageProps) => {
   ];
 
   return (
-    <div className="w-full h-[calc(100vh-4rem)] bg-gray-100 pt-4 px-2">
-      <div className="overflow-auto h-full px-2 rounded-t-2xl border inset-shadow-sm">
-        <div className="columns-1 sm:columns-2 xl:columns-3 2xl:columns-4 gap-3 py-2 [column-fill:_balance]">
+    <div className="box-border flex h-full min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden bg-gray-100 px-2 pt-4">
+      <div className="min-h-0 flex-1 min-w-0 max-w-full overflow-x-auto overflow-y-auto rounded-t-2xl border px-2 inset-shadow-sm">
+        <div className="columns-1 gap-3 py-2 [column-fill:_balance] sm:columns-2 xl:columns-3 2xl:columns-4">
           {cards.map((card) => (
-            <div key={card.key?.toString()} className="mb-3 break-inside-avoid">
+            <div key={card.key?.toString()} className="mb-3 max-w-full min-w-0 break-inside-avoid">
               {card}
             </div>
           ))}

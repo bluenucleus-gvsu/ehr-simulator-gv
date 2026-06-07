@@ -106,7 +106,11 @@ export default function CourseAssignmentsClient({
 
     return Array.from(merged.values()).reduce<{ completed: SimAssignment[]; assigned: SimAssignment[] }>(
       (acc, item) => {
-        const lifecycle = getAssignedSimulationLifecycle({ simTime: item.simTime, presimTime: item.presimTime });
+        const lifecycle = getAssignedSimulationLifecycle({
+          simTime: item.simTime,
+          presimTime: item.presimTime,
+          sessionStatus: item.sessionStatus,
+        });
         if (lifecycle.isPastScheduled) {
           acc.completed.push(item);
         } else {

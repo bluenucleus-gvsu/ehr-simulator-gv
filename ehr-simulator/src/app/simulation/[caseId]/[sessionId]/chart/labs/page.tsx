@@ -187,15 +187,15 @@ function LabPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-[calc(100vh-4rem)] w-[calc(100vw-16rem)] bg-gray-100 justify-center items-center">
+      <div className="flex h-full min-h-0 w-full max-w-full items-center justify-center bg-gray-100">
         <p className="text-gray-500 animate-pulse">Loading Labs...</p>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] w-[calc(100vw-16rem)] bg-gray-100 justify-center items-center px-4 pt-4 ">
-      <div className="w-full h-full border border-gray-200 rounded-t-lg overflow-hidden flex flex-col">
+    <div className="flex h-full min-h-0 w-full max-w-full flex-col bg-gray-100 px-4 pt-4">
+      <div className="flex min-h-0 flex-1 w-full flex-col overflow-auto rounded-t-lg border border-gray-200">
         <Table className="w-full overflow-x-auto">
           <TableHeader className=" bg-gray-50">
             {ptTable.getHeaderGroups().map(headerGroup => (

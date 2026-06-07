@@ -37,11 +37,13 @@ const ChartLayout = async ({ children, params }: ChartLayoutProps) => {
         <SimulationShell>
           <Toaster position="top-right" />
           <Header tabs={<ChartTabs />} />
-          <div className="flex w-full h-full">
+          <div className="flex min-h-0 flex-1 w-full min-w-0">
             <ChartSidebar />
-            <div className="flex flex-col w-full h-full">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
               <SimulationModeBanner />
-              {children}
+              <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-hidden">
+                {children}
+              </div>
             </div>
           </div>
         </SimulationShell>
