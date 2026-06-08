@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import FeedbackModal from "./FeedbackModal";
-
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 export type Member = {
   id: string;
   name: string;
@@ -80,9 +80,43 @@ function SimulationGroupsView({
   const [feedbackTarget, setFeedbackTarget] = useState<FeedbackTarget | null>(null);
   const [submittedFeedback, setSubmittedFeedback] = useState<Record<string, string>>({});
 
+  // Test Data
+  const [groupStage, setGroupStage] = useState<Record<string, number>>({});
+  const [stageDialog, setStageDialog] = useState(false);   // Stage Change Dialog Check
+  const [pendingStageGroup, setPendingStageGroup] = useState<{id: string; name:string } | null>(null); // Stage Group Dialog Pending
+  const stages = 10; // Number of stages
+  const maxStagesPerRow = 5; // Max number in one row
+
+  // Handle Feedback submit button
   const handleSubmit = (key: string, feedback: string) => {
     setSubmittedFeedback((prev) => ({ ...prev, [key]: feedback }));
     console.log(`[DUMMY] Feedback submitted for "${key}":`, feedback);
+  };
+
+  // Handle Next Stage Button click
+  const handleStageAdvancement = (id: string, name: string) => {
+    setPendingStageGroup({id, name})
+    setStageDialog(true)
+  };
+
+  // Confirm Dialog Action
+  const confirmStageAdvancement = () => {
+    if (!pendingStageGroup) return;
+
+    setGroupStage(prev => ({
+      ...prev,
+      [pendingStageGroup.id]: Math.min((prev[pendingStageGroup.id] ?? 0) + 1, stages - 1),
+    }));
+
+    // Add core db update logic here...
+    setStageDialog(false);
+    setPendingStageGroup(null);
+  };
+
+  // Cancel Dialog Action
+  const cancelStageAdvancement = () => {
+    setStageDialog(false);
+    setPendingStageGroup(null);
   };
 
   return (
@@ -122,6 +156,18 @@ function SimulationGroupsView({
         {simulation.groups.map((group) => {
           const groupFeedbackKey = `group:${group.id}`;
           const hasGroupFeedback = !!submittedFeedback[groupFeedbackKey];
+
+          // Test Data
+          const currentStage = groupStage[group.id] ?? 0;
+          // Creating Array to iterate over, will be replaced with core db logic
+          const stageRows = Array.from(
+            { length: Math.ceil(stages / maxStagesPerRow) },
+            (_, rowIndex) => {
+              const start = rowIndex * maxStagesPerRow;
+              const rowLength = Math.min(maxStagesPerRow, stages - start);
+              return Array.from({ length: rowLength }, (_, idx) => start + idx);
+            }
+          );
 
           return (
             <div
@@ -191,6 +237,49 @@ function SimulationGroupsView({
                   );
                 })}
               </ul>
+              {/* Group Footer for Stage Change */}
+              <hr />
+              <div className="flex flex-wrap items-center gap-4 py-2">
+                <div className="flex-1 min-w-[18rem] space-y-1">
+                  {stageRows.map((row, rowIndex) => (
+                    <div key={rowIndex} className="flex flex-wrap items-center">
+                      {row.map((stageIndex, idx) => (
+                        <div
+                          key={stageIndex}
+                          style={{
+                            clipPath:
+                              idx === 0
+                               // Using clipPath to create the Stage Layout... [Pn> >Pn+1>...
+                                ? 'polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%)'
+                                : 'polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%)',
+                            // Set the margin for the first to zero
+                            marginLeft: idx === 0 ? '0' : '-10px',
+                            zIndex: stageIndex,
+                          }}
+                          // Core colors for Current stage, Completed stage, and Not Yet There stage.
+                          className={`relative px-4 py-1.5 text-sm font-medium text-white ${
+                            stageIndex < currentStage
+                              ? 'bg-green-500'
+                              : stageIndex === currentStage
+                              ? 'bg-blue-500'
+                              : 'bg-slate-300'
+                          }`}
+                        >
+                          P{stageIndex + 1}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => handleStageAdvancement(group.id, group.name)}
+                  disabled={currentStage >= stages - 1}
+                  className="shrink-0 rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
+                >
+                  Next Stage
+                </button>
+              </div>
             </div>
           );
         })}
@@ -214,6 +303,27 @@ function SimulationGroupsView({
           }}
         />
       )}
+
+      {/* Next Stage Alert Dialog */}
+      <AlertDialog open={stageDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Advance to the Next Stage</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to advance {pendingStageGroup? pendingStageGroup.name : ""} to the next stage?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelStageAdvancement}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmStageAdvancement}>
+              Advance
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+        
+      </AlertDialog>
     </div>
   );
 }
