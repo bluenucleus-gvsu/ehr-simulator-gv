@@ -80,12 +80,12 @@ function SimulationGroupsView({
   const [feedbackTarget, setFeedbackTarget] = useState<FeedbackTarget | null>(null);
   const [submittedFeedback, setSubmittedFeedback] = useState<Record<string, string>>({});
 
-  // Test Data
-  const [groupStage, setGroupStage] = useState<Record<string, number>>({});
-  const [stageDialog, setStageDialog] = useState(false);   // Stage Change Dialog Check
-  const [pendingStageGroup, setPendingStageGroup] = useState<{id: string; name:string } | null>(null); // Stage Group Dialog Pending
-  const stages = 10; // Number of stages
-  const maxStagesPerRow = 5; // Max number in one row
+  // Core Alert Dialog and Phase Change Variables
+  const phases = 10; // const phases = await getPhaseCount(caseId)
+  const maxPhasesPerRow = 5; // Max number of phases in one row
+  const [groupPhase, setGroupPhase] = useState<Record<string, number>>({}); // Replaced with case_sessions.current_phase
+  const [phaseDialog, setPhaseDialog] = useState(false);   // Phase Change Dialog Check
+  const [pendingPhaseGroup, setPendingPhaseGroup] = useState<{id: string; name:string } | null>(null); // Phase Group Dialog Pending
 
   // Handle Feedback submit button
   const handleSubmit = (key: string, feedback: string) => {
@@ -93,30 +93,58 @@ function SimulationGroupsView({
     console.log(`[DUMMY] Feedback submitted for "${key}":`, feedback);
   };
 
-  // Handle Next Stage Button click
-  const handleStageAdvancement = (id: string, name: string) => {
-    setPendingStageGroup({id, name})
-    setStageDialog(true)
+  // Handle 'Next Phase' Button click
+  const handlePhaseAdvancement = (id: string, name: string) => {
+    setPendingPhaseGroup({id, name})
+    setPhaseDialog(true)
   };
 
-  // Confirm Dialog Action
-  const confirmStageAdvancement = () => {
-    if (!pendingStageGroup) return;
+  // Confirm AlertDialog Action
+  const confirmPhaseAdvancement = () => { // Change to async
+    if (!pendingPhaseGroup) return;
 
-    setGroupStage(prev => ({
-      ...prev,
-      [pendingStageGroup.id]: Math.min((prev[pendingStageGroup.id] ?? 0) + 1, stages - 1),
+    /* 
+    
+    // Get: case_sessions.current_phase using groups.id, and section_assignments.id
+    const currentPhase = await getCurrentAndCountPhase(
+      pendingPhaseGroup.id,
+      sectionAssignmentId
+    )
+
+    // Check: 
+    if (currentPhase >= phaseCount) {
+      setPhaseDialog(false);
+      setPendingPhaseGroup(null);
+      return;
+    }
+
+    // Increment:
+    const updatePhaseDB = currentPhase + 1
+    await updateCaseSessionPhase(pendingPhaseGroup.id, sectionAssignmentId, updatedPhase) // server action
+
+    // Update State:
+    setGroupPhase((prev) => ({
+      ...prev, 
+      [pendingPhaseGroup.id]: updatePhaseDB,
     }));
 
-    // Add core db update logic here...
-    setStageDialog(false);
-    setPendingStageGroup(null);
+    */
+
+    // Remove...
+    setGroupPhase(prev => ({
+      ...prev,
+      [pendingPhaseGroup.id]: Math.min((prev[pendingPhaseGroup.id] ?? 1) + 1, phases),
+    }));
+    // Remove...
+
+    setPhaseDialog(false);
+    setPendingPhaseGroup(null);
   };
 
-  // Cancel Dialog Action
-  const cancelStageAdvancement = () => {
-    setStageDialog(false);
-    setPendingStageGroup(null);
+  // Cancel AlertDialog Action
+  const cancelPhaseAdvancement = () => {
+    setPhaseDialog(false);
+    setPendingPhaseGroup(null);
   };
 
   return (
@@ -158,13 +186,14 @@ function SimulationGroupsView({
           const hasGroupFeedback = !!submittedFeedback[groupFeedbackKey];
 
           // Test Data
-          const currentStage = groupStage[group.id] ?? 0;
+          const currentPhase = groupPhase[group.id] ?? 1; // Use what ever database logic we will be using.
+          
           // Creating Array to iterate over, will be replaced with core db logic
-          const stageRows = Array.from(
-            { length: Math.ceil(stages / maxStagesPerRow) },
+          const phaseRows = Array.from(
+            { length: Math.ceil(phases / maxPhasesPerRow) },
             (_, rowIndex) => {
-              const start = rowIndex * maxStagesPerRow;
-              const rowLength = Math.min(maxStagesPerRow, stages - start);
+              const start = rowIndex * maxPhasesPerRow + 1;
+              const rowLength = Math.min(maxPhasesPerRow, phases - rowIndex * maxPhasesPerRow);
               return Array.from({ length: rowLength }, (_, idx) => start + idx);
             }
           );
@@ -237,35 +266,35 @@ function SimulationGroupsView({
                   );
                 })}
               </ul>
-              {/* Group Footer for Stage Change */}
+              {/* Group Footer for Phase Change */}
               <hr />
               <div className="flex flex-wrap items-center gap-4 py-2">
                 <div className="flex-1 min-w-[18rem] space-y-1">
-                  {stageRows.map((row, rowIndex) => (
+                  {phaseRows.map((row, rowIndex) => (
                     <div key={rowIndex} className="flex flex-wrap items-center">
-                      {row.map((stageIndex, idx) => (
+                      {row.map((phaseIndex, idx) => (
                         <div
-                          key={stageIndex}
+                          key={phaseIndex}
                           style={{
                             clipPath:
                               idx === 0
-                               // Using clipPath to create the Stage Layout... [Pn> >Pn+1>...
+                               // Using clipPath to create the Phase Layout... [Pn> >Pn+1>...
                                 ? 'polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%)'
                                 : 'polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%)',
                             // Set the margin for the first to zero
                             marginLeft: idx === 0 ? '0' : '-10px',
-                            zIndex: stageIndex,
+                            zIndex: phaseIndex,
                           }}
-                          // Core colors for Current stage, Completed stage, and Not Yet There stage.
+                          // Core colors for Current phase, Completed phase, and Not Yet There phase.
                           className={`relative px-4 py-1.5 text-sm font-medium text-white ${
-                            stageIndex < currentStage
+                            phaseIndex < currentPhase
                               ? 'bg-green-500'
-                              : stageIndex === currentStage
+                              : phaseIndex === currentPhase
                               ? 'bg-blue-500'
                               : 'bg-slate-300'
                           }`}
                         >
-                          P{stageIndex + 1}
+                          P{phaseIndex}
                         </div>
                       ))}
                     </div>
@@ -273,11 +302,11 @@ function SimulationGroupsView({
                 </div>
 
                 <button
-                  onClick={() => handleStageAdvancement(group.id, group.name)}
-                  disabled={currentStage >= stages - 1}
+                  onClick={() => handlePhaseAdvancement(group.id, group.name)}
+                  disabled={currentPhase >= phases}
                   className="shrink-0 rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
                 >
-                  Next Stage
+                  Next Phase
                 </button>
               </div>
             </div>
@@ -304,20 +333,21 @@ function SimulationGroupsView({
         />
       )}
 
-      {/* Next Stage Alert Dialog */}
-      <AlertDialog open={stageDialog}>
+      {/* Next Phase Alert Dialog */}
+      <AlertDialog open={phaseDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Advance to the Next Stage</AlertDialogTitle>
+            <AlertDialogTitle>Advance {pendingPhaseGroup? pendingPhaseGroup.name : ""} to the Next Phase</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to advance {pendingStageGroup? pendingStageGroup.name : ""} to the next stage?
+              Are you sure you want to advance {pendingPhaseGroup? pendingPhaseGroup.name : ""} to the next phase? 
+              You can not go back after advancing.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelStageAdvancement}>
+            <AlertDialogCancel onClick={cancelPhaseAdvancement}>
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={confirmStageAdvancement}>
+            <AlertDialogAction onClick={confirmPhaseAdvancement}>
               Advance
             </AlertDialogAction>
           </AlertDialogFooter>
