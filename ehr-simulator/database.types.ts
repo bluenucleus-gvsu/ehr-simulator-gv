@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       case_data: {
@@ -109,6 +134,7 @@ export type Database = {
         Row: {
           case_id: string | null
           completed_at: string | null
+          current_phase: number
           feedback: string | null
           group_id: string | null
           id: string
@@ -120,6 +146,7 @@ export type Database = {
         Insert: {
           case_id?: string | null
           completed_at?: string | null
+          current_phase?: number
           feedback?: string | null
           group_id?: string | null
           id?: string
@@ -131,6 +158,7 @@ export type Database = {
         Update: {
           case_id?: string | null
           completed_at?: string | null
+          current_phase?: number
           feedback?: string | null
           group_id?: string | null
           id?: string
@@ -183,12 +211,14 @@ export type Database = {
           id: string
           inpatient_duration_days: number | null
           insurance: Database["public"]["Enums"]["insurance_type"] | null
+          intake_output_blocks: Json
           isolation_precautions_id: string | null
           language: string | null
           last_name: string
           living_situation: string[] | null
           medical_history: string[] | null
           name: string
+          phase_count: number
           relationship_status_id: string | null
           religion: string | null
           requires_interpreter: boolean
@@ -217,12 +247,14 @@ export type Database = {
           id?: string
           inpatient_duration_days?: number | null
           insurance?: Database["public"]["Enums"]["insurance_type"] | null
+          intake_output_blocks?: Json
           isolation_precautions_id?: string | null
           language?: string | null
           last_name: string
           living_situation?: string[] | null
           medical_history?: string[] | null
           name: string
+          phase_count?: number
           relationship_status_id?: string | null
           religion?: string | null
           requires_interpreter?: boolean
@@ -251,12 +283,14 @@ export type Database = {
           id?: string
           inpatient_duration_days?: number | null
           insurance?: Database["public"]["Enums"]["insurance_type"] | null
+          intake_output_blocks?: Json
           isolation_precautions_id?: string | null
           language?: string | null
           last_name?: string
           living_situation?: string[] | null
           medical_history?: string[] | null
           name?: string
+          phase_count?: number
           relationship_status_id?: string | null
           religion?: string | null
           requires_interpreter?: boolean
@@ -1405,6 +1439,7 @@ export type Database = {
           myoglobin: number | null
           nitrites: string | null
           pco2: number | null
+          phase: number
           phosphate: number | null
           platelets: number | null
           po2: number | null
@@ -1465,6 +1500,7 @@ export type Database = {
           myoglobin?: number | null
           nitrites?: string | null
           pco2?: number | null
+          phase?: number
           phosphate?: number | null
           platelets?: number | null
           po2?: number | null
@@ -1525,6 +1561,7 @@ export type Database = {
           myoglobin?: number | null
           nitrites?: string | null
           pco2?: number | null
+          phase?: number
           phosphate?: number | null
           platelets?: number | null
           po2?: number | null
@@ -1565,6 +1602,7 @@ export type Database = {
           medication_id: string | null
           medication_order_id: string | null
           notes: string | null
+          phase: number
           status: string | null
           time_offset: number
         }
@@ -1577,6 +1615,7 @@ export type Database = {
           medication_id?: string | null
           medication_order_id?: string | null
           notes?: string | null
+          phase?: number
           status?: string | null
           time_offset: number
         }
@@ -1589,6 +1628,7 @@ export type Database = {
           medication_id?: string | null
           medication_order_id?: string | null
           notes?: string | null
+          phase?: number
           status?: string | null
           time_offset?: number
         }
@@ -1621,6 +1661,7 @@ export type Database = {
           is_in_presim: boolean
           medication_id: string
           ordering_provider: string | null
+          phase: number
           priority: Database["public"]["Enums"]["medication_priorities"]
         }
         Insert: {
@@ -1634,6 +1675,7 @@ export type Database = {
           is_in_presim?: boolean
           medication_id: string
           ordering_provider?: string | null
+          phase?: number
           priority: Database["public"]["Enums"]["medication_priorities"]
         }
         Update: {
@@ -1647,6 +1689,7 @@ export type Database = {
           is_in_presim?: boolean
           medication_id?: string
           ordering_provider?: string | null
+          phase?: number
           priority?: Database["public"]["Enums"]["medication_priorities"]
         }
         Relationships: [
@@ -1797,6 +1840,7 @@ export type Database = {
           id: string
           is_important: boolean
           is_in_presim: boolean
+          phase: number
           provider: string
           status: string
           title: string
@@ -1809,6 +1853,7 @@ export type Database = {
           id?: string
           is_important?: boolean
           is_in_presim?: boolean
+          phase?: number
           provider: string
           status: string
           title: string
@@ -1821,6 +1866,7 @@ export type Database = {
           id?: string
           is_important?: boolean
           is_in_presim?: boolean
+          phase?: number
           provider?: string
           status?: string
           title?: string
@@ -2413,6 +2459,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       clinical_doc_category_type: [
@@ -2466,3 +2515,5 @@ export const Constants = {
   },
 } as const
 
+A new version of Supabase CLI is available: v2.105.0 (currently installed v2.84.4)
+We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
