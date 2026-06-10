@@ -693,3 +693,38 @@ export async function expireSession(sessionId: string): Promise<SessionTransitio
     return { success: false, error };
   }
 }
+
+export async function updateCurrentPhase(updatedPhase: number, sessionId: string) {
+  // Function used to updated the current_phase in case_sessions table
+  // Used in faculty/components/FacultyCoursesView.tsx
+
+  // Establish Connection
+  const supabase = createClient<Database>(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        );
+  
+  // Update based on sessionId
+  const { error } = await supabase
+    .from("case_sessions")
+    .update({ current_phase: updatedPhase
+    })
+    .eq("id", sessionId)
+
+  // Return error 
+  if (error) {
+    return {
+      success: false,
+      message: "Failed to update current_phase.",
+      error,
+      data: null
+    };
+  }
+
+  // Return successful 
+  return {
+        success: true,
+        message: `current_phase updated:${sessionId}`,
+        data: null,
+    }
+}

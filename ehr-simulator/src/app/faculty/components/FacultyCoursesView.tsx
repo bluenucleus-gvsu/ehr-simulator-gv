@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import FeedbackModal from "./FeedbackModal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { updateCurrentPhase } from "@/actions/simulation";
 export type Member = {
   id: string;
   name: string;
@@ -10,14 +11,18 @@ export type Member = {
 export type Group = {
   id: string;
   name: string;
+  caseSessionId?: string | null;
   members: Member[];
 };
 
 export type Simulation = {
   id: string;
   caseName: string;
+  phaseCount: number;
   simTime: string;
   groups: Group[];
+  sessionId?: string | null;
+  caseSessionIds?: string[];
 };
 
 export type Section = {
@@ -81,11 +86,12 @@ function SimulationGroupsView({
   const [submittedFeedback, setSubmittedFeedback] = useState<Record<string, string>>({});
 
   // Core Alert Dialog and Phase Change Variables
-  const phases = 10; // const phases = await getPhaseCount(caseId)
-  const maxPhasesPerRow = 5; // Max number of phases in one row
-  const [groupPhase, setGroupPhase] = useState<Record<string, number>>({}); // Replaced with case_sessions.current_phase
+  const phases = simulation.phaseCount; // Number of total phases, found in cases table
+  const maxPhasesPerRow = 5; // Max number of phases in one row for UI
+
+  const [groupPhase, setGroupPhase] = useState<Record<string, number>>({}); // List of groups and their phase they are on
   const [phaseDialog, setPhaseDialog] = useState(false);   // Phase Change Dialog Check
-  const [pendingPhaseGroup, setPendingPhaseGroup] = useState<{id: string; name:string } | null>(null); // Phase Group Dialog Pending
+  const [pendingPhaseGroup, setPendingPhaseGroup] = useState<{id: string; name:string } | null>(null); // Phase Group Dialog Pending for updating phase
 
   // Handle Feedback submit button
   const handleSubmit = (key: string, feedback: string) => {
@@ -94,52 +100,54 @@ function SimulationGroupsView({
   };
 
   // Handle 'Next Phase' Button click
-  const handlePhaseAdvancement = (id: string, name: string) => {
-    setPendingPhaseGroup({id, name})
-    setPhaseDialog(true)
+  const handlePhaseAdvancement = (id: string, name: string, currentPhase: number) => {
+
+    // Check if current phase is not over the total phases amount
+    if (currentPhase <= phases) {
+      setPendingPhaseGroup({id, name}) // Set this group to pending
+      setPhaseDialog(true) // And display the AlertDialog
+    }
+
+    // May want error handling...
   };
 
   // Confirm AlertDialog Action
-  const confirmPhaseAdvancement = () => { // Change to async
-    if (!pendingPhaseGroup) return;
+  const confirmPhaseAdvancement = async () => {
+    if (!pendingPhaseGroup) return; 
 
-    /* 
+    // Get sessionId
+    const group = simulation.groups.find((g) => g.id === pendingPhaseGroup.id);
+    const sessionId = group?.caseSessionId ?? simulation.sessionId;
+    const updatedPhase = (groupPhase[pendingPhaseGroup.id] ?? 1) + 1
+
+    // If sessionId is present, advance using updateCurrentPhase
+    if (sessionId) {
+
+        const response = await updateCurrentPhase(updatedPhase, sessionId)
+
+        if(response.error){
+          console.error('Failed to set complete', response)
+        }
+      }
+      else{
+        // If there is not sessionId, close the dialog and remove pending status
+        setPhaseDialog(false);
+        setPendingPhaseGroup(null);
+
+        // May want alternative Alter Dialog or error message...
+        return;
+      }
+        // Set the groupPhase to the updated phase number
+        setGroupPhase((prev) => ({
+          ...prev,
+          [pendingPhaseGroup.id]: updatedPhase,
+        }))
+
+        // Close the dialog and remove pending status
+        setPhaseDialog(false);
+        setPendingPhaseGroup(null);
     
-    // Get: case_sessions.current_phase using groups.id, and section_assignments.id
-    const currentPhase = await getCurrentAndCountPhase(
-      pendingPhaseGroup.id,
-      sectionAssignmentId
-    )
-
-    // Check: 
-    if (currentPhase >= phaseCount) {
-      setPhaseDialog(false);
-      setPendingPhaseGroup(null);
-      return;
-    }
-
-    // Increment:
-    const updatePhaseDB = currentPhase + 1
-    await updateCaseSessionPhase(pendingPhaseGroup.id, sectionAssignmentId, updatedPhase) // server action
-
-    // Update State:
-    setGroupPhase((prev) => ({
-      ...prev, 
-      [pendingPhaseGroup.id]: updatePhaseDB,
-    }));
-
-    */
-
-    // Remove...
-    setGroupPhase(prev => ({
-      ...prev,
-      [pendingPhaseGroup.id]: Math.min((prev[pendingPhaseGroup.id] ?? 1) + 1, phases),
-    }));
-    // Remove...
-
-    setPhaseDialog(false);
-    setPendingPhaseGroup(null);
-  };
+    };
 
   // Cancel AlertDialog Action
   const cancelPhaseAdvancement = () => {
@@ -186,9 +194,9 @@ function SimulationGroupsView({
           const hasGroupFeedback = !!submittedFeedback[groupFeedbackKey];
 
           // Test Data
-          const currentPhase = groupPhase[group.id] ?? 1; // Use what ever database logic we will be using.
+          const currentPhase = groupPhase[group.id] ?? 1; // Get the current phase or just 1
           
-          // Creating Array to iterate over, will be replaced with core db logic
+          // Creating Array to iterate over phases
           const phaseRows = Array.from(
             { length: Math.ceil(phases / maxPhasesPerRow) },
             (_, rowIndex) => {
@@ -302,7 +310,7 @@ function SimulationGroupsView({
                 </div>
 
                 <button
-                  onClick={() => handlePhaseAdvancement(group.id, group.name)}
+                  onClick={() => handlePhaseAdvancement(group.id, group.name, currentPhase)}
                   disabled={currentPhase >= phases}
                   className="shrink-0 rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
                 >
