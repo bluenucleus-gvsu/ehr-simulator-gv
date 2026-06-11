@@ -142,10 +142,10 @@ function getDummyCourses(): Course[] {
 const getStudentName = (student: any) => {
   if (!student) return "Unknown Student";
   if (student.full_name) return student.full_name;
-  return student.email || student.id || "Unknown Student";
+  return student.email || "Unknown Student";
 };
 
-// Get data from Supabase (May place this somewhere else for be)
+// Get data from Supabase (May place this somewhere else or use SQL function)
 async function getFacultyCourses(facultyId: string): Promise<Course[]> {
 
   // Establish Connection
@@ -192,6 +192,7 @@ async function getFacultyCourses(facultyId: string): Promise<Course[]> {
     .map((row: any) => row.section)
     .filter(Boolean);
 
+  // Create an empty map for (course_id, Course Object & sections array)
   const courseMap = new Map<string, Course & { sections: any[] }>();
 
 
@@ -202,6 +203,8 @@ async function getFacultyCourses(facultyId: string): Promise<Course[]> {
 
     // simulationRows which contains info from: cases, groups, case_sessions, group_members, and section_assignments
     const simulationRows = (section.section_assignments ?? []).map((assignment: any) => {
+
+      // Set up the caseName and phaseCount from cases
       const caseRecord = assignment.cases;
       const caseName =
         caseRecord?.name ||
@@ -209,12 +212,14 @@ async function getFacultyCourses(facultyId: string): Promise<Course[]> {
         "Untitled Simulation";
       const phaseCount = caseRecord?.phase_count;
 
+      // Filter each session by group
       const sessionByGroupId = new Map<string, string>(
         (assignment.case_sessions ?? [])
           .filter((session: any) => session.group_id && session.id)
           .map((session: any) => [session.group_id, session.id])
       );
 
+      // Gather all the groups info, including members
       const groupRows = (section.groups ?? []).map((group: any) => ({
         id: group.id,
         name: group.name,
@@ -227,8 +232,10 @@ async function getFacultyCourses(facultyId: string): Promise<Course[]> {
           .filter((member: any) => member.id),
       }));
 
+      // Get the case_session.id for all section_assignments
       const caseSessionIds = (assignment.case_sessions ?? []).map((session: any) => session.id).filter(Boolean);
 
+      // simulationRows return
       return {
         id: assignment.id,
         caseName,
@@ -240,7 +247,7 @@ async function getFacultyCourses(facultyId: string): Promise<Course[]> {
       };
     });
 
-    // Set up the paylod with id, name and simulationRows
+    // Set up the paylod for section with id, name and simulationRows
     const sectionPayload = {
       id: section.id,
       name: section.name,
@@ -250,19 +257,24 @@ async function getFacultyCourses(facultyId: string): Promise<Course[]> {
     // Check if the course exists
     const existingCourse = courseMap.get(course.id);
     if (existingCourse) {
-      existingCourse.sections.push(sectionPayload);
+      existingCourse.sections.push(sectionPayload); // Add the payload to the existing course
     } else {
+
+      // Fill the empty course map (course_id, Course Object & sections array)
       courseMap.set(course.id, {
+        // Course Object
         id: course.id,
         code: course.code,
         name: course.name,
         active: course.active ?? false,
-        sections: [sectionPayload],
+
+        // Section Array
+        sections: [sectionPayload], 
       });
     }
   }
 
-  // Return an array of the data all cleaned
+  // Return an array of the data in an array
   return Array.from(courseMap.values()).map((course) => ({
     ...course,
     sections: course.sections,
