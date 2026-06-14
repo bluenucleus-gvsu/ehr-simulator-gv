@@ -40,47 +40,36 @@ export function getMedDose(medication: AllMedicationTypes, order: MedicationOrde
 }
 
 export const renderMedTitleRow = (medication: AllMedicationTypes, order: MedicationOrder) => {
-  const brandNameDisplay = `(${medication.brandName})`
-  switch (medication.route) {
-    case 'IV':
-      const diluent = `in ${medication.diluent} ${medication.totalVolume}mL`
-      if (medication.genericName !== 'heparin sodium') {
-        const ivTitle = `${medication.genericName} ${medication.brandName ? brandNameDisplay : ""} ${order.dose}${medication.strengthUnit} ${medication.diluent ? diluent : ''}`
-        return (
-          <p className="font-semibold">{ivTitle}</p>
-        )
-        // handle continuous Heparin infusion, which has no fixed dose
-      } else if (medication.genericName === 'heparin sodium') {
-        const unitName = (medication.strengthUnit === 'units') ? ' units' : medication.strengthUnit;
-        const ivTitle = `${medication.genericName} ${medication.brandName ? brandNameDisplay : ""} ${medication.strength}${unitName} ${medication.diluent ? diluent : ''}`
-        return (
-          <p className="font-semibold">{ivTitle}</p>
-        )
-      }
+  // 1. Format the base medication name
+  const nameParts = [
+    medication.genericName,
+    medication.brandName ? `(${medication.brandName})` : null,
+  ];
 
-    case "SC":
-      if (isSlidingScaleInsulin(medication)) {
-        const medTitle = `${medication.genericName} ${medication.brandName ? brandNameDisplay : ''}`
-        return (
-          <p className="font-semibold">{medTitle}</p>
-        )
-      }
-      else {
-        const strengthUnit = medication.strengthUnit === 'units' ? ' units' : medication.strengthUnit
-        const medTitle = `${medication.genericName} ${medication.brandName ? brandNameDisplay : ''} ${strengthUnit}`
-        return (
-          <p className="font font-semibold">{medTitle}</p>
-        )
-      }
+  // 2. Format the dose/strength string
+  const unitStr = medication.strengthUnit === 'units' ? ' units' : medication.strengthUnit;
+  let doseStr: string | null = `${order.dose}${unitStr}`;
 
-    default:
-      const medTitle = `${medication.genericName} ${medication.brandName ? brandNameDisplay : ''} ${medication.strengthUnit}`
-      return (
-        <p className="font font-semibold">{medTitle}</p>
-
-      )
+  if (medication.genericName === 'heparin sodium') {
+    // Heparin continuous infusions use strength rather than a fixed order dose
+    doseStr = `${medication.strength}${unitStr}`;
+  } else if (isSlidingScaleInsulin(medication)) {
+    // Sliding scale insulin omits the dose in the title row
+    doseStr = null;
   }
-}
+
+  // 3. Format IV diluent
+  const diluentStr = (medication.route === 'IV' && medication.diluent)
+    ? `in ${medication.diluent} ${medication.totalVolume}mL`
+    : null;
+
+  // 4. Assemble and render
+  const fullTitle = [...nameParts, doseStr, diluentStr]
+    .filter(Boolean)
+    .join(' ');
+
+  return <p className="font-semibold">{fullTitle}</p>;
+};
 
 function renderMedCardHelper(order: MedicationOrder) {
   return (

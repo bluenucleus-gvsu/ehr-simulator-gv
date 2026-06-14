@@ -18,7 +18,8 @@ export function transformMedicationAdministrationsToSchema(
   medAdministrations.forEach(medAdmin => {
     medAdministrationsInsert.push({
       case_id: caseId,
-      medication_id: medAdmin.medicationOrderId,
+      // medication_id: medAdmin.medicationOrderId,
+      medication_order_id: medAdmin.medicationOrderId,
       administrator: medAdmin.administratorId ?? "",
       time_offset: medAdmin.adminTimeMinuteOffset,
       status: medAdmin.status,
