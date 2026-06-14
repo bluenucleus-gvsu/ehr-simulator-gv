@@ -321,7 +321,6 @@ export default function MarView({
       };
     });
   };
-  console.log(newAdministrations)
   const handleClearAllSelections = () => {
     setSelectedOrders([]);
     setNewAdministrations({});

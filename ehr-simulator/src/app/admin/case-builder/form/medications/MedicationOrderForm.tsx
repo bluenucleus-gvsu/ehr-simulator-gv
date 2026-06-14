@@ -19,11 +19,10 @@ import { saveCaseData } from "@/actions/case_builder/caseBuilder"
 function getComboboxData(medications: AllMedicationTypes[]) {
   return medications.map(med => {
     const brandName = med.brandName ? `(${med.brandName})` : '';
-    const strength = `${med.strength}${med.strengthUnit} ${med.dispenseUnit}`
+    const strengthAndUnit = med.isVariableDose ? `variable dose ${med.dispenseUnit}` : `${med.strength}${med.strengthUnit} ${med.dispenseUnit}`
     const route = `[${med.route}]`;
-    const variableDoseStatus = med.isVariableDose ? '[Variable Dose]' : ''
 
-    const medLabel = `${med.genericName}  ${brandName}  ${strength}  ${route} ${variableDoseStatus}`;
+    const medLabel = `${med.genericName}  ${brandName}  ${strengthAndUnit}  ${route}`;
     return {
       value: med.id,
       label: medLabel

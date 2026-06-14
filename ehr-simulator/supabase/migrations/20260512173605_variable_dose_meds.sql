@@ -47,6 +47,9 @@ ALTER TABLE IF EXISTS medications
   DROP COLUMN IF EXISTS is_continuous,
   ADD COLUMN is_variable_dose boolean NOT NULL DEFAULT false;
 
+ALTER TABLE IF EXISTS medication_administrations
+  DROP COLUMN IF EXISTS medication_id;
+
 ------------------------------------------------------------------------
 -- Update unique constraint to allow for fixed and variable dose insulins
 ------------------------------------------------------------------------

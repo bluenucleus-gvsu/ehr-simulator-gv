@@ -1600,7 +1600,6 @@ export type Database = {
           created_at: string
           infusion_rate: number | null
           is_in_presim: boolean
-          medication_id: string | null
           medication_order_id: string | null
           notes: string | null
           phase: number
@@ -1614,7 +1613,6 @@ export type Database = {
           created_at?: string
           infusion_rate?: number | null
           is_in_presim?: boolean
-          medication_id?: string | null
           medication_order_id?: string | null
           notes?: string | null
           phase?: number
@@ -1628,7 +1626,6 @@ export type Database = {
           created_at?: string
           infusion_rate?: number | null
           is_in_presim?: boolean
-          medication_id?: string | null
           medication_order_id?: string | null
           notes?: string | null
           phase?: number
