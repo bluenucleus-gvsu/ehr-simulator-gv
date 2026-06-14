@@ -29,7 +29,7 @@ export async function upsertCaseDemographics(
     relationship_status_id,
     requires_interpreter: Boolean(d.needsInterpreter),
     admitting_diagnosis: d.admittingDiagnosis ?? null,
-    attending_provider: [d.attendingProviderName, d.attendingProviderTitle].filter(Boolean).join(" ") || null,
+    attending_provider: [d.attendingProviderName, d.attendingProviderTitle].filter(Boolean).join(", ") || null,
     inpatient_duration_days: toNumeric(d.admissionDateOffest),
     time_of_admission: d.admissionTime,
     emergency_contact_name: d.contact ?? null,

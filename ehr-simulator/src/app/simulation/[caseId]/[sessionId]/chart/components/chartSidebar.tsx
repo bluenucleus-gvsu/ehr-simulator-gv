@@ -33,9 +33,8 @@ function ChartSidebarSkeleton() {
 
 export default function ChartSidebar() {
   const { caseBundle } = useSimulationCase();
-  const { simStartTime, userRole } = useSimSessionContext();
-  const showCaseIdentifier =
-    userRole != null && userRole.trim().toLowerCase() !== "student";
+  const { simStartTime } = useSimSessionContext();
+
   const referenceTime = useMemo(
     () => new Date(simStartTime ?? Date.now()),
     [simStartTime],
@@ -98,30 +97,17 @@ export default function ChartSidebar() {
       </span>
       <div className="flex flex-col items-center">
         <h1 className="text-purple-900 text-lg font-medium tracking-tight">{sidebarData.name.value}</h1>
-        <p className="text-purple-900 text-sm tracking-tight">
-          {sidebarData.gender.value && sidebarData.gender.value !== "N/A" ? (
-            <>
-              {sidebarData.gender.value}
-              <span className="pl-2 font-normal">
-                {sidebarData.dob.value !== "—" ? `${sidebarData.age.value} y.o.` : "—"}
-              </span>
-            </>
-          ) : (
-            <span className="font-normal">
-              {sidebarData.dob.value !== "—" ? `${sidebarData.age.value} y.o.` : "—"}
-            </span>
-          )}
-        </p>
         <p className="text-purple-900 text-sm font-light tracking-tight">
+          {sidebarData.age.label}:
+          <span className="pl-2 font-normal">{sidebarData.age.value}</span>
+        </p>
+
+
+
+        {/* <p className="text-purple-900 text-sm font-light tracking-tight">
           {sidebarData.dob.label}:
           <span className="pl-2 font-normal">{sidebarData.dob.value}</span>
-        </p>
-        {showCaseIdentifier && (
-          <p className="text-purple-900 text-sm font-light tracking-tight">
-            {sidebarData.mrn.label}:
-            <span className="pl-2 font-normal font-mono text-xs break-all">{sidebarData.mrn.value}</span>
-          </p>
-        )}
+        </p> */}
 
         <p className="text-purple-900 text-sm font-light tracking-tight">
           {sidebarData.code.label}:
@@ -134,10 +120,10 @@ export default function ChartSidebar() {
         <div className="relative flex flex-col border bg-white border-purple-900 w-full h-fit px-2 py-3 gap-1 rounded-lg shadow-md">
           <p className="font-medium text-purple-900 tracking-tight -top-3 absolute left-2 bg-white rounded-2xl  px-1">This Admission</p>
 
-          <p className="text-purple-900 text-xs font-light tracking-tight">
+          {/* <p className="text-purple-900 text-xs font-light tracking-tight">
             <span className="underline">{sidebarData.admissionDate.label}:</span>
             <span className="pl-2 font-normal">{sidebarData.admissionDate.value}</span>
-          </p>
+          </p> */}
           <p className="text-purple-900 text-xs font-light tracking-tight">
             <span className="underline">{sidebarData.attending.label}:</span>
             <span className="pl-2 font-normal">{sidebarData.attending.value}</span>
@@ -178,13 +164,13 @@ export default function ChartSidebar() {
           <p className="text-purple-900 text-xs font-light tracking-tight">
             <span className="underline text-nowrap">{sidebarData.allergies.label}:</span>
             <span className='font-normal decoration-none no-underline px-2  rounded-md'>
-              {sidebarData.allergies.value.length ? sidebarData.allergies.value.join(", ") : "N/A"}
+              {sidebarData.allergies.value.length ? sidebarData.allergies.value.join(", ") : "None"}
             </span>
           </p>
           <p className="text-purple-900 text-xs font-light tracking-tight">
             <span className="underline pr-2 text-nowrap">{sidebarData.pmh.label}:</span>
             <span className='font-normal decoration-none no-underline rounded-md'>
-              {sidebarData.pmh.value.length ? sidebarData.pmh.value.join(", ") : "N/A"}
+              {sidebarData.pmh.value.length ? sidebarData.pmh.value.join(", ") : "None"}
             </span>
           </p>
 

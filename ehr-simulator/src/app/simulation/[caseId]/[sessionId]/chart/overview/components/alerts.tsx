@@ -19,8 +19,9 @@ const Alerts = () => {
   const { caseBundle } = useSimulationCase();
   const alertNames = caseBundle?.safetyAlerts?.length
     ? caseBundle.safetyAlerts.map((row) => alertName(row?.safety_alert))
-    : ["N/A"];
+    : [];
 
+  if (alertNames.length === 0) return null;
   return (
     <Card className="relative max-w-full min-w-0 gap-3 overflow-hidden pt-2 h-fit">
       <StyledTitle color="bg-yellow-200" firstLetter="A" secondLetter="lerts" />
