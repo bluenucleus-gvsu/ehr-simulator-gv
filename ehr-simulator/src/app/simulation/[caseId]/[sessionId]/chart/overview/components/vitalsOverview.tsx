@@ -37,7 +37,6 @@ const vitalSignIds = [
   "rr",
   "temp",
   "spo2",
-  "pain",
   "weight_kg",
 ];
 
@@ -155,6 +154,8 @@ export function VitalsOverview() {
       </TableRow>
     ))
   }
+
+  if (displayTimeOffsets.length === 0) return null;
 
   return (
     <Card className="relative col-span-1 h-fit max-w-full min-w-0 gap-3 overflow-hidden p-0 pt-2">

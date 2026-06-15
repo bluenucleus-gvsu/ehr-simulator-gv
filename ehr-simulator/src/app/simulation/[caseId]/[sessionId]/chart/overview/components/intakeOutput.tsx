@@ -97,6 +97,9 @@ export function IntakeOutput() {
     )
   }
 
+  // Hide card if no I&O data to display
+  if (chartData.every(block => block.intake === 0 && block.output === 0)) return null;
+
   return (
     <Card className="relative col-span-1 h-fit max-w-full min-w-0 gap-3 overflow-hidden pt-2">
       <StyledTitle color="bg-sky-200" firstLetter="I" secondLetter="ntake/Output" />

@@ -52,12 +52,6 @@ export default function ChartTabs() {
       icon: <TestTubeDiagonal className="size-4" />,
       path: `/simulation/${caseId}/${sessionId}/chart/labs`,
     },
-    // {
-    //   name: "Avatar",
-    //   value: "Avatar",
-    //   icon: <User />,
-    //   path: `/simulation/${caseId}/${sessionId}/chart/overview`,
-    // },
     {
       name: "Orders",
       value: "orders",
@@ -88,20 +82,18 @@ export default function ChartTabs() {
 
   return (
     <>
-      <Tabs value={currentTabValue} className="w-fit pl-6 mt-auto">
-        <TabsList className="w-full h-12 p-1.5 bg-slate-900/15 backdrop-blur-md justify-start rounded-2xl border border-white/35 shadow-md">
+      <Tabs value={currentTabValue} className="w-fit pl-10 mt-auto self-end ">
+        <TabsList className="w-full h-8 p-0 bg-transparent justify-start self-end rounded-none">
           {[
             ...tabs.map((tab) => (
               <TabsTrigger
                 key={tab.value}
                 onClick={() => handleTabClick(tab.path)}
                 value={tab.value}
-                className="group h-9 rounded-xl px-3.5 text-sm font-medium text-white/95 hover:text-white hover:bg-white/20 hover:shadow-sm hover:-translate-y-[1px] active:translate-y-0 active:scale-[0.99] data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow data-[state=active]:font-semibold transition-all duration-200 border border-white/20 data-[state=active]:border-slate-200 flex items-center gap-1.5"
+                className="rounded-none bg-gray-200 p-3 data-[state=active]:h-10 data-[state=active]:px-4  data-[state=active]:shadow-black/20 ring-none outline-none border border-gray-300 data-[state=active]:bg-gray-100 -mb-[2px] rounded-t-md flex items-center"
               >
-                <span className="transition-transform duration-200 group-hover:scale-110">
-                  {tab.icon}
-                </span>
-                <p className="text-sm tracking-tight">{tab.name}</p>
+                {tab.icon}
+                <p className="text-md font-normal tracking-tight">{tab.name}</p>
               </TabsTrigger>
             )),
             // For future mutli-pt sims
