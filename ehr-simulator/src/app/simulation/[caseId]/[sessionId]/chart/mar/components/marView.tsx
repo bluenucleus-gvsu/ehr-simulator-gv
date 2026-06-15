@@ -27,7 +27,6 @@ import { appendTesterMedicationAdministrations, getTesterMedicationAdministratio
 import { isTesterModeClient } from '@/utils/testerMode';
 import { useStudentSimulationEditAccess } from '@/utils/studentSimulationEditAccess';
 
-
 export interface NewAdministrationData {
   [medOrderId: string]: StudentMedicationAdministration;
 }
@@ -98,7 +97,6 @@ export default function MarView({
   });
   // Scanner debugging
   // const [scannedSymbol, setScannedSymbol] = useState('')
-
   const handleScan = (symbol: string) => {
     if (!canEdit) {
       toast.info("Medication documentation is view-only in pre-simulation.");
@@ -155,7 +153,7 @@ export default function MarView({
           ...prev,
           [targetOrder.id]: {
             ...currentAdmin,
-            administered_dose: (currentAdmin.administered_dose || 0) + targetOrder.dose
+            administered_dose: (currentAdmin.administered_dose || 0) + (targetOrder.dose || 0)
           }
         };
       })
@@ -177,9 +175,11 @@ export default function MarView({
 
           status: "Given",
           administrator: userName,
-          time_offset: 0,
+          time_offset: 0, // updated on submission
           administered_dose: targetOrder.dose,
-          is_in_presim: isPresim ?? false,
+
+          infusion_rate: targetOrder.infusionRate,
+          is_in_presim: false,
           notes: '',
         }
       }));
@@ -204,6 +204,7 @@ export default function MarView({
         status: "Given",
         administrator: userName,
         time_offset: 0,
+        infusion_rate: order.infusionRate,
         administered_dose: order.dose,
         is_in_presim: isPresim ?? false,
         notes: '',
@@ -271,6 +272,7 @@ export default function MarView({
           status: "Given",
           administrator: userName,
           time_offset: 0,
+          infusion_rate: order.infusionRate,
           administered_dose: order.dose,
           is_in_presim: isPresim ?? false,
           notes: '',
@@ -319,7 +321,6 @@ export default function MarView({
       };
     });
   };
-
   const handleClearAllSelections = () => {
     setSelectedOrders([]);
     setNewAdministrations({});
@@ -343,7 +344,7 @@ export default function MarView({
       const currentAdmin = newAdministrations[orderId]
       return {
         ...currentAdmin,
-        time_offset: displayTimeOffsetMinutes,
+        time_offset: elapsedMinutes,
       };
     });
 
@@ -435,42 +436,10 @@ export default function MarView({
     return () => clearInterval(interval);
   }, [anchorDate]);
 
-  const displayTimeOffsetMinutes = useMemo(() => {
-    const nonDueOffsets = mergedAdministrations
-      .filter((admin) => admin.status !== "Due")
-      .map((admin) => admin.time_offset)
-      .filter((offset): offset is number => typeof offset === "number");
-
-    const allOffsets = mergedAdministrations
-      .map((admin) => admin.time_offset)
-      .filter((offset): offset is number => typeof offset === "number");
-
-    const adminOffsets = nonDueOffsets.length > 0 ? nonDueOffsets : allOffsets;
-
-    if (adminOffsets.length === 0) {
-      return elapsedMinutes;
-    }
-
-    // Six columns represent ~6h centered near sim "now"; if administrations fall in that window, stay on elapsed time.
-    const windowStart = elapsedMinutes - (3 * 60);
-    const windowEnd = elapsedMinutes + (2 * 60);
-    const hasVisibleRangeHit = adminOffsets.some(
-      (offset) => offset >= windowStart && offset <= windowEnd,
-    );
-
-    if (hasVisibleRangeHit) {
-      return elapsedMinutes;
-    }
-
-    return adminOffsets.reduce((closest, offset) => {
-      const currentDistance = Math.abs(offset - elapsedMinutes);
-      const closestDistance = Math.abs(closest - elapsedMinutes);
-      return currentDistance < closestDistance ? offset : closest;
-    }, adminOffsets[0]);
-  }, [elapsedMinutes, mergedAdministrations]);
+  //  const displayTimeOffsetMinutes = elapsedMinutes;
 
   const currentSimTime = anchorDate
-    ? addMinutes(anchorDate, displayTimeOffsetMinutes)
+    ? addMinutes(anchorDate, elapsedMinutes)
     : new Date();
 
   const displayColumns = createColumns(currentSimTime, timeColumnOffset);
