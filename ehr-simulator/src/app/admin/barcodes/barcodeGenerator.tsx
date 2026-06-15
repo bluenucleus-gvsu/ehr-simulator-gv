@@ -1,15 +1,15 @@
 'use client'
 
-import { DatabaseMedication } from "@/actions/simulation";
 import { useState } from "react";
 import bwipjs from '@bwip-js/browser';
 import { Checkbox } from "@/components/ui/checkbox";
 import { SimCase } from "@/actions/cases";
 import { format } from "date-fns";
+import { AllMedicationTypes } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
 
 
 interface BarcodeGeneratorProps {
-  medications: DatabaseMedication[];
+  medications: AllMedicationTypes[];
   simCases: SimCase[];
 }
 
@@ -128,7 +128,7 @@ const BardcodeGenerator = ({ medications, simCases }: BarcodeGeneratorProps) => 
           return Array.from({ length: count }, () => `
                   <div class="label">
                     <div class="med-info">
-                      <div class="med-name">${med.generic_name} ${med.brand_name ? '(' + med.brand_name + ')' : ''} ${med.strength}${med.strength_unit} ${med.route}</div>
+                      <div class="med-name">${med.genericName} ${med.brandName ? '(' + med.brandName + ')' : ''} ${med.strength}${med.strengthUnit} ${med.route}</div>
                     </div>
                     <div class="barcode-container">${med.barcodeDataUrl}</div>
                   </div>
@@ -299,7 +299,17 @@ const BardcodeGenerator = ({ medications, simCases }: BarcodeGeneratorProps) => 
           {/* MEDICATIONS TAB CONTENT */}
           {activeTab === 'medications' && medications.map((med) => {
             const isSelected = selectedMeds.includes(med.id);
-            const medDisplay = `${med.generic_name} ${med.brand_name ? '(' + med.brand_name + ')' : ''} ${med.strength}${med.strength_unit} ${med.route}`;
+
+
+            const brandName = med.brandName ? `(${med.brandName})` : '';
+            const strengthAndUnit = med.isVariableDose ? `variable dose ${med.dispenseUnit}` : `${med.strength}${med.strengthUnit} ${med.dispenseUnit}`
+            const route = `[${med.route}]`;
+
+            const medDisplay = `${med.genericName}  ${brandName}  ${strengthAndUnit}  ${route}`;
+
+
+
+            // const medDisplay = `${med.generic_name} ${med.brand_name ? '(' + med.brand_name + ')' : ''} ${med.strength}${med.strength_unit} ${med.route}`;
 
             return (
               <div key={med.id} className="p-4 flex justify-between items-center gap-4 bg-white rounded-xl border shadow-sm transition-all">

@@ -1,6 +1,7 @@
 import { getAllMedications } from "@/actions/simulation"
 import BardcodeGenerator from "./barcodeGenerator"
 import { getAllSimCases } from "@/actions/cases";
+import { mapDatabaseMedToFrontend } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers";
 
 const Formulary = async () => {
   const [medResponse, caseReponse] = await Promise.all([
@@ -12,7 +13,9 @@ const Formulary = async () => {
     return <div>Failed to retrieve medication and case data.</div>
   }
 
-  const medications = medResponse.data || []
+  const dbMeds = medResponse.data || []
+  const medications = dbMeds.map(dbMed => mapDatabaseMedToFrontend(dbMed))
+
   const cases = caseReponse.data || []
 
 
