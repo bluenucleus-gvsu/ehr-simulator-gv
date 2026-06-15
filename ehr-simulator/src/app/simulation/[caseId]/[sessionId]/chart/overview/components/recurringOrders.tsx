@@ -24,14 +24,10 @@ function categoryMatches(category: string, section: "nursing" | "respiratory" | 
       return c === "nursing"
     case "respiratory":
       return c === "respiratory"
-    case "diet":
-      return c === "diet" || c === "nutrition"
     case "laboratory":
       return c === "laboratory" || c === "lab" || c === "labs"
     case "consult":
       return c === "consult"
-    case "medication":
-      return c === "medication" || c === "medications"
     default:
       return false
   }
@@ -40,10 +36,8 @@ function categoryMatches(category: string, section: "nursing" | "respiratory" | 
 const SECTIONS: { key: "nursing" | "respiratory" | "diet" | "laboratory" | "consult" | "medication"; label: string }[] = [
   { key: "nursing", label: "Nursing" },
   { key: "respiratory", label: "Respiratory" },
-  { key: "diet", label: "Diet" },
   { key: "laboratory", label: "Labs" },
   { key: "consult", label: "Consults" },
-  { key: "medication", label: "Medications" },
 ]
 
 const RecurringOrders = () => {

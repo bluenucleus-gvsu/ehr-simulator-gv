@@ -106,12 +106,12 @@ function formatWeight(weightKg: unknown): string {
 function valueFromJoinedName(raw: unknown): string {
   if (Array.isArray(raw)) {
     const first = raw[0] as { name?: string } | undefined;
-    return first?.name?.trim() || "N/A";
+    return first?.name?.trim() || "None";
   }
   if (raw && typeof raw === "object") {
     return String((raw as { name?: string }).name ?? "").trim() || "N/A";
   }
-  return "N/A";
+  return "None";
 }
 
 export type BuildChartDataOptions = {
@@ -168,29 +168,29 @@ export function buildChartDataFromCaseRow(
 
   const supportPersons = String(caseRow?.emergency_contact_name ?? "").trim()
     ? [{
-        name: String(caseRow?.emergency_contact_name ?? "").trim(),
-        relationship: String(caseRow?.emergency_contact_relationship ?? "").trim() || "N/A",
-        phone: String(caseRow?.emergency_contact_phone ?? "").trim() || "N/A",
-      }]
+      name: String(caseRow?.emergency_contact_name ?? "").trim(),
+      relationship: String(caseRow?.emergency_contact_relationship ?? "").trim() || "Unknown",
+      phone: String(caseRow?.emergency_contact_phone ?? "").trim() || "",
+    }]
     : [];
 
   return {
     name: { id: "name", label: "Name", value: fullName },
     gender: { id: "gender", label: "Gender", value: String(caseRow?.gender ?? "").trim() || "N/A" },
-    age: { id: "age", label: "Age", value: dobDate != null ? ageYears : 0 },
+    age: { id: "age", label: "Age", value: ageYears },
     dob: { id: "dob", label: "DOB", value: dobDisplay },
     mrn: {
       id: "caseId",
       label: "Case ID",
       value: caseIdStr || "—",
     },
-    code: { id: "code", label: "Code", value: String(caseRow?.code_status ?? "").trim() || "N/A" },
+    code: { id: "code", label: "Code Status", value: String(caseRow?.code_status ?? "").trim() || "N/A" },
     admissionDate: { id: "admission", label: "Admission Date", value: admissionDisplay },
     pronouns: { id: "pronouns", label: "Pronouns", value: String(caseRow?.pronouns ?? "").trim() || "N/A" },
     sexAtBirth: { id: "sexAtBirth", label: "Sex Assigned at Birth", value: String(caseRow?.sex_at_birth ?? "").trim() || "N/A" },
     genderIdentity: { id: "genderIdentity", label: "Gender Identity", value: String(caseRow?.gender_identity ?? "").trim() || "N/A" },
     ethnicity: { id: "ethnicity", label: "Ethnicity", value: String(caseRow?.ethnicity ?? "").trim() || "N/A" },
-    location: { id: "location", label: "Location", value: "Simulation Chart" },
+    location: { id: "location", label: "Location", value: "Simulation Suite" },
     isolation: {
       id: "isolation",
       label: "Isolation",
@@ -199,7 +199,7 @@ export function buildChartDataFromCaseRow(
     },
     allergies: { id: "allergies", label: "Allergies", value: stringList(caseRow?.allergies) },
     immunizations: { id: "immunizations", label: "Immunizations", value: [] },
-    attending: { id: "attending", label: "Attending Provider", value: String(caseRow?.attending_provider ?? "").trim() || "N/A" },
+    attending: { id: "attending", label: "Attending Provider", value: String(caseRow?.attending_provider ?? "").trim() || "" },
     pmh: { id: "pmh", label: "Past Medical History", value: stringList(caseRow?.medical_history) },
     surgicalHistory: {
       id: "surgicalHistory",

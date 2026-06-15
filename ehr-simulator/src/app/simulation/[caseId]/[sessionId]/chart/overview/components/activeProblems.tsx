@@ -19,7 +19,8 @@ const ActiveProblems = () => {
     )
   }
 
-  const pmh = chartData.pmh.value.length ? chartData.pmh.value : ["No active problems recorded"];
+  const pmh = chartData.pmh.value.length ? chartData.pmh.value : [];
+  if (pmh.length === 0) return null;
 
   return (
     <Card className="relative col-span-1 pt-2 overflow-hidden h-fit gap-3">
