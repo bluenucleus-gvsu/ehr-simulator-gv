@@ -86,6 +86,103 @@ const buildCompactPatientName = (simCase: SimCase): string => {
   return [simCase.last_name, firstInitial].filter(Boolean).join(', ').toUpperCase();
 };
 
+const getPrintFitScript = (): string => `
+  <script>
+    (function () {
+      const shrinkToFit = (container, selectorConfig, options) => {
+        const elements = selectorConfig
+          .map((config) => {
+            const element = container.querySelector(config.selector);
+
+            if (!element) {
+              return null;
+            }
+
+            const computedStyle = window.getComputedStyle(element);
+            const initialFontSizePx = parseFloat(computedStyle.fontSize);
+            const initialLineHeightPx = parseFloat(computedStyle.lineHeight);
+
+            return {
+              element,
+              minFontSizePx: config.minFontSizePx,
+              initialFontSizePx,
+              lineHeightRatio: Number.isFinite(initialLineHeightPx) && initialFontSizePx > 0
+                ? initialLineHeightPx / initialFontSizePx
+                : 1.1,
+            };
+          })
+          .filter(Boolean);
+
+        for (let attempt = 0; attempt < options.maxIterations; attempt += 1) {
+          const hasVerticalOverflow = container.scrollHeight > container.clientHeight + 1;
+          const hasHorizontalOverflow = container.scrollWidth > container.clientWidth + 1;
+
+          if (!hasVerticalOverflow && !hasHorizontalOverflow) {
+            break;
+          }
+
+          let updated = false;
+
+          elements.forEach((entry) => {
+            const currentFontSizePx = parseFloat(window.getComputedStyle(entry.element).fontSize);
+
+            if (currentFontSizePx <= entry.minFontSizePx) {
+              return;
+            }
+
+            const nextFontSizePx = Math.max(entry.minFontSizePx, currentFontSizePx - options.stepPx);
+            entry.element.style.fontSize = nextFontSizePx.toFixed(2) + 'px';
+            entry.element.style.lineHeight = (nextFontSizePx * entry.lineHeightRatio).toFixed(2) + 'px';
+            updated = true;
+          });
+
+          if (!updated) {
+            break;
+          }
+        }
+      };
+
+      const fitMedicationLabels = () => {
+        document.querySelectorAll('.label:not(.is-empty) .med-info').forEach((container) => {
+          shrinkToFit(
+            container,
+            [
+              { selector: '.med-name', minFontSizePx: 7.4 },
+              { selector: '.med-details', minFontSizePx: 6.6 },
+              { selector: '.med-id', minFontSizePx: 5.8 },
+            ],
+            { stepPx: 0.35, maxIterations: 18 },
+          );
+        });
+      };
+
+      const fitWristbandLabels = () => {
+        document.querySelectorAll('.wristband-label:not(.is-empty) .patient-info').forEach((container) => {
+          shrinkToFit(
+            container,
+            [
+              { selector: '.patient-name', minFontSizePx: 5.4 },
+              { selector: '.patient-dob', minFontSizePx: 4.8 },
+            ],
+            { stepPx: 0.3, maxIterations: 16 },
+          );
+        });
+      };
+
+      const fitLabels = () => {
+        fitMedicationLabels();
+        fitWristbandLabels();
+      };
+
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(fitLabels).catch(fitLabels);
+      } else {
+        fitLabels();
+      }
+    })();
+  </script>
+`;
+
 const buildMedicationPrintHtml = (
   medications: MedicationWithBarcode[],
   quantities: Record<string, number>,
@@ -132,20 +229,20 @@ const buildMedicationPrintHtml = (
             padding: 0.05in;
             overflow: hidden;
             display: grid;
-            grid-template-columns: 0.58in 1fr;
-            gap: 0.06in;
+            grid-template-columns: 0.5in 1fr;
+            gap: 0.05in;
             align-items: center;
           }
           .label.is-empty { visibility: hidden; }
           .barcode-container {
-            width: 0.58in;
+            width: 0.5in;
             display: flex;
             align-items: center;
             justify-content: center;
           }
           .barcode-container svg {
-            width: 0.5in;
-            height: 0.5in;
+            width: 0.42in;
+            height: 0.42in;
             display: block;
           }
           .med-info {
@@ -153,25 +250,29 @@ const buildMedicationPrintHtml = (
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 0.03in;
+            gap: 0.02in;
+            height: 100%;
             overflow: hidden;
           }
           .med-name {
-            font-size: 8pt;
-            line-height: 1.05;
+            font-size: 7.5pt;
+            line-height: 1.08;
             font-weight: 700;
-            max-height: 0.34in;
-            overflow: hidden;
           }
           .med-details {
-            font-size: 6.5pt;
-            line-height: 1.12;
+            font-size: 6.25pt;
+            line-height: 1.1;
           }
           .med-id {
-            font-size: 5.5pt;
+            font-size: 5.25pt;
             line-height: 1.05;
             color: #555;
-            word-break: break-all;
+          }
+          .med-name,
+          .med-details,
+          .med-id {
+            overflow-wrap: anywhere;
+            word-break: break-word;
           }
         </style>
       </head>
@@ -195,6 +296,7 @@ const buildMedicationPrintHtml = (
             </section>
           `;
         }).join('')}
+        ${getPrintFitScript()}
       </body>
     </html>
   `;
@@ -245,20 +347,20 @@ const buildWristbandPrintHtml = (
             padding: 0.03in 0.04in;
             overflow: hidden;
             display: grid;
-            grid-template-columns: 0.34in 1fr;
-            gap: 0.04in;
+            grid-template-columns: 0.29in 1fr;
+            gap: 0.03in;
             align-items: center;
           }
           .wristband-label.is-empty { visibility: hidden; }
           .qr-container {
-            width: 0.34in;
+            width: 0.29in;
             display: flex;
             align-items: center;
             justify-content: center;
           }
           .qr-container svg {
-            width: 0.3in;
-            height: 0.3in;
+            width: 0.24in;
+            height: 0.24in;
             display: block;
           }
           .patient-info {
@@ -266,22 +368,22 @@ const buildWristbandPrintHtml = (
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 0.02in;
+            gap: 0.01in;
+            height: 100%;
+            overflow: hidden;
           }
           .patient-name {
-            font-size: 5.5pt;
-            line-height: 1;
+            font-size: 5.2pt;
+            line-height: 1.02;
             font-weight: 700;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            overflow-wrap: anywhere;
+            word-break: break-word;
           }
           .patient-dob {
-            font-size: 4.7pt;
-            line-height: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 4.5pt;
+            line-height: 1.02;
+            overflow-wrap: anywhere;
+            word-break: break-word;
           }
         </style>
       </head>
@@ -304,6 +406,7 @@ const buildWristbandPrintHtml = (
             </section>
           `;
         }).join('')}
+        ${getPrintFitScript()}
       </body>
     </html>
   `;
@@ -409,7 +512,7 @@ const BardcodeGenerator = ({ medications, simCases }: BarcodeGeneratorProps) => 
         setTimeout(() => {
           printWindow.print();
           printWindow.close();
-        }, 500);
+        }, 900);
       };
 
     } catch (error) {
