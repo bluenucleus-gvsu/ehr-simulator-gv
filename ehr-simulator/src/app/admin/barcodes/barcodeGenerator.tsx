@@ -15,6 +15,297 @@ interface BarcodeGeneratorProps {
 
 type TabType = 'medications' | 'wristbands';
 
+const MEDICATION_LABELS_PER_SHEET = 30;
+const WRISTBAND_LABELS_PER_SHEET = 80;
+
+type MedicationWithBarcode = AllMedicationTypes & { barcodeSvg: string };
+type CaseWithBarcode = SimCase & { qrSvg: string };
+
+const chunkItems = <T,>(items: T[], chunkSize: number): T[][] => {
+  if (items.length === 0) {
+    return [];
+  }
+
+  const chunks: T[][] = [];
+
+  for (let index = 0; index < items.length; index += chunkSize) {
+    chunks.push(items.slice(index, index + chunkSize));
+  }
+
+  return chunks;
+};
+
+const escapeHtml = (value: string | number | null | undefined): string => {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+};
+
+const formatPrintableDate = (value: string | null): string => {
+  if (!value) {
+    return 'N/A';
+  }
+
+  const parsedDate = new Date(value);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return value;
+  }
+
+  return format(parsedDate, 'MM/dd/yyyy');
+};
+
+const buildMedicationName = (medication: AllMedicationTypes): string => {
+  return medication.brandName
+    ? `${medication.genericName} (${medication.brandName})`
+    : medication.genericName;
+};
+
+const buildMedicationDetails = (medication: AllMedicationTypes): string => {
+  const strength = medication.isVariableDose
+    ? `Variable dose ${medication.dispenseUnit}`
+    : `${medication.strength}${medication.strengthUnit} ${medication.dispenseUnit}`.trim();
+
+  return [strength, medication.route].filter(Boolean).join(' • ');
+};
+
+const buildCompactPatientName = (simCase: SimCase): string => {
+  const fullName = [simCase.last_name, simCase.first_name].filter(Boolean).join(', ').toUpperCase();
+
+  if (fullName.length <= 22) {
+    return fullName;
+  }
+
+  const firstInitial = simCase.first_name ? `${simCase.first_name.charAt(0)}.` : '';
+  return [simCase.last_name, firstInitial].filter(Boolean).join(', ').toUpperCase();
+};
+
+const buildMedicationPrintHtml = (
+  medications: MedicationWithBarcode[],
+  quantities: Record<string, number>,
+): string => {
+  const expandedLabels = medications.flatMap((medication) =>
+    Array.from({ length: quantities[medication.id] || 1 }, (_, copyIndex) => ({
+      ...medication,
+      copyKey: `${medication.id}-${copyIndex}`,
+    })),
+  );
+
+  const pages = chunkItems(expandedLabels, MEDICATION_LABELS_PER_SHEET);
+
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Medication Barcodes</title>
+        <style>
+          @page { size: letter; margin: 0; }
+          * { box-sizing: border-box; }
+          html, body { margin: 0; padding: 0; background: #fff; }
+          body {
+            font-family: Arial, sans-serif;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .sheet {
+            width: 8.5in;
+            min-height: 11in;
+            padding: 0.5in 0.1875in;
+            display: grid;
+            grid-template-columns: repeat(3, 2.625in);
+            grid-auto-rows: 1in;
+            column-gap: 0.125in;
+            row-gap: 0;
+            align-content: start;
+            page-break-after: always;
+          }
+          .sheet:last-child { page-break-after: auto; }
+          .label {
+            width: 2.625in;
+            height: 1in;
+            padding: 0.05in;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 0.58in 1fr;
+            gap: 0.06in;
+            align-items: center;
+          }
+          .label.is-empty { visibility: hidden; }
+          .barcode-container {
+            width: 0.58in;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .barcode-container svg {
+            width: 0.5in;
+            height: 0.5in;
+            display: block;
+          }
+          .med-info {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.03in;
+            overflow: hidden;
+          }
+          .med-name {
+            font-size: 8pt;
+            line-height: 1.05;
+            font-weight: 700;
+            max-height: 0.34in;
+            overflow: hidden;
+          }
+          .med-details {
+            font-size: 6.5pt;
+            line-height: 1.12;
+          }
+          .med-id {
+            font-size: 5.5pt;
+            line-height: 1.05;
+            color: #555;
+            word-break: break-all;
+          }
+        </style>
+      </head>
+      <body>
+        ${pages.map((page) => {
+          const emptyLabels = MEDICATION_LABELS_PER_SHEET - page.length;
+
+          return `
+            <section class="sheet">
+              ${page.map((medication) => `
+                <article class="label" data-copy-key="${escapeHtml(medication.copyKey)}">
+                  <div class="barcode-container">${medication.barcodeSvg}</div>
+                  <div class="med-info">
+                    <div class="med-name">${escapeHtml(buildMedicationName(medication))}</div>
+                    <div class="med-details">${escapeHtml(buildMedicationDetails(medication))}</div>
+                    <div class="med-id">${escapeHtml(medication.id)}</div>
+                  </div>
+                </article>
+              `).join('')}
+              ${Array.from({ length: emptyLabels }, () => '<article class="label is-empty" aria-hidden="true"></article>').join('')}
+            </section>
+          `;
+        }).join('')}
+      </body>
+    </html>
+  `;
+};
+
+const buildWristbandPrintHtml = (
+  simCases: CaseWithBarcode[],
+  quantities: Record<string, number>,
+): string => {
+  const expandedLabels = simCases.flatMap((simCase) =>
+    Array.from({ length: quantities[simCase.id] || 1 }, (_, copyIndex) => ({
+      ...simCase,
+      copyKey: `${simCase.id}-${copyIndex}`,
+    })),
+  );
+
+  const pages = chunkItems(expandedLabels, WRISTBAND_LABELS_PER_SHEET);
+
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Patient Wristbands</title>
+        <style>
+          @page { size: letter; margin: 0; }
+          * { box-sizing: border-box; }
+          html, body { margin: 0; padding: 0; background: #fff; }
+          body {
+            font-family: Arial, sans-serif;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .sheet {
+            width: 8.5in;
+            min-height: 11in;
+            padding: 0.5in 0.75in;
+            display: grid;
+            grid-template-columns: repeat(4, 1.75in);
+            grid-auto-rows: 0.5in;
+            gap: 0;
+            align-content: start;
+            page-break-after: always;
+          }
+          .sheet:last-child { page-break-after: auto; }
+          .wristband-label {
+            width: 1.75in;
+            height: 0.5in;
+            padding: 0.03in 0.04in;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 0.34in 1fr;
+            gap: 0.04in;
+            align-items: center;
+          }
+          .wristband-label.is-empty { visibility: hidden; }
+          .qr-container {
+            width: 0.34in;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .qr-container svg {
+            width: 0.3in;
+            height: 0.3in;
+            display: block;
+          }
+          .patient-info {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.02in;
+          }
+          .patient-name {
+            font-size: 5.5pt;
+            line-height: 1;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+          .patient-dob {
+            font-size: 4.7pt;
+            line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+        </style>
+      </head>
+      <body>
+        ${pages.map((page) => {
+          const emptyLabels = WRISTBAND_LABELS_PER_SHEET - page.length;
+
+          return `
+            <section class="sheet">
+              ${page.map((simCase) => `
+                <article class="wristband-label" data-copy-key="${escapeHtml(simCase.copyKey)}">
+                  <div class="qr-container">${simCase.qrSvg}</div>
+                  <div class="patient-info">
+                    <div class="patient-name">${escapeHtml(buildCompactPatientName(simCase))}</div>
+                    <div class="patient-dob">DOB ${escapeHtml(formatPrintableDate(simCase.date_of_birth))}</div>
+                  </div>
+                </article>
+              `).join('')}
+              ${Array.from({ length: emptyLabels }, () => '<article class="wristband-label is-empty" aria-hidden="true"></article>').join('')}
+            </section>
+          `;
+        }).join('')}
+      </body>
+    </html>
+  `;
+};
+
 const BardcodeGenerator = ({ medications, simCases }: BarcodeGeneratorProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('medications');
 
@@ -57,21 +348,22 @@ const BardcodeGenerator = ({ medications, simCases }: BarcodeGeneratorProps) => 
   const generateMedBarcodeSvg = (text: string): string => {
     return bwipjs.toSVG({
       bcid: 'datamatrix',
-      text: text,
-      height: 12,
-      includetext: true,
-      textxalign: 'center',
+      text,
+      scale: 2,
+      paddingwidth: 0,
+      paddingheight: 0,
     });
-  }
+  };
 
   const generateWristbandSvg = (text: string): string => {
     return bwipjs.toSVG({
       bcid: 'datamatrix',
-      text: text,
-      height: 18,
-      width: 18,
+      text,
+      scale: 2,
+      paddingwidth: 0,
+      paddingheight: 0,
     });
-  }
+  };
 
   const printItems = async () => {
     const isMeds = activeTab === 'medications';
@@ -91,151 +383,23 @@ const BardcodeGenerator = ({ medications, simCases }: BarcodeGeneratorProps) => 
         return;
       }
 
-      let printHTML = '';
-
       if (isMeds) {
-        // --- MEDICATION LABELS HTML ---
-        const medsToPrint = medications.filter(med => selectedMeds.includes(med.id));
-        const medsWithBarcodes = await Promise.all(medsToPrint.map(async (med) => {
-          return { ...med, barcodeDataUrl: generateMedBarcodeSvg(med.id) };
+        const medsToPrint = medications.filter((medication) => selectedMeds.includes(medication.id));
+        const medsWithBarcodes: MedicationWithBarcode[] = medsToPrint.map((medication) => ({
+          ...medication,
+          barcodeSvg: generateMedBarcodeSvg(medication.id),
         }));
 
-        printHTML = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <title>Medication Barcodes</title>
-            <style>
-              * { box-sizing: border-box; margin: 0; padding: 0; }
-              body { font-family: Arial, sans-serif; padding: 0.5in; background: white; }
-              .page-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-              .label-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; width: 100%; }
-              .label { border: 1px solid #333; padding: 8px; text-align: center; page-break-inside: avoid; min-height: 120px; display: flex; flex-direction: column; justify-content: space-between; }
-              .med-name { font-weight: bold; font-size: 11px; margin-bottom: 2px; }
-              .barcode-container { display: flex; justify-content: center; align-items: center; }
-              .barcode-container img, .barcode-container svg { max-width: 100%; height: auto; }
-              @media print { body { padding: 0.25in; } .label { page-break-inside: avoid; } }
-            </style>
-          </head>
-          <body>
-            <div class="page-header">
-              <h1>Medication Barcode Labels</h1>
-              <p>Generated: ${new Date().toLocaleDateString()}</p>
-            </div>
-            <div class="label-grid">
-              ${medsWithBarcodes.map(med => {
-          const count = medQuantities[med.id] || 1;
-          return Array.from({ length: count }, () => `
-                  <div class="label">
-                    <div class="med-info">
-                      <div class="med-name">${med.genericName} ${med.brandName ? '(' + med.brandName + ')' : ''} ${med.strength}${med.strengthUnit} ${med.route}</div>
-                    </div>
-                    <div class="barcode-container">${med.barcodeDataUrl}</div>
-                  </div>
-                `).join('');
-        }).join('')}
-            </div>
-          </body>
-          </html>
-        `;
+        printWindow.document.write(buildMedicationPrintHtml(medsWithBarcodes, medQuantities));
       } else {
-        // --- WRISTBANDS HTML ---
-        const casesToPrint = simCases.filter(c => selectedCases.includes(c.id));
-        const casesWithBarcodes = await Promise.all(casesToPrint.map(async (c) => {
-          const barcodeContent = '~pt' + c.id
-          return { ...c, qrDataUrl: generateWristbandSvg(barcodeContent) };
+        const casesToPrint = simCases.filter((simCase) => selectedCases.includes(simCase.id));
+        const casesWithBarcodes: CaseWithBarcode[] = casesToPrint.map((simCase) => ({
+          ...simCase,
+          qrSvg: generateWristbandSvg(`~pt${simCase.id}`),
         }));
 
-        printHTML = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <title>Patient Wristbands</title>
-            <style>
-              * { box-sizing: border-box; margin: 0; padding: 0; }
-              body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 0.5in; background: white; }
-              .page-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-              .wristband-list { display: flex; flex-direction: column; gap: 0.5in; width: 100%; }
-              
-              /* Wristband Layout */
-              .wristband {
-                display: flex;
-                align-items: center;
-                width: 7.5in;
-                height: 1.25in;
-                border: 1px dashed #999;
-                border-radius: 8px;
-                padding: 10px 20px;
-                page-break-inside: avoid;
-                position: relative;
-              }
-              .band-hole-punch {
-                width: 15px;
-                height: 15px;
-                border-radius: 50%;
-                border: 2px solid #ccc;
-                position: absolute;
-                right: 20px;
-              }
-              .qr-container {
-                margin-right: 20px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-              }
-              .qr-container svg { width: 70px; height: 70px; }
-              .divider {
-                width: 2px;
-                height: 80%;
-                background-color: #000;
-                margin-right: 20px;
-              }
-              .patient-info {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                flex-grow: 1;
-              }
-              .patient-name { font-size: 24px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
-              .patient-details { font-size: 14px; color: #333; display: flex; gap: 20px; }
-              .hospital-branding { font-size: 10px; color: #666; position: absolute; bottom: 8px; right: 50px; text-transform: uppercase; letter-spacing: 1px; }
-
-              @media print { body { padding: 0.25in; } .wristband { page-break-inside: avoid; } }
-            </style>
-          </head>
-          <body>
-            <div class="page-header">
-              <h1>Patient Wristbands</h1>
-              <p>Generated: ${new Date().toLocaleDateString()}</p>
-            </div>
-            <div class="wristband-list">
-              ${casesWithBarcodes.map(c => {
-          const count = caseQuantities[c.id] || 1;
-          return Array.from({ length: count }, () => `
-                  <div class="wristband">
-                    <div class="qr-container">
-                      ${c.qrDataUrl}
-                    </div>
-                    <div class="divider"></div>
-                    <div class="patient-info">
-                      <div class="patient-name">${c.first_name} ${c.last_name}</div>
-                      <div class="patient-details">
-                        <span><strong>DOB:</strong> ${c.date_of_birth || 'N/A'}</span>
-                        <span><strong>ID:</strong> ${c.id}</span>
-                      </div>
-                    </div>
-                    <div class="hospital-branding">GVSU SIM CENTER</div>
-                    <div class="band-hole-punch"></div>
-                  </div>
-                `).join('');
-        }).join('')}
-            </div>
-          </body>
-          </html>
-        `;
+        printWindow.document.write(buildWristbandPrintHtml(casesWithBarcodes, caseQuantities));
       }
-
-      printWindow.document.write(printHTML);
       printWindow.document.close();
 
       printWindow.onload = () => {
@@ -251,7 +415,7 @@ const BardcodeGenerator = ({ medications, simCases }: BarcodeGeneratorProps) => 
     } finally {
       setIsPrinting(false);
     }
-  }
+  };
 
   return (
     <div className="w-full flex flex-col h-full">
