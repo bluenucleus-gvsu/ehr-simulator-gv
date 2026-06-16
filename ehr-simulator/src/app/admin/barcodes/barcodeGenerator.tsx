@@ -67,7 +67,10 @@ const buildMedicationName = (medication: AllMedicationTypes): string => {
 const buildMedicationDetails = (medication: AllMedicationTypes): string => {
   const strength = medication.isVariableDose
     ? `Variable dose ${medication.dispenseUnit}`
-    : `${medication.strength}${medication.strengthUnit} ${medication.dispenseUnit}`.trim();
+    : [
+      `${medication.strength ?? ''}${medication.strengthUnit ?? ''}`.trim(),
+      medication.dispenseUnit,
+    ].filter(Boolean).join(' ');
 
   return [strength, medication.route].filter(Boolean).join(' • ');
 };
