@@ -663,6 +663,47 @@ export async function expireSession(sessionId: string): Promise<SessionTransitio
   }
 }
 
+export async function getCurrentPhases(
+  groups: Array<{ id: string; caseSessionId?: string | null }>,
+  fallbackSessionId?: string
+) {
+  const sessionIds = [...new Set(
+    groups
+      .map(g => g.caseSessionId ?? fallbackSessionId)
+      .filter((id): id is string => Boolean(id))
+  )];
+
+  if (sessionIds.length === 0) {
+    return { success: false, message: "Failed to fetch phases, no session Ids", data: null };
+  }
+
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { data, error } = await supabase
+    .from("case_sessions")
+    .select("id, current_phase")
+    .in("id", sessionIds);
+
+  if (error) {
+    return { success: false, message: "Failed to fetch phases", error, data: null };
+  }
+
+  const groupPhaseMap: Record<string, number> = {};
+
+  groups.forEach(group => {
+    const sessionId = group.caseSessionId ?? fallbackSessionId;
+    const session = data?.find(s => s.id === sessionId);
+    if (session) {
+      groupPhaseMap[group.id] = session.current_phase ?? 1;
+    }
+  });
+
+  return { success: true, data: groupPhaseMap };
+}
+
 export async function updateCurrentPhase(updatedPhase: number, sessionId: string) {
   // Function used to updated the current_phase in case_sessions table
   // Used in faculty/components/FacultyCoursesView.tsx

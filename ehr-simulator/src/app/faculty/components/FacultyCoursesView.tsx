@@ -1,8 +1,8 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import FeedbackModal from "./FeedbackModal";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { updateCurrentPhase } from "@/actions/simulation";
+import { updateCurrentPhase, getCurrentPhases } from "@/actions/simulation";
 export type Member = {
   id: string;
   name: string;
@@ -21,7 +21,7 @@ export type Simulation = {
   phaseCount: number;
   simTime: string;
   groups: Group[];
-  sessionId?: string | null;
+  sessionId?: string;
   caseSessionIds?: string[];
 };
 
@@ -93,6 +93,19 @@ function SimulationGroupsView({
   const [phaseDialog, setPhaseDialog] = useState(false);   // Phase Change Dialog Check
   const [pendingPhaseGroup, setPendingPhaseGroup] = useState<{id: string; name:string } | null>(null); // Phase Group Dialog Pending for updating phase
 
+
+  useEffect(() => {
+    const fetchPhases = async () => {
+      const response = await getCurrentPhases(simulation.groups, simulation.sessionId);
+      
+      if (response.success && response.data) {
+        setGroupPhase(response.data);
+      }
+    }
+    fetchPhases();
+}, [simulation]);
+
+
   // Handle Feedback submit button
   const handleSubmit = (key: string, feedback: string) => {
     setSubmittedFeedback((prev) => ({ ...prev, [key]: feedback }));
@@ -127,7 +140,11 @@ function SimulationGroupsView({
 
         if(response.error){
           console.error('Failed to set complete', response)
+          setPhaseDialog(false);
+          setPendingPhaseGroup(null);
+          return;
         }
+
       }
       else{
         // If there is not sessionId, close the dialog and remove pending status
@@ -138,10 +155,10 @@ function SimulationGroupsView({
         return;
       }
         // Set the groupPhase to the updated phase number
-        setGroupPhase((prev) => ({
-          ...prev,
-          [pendingPhaseGroup.id]: updatedPhase,
-        }))
+        const refresh = await getCurrentPhases(simulation.groups, simulation.sessionId);
+        if (refresh.success && refresh.data) {
+          setGroupPhase(refresh.data);
+        }
 
         // Close the dialog and remove pending status
         setPhaseDialog(false);
@@ -420,7 +437,7 @@ export default function FacultyCoursesView({ courses }: { courses: Course[] }) {
               }
               className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 font-medium"
             >
-              Start Simulation
+              Enter Simulation
             </button>
           ) : past ? (
             <span className="px-3 py-1.5 text-xs bg-slate-100 text-slate-500 rounded-md">
