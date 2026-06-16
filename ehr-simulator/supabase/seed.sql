@@ -268,11 +268,47 @@ VALUES
   (
     'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
     (SELECT id FROM medications WHERE generic_name = 'acetaminophen' AND route = 'PO' AND strength = 650 AND strength_unit = 'mg' LIMIT 1),
-    500, 
+    650, 
     'Q6H', 
     'PRN', 
     'Do not exceed 4000mg per 24 hours.', 
     'Mild pain or fever', 
+    'Dr. Gregory House',
+    NULL,
+    TRUE
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'acetaminophen' AND route = 'PO' AND strength = 650 AND strength_unit = 'mg' LIMIT 1),
+    1950, 
+    'Q6H', 
+    'PRN', 
+    'Do not exceed 4000mg per 24 hours.', 
+    'Mild pain or fever', 
+    'Dr. Gregory House',
+    NULL,
+    TRUE
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'acetaminophen' AND route = 'PO' AND strength = 650 AND strength_unit = 'mg' LIMIT 1),
+    1300, 
+    'Q6H', 
+    'PRN', 
+    'Do not exceed 4000mg per 24 hours.', 
+    'Mild pain or fever', 
+    'Dr. Gregory House',
+    NULL,
+    TRUE
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'albuterol sulfate' LIMIT 1),
+    30, 
+    'Q6H', 
+    'Routine', 
+    null, 
+    'Indic.', 
     'Dr. Gregory House',
     NULL,
     TRUE
@@ -303,6 +339,18 @@ VALUES
   ),
   (
     'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'aspirin' AND strength_unit = 'mg' LIMIT 1),
+    81, 
+    'DAILY', 
+    'Routine', 
+    'Take in the evening.', 
+    'Hyperlipidemia', 
+    'Dr. Gregory House',
+    NULL,
+    TRUE
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
     (SELECT id FROM medications WHERE generic_name = 'normal saline 0.9%' AND route = 'IV' AND strength = 1000 AND strength_unit = 'mL' LIMIT 1), 
     1000, 
     'CONTINUOUS', 
@@ -316,7 +364,7 @@ VALUES
 
   (
     'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
-    (SELECT id FROM medications WHERE generic_name = 'cefazolin' AND route = 'IV' AND strength = 1000 AND strength_unit = 'mg' LIMIT 1), 
+    (SELECT id FROM medications WHERE generic_name = 'cefazolin' LIMIT 1), 
     1000, 
     'Q8H', 
     'Routine', 
@@ -350,20 +398,102 @@ VALUES
     NULL,
     TRUE
   ),
-  -- not in presim
   (
   'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
     (SELECT id FROM medications WHERE generic_name = 'cefazolin' AND route = 'IV' AND strength = 1000 AND strength_unit = 'mg' LIMIT 1), 
     1000, 
     'Q2H', 
     'Routine', 
+    null, 
+    'Prophylaxis', 
+    'Dr. Pepper',
+    125,
+    FALSE
+  ),
+  (
+  'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'ceftriaxone' AND route = 'IV' LIMIT 1), 
+    1, 
+    'Q2H', 
+    'Routine', 
     'Not in Presim Test.', 
     'Prophylaxis', 
     'Dr. Pepper',
-    999,
+    null,
     FALSE
   ),
--- not in presim
+  (
+  'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'dextrose 5% in NS 0.45%' AND route = 'IV' LIMIT 1), 
+    1000, 
+    'Q2H', 
+    'Routine', 
+    'Not in Presim Test.', 
+    'Prophylaxis', 
+    'Dr. Pepper',
+    100,
+    FALSE
+  ),
+  (
+  'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'enoxaparin' LIMIT 1), 
+    40, 
+    'Q2H', 
+    'Routine', 
+    null, 
+    'Prophylaxis', 
+    'Dr. Pepper',
+    null,
+    FALSE
+  ),
+  (
+  'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'furosemide' LIMIT 1), 
+    40, 
+    'Q2H', 
+    'Routine', 
+    null, 
+    'Prophylaxis', 
+    'Dr. Pepper',
+    null,
+    FALSE
+  ),
+  -- (
+  -- 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+  --   (SELECT id FROM medications WHERE generic_name = 'Lactated Ringer''s Injection' LIMIT 1), 
+  --   500, 
+  --   'Q2H', 
+  --   'Routine', 
+  --   null, 
+  --   'Prophylaxis', 
+  --   'Dr. Pepper',
+  --   75,
+  --   FALSE
+  -- ),
+  (
+  'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'methylprednisolone' LIMIT 1), 
+    500, 
+    'Q2H', 
+    'Routine', 
+    null, 
+    'Prophylaxis', 
+    'Dr. Pepper',
+    null,
+    FALSE
+  ),
+  (
+  'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'metoprolol succinate' and strength = 25 LIMIT 1), 
+    75, 
+    'Q2H', 
+    'Routine', 
+    null, 
+    'Prophylaxis', 
+    'Dr. Pepper',
+    null,
+    FALSE
+  ),
   (
     'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
     (SELECT id FROM medications WHERE generic_name = 'pantoprazole' AND route = 'PO' AND strength = 40 AND strength_unit = 'mg' LIMIT 1), 
