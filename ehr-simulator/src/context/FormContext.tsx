@@ -19,16 +19,20 @@ import {
   dedupeMedicationIdsAcrossPhases,
   medOrderIdsInOtherPhases,
 } from '@/lib/caseBuilder/remapMedicationOrderIds';
+import { deleteCasePhaseData } from '@/actions/case_builder/deleteCasePhaseData';
 import {
-  applyPhaseCountResolutions,
   carryOverScopeFromPrevious,
+  deleteScopePhase as removeScopePhaseFromCache,
   ensureScopePhaseInitialized,
-  listPhasesWithSavedData,
   phaseByScopeFromCache,
-  type PhaseRestoreChoice,
+  truncateCacheAbovePhase,
 } from '@/lib/caseBuilder/phaseCacheOps';
+import { persistScopePhaseToDatabase } from '@/lib/caseBuilder/persistPhaseScope';
+import { loadMarPhaseLiveFields } from '@/lib/caseBuilder/marPhaseOps';
 import {
   clampPhaseCount,
+  cloneMedAdmins,
+  cloneMedOrders,
   createEmptyPhaseCache,
   DEFAULT_PHASE_COUNT,
   defaultPhaseByScope,
@@ -62,14 +66,11 @@ interface FormContextType {
   phaseCount: number;
   phaseByScope: PhaseByScope;
   setCaseId: (id: string) => void;
-  applyPhaseCountChange: (
-    count: number,
-    resolutions?: Record<number, PhaseRestoreChoice>,
-  ) => void;
-  switchActivePhase: (scope: PhaseTabScope, phase: number) => void;
-  createNextPhase: (scope: PhaseTabScope) => boolean;
+  applyPhaseCountChange: (count: number) => void;
+  switchActivePhase: (scope: PhaseTabScope, phase: number) => Promise<void>;
+  createNextPhase: (scope: PhaseTabScope) => Promise<boolean>;
+  deleteScopePhase: (scope: PhaseTabScope) => Promise<boolean>;
   registerPhaseScope: (scope: PhaseTabScope) => void;
-  getPhasesWithSavedData: (fromPhase: number, toPhase: number) => number[];
   initializeFromCaseBundle: (bundle: CaseBundle) => void;
   restorePhaseState: (opts: {
     phaseCount?: number;
@@ -145,10 +146,10 @@ const FormContext = createContext<FormContextType>({
   phaseCount: DEFAULT_PHASE_COUNT,
   phaseByScope: defaultPhaseByScope(),
   applyPhaseCountChange: () => {},
-  switchActivePhase: () => {},
-  createNextPhase: () => false,
+  switchActivePhase: async () => {},
+  createNextPhase: async () => false,
+  deleteScopePhase: async () => false,
   registerPhaseScope: () => {},
-  getPhasesWithSavedData: () => [],
   initializeFromCaseBundle: () => {},
   restorePhaseState: () => {},
   demographicData: defaultDemographicData,
@@ -189,6 +190,8 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
   const lastRegisteredScopeRef = useRef<PhaseTabScope | null>(null);
 
   const [caseId, setCaseId] = useState<string | undefined>(undefined);
+  const caseIdRef = useRef(caseId);
+  caseIdRef.current = caseId;
   const [phaseCount, setPhaseCount] = useState(DEFAULT_PHASE_COUNT);
   const [phaseByScope, setPhaseByScope] = useState<PhaseByScope>(defaultPhaseByScope);
   phaseByScopeRef.current = phaseByScope;
@@ -239,19 +242,28 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
           labs: overlay.labs ?? labDataRef.current,
         });
         break;
-      case 'medOrders':
-        phaseCacheRef.current = persistLiveFieldsToCache(phaseCacheRef.current, phase, {
-          ...current,
-          medOrders: overlay.medOrders ?? medOrderDataRef.current,
-        });
+      case 'medOrders': {
+        const medOrders = overlay.medOrders ?? medOrderDataRef.current;
+        phaseCacheRef.current = {
+          ...phaseCacheRef.current,
+          medOrders: {
+            ...phaseCacheRef.current.medOrders,
+            [phase]: cloneMedOrders(medOrders),
+          },
+        };
         break;
-      case 'mar':
-        phaseCacheRef.current = persistLiveFieldsToCache(phaseCacheRef.current, phase, {
-          ...current,
-          medOrders: overlay.medOrders ?? medOrderDataRef.current,
-          medAdmins: overlay.medAdministrationInstances ?? medAdministrationDataRef.current,
-        });
+      }
+      case 'mar': {
+        const medAdmins = overlay.medAdministrationInstances ?? medAdministrationDataRef.current;
+        phaseCacheRef.current = {
+          ...phaseCacheRef.current,
+          medAdmins: {
+            ...phaseCacheRef.current.medAdmins,
+            [phase]: cloneMedAdmins(medAdmins),
+          },
+        };
         break;
+      }
     }
   }, []);
 
@@ -266,13 +278,30 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
         break;
       case 'medOrders':
         setMedOrderData(loaded.medOrders);
-        setMedAdministrationData(loaded.medAdmins);
         break;
-      case 'mar':
-        setMedOrderData(loaded.medOrders);
-        setMedAdministrationData(loaded.medAdmins);
+      case 'mar': {
+        const { cache: nextCache, medOrders, medAdmins } = loadMarPhaseLiveFields(
+          phaseCacheRef.current,
+          phase,
+        );
+        phaseCacheRef.current = nextCache;
+        setMedOrderData(medOrders);
+        setMedAdministrationData(medAdmins);
         break;
+      }
     }
+  }, []);
+
+  const persistActiveScopePhase = useCallback(async (scope: PhaseTabScope, phase: number) => {
+    const id = caseIdRef.current;
+    if (!id || isTesterModeClient()) return;
+    phaseCacheRef.current = await persistScopePhaseToDatabase({
+      caseId: id,
+      scope,
+      phase,
+      cache: phaseCacheRef.current,
+      overlay: caseBuilderLocalOverlayRef.current?.() ?? {},
+    });
   }, []);
 
   const registerPhaseScope = useCallback(
@@ -280,19 +309,26 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
       const prev = lastRegisteredScopeRef.current;
       if (prev && prev !== scope) {
         flushScopeToCache(prev);
+        const prevPhase = phaseByScopeRef.current[prev].activePhase;
+        void persistActiveScopePhase(prev, prevPhase);
       }
       lastRegisteredScopeRef.current = scope;
       applyScopeToLiveFields(scope, phaseByScopeRef.current[scope].activePhase);
     },
-    [flushScopeToCache, applyScopeToLiveFields],
+    [flushScopeToCache, applyScopeToLiveFields, persistActiveScopePhase],
   );
 
   const switchActivePhase = useCallback(
-    (scope: PhaseTabScope, phase: number) => {
+    async (scope: PhaseTabScope, phase: number) => {
       const scopeState = phaseByScopeRef.current[scope];
       const next = clampPhaseCount(phase);
       if (next > scopeState.highestInitializedPhase || next < 1) return;
+      if (next === scopeState.activePhase) return;
+
+      const leavingPhase = scopeState.activePhase;
       flushScopeToCache(scope);
+      await persistActiveScopePhase(scope, leavingPhase);
+
       phaseCacheRef.current = ensureScopePhaseInitialized(phaseCacheRef.current, scope, next);
       setPhaseByScope((prev) => ({
         ...prev,
@@ -300,15 +336,19 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
       }));
       applyScopeToLiveFields(scope, next);
     },
-    [flushScopeToCache, applyScopeToLiveFields],
+    [flushScopeToCache, applyScopeToLiveFields, persistActiveScopePhase],
   );
 
   const createNextPhase = useCallback(
-    (scope: PhaseTabScope): boolean => {
+    async (scope: PhaseTabScope): Promise<boolean> => {
       const scopeState = phaseByScopeRef.current[scope];
       if (scopeState.highestInitializedPhase >= phaseCount) return false;
-      const next = scopeState.highestInitializedPhase + 1;
+
+      const leavingPhase = scopeState.activePhase;
       flushScopeToCache(scope);
+      await persistActiveScopePhase(scope, leavingPhase);
+
+      const next = scopeState.highestInitializedPhase + 1;
       phaseCacheRef.current = carryOverScopeFromPrevious(phaseCacheRef.current, scope, next);
       setPhaseByScope((prev) => ({
         ...prev,
@@ -317,27 +357,42 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
       applyScopeToLiveFields(scope, next);
       return true;
     },
-    [phaseCount, flushScopeToCache, applyScopeToLiveFields],
+    [phaseCount, flushScopeToCache, applyScopeToLiveFields, persistActiveScopePhase],
   );
 
-  const getPhasesWithSavedData = useCallback((fromPhase: number, toPhase: number) => {
-    return listPhasesWithSavedData(phaseCacheRef.current, fromPhase, toPhase);
-  }, []);
+  const deleteScopePhase = useCallback(
+    async (scope: PhaseTabScope): Promise<boolean> => {
+      const scopeState = phaseByScopeRef.current[scope];
+      if (scopeState.activePhase <= 1) return false;
+      if (scopeState.activePhase !== scopeState.highestInitializedPhase) return false;
+
+      const phase = scopeState.activePhase;
+      phaseCacheRef.current = removeScopePhaseFromCache(phaseCacheRef.current, scope, phase);
+
+      const id = caseIdRef.current;
+      if (id && !isTesterModeClient()) {
+        await deleteCasePhaseData(id, scope, [phase]);
+      }
+
+      const newPhase = phase - 1;
+      setPhaseByScope((prev) => ({
+        ...prev,
+        [scope]: { activePhase: newPhase, highestInitializedPhase: newPhase },
+      }));
+      applyScopeToLiveFields(scope, newPhase);
+      return true;
+    },
+    [applyScopeToLiveFields],
+  );
 
   const applyPhaseCountChange = useCallback(
-    (count: number, resolutions: Record<number, PhaseRestoreChoice> = {}) => {
+    (count: number) => {
       const next = clampPhaseCount(count);
-      const prev = phaseCount;
       const scope = lastRegisteredScopeRef.current;
       if (scope) flushScopeToCache(scope);
 
-      if (next > prev) {
-        phaseCacheRef.current = applyPhaseCountResolutions(
-          phaseCacheRef.current,
-          prev,
-          next,
-          resolutions,
-        );
+      if (next < phaseCount) {
+        phaseCacheRef.current = truncateCacheAbovePhase(phaseCacheRef.current, next);
       }
 
       setPhaseCount(next);
@@ -525,16 +580,24 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
   const getMedicationPhasePayload = useCallback((scope: 'medOrders' | 'mar') => {
     flushScopeToCache(scope);
     const phase = phaseByScopeRef.current[scope].activePhase;
-    const data = loadPhaseIntoLiveFields(phaseCacheRef.current, phase);
     const overlay = caseBuilderLocalOverlayRef.current?.() ?? {};
+
+    if (scope === 'mar') {
+      const { cache: nextCache, medOrders, medAdmins } = loadMarPhaseLiveFields(
+        phaseCacheRef.current,
+        phase,
+      );
+      phaseCacheRef.current = nextCache;
+      const liveAdmins = overlay.medAdministrationInstances ?? medAdmins;
+      const orderIds = new Set(medOrders.createdOrders.map((o) => o.id));
+      const administrations = liveAdmins.filter((a) => orderIds.has(a.medicationOrderId));
+      return { phase, orders: medOrders.createdOrders, administrations };
+    }
+
+    const data = loadPhaseIntoLiveFields(phaseCacheRef.current, phase);
     const liveOrders =
-      scope === 'medOrders' && overlay.medOrders?.createdOrders
-        ? overlay.medOrders.createdOrders
-        : data.medOrders.createdOrders;
-    const liveAdmins =
-      scope === 'mar' && overlay.medAdministrationInstances
-        ? overlay.medAdministrationInstances
-        : data.medAdmins;
+      overlay.medOrders?.createdOrders ?? data.medOrders.createdOrders;
+    const liveAdmins = data.medAdmins;
 
     const idsInOtherPhases = medOrderIdsInOtherPhases(
       phaseCacheRef.current.medOrders,
@@ -546,15 +609,15 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
       idsInOtherPhases,
     );
 
-    const remapped = liveOrders.some((o) => idsInOtherPhases.has(o.id));
-    if (remapped) {
-      phaseCacheRef.current = persistLiveFieldsToCache(phaseCacheRef.current, phase, {
-        ...data,
-        medOrders: { createdOrders: orders, selectedMeds: data.medOrders.selectedMeds },
-        medAdmins: administrations,
-      });
+    if (liveOrders.some((o) => idsInOtherPhases.has(o.id))) {
+      phaseCacheRef.current = {
+        ...phaseCacheRef.current,
+        medOrders: {
+          ...phaseCacheRef.current.medOrders,
+          [phase]: { createdOrders: orders, selectedMeds: data.medOrders.selectedMeds },
+        },
+      };
       setMedOrderData({ createdOrders: orders, selectedMeds: data.medOrders.selectedMeds });
-      setMedAdministrationData(administrations);
     }
 
     return { phase, orders, administrations };
@@ -591,8 +654,8 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
         applyPhaseCountChange,
         switchActivePhase,
         createNextPhase,
+        deleteScopePhase,
         registerPhaseScope,
-        getPhasesWithSavedData,
         initializeFromCaseBundle,
         restorePhaseState,
         demographicData,
@@ -631,6 +694,7 @@ export function usePhaseTab(scope: PhaseTabScope) {
     highestInitializedPhase: scopeState.highestInitializedPhase,
     switchActivePhase: (phase: number) => ctx.switchActivePhase(scope, phase),
     createNextPhase: () => ctx.createNextPhase(scope),
+    deleteScopePhase: () => ctx.deleteScopePhase(scope),
     registerPhaseScope: () => ctx.registerPhaseScope(scope),
     getMedicationSavePayload:
       scope === 'medOrders' || scope === 'mar'

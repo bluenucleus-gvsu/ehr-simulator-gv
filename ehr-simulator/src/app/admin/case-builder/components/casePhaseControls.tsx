@@ -4,52 +4,59 @@ import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { deleteCasePhasesAbove } from "@/actions/case_builder/deleteCasePhaseData";
 import { updateCasePhaseCount } from "@/actions/case_builder/updateCasePhaseCount";
 import { useFormContext } from "@/context/FormContext";
 import { MAX_CASE_PHASES } from "@/lib/casePhases";
-import type { PhaseRestoreChoice } from "@/lib/caseBuilder/phaseCacheOps";
 import { isTesterModeClient } from "@/utils/testerMode";
-import { PhaseRestoreDialog } from "./phaseRestoreDialog";
 
 /** Max phases allowed for this case (set next to Save). Phase switching lives on each Orders/Labs/MAR tab. */
 export function CasePhaseControls() {
-  const { caseId, phaseCount, applyPhaseCountChange, getPhasesWithSavedData } = useFormContext();
+  const { caseId, phaseCount, applyPhaseCountChange } = useFormContext();
 
   const [draftCount, setDraftCount] = useState(String(phaseCount));
   const [isUpdating, setIsUpdating] = useState(false);
-  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState<number | null>(null);
-  const [phasesToRestore, setPhasesToRestore] = useState<number[]>([]);
 
   useEffect(() => {
     setDraftCount(String(phaseCount));
   }, [phaseCount]);
 
-  const commitCount = async (
-    parsed: number,
-    resolutions: Record<number, PhaseRestoreChoice> = {},
-  ) => {
+  const commitCount = async (parsed: number) => {
     setIsUpdating(true);
     try {
+      if (parsed < phaseCount && caseId && !isTesterModeClient()) {
+        await deleteCasePhasesAbove(caseId, parsed);
+      }
       if (caseId && !isTesterModeClient()) {
         await updateCasePhaseCount(caseId, parsed);
       }
-      applyPhaseCountChange(parsed, resolutions);
+      applyPhaseCountChange(parsed);
       toast.success(`This case allows up to ${parsed} phase${parsed === 1 ? "" : "s"}.`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update phase count.");
     } finally {
       setIsUpdating(false);
-      setRestoreDialogOpen(false);
+      setConfirmOpen(false);
       setPendingCount(null);
-      setPhasesToRestore([]);
     }
   };
 
-  const handleUpdateCount = async () => {
+  const handleUpdateCount = () => {
     const parsed = Number(draftCount);
     if (!Number.isFinite(parsed) || parsed < 1 || parsed > MAX_CASE_PHASES) {
       toast.error(`Enter a number between 1 and ${MAX_CASE_PHASES}.`);
@@ -58,31 +65,31 @@ export function CasePhaseControls() {
 
     if (parsed === phaseCount) return;
 
-    if (parsed > phaseCount) {
-      const saved = getPhasesWithSavedData(phaseCount + 1, parsed);
-      if (saved.length > 0) {
-        setPendingCount(parsed);
-        setPhasesToRestore(saved);
-        setRestoreDialogOpen(true);
-        return;
-      }
+    if (parsed < phaseCount) {
+      setPendingCount(parsed);
+      setConfirmOpen(true);
+      return;
     }
 
-    await commitCount(parsed);
+    void commitCount(parsed);
   };
 
-  const handleRestoreConfirm = (resolutions: Record<number, PhaseRestoreChoice>) => {
+  const handleConfirmDecrease = () => {
     if (pendingCount !== null) {
-      void commitCount(pendingCount, resolutions);
+      void commitCount(pendingCount);
     }
   };
 
-  const handleRestoreCancel = () => {
-    setRestoreDialogOpen(false);
+  const handleCancelDecrease = () => {
+    setConfirmOpen(false);
     setPendingCount(null);
-    setPhasesToRestore([]);
     setDraftCount(String(phaseCount));
   };
+
+  const removedPhases =
+    pendingCount !== null && pendingCount < phaseCount
+      ? Array.from({ length: phaseCount - pendingCount }, (_, i) => pendingCount + 1 + i)
+      : [];
 
   return (
     <>
@@ -112,12 +119,22 @@ export function CasePhaseControls() {
         </Button>
       </div>
 
-      <PhaseRestoreDialog
-        open={restoreDialogOpen}
-        phases={phasesToRestore}
-        onConfirm={handleRestoreConfirm}
-        onCancel={handleRestoreCancel}
-      />
+      <AlertDialog open={confirmOpen} onOpenChange={(open) => !open && handleCancelDecrease()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove extra phases?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Lowering the max to {pendingCount} will delete saved data for phase
+              {removedPhases.length === 1 ? "" : "s"}{" "}
+              {removedPhases.length > 0 ? removedPhases.join(", ") : ""}. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelDecrease}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDecrease}>Remove phases</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

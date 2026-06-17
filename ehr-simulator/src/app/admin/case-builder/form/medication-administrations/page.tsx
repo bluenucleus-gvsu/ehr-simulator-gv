@@ -85,7 +85,13 @@ export default function MedicationAdministrationsForm() {
 
   useEffect(() => {
     setMedAdministrations(medAdministrationData);
-    setSelectedOrders(medOrderData.createdOrders);
+    const linkedOrderIds = new Set(medAdministrationData.map((a) => a.medicationOrderId));
+    const ordersWithAdmins = medOrderData.createdOrders.filter((o) =>
+      linkedOrderIds.has(o.id),
+    );
+    setSelectedOrders(
+      ordersWithAdmins.length > 0 ? ordersWithAdmins : medOrderData.createdOrders,
+    );
   }, [medAdministrationData, medOrderData, activePhase]);
 
   useEffect(() => {

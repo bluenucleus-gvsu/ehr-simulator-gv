@@ -21,6 +21,7 @@ import {
 } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
 import type { OrderType } from "@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData";
 import { copyMedOrdersWithNewIds } from "@/lib/caseBuilder/remapMedicationOrderIds";
+import { carryMarPhaseFromPrevious } from "@/lib/caseBuilder/marPhaseOps";
 
 function selectedMedsFromOrders(createdOrders: MedicationOrder[]) {
   return createdOrders
@@ -250,17 +251,8 @@ export function carryOverScopeFromPrevious(
         medOrders,
       });
     }
-    case "mar": {
-      const { medOrders, medAdmins } = copyMedOrdersWithNewIds(
-        source.medOrders,
-        source.medAdmins,
-      );
-      return persistLiveFieldsToCache(next, phase, {
-        ...target,
-        medOrders,
-        medAdmins,
-      });
-    }
+    case "mar":
+      return carryMarPhaseFromPrevious(next, phase);
   }
 }
 
