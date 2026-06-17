@@ -7,13 +7,12 @@ import { ClipboardCheck, Stethoscope, Wind, FlaskConical, UserRound, Utensils, C
 import type { OrderType } from "@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData"
 import { FormShell } from "../../components/formShell"
 import { saveCaseJsonBlob } from "../../api/dump_case_json"
-import { saveCaseData } from "@/actions/case_builder/caseBuilder"
-import { CaseSection } from "@/lib/saveCase"
 import { ClinicalNote } from "@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData"
 import type { AllMedicationTypes, MedicationOrder, MedAdministrationInstance} from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData"
 import { renderMedFormDetails, renderMedFormTitle } from "../medications/components/medFormHelpers"
 import NoteFormDisplay from "../notes/noteFormDisplay";
-import type { FamilyHistoryData } from "../history/familyHistory"
+import { saveCaseData } from "@/actions/case_builder/caseBuilder"
+import { CaseSection } from "@/lib/saveCase"
 
 const categories: OrderType["category"][] = ["Nursing", "Respiratory", "Laboratory", "Consult", "Diet"]
 
@@ -54,7 +53,7 @@ const FormReview = () => {
     registerCaseBuilderLocalOverlay,
   } = useFormContext()
   const [notes, setNotes] = useState<ClinicalNote[]>(noteData);
-  const [familyHistory] = useState<FamilyHistoryData[]>(historyData.familyHistory);
+  const familyHistory = historyData.familyHistory;
 
   const router = useRouter();
 
@@ -96,7 +95,7 @@ const FormReview = () => {
     };
   }
 
-  const sortedNotes = noteData.sort((a, b) => b.timeOffset - a.timeOffset)
+  const sortedNotes = [...noteData].sort((a, b) => b.timeOffset - a.timeOffset)  // Sort a copy of the actual list
 
   const getMedicationForOrder = (order: MedicationOrder): AllMedicationTypes | undefined => {
     return medOrderData.selectedMeds.find((med) => med.id === order.medicationId)
@@ -130,7 +129,7 @@ const FormReview = () => {
                   <p><strong>Last Name:</strong> {demographicData.lastName || 'None'}</p>
                   <p><strong>Age:</strong> {demographicData.age || 'None'}</p>
                   <p><strong>DOB:</strong> {demographicData.DOBMonth && demographicData.DOBDay ? `${demographicData.DOBMonth} ${demographicData.DOBDay}` : 'None'}</p>
-                  <p><strong>Height (Imperical):</strong> {demographicData.heightFeet && demographicData.heightInches ? `${demographicData.heightFeet}' ${demographicData.heightInches}"` : 'None'}</p>
+                  <p><strong>Height (Imperial):</strong> {demographicData.heightFeet && demographicData.heightInches ? `${demographicData.heightFeet}' ${demographicData.heightInches}"` : 'None'}</p>
                   <p><strong>Dosing Weight (Metric):</strong> {demographicData.dosingWeight ? `${demographicData.dosingWeight} kg` : 'None'}</p>
                   <p><strong>Admission Date Offset:</strong> {demographicData.admissionDateOffest || 'None'}</p>
                   <p><strong>Admission Time:</strong> {demographicData.admissionTime || 'None'}</p>
@@ -144,7 +143,7 @@ const FormReview = () => {
                   <p><strong>Employment:</strong> {demographicData.employment || 'None'}</p>
                   <p><strong>Religion:</strong> {demographicData.religion || 'None'}</p>
                   <p><strong>Relationship Status:</strong> {demographicData.relationshipStatus || 'None'}</p>
-                  <p><strong>Emergancy Contact:</strong> {demographicData.contact ? `${demographicData.contact} (${demographicData.contactRelationship || 'None'})` : 'None'}</p>
+                  <p><strong>Emergency Contact:</strong> {demographicData.contact ? `${demographicData.contact} (${demographicData.contactRelationship || 'None'})` : 'None'}</p>
                 </CardContent>
                 <CardFooter className="flex-col items-start gap-4">
                   <p><strong>Summary:</strong> {demographicData.summary || 'None'}</p>  
@@ -189,12 +188,12 @@ const FormReview = () => {
                 <CardContent>
                   {orderData.length > 0 ? (
                     <div className="space-y-6">
-                      {categories.map(cat => {
+                      {categories.map((cat, index) => {
                         const catOrders = orderData.filter((o: OrderType) => o.category === cat);
                         if (catOrders.length === 0) return null;
 
                         return (
-                          <div key={cat} className="space-y-3">
+                          <div key={index} className="space-y-3">
                             <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">
                               {getCategoryIcon(cat)} {cat} Orders
                             </div>
@@ -285,10 +284,10 @@ const FormReview = () => {
                 <CardContent>
                   {medOrderData.createdOrders.length > 0 ? (
                     <div className="space-y-4">
-                      {medOrderData.createdOrders.map((order) => {
+                      {medOrderData.createdOrders.map((order, index) => {
                         const medication = getMedicationForOrder(order)
                         return (
-                          <div key={order.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                          <div key={index} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                             <div className="flex flex-col gap-3">
                               <div className="flex flex-col gap-1">
                                 {medication ? (
@@ -334,12 +333,12 @@ const FormReview = () => {
                 <CardContent>
                   {medAdministrationData.length > 0 ? 
                   (<div className="space-y-4">
-                    {medAdministrationData.map((admin) => {
+                    {medAdministrationData.map((admin, index) => {
                       const order = getOrderForAdmin(admin)
                       const medication = order ? getMedicationForOrder(order) : undefined
 
                       return (
-                        <div key={admin.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <div key={index} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                           {medication ? (
                                   <>
                                     {renderMedFormTitle(medication)}
