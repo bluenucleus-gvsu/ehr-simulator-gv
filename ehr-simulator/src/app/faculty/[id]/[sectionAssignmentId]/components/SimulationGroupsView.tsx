@@ -164,6 +164,7 @@ export default function SimulationGroupsView({
                       ? "bg-green-50 text-green-700 border border-green-300"
                       : "bg-blue-600 text-white hover:bg-blue-700"
                   }`}
+                  disabled={true}
                 >
                   {hasGroupFeedback ? "✓ Group Feedback Given" : "Give Group Feedback"}
                 </button>
@@ -201,6 +202,7 @@ export default function SimulationGroupsView({
                             ? "bg-green-50 text-green-700 border border-green-300"
                             : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                         }`}
+                        disabled={true}
                       >
                         {hasMemberFeedback ? "✓ Feedback Given" : "Give Feedback"}
                       </button>
