@@ -218,8 +218,9 @@ export default function SimulationGroupsView({
                   {phaseRows.map((row, rowIndex) => (
                     <div key={rowIndex} className="flex flex-wrap items-center">
                       {row.map((phaseIndex, idx) => (
-                        <div
+                        <button
                           key={phaseIndex}
+                          onClick={() => phaseIndex === currentPhase + 1 ? handlePhaseAdvancement(group.id, group.name, currentPhase) : null}
                           style={{
                             clipPath:
                               idx === 0
@@ -237,7 +238,7 @@ export default function SimulationGroupsView({
                           }`}
                         >
                           P{phaseIndex}
-                        </div>
+                        </button>
                       ))}
                     </div>
                   ))}
