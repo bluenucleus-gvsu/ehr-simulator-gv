@@ -2,7 +2,7 @@ import { addMinutes, format, isWithinInterval } from "date-fns";
 import type { MedCardColumn } from "./marHelpers";
 import type { AllMedicationTypes, MedicationOrder } from "./marData.jsx"
 // import { Checkbox } from "@/components/ui/checkbox";
-import { findLastAdminTime, renderMedCardDetails, renderMedTitleRow } from "./marHelpers";
+import { findLastAdminTime, renderMedCardDetails, renderMedTitleRow, caseAdministrationTime } from "./marHelpers";
 import { DatabaseMedAdministration } from "@/actions/simulation";
 
 interface MedCardProps {
@@ -52,7 +52,7 @@ const MedCard = ({
   // using columns passed from main mar component, add relevant administration data (given, held, refused...)
   const processedColumns = columns.map(col => {
     const administrationsInColumn = visibleAdministrations.filter(admin => {
-      const adminTime = addMinutes(sessionStart || 0, admin.time_offset ?? 0);
+      const adminTime = caseAdministrationTime(admin, sessionStart || new Date());
 
       // Check if that time falls inside this column
       return isWithinInterval(adminTime, {
@@ -108,7 +108,7 @@ const MedCard = ({
 
               <div className="flex-1 p-2 space-y-2 flex flex-col items-center justify-center min-h-[80px]">
                 {col.associatedAdministrations?.map((admin, index) => {
-                  const adminTime = addMinutes(sessionStart, admin.time_offset ?? 0);
+                  const adminTime = caseAdministrationTime(admin, sessionStart);
 
                   // Status Colors
                   let statusStyle = "bg-slate-100 text-slate-600 border-slate-200";

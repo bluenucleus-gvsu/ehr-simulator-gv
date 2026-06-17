@@ -19,8 +19,6 @@ import { FormShell } from "../../components/formShell";
 import { PhaseTabNav } from "../../components/phaseTabNav";
 import { TableFormHeader } from "../../components/tableFormHeader";
 import { FormTable } from "../../components/FormTable";
-import { saveCaseData } from "@/actions/case_builder/caseBuilder";
-import { CaseSection } from "@/lib/saveCase";
 
 const columnHelper = createColumnHelper<LabTableData>();
 
@@ -43,7 +41,7 @@ function ensureNumberSet(input: unknown): Set<number> {
 }
 
 function LabFormInner() {
-  const { onDataChange, labData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
+  const { onDataChange, labData, caseId, registerCaseBuilderLocalOverlay, saveAllPhasesForScope, flushPhaseScope } = useFormContext()
   const { activePhase, registerPhaseScope } = usePhaseTab("labs");
 
   useEffect(() => {
@@ -123,7 +121,8 @@ function LabFormInner() {
     router.push("/admin/case-builder/form/orders");
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    flushPhaseScope('labs', activePhase);
     onDataChange('labs', {
       data: labTableData,
       timePoints: timePoints,
@@ -131,17 +130,9 @@ function LabFormInner() {
       visibleItems: visibleItems
     });
 
-    saveCaseData({
-      payload: {
-        data: labTableData,
-        timePoints,
-        timePointsInPreSim: Array.from(timePointsInPresim),
-        visibleItems: Array.from(visibleItems),
-      },
-      section: CaseSection.LABS,
-      caseId: caseId,
-      phase: activePhase,
-    })
+    if (caseId) {
+      await saveAllPhasesForScope('labs');
+    }
 
     router.push('/admin/case-builder/form/charting')
   }

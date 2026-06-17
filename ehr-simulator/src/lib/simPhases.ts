@@ -121,20 +121,35 @@ function filterMedications(
     (row) => readPhase(row) === medOrdersPhase,
   );
   const orderIds = new Set(medicationOrders.map((o) => String(o.id)));
+  const orderMedicationIds = new Set(
+    medicationOrders
+      .map((o) => String((o as { medication_id?: string | null }).medication_id ?? ""))
+      .filter(Boolean),
+  );
   const medicationAdministrations = (bundle.medicationAdministrations ?? []).filter(
-    (row) =>
-      readPhase(row) === marPhase && orderIds.has(String(row.medication_order_id ?? "")),
+    (row) => {
+      if (readPhase(row) !== marPhase) return false;
+      const orderId = String(row.medication_order_id ?? "");
+      if (orderId && orderIds.has(orderId)) return true;
+      const medId = String((row as { medication_id?: string | null }).medication_id ?? "");
+      return Boolean(medId && orderMedicationIds.has(medId));
+    },
   );
   return { medicationOrders, medicationAdministrations };
 }
 
 /**
  * Filters Orders / Labs / MAR for the active simulation using per-section effective phases.
+ * Single-phase cases show all section rows (same as pre-phases main) to avoid hiding legacy data.
  */
 export function filterCaseBundleForSimulation(
   bundle: CaseBundle,
   context: SimulationPhaseContext,
 ): CaseBundle {
+  if (!context.isMultiPhase) {
+    return bundle;
+  }
+
   const effective = resolveEffectivePhases(bundle, context);
   const labs = filterLabResults(bundle, effective.labs);
   const meds = filterMedications(bundle, effective.medOrders, effective.mar);

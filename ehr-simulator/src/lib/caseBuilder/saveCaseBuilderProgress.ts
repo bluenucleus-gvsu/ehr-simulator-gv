@@ -6,8 +6,10 @@ import { saveCaseJsonBlob } from "@/app/admin/case-builder/api/dump_case_json";
 import type { CaseBuilderSaveSnapshot } from "@/context/FormContext";
 import { CaseSection } from "@/lib/saveCase";
 import { loadPhaseIntoLiveFields } from "@/lib/caseBuilder/hydratePhaseCache";
-import { phaseHasScopeCacheEntry } from "@/lib/caseBuilder/phaseCacheOps";
-import { dedupeMedicationIdsAcrossPhases } from "@/lib/caseBuilder/remapMedicationOrderIds";
+import {
+  persistAllMedicationPhasesToDatabase,
+} from "@/lib/caseBuilder/persistPhaseScope";
+import { phaseHasScopeCacheEntry, maxPhaseInScope } from "@/lib/caseBuilder/phaseCacheOps";
 import { isTesterModeClient } from "@/utils/testerMode";
 import { setTesterCaseDraft, upsertTesterCase } from "@/utils/testerLocalStore";
 import {
@@ -53,6 +55,27 @@ async function saveSection(
   } catch (err) {
     throw new Error(`${label}: ${extractErrorMessage(err)}`);
   }
+}
+
+/** Persist every initialized Med Orders / MAR phase from the phase cache. */
+export async function saveMedicationPhasesFromSnapshot(
+  snapshot: CaseBuilderSaveSnapshot,
+  caseId: string,
+): Promise<void> {
+  const multiPhase = snapshot.phaseCount > 1;
+
+  await saveSection(
+    multiPhase ? "Medications (all phases)" : "Medications",
+    async () => {
+      await persistAllMedicationPhasesToDatabase({
+        caseId,
+        cache: snapshot.phaseCache,
+        phaseByScope: snapshot.phaseByScope,
+        phaseCount: snapshot.phaseCount,
+      });
+      return undefined;
+    },
+  );
 }
 
 /**
@@ -112,10 +135,10 @@ export async function saveAllCaseBuilderProgress(
 
   const ordersPhases = Math.min(
     snapshot.phaseCount,
-    phaseByScope.orders.highestInitializedPhase,
+    Math.max(phaseByScope.orders.highestInitializedPhase, maxPhaseInScope(phaseCache, "orders")),
   );
   for (let phase = 1; phase <= ordersPhases; phase++) {
-    if (phase > 1 && !phaseHasScopeCacheEntry(phaseCache, "orders", phase)) continue;
+    if (!phaseHasScopeCacheEntry(phaseCache, "orders", phase)) continue;
     const phaseData = loadPhaseIntoLiveFields(phaseCache, phase);
     const phaseLabel = multiPhase ? ` (phase ${phase})` : "";
     await saveSection(`Orders${phaseLabel}`, () =>
@@ -128,9 +151,12 @@ export async function saveAllCaseBuilderProgress(
     );
   }
 
-  const labsPhases = Math.min(snapshot.phaseCount, phaseByScope.labs.highestInitializedPhase);
+  const labsPhases = Math.min(
+    snapshot.phaseCount,
+    Math.max(phaseByScope.labs.highestInitializedPhase, maxPhaseInScope(phaseCache, "labs")),
+  );
   for (let phase = 1; phase <= labsPhases; phase++) {
-    if (phase > 1 && !phaseHasScopeCacheEntry(phaseCache, "labs", phase)) continue;
+    if (!phaseHasScopeCacheEntry(phaseCache, "labs", phase)) continue;
     const phaseData = loadPhaseIntoLiveFields(phaseCache, phase);
     const phaseLabel = multiPhase ? ` (phase ${phase})` : "";
     await saveSection(`Labs${phaseLabel}`, () =>
@@ -143,38 +169,7 @@ export async function saveAllCaseBuilderProgress(
     );
   }
 
-  const medOrdersPhases = Math.min(
-    snapshot.phaseCount,
-    phaseByScope.medOrders.highestInitializedPhase,
-  );
-  const marPhases = Math.min(snapshot.phaseCount, phaseByScope.mar.highestInitializedPhase);
-  const medPhases = Math.max(medOrdersPhases, marPhases);
-  const medOrderIdsUsedInEarlierPhases = new Set<string>();
-  for (let phase = 1; phase <= medPhases; phase++) {
-    const inMedOrdersRange = phase <= medOrdersPhases;
-    const inMarRange = phase <= marPhases;
-    const hasMedOrders =
-      inMedOrdersRange &&
-      (phase === 1 || phaseHasScopeCacheEntry(phaseCache, "medOrders", phase));
-    const hasMar =
-      inMarRange && (phase === 1 || phaseHasScopeCacheEntry(phaseCache, "mar", phase));
-    if (!hasMedOrders && !hasMar) continue;
-    const phaseData = loadPhaseIntoLiveFields(phaseCache, phase);
-    const { orders, administrations } = dedupeMedicationIdsAcrossPhases(
-      phaseData.medOrders,
-      phaseData.medAdmins,
-      medOrderIdsUsedInEarlierPhases,
-    );
-    const phaseLabel = multiPhase ? ` (phase ${phase})` : "";
-    await saveSection(`Medications${phaseLabel}`, () =>
-      saveCaseData({
-        payload: { orders, administrations },
-        section: CaseSection.MEDICATION_ORDERS,
-        caseId: effectiveCaseId,
-        phase,
-      }),
-    );
-  }
+  await saveMedicationPhasesFromSnapshot(snapshot, effectiveCaseId);
 
   await saveSection("Charting", () =>
     saveCaseData({

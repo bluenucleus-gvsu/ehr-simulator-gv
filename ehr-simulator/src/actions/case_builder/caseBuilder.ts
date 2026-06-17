@@ -8,7 +8,7 @@ import { updateClinicalDocuments } from "@/actions/case_builder/updateClinicalDo
 import { updateOrders } from "@/actions/case_builder/updateOrders";
 import { updateLabs } from "@/actions/case_builder/updateLabs";
 import { updateDocumentationResults } from "@/actions/case_builder/updateDocumentationResults";
-import { updateMedications } from "@/actions/case_builder/updateMedications";
+import { updateMedications, type MedicationPersistPart } from "@/actions/case_builder/updateMedications";
 import { updateCaseIntakeOutput } from "@/actions/case_builder/updateCaseIntakeOutput";
 import { runWriteForMode } from "@/utils/testerWriteGateway";
 
@@ -29,6 +29,7 @@ type SaveCaseArgs =
       payload: { orders: MedicationOrder[]; administrations: MedAdministrationInstance[] };
       caseId?: string | null;
       phase?: number;
+      medicationPart?: MedicationPersistPart;
     }
 
 export async function saveCaseData(args: SaveCaseArgs) {
@@ -62,7 +63,13 @@ export async function saveCaseData(args: SaveCaseArgs) {
         case CaseSection.INTAKE_OUTPUT:
           return await updateCaseIntakeOutput(supabase, payload, caseId);
         case CaseSection.MEDICATION_ORDERS:
-          return await updateMedications(supabase, payload, caseId, phase);
+          return await updateMedications(
+            supabase,
+            payload,
+            caseId,
+            phase,
+            args.medicationPart ?? "all",
+          );
       }
     },
     async () => ({

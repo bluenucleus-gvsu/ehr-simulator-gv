@@ -1,4 +1,6 @@
 import type { CaseBundle } from "@/actions/case_builder/getCase";
+import type { DatabaseMedication } from "@/actions/simulation";
+import { mapDatabaseMedToFrontend } from "./marHelpers";
 import type {
   AdministrationStatus,
   AllMedicationTypes,
@@ -128,6 +130,36 @@ export function medOrderFormStateFromCaseBundle(caseBundle: CaseBundle | null): 
   return { createdOrders, selectedMeds };
 }
 
+function resolveMedicationForOrder(
+  med: Record<string, unknown> | null,
+  orderRowId: string,
+): { medicationId: string; med: AllMedicationTypes } {
+  const genericLabel = (med?.generic_name as string) ?? "Medication";
+  const catalog = med
+    ? findCatalogMedicationByDbMed(med as { generic_name?: string; route?: string; strength?: number })
+    : undefined;
+
+  if (catalog) {
+    return { medicationId: catalog.id, med: catalog };
+  }
+
+  const dbMedId = med?.id ? String(med.id) : "";
+  if (dbMedId && med?.generic_name && med?.route) {
+    try {
+      const mapped = mapDatabaseMedToFrontend(med as DatabaseMedication);
+      return { medicationId: dbMedId, med: { ...mapped, id: dbMedId } };
+    } catch {
+      // fall through to placeholder
+    }
+  }
+
+  const fallbackId = dbMedId || `db-med-${orderRowId}`;
+  return {
+    medicationId: fallbackId,
+    med: placeholderMedication(fallbackId, genericLabel),
+  };
+}
+
 export function buildMarFromCaseBundle(caseBundle: CaseBundle | null): {
   medicationOrders: MedicationOrder[];
   administrations: MedAdministrationInstance[];
@@ -143,6 +175,8 @@ export function buildMarFromCaseBundle(caseBundle: CaseBundle | null): {
   const medsById: Record<string, AllMedicationTypes> = {};
   const medicationOrders: MedicationOrder[] = [];
   const orderIndex = new Map<string, MedicationOrder>();
+  /** DB `medications.id` → `medication_orders.id` for the active phase. */
+  const dbMedIdToOrderId = new Map<string, string>();
 
   /** When legacy administrations only store catalog id, map to structured order UUID if one exists. */
   const catalogIdToOrderId = new Map<string, string>();
@@ -152,15 +186,18 @@ export function buildMarFromCaseBundle(caseBundle: CaseBundle | null): {
     if (!id) continue;
 
     const med = embeddedMedication(row);
-    const catalog = med ? findCatalogMedicationByDbMed(med as { generic_name?: string; route?: string; strength?: number }) : undefined;
-    const genericLabel = (med?.generic_name as string) ?? "Medication";
-    const medicationId = catalog?.id ?? `db-med-${id}`;
+    const dbMedId = med?.id ? String(med.id) : "";
+    if (dbMedId) {
+      dbMedIdToOrderId.set(dbMedId, id);
+    }
 
-    if (catalog) {
-      medsById[catalog.id] = catalog;
-      catalogIdToOrderId.set(catalog.id, id);
-    } else {
-      medsById[medicationId] = placeholderMedication(medicationId, genericLabel);
+    const { medicationId, med: resolvedMed } = resolveMedicationForOrder(med, id);
+    medsById[resolvedMed.id] = resolvedMed;
+    if (medicationId !== resolvedMed.id) {
+      medsById[medicationId] = resolvedMed;
+    }
+    if (resolvedMed.id !== `db-med-${id}`) {
+      catalogIdToOrderId.set(resolvedMed.id, id);
     }
 
     const pr = String(row.priority ?? "");
@@ -241,22 +278,33 @@ export function buildMarFromCaseBundle(caseBundle: CaseBundle | null): {
 
   const administrations: MedAdministrationInstance[] = [];
 
-  dbAdmins.forEach((a, index) => {
+  const resolveAdminOrderKey = (a: DbMedAdmin): string | null => {
     const oid = a.medication_order_id ? String(a.medication_order_id) : "";
     const mid = (a.medication_id ?? "").trim();
 
-    let orderKey: string | null = null;
     if (oid && orderIndex.has(oid)) {
-      orderKey = oid;
-    } else if (mid) {
+      return oid;
+    }
+
+    if (mid) {
+      const byDbMed = dbMedIdToOrderId.get(mid);
+      if (byDbMed && orderIndex.has(byDbMed)) {
+        return byDbMed;
+      }
       const resolved = catalogIdToOrderId.get(mid);
       if (resolved && orderIndex.has(resolved)) {
-        orderKey = resolved;
-      } else if (orderIndex.has(mid)) {
-        orderKey = mid;
+        return resolved;
+      }
+      if (orderIndex.has(mid)) {
+        return mid;
       }
     }
 
+    return null;
+  };
+
+  dbAdmins.forEach((a, index) => {
+    const orderKey = resolveAdminOrderKey(a);
     if (!orderKey) return;
 
     administrations.push({

@@ -98,3 +98,33 @@ export function readPhase(row: { phase?: number | null } | null | undefined): nu
   const p = row?.phase;
   return typeof p === "number" && p >= 1 ? p : 1;
 }
+
+/** Union of phase numbers that have med-order or MAR content in the cache. */
+export function medicationPhasesInCache(
+  cache: PhaseScopedCache,
+  phaseCount: number,
+  phaseByScope: PhaseByScope,
+): number[] {
+  const fromScope = Math.max(
+    phaseByScope.medOrders.highestInitializedPhase,
+    phaseByScope.mar.highestInitializedPhase,
+  );
+  const fromKeys = new Set<number>();
+  for (const key of Object.keys(cache.medOrders)) {
+    const p = Number(key);
+    if (Number.isFinite(p) && p >= 1) fromKeys.add(p);
+  }
+  for (const key of Object.keys(cache.medAdmins)) {
+    const p = Number(key);
+    if (Number.isFinite(p) && p >= 1) fromKeys.add(p);
+  }
+  const maxPhase = Math.max(fromScope, fromKeys.size > 0 ? Math.max(...fromKeys) : 1);
+  const phases = new Set<number>();
+  for (let p = 1; p <= Math.min(phaseCount, maxPhase); p++) {
+    phases.add(p);
+  }
+  for (const p of fromKeys) {
+    if (p <= phaseCount) phases.add(p);
+  }
+  return [...phases].sort((a, b) => a - b);
+}

@@ -37,10 +37,11 @@ export function PhaseTabNav({ scope }: PhaseTabNavProps) {
   const canDeletePhase =
     activePhase > 1 && activePhase === highestInitializedPhase && !busy;
 
-  const runPhaseAction = async (action: () => Promise<unknown>) => {
+  const runPhaseAction = async (action: () => Promise<unknown>, savedMessage?: string) => {
     setBusy(true);
     try {
       await action();
+      if (savedMessage) toast.success(savedMessage);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Phase update failed.");
     } finally {
@@ -70,7 +71,12 @@ export function PhaseTabNav({ scope }: PhaseTabNavProps) {
                   ? cn(style.badge, "ring-2 ring-offset-2 ring-slate-400 scale-105")
                   : cn(style.selectTrigger, "hover:opacity-90"),
               )}
-              onClick={() => void runPhaseAction(() => switchActivePhase(p))}
+              onClick={() =>
+                void runPhaseAction(
+                  () => switchActivePhase(p),
+                  `Phase ${p} — all changes saved.`,
+                )
+              }
             >
               Phase {p}
             </Button>
@@ -87,7 +93,12 @@ export function PhaseTabNav({ scope }: PhaseTabNavProps) {
               "h-9 gap-1 border-2 border-dashed font-semibold",
               getPhaseStyle(nextPhaseNum).selectTrigger,
             )}
-            onClick={() => void runPhaseAction(() => createNextPhase())}
+            onClick={() =>
+              void runPhaseAction(
+                () => createNextPhase(),
+                `Phase ${nextPhaseNum} created — previous phases saved.`,
+              )
+            }
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
             Phase {nextPhaseNum}
@@ -115,11 +126,11 @@ export function PhaseTabNav({ scope }: PhaseTabNavProps) {
       </div>
       {activePhase > 1 ? (
         <p className="text-xs text-slate-500 text-center max-w-lg">
-          Editing Phase {activePhase}. Changes save when you switch phases.
+          Editing Phase {activePhase}. All phases save automatically when you switch, create a new phase, or continue.
         </p>
       ) : (
         <p className="text-xs text-slate-500 text-center max-w-lg">
-          Start in Phase 1, then use the next phase button when the patient progresses.
+          Start in Phase 1. Changes save when you switch phases, add a phase, or click Continue.
         </p>
       )}
     </div>

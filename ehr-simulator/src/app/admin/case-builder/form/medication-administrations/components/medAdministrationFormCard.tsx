@@ -1,8 +1,13 @@
 import { AllMedicationTypes, MedAdministrationInstance, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
-import { renderMedCardDetails, renderMedTitleRow } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers";
-import { MedCardColumn } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers";
+import {
+  caseAdministrationTime,
+  findLastAdminTime,
+  MedCardColumn,
+  renderMedCardDetails,
+  renderMedTitleRow,
+} from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { format } from "date-fns";
+import { format, isWithinInterval } from "date-fns";
 import { Check, Trash2, X } from "lucide-react";
 
 interface MedCardProps {
@@ -10,7 +15,7 @@ interface MedCardProps {
   administrations: MedAdministrationInstance[];
   order: MedicationOrder;
   columns: MedCardColumn[];
-  sessionStartTime: number;
+  sessionStart: Date;
   isHighlightableColumn: boolean;
   onDeleteAdministration: (adminId: string) => void;
 }
@@ -20,77 +25,20 @@ export default function MedAdministrationFormCard({
   administrations,
   order,
   columns,
-  sessionStartTime,
+  sessionStart,
   isHighlightableColumn,
-  onDeleteAdministration
+  onDeleteAdministration,
 }: MedCardProps) {
-  const timelineAdministrations = (() => {
-    if (!administrations || administrations.length <= 1) {
-      return administrations;
-    }
-
-    const sorted = [...administrations]
-      .filter((admin) => Number.isFinite(admin.adminTimeMinuteOffset))
-      .sort((a, b) => a.adminTimeMinuteOffset - b.adminTimeMinuteOffset);
-
-    if (sorted.length <= 1) {
-      return administrations;
-    }
-
-    const clusters: MedAdministrationInstance[][] = [];
-    for (const admin of sorted) {
-      const lastCluster = clusters[clusters.length - 1];
-      if (!lastCluster) {
-        clusters.push([admin]);
-        continue;
-      }
-      const prev = lastCluster[lastCluster.length - 1];
-      if (Math.abs(admin.adminTimeMinuteOffset - prev.adminTimeMinuteOffset) <= 6 * 60) {
-        lastCluster.push(admin);
-      } else {
-        clusters.push([admin]);
-      }
-    }
-
-    if (clusters.length <= 1) {
-      return administrations;
-    }
-
-    return clusters.reduce((best, current) => {
-      if (current.length !== best.length) {
-        return current.length > best.length ? current : best;
-      }
-      const bestMean = best.reduce((sum, x) => sum + x.adminTimeMinuteOffset, 0) / best.length;
-      const currentMean = current.reduce((sum, x) => sum + x.adminTimeMinuteOffset, 0) / current.length;
-      return Math.abs(currentMean) < Math.abs(bestMean) ? current : best;
-    }, clusters[0]);
-  })();
-
-  // Calculate columns logic
-  const processedColumns = columns.map(col => {
-    const administrationsInColumn = timelineAdministrations.filter(admin => {
-      const adminAbsoluteTime = new Date(sessionStartTime + admin.adminTimeMinuteOffset * 60 * 1000);
-      return adminAbsoluteTime >= col.startTime && adminAbsoluteTime <= col.endTime;
-    })
-    return { ...col, associatedAdministrations: administrationsInColumn }
-  })
-
-  const findLastAdminTime = () => {
-    if (!timelineAdministrations || timelineAdministrations.length === 0) {
-      return "Never";
-    }
-    const filteredAdmins = timelineAdministrations.filter((admin: MedAdministrationInstance) => admin.status === "Given")
-    if (filteredAdmins.length !== 0) {
-      const lastAdmin = filteredAdmins.reduce((latest, current) => {
-        return current.adminTimeMinuteOffset > latest.adminTimeMinuteOffset ? current : latest;
-      })
-      const lastAdminTime = new Date(sessionStartTime + lastAdmin.adminTimeMinuteOffset * 60 * 1000);
-
-      return format(lastAdminTime, 'HHmm')
-    }
-    return "Never"
-  }
-
+  const processedColumns = columns.map((col) => {
+    const administrationsInColumn = administrations.filter((admin) => {
+      const adminTime = caseAdministrationTime(admin, sessionStart);
+      return isWithinInterval(adminTime, {
+        start: col.startTime,
+        end: col.endTime,
+      });
+    });
+    return { ...col, associatedAdministrations: administrationsInColumn };
+  });
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col md:flex-row">
@@ -112,31 +60,30 @@ export default function MedAdministrationFormCard({
           )}
 
         </div>
-        <div className="flex w-full justify-end gap-2 pr-4 text-sm">
-          <p className="">Last Administered:</p>
-          <p className="font-light">{findLastAdminTime()}</p>
-        </div>
+        {findLastAdminTime(administrations, sessionStart)}
       </div>
 
       {/* Right Columns */}
       <div className="flex-1 grid grid-cols-6 divide-x divide-slate-100 overflow-x-auto">
         {processedColumns.map((col, colIndex) => {
-          const isCurrentHour = colIndex === 3;
+          const isCurrentHourColumn =
+            isHighlightableColumn &&
+            isWithinInterval(sessionStart, { start: col.startTime, end: col.endTime });
 
           return (
-            <div key={colIndex} className={`flex flex-col min-w-[60px] ${isCurrentHour && isHighlightableColumn ? 'bg-blue-50/30' : ''}`}>
+            <div key={colIndex} className={`flex flex-col min-w-[60px] ${isCurrentHourColumn ? 'bg-blue-50/30' : ''}`}>
               <div
                 key={col.colHeader}
                 className="medCard-pulse"
               >
-                <div className={`text-xs text-center py-1 font-mono uppercase tracking-wider border-b border-slate-100 ${isCurrentHour && isHighlightableColumn ? 'text-blue-600 font-bold' : 'text-slate-500'}`}>
+                <div className={`text-xs text-center py-1 font-mono uppercase tracking-wider border-b border-slate-100 ${isCurrentHourColumn ? 'text-blue-600 font-bold' : 'text-slate-500'}`}>
                   {col.colHeader}
                 </div>
               </div>
 
               <div className="flex-1 p-2 space-y-2 flex flex-col items-center justify-center min-h-[80px]">
                 {col.associatedAdministrations?.map((admin, adminIdx) => {
-                  const adminTime = new Date(sessionStartTime + admin.adminTimeMinuteOffset * 60 * 1000);
+                  const adminTime = caseAdministrationTime(admin, sessionStart);
                   const adminKey = `${order.id}-col${colIndex}-i${adminIdx}-${
                     admin.id?.trim() ? admin.id : `t${admin.adminTimeMinuteOffset}`
                   }`;
@@ -149,7 +96,7 @@ export default function MedAdministrationFormCard({
 
                   return (
                     <div key={adminKey} className={`relative w-fit text-center p-1.5 rounded border text-xs ${statusStyle} group`}>
-                      <div className="font-bold">{format(adminTime, 'HH:mm')}</div>
+                      <div className="font-bold font-mono">{format(adminTime, 'HHmm')}</div>
                       <div className="text-[10px] opacity-">{admin.status}</div>
 
                       <div className="absolute -top-1.5 -left-1.5 size-4 rounded-full bg-white border flex justify-center items-center">

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import {
   Pill,
   Clock,
@@ -8,7 +8,6 @@ import {
   Syringe,
   ChevronDown,
 } from "lucide-react"
-import { addMinutes } from "date-fns"
 import { useRouter } from "next/navigation"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,15 +25,14 @@ import {
   AdministrationStatus,
   AllMedicationTypes,
 } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData"
-import { createColumns } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers"
+import { buildMarDisplayColumns } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers"
 import MedAdministrationFormCard from "./components/medAdministrationFormCard"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useFormContext, usePhaseTab } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
 import { PhaseTabNav } from "../../components/phaseTabNav"
 import ColumnShiftControl from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/columnShiftControl"
-import { CaseSection } from "@/lib/saveCase"
-import { saveCaseData } from "@/actions/case_builder/caseBuilder"
+import { toast } from "sonner"
 
 function getComboboxData(orders: MedicationOrder[], medications: AllMedicationTypes[]) {
   return orders.map(order => {
@@ -54,13 +52,20 @@ function getComboboxData(orders: MedicationOrder[], medications: AllMedicationTy
   })
 }
 
-export default function MedicationAdministrationsForm() {
-  const { onDataChange, medAdministrationData, medOrderData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
-  const { activePhase, registerPhaseScope, getMedicationSavePayload } = usePhaseTab("mar");
 
-  useEffect(() => {
-    registerPhaseScope();
-  }, []);
+export default function MedicationAdministrationsForm() {
+  const {
+    onDataChange,
+    medAdministrationData,
+    medOrderData,
+    caseId,
+    registerCaseBuilderLocalOverlay,
+    saveAllPhasesForScope,
+    flushPhaseScope,
+  } = useFormContext()
+  const { activePhase } = usePhaseTab("mar");
+
+  const medAdministrationsRef = useRef<MedAdministrationInstance[]>([])
 
   const [medAdministrations, setMedAdministrations] = useState<MedAdministrationInstance[]>(
     medAdministrationData.filter((admin) =>
@@ -80,9 +85,7 @@ export default function MedicationAdministrationsForm() {
   const [hours, setHours] = useState<number | ''>(0);
   const [minutes, setMinutes] = useState<number | ''>(0);
 
-  const [startTime] = useState(new Date())
-  const [anchorDate] = useState<Date>(new Date());
-  const [elapsedMinutes] = useState(0);
+  const [sessionStart] = useState<Date>(() => new Date());
   const [timeColumnOffset, setTimeColumnOffset] = useState(0);
 
   const router = useRouter()
@@ -98,12 +101,14 @@ export default function MedicationAdministrationsForm() {
     );
   }, [medAdministrationData, medOrderData, activePhase]);
 
+  medAdministrationsRef.current = medAdministrations;
+
   useEffect(() => {
     registerCaseBuilderLocalOverlay(() => ({
-      medAdministrationInstances: medAdministrations,
+      medAdministrationInstances: medAdministrationsRef.current,
     }));
     return () => registerCaseBuilderLocalOverlay(null);
-  }, [medAdministrations, registerCaseBuilderLocalOverlay]);
+  }, [registerCaseBuilderLocalOverlay]);
 
   const comboboxData = getComboboxData(medOrderData.createdOrders, medOrderData.selectedMeds)
   const linkedMed = selectedOrder ? medOrderData.selectedMeds.find(med => med.id === selectedOrder.medicationId) : undefined
@@ -174,16 +179,12 @@ export default function MedicationAdministrationsForm() {
   }
 
   const handleSubmit = async () => {
+    flushPhaseScope('mar', activePhase);
     onDataChange('medAdministrationInstances', medAdministrations)
 
-    if (caseId && getMedicationSavePayload) {
-      const { phase, orders, administrations } = getMedicationSavePayload();
-      await saveCaseData({
-        payload: { orders, administrations },
-        section: CaseSection.MEDICATION_ORDERS,
-        caseId,
-        phase,
-      })
+    if (caseId) {
+      await saveAllPhasesForScope('mar');
+      toast.success("Medication administrations saved.");
     }
 
     router.push('/admin/case-builder/form/review')
@@ -200,8 +201,11 @@ export default function MedicationAdministrationsForm() {
       setDose(val)
     }
   }
-  const currentSimTime = addMinutes(anchorDate, elapsedMinutes);
-  const displayColumns = createColumns(currentSimTime, timeColumnOffset);
+  const displayColumns = useMemo(() => {
+    const adminOffsets = medAdministrations.map((a) => a.adminTimeMinuteOffset);
+    return buildMarDisplayColumns(sessionStart, 0, timeColumnOffset, adminOffsets);
+  }, [medAdministrations, sessionStart, timeColumnOffset]);
+
   return (
     <FormShell
       title="Medication History"
@@ -369,7 +373,7 @@ export default function MedicationAdministrationsForm() {
                         medication={linkedMed}
                         columns={displayColumns}
                         administrations={linkedAdmins}
-                        sessionStartTime={startTime.getTime()}
+                        sessionStart={sessionStart}
                         isHighlightableColumn={timeColumnOffset === 0}
                         onDeleteAdministration={handleDeleteAdministration}
                       />

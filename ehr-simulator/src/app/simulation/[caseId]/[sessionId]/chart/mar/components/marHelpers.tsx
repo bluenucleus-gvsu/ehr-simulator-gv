@@ -1,14 +1,14 @@
-import { addHours, addMinutes, format, isSameDay, startOfHour, endOfHour } from "date-fns";
-import type { Database } from "../../../../../../../../database.types";
+import { addHours, addMinutes, differenceInHours, differenceInMinutes, format, isSameDay, isWithinInterval, startOfHour, endOfHour, min, max } from "date-fns";
 import type { AllMedicationTypes, InjectableMedication, InsulinMedication, IvMedication, MedAdministrationInstance, MedicationOrder, OralMedication } from "./marData";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { UserCheck, UserX } from "lucide-react";
 import { DatabaseMedication } from "@/actions/simulation";
 
-type MedAdministrationViewRow = Database["public"]["Views"]["all_medication_administrations"]["Row"];
-type AdminTimeLike = Pick<MedAdministrationViewRow, "status" | "time_offset"> & {
-  adminTimeMinuteOffset?: number;
+type AdminTimeLike = {
+  status?: string | null;
+  time_offset?: number | null;
+  adminTimeMinuteOffset?: number | null;
 };
 
 export interface MedCardColumn {
@@ -249,7 +249,73 @@ export const createColumns = (currentTime: Date, offsetHours: number, futureColC
   return displayColumns;
 };
 
+/** Shared MAR grid: session T+0 + minute offsets, same rules in case builder and simulation. */
+export function buildMarDisplayColumns(
+  sessionStart: Date,
+  elapsedSimMinutes: number,
+  columnOffsetHours: number,
+  adminMinuteOffsets: number[],
+  futureColCount = 2,
+): MedCardColumn[] {
+  const currentSimTime = addMinutes(sessionStart, elapsedSimMinutes);
+  const adminTimes = adminMinuteOffsets
+    .filter((o) => Number.isFinite(o))
+    .map((o) => addMinutes(sessionStart, o));
+  return createColumnsIncludingAdminTimes(
+    currentSimTime,
+    columnOffsetHours,
+    adminTimes,
+    futureColCount,
+  );
+}
+
+/** Shift the MAR window when case-authored admin times fall outside the default columns. */
+export function createColumnsIncludingAdminTimes(
+  currentTime: Date,
+  offsetHours: number,
+  adminTimes: Date[],
+  futureColCount = 2,
+): MedCardColumn[] {
+  const base = createColumns(currentTime, offsetHours, futureColCount);
+  if (adminTimes.length === 0) return base;
+
+  const windowStart = base[0].startTime;
+  const windowEnd = base[base.length - 1].endTime;
+  const allInside = adminTimes.every((t) =>
+    isWithinInterval(t, { start: windowStart, end: windowEnd }),
+  );
+  if (allInside) return base;
+
+  const earliest = min(adminTimes);
+  const latest = max(adminTimes);
+  const midAdmin = addMinutes(earliest, Math.round(differenceInMinutes(latest, earliest) / 2));
+  const columnCount = 6;
+  const startOffset =
+    differenceInHours(startOfHour(midAdmin), startOfHour(currentTime)) -
+    (columnCount - 1 - futureColCount);
+
+  return createColumns(currentTime, startOffset, futureColCount);
+};
+
+export function caseAdministrationTime(
+  admin: {
+    time_offset?: number | null;
+    adminTimeMinuteOffset?: number | null;
+    source_type?: string | null;
+    case_session_id?: string | null;
+  },
+  sessionStart: Date,
+): Date {
+  const offset = admin.time_offset ?? admin.adminTimeMinuteOffset ?? 0;
+  return addMinutes(sessionStart, offset);
+}
+
 export function mapDatabaseMedToFrontend(dbMed: DatabaseMedication): AllMedicationTypes {
+  const dispenseUnit =
+    dbMed.dispense_units?.name?.trim() ||
+    inferDispenseUnitFromRoute(dbMed.route) ||
+    "Unknown";
+
   // 1. Extract the base properties common to ALL medications
   const baseMed = {
     id: dbMed.id,
@@ -258,8 +324,8 @@ export function mapDatabaseMedToFrontend(dbMed: DatabaseMedication): AllMedicati
     route: dbMed.route,
     strength: dbMed.strength,
     strengthUnit: dbMed.strength_unit,
-    dispenseUnit: dbMed.dispense_units.name || "Unknown",
-    isVariableDose: dbMed.is_variable_dose,
+    dispenseUnit,
+    isVariableDose: Boolean(dbMed.is_variable_dose),
   };
 
   // 2. Narrow based on the route
@@ -277,7 +343,6 @@ export function mapDatabaseMedToFrontend(dbMed: DatabaseMedication): AllMedicati
       return {
         ...baseMed,
         route: "PO",
-        dispenseUnit: dbMed.dispense_units.name,
       } as OralMedication;
 
     case "SC":
@@ -293,5 +358,21 @@ export function mapDatabaseMedToFrontend(dbMed: DatabaseMedication): AllMedicati
 
     default:
       return baseMed as AllMedicationTypes;
+  }
+}
+
+function inferDispenseUnitFromRoute(route: string | null | undefined): string | undefined {
+  switch (route) {
+    case "PO":
+      return "Tablet";
+    case "IV":
+      return "Bag";
+    case "SC":
+    case "IM":
+      return "Syringe";
+    case "Inhalation":
+      return "Puff";
+    default:
+      return undefined;
   }
 }

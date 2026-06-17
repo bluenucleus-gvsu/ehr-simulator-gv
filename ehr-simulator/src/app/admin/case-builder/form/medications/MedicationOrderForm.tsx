@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   Pill,
   Search,
@@ -14,8 +14,6 @@ import { useRouter } from "next/navigation"
 import { useFormContext, usePhaseTab } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
 import { PhaseTabNav } from "../../components/phaseTabNav"
-import { CaseSection } from "@/lib/saveCase"
-import { saveCaseData } from "@/actions/case_builder/caseBuilder"
 import { toast } from "sonner"
 
 function getComboboxData(medications: AllMedicationTypes[]) {
@@ -47,16 +45,24 @@ interface MedicationOrderFormProps {
 
 export default function MedicationOrderForm({ medications }: MedicationOrderFormProps) {
   const router = useRouter()
-  const { onDataChange, medOrderData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
-  const { activePhase, registerPhaseScope, getMedicationSavePayload } = usePhaseTab("medOrders");
-
-  useEffect(() => {
-    registerPhaseScope();
-  }, [registerPhaseScope]);
+  const {
+    onDataChange,
+    medOrderData,
+    caseId,
+    registerCaseBuilderLocalOverlay,
+    saveAllPhasesForScope,
+    flushPhaseScope,
+  } = useFormContext()
+  const { activePhase } = usePhaseTab("medOrders");
 
   const [selectedMed, setSelectedMed] = useState('')
   const [selectedMeds, setSelectedMeds] = useState<AllMedicationTypes[]>(medOrderData.selectedMeds)
   const [medOrders, setMedOrders] = useState<MedicationOrder[]>(medOrderData.createdOrders)
+
+  const medOrdersRef = useRef(medOrders)
+  const selectedMedsRef = useRef(selectedMeds)
+  medOrdersRef.current = medOrders
+  selectedMedsRef.current = selectedMeds
 
   const handleAddMedication = (newMedId: string) => {
     setSelectedMed(newMedId)
@@ -125,10 +131,13 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
 
   useEffect(() => {
     registerCaseBuilderLocalOverlay(() => ({
-      medOrders: { createdOrders: medOrders, selectedMeds: selectedMeds },
+      medOrders: {
+        createdOrders: medOrdersRef.current,
+        selectedMeds: selectedMedsRef.current,
+      },
     }));
     return () => registerCaseBuilderLocalOverlay(null);
-  }, [medOrders, selectedMeds, registerCaseBuilderLocalOverlay]);
+  }, [registerCaseBuilderLocalOverlay]);
 
   const goBack = () => {
     onDataChange('medOrders', {
@@ -139,23 +148,18 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
   }
 
   const handleSubmit = async () => {
+    flushPhaseScope('medOrders', activePhase);
     onDataChange('medOrders', {
       createdOrders: medOrders,
       selectedMeds: selectedMeds
     });
-    if (caseId && getMedicationSavePayload) {
-      const { phase, orders, administrations } = getMedicationSavePayload();
-      if (orders.length === 0) {
-        toast.error("Add at least one medication order before continuing.");
-        return;
-      }
-      await saveCaseData({
-        payload: { orders, administrations },
-        section: CaseSection.MEDICATION_ORDERS,
-        caseId,
-        phase,
-      });
-      toast.success(`Medication orders saved (phase ${phase}).`);
+    if (medOrders.length === 0) {
+      toast.error("Add at least one medication order before continuing.");
+      return;
+    }
+    if (caseId) {
+      await saveAllPhasesForScope('medOrders');
+      toast.success("Medication orders saved.");
     }
     router.push('/admin/case-builder/form/medication-administrations');
   }

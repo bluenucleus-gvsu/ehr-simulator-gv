@@ -33,8 +33,6 @@ import { useFormContext, usePhaseTab } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
 import { PhaseTabNav } from "../../components/phaseTabNav"
 import { Checkbox } from "@/components/ui/checkbox"
-import { saveCaseData } from "@/actions/case_builder/caseBuilder"
-import { CaseSection } from "@/lib/saveCase"
 
 const categories: OrderType["category"][] = ["Nursing", "Respiratory", "Laboratory", "Consult", "Diet", "Medication"]
 
@@ -64,7 +62,7 @@ const getCategoryColor = (cat: string | undefined) => {
 
 export default function OrdersForm() {
   const router = useRouter();
-  const { onDataChange, orderData, caseId, registerCaseBuilderLocalOverlay } = useFormContext();
+  const { onDataChange, orderData, caseId, registerCaseBuilderLocalOverlay, saveAllPhasesForScope, flushPhaseScope } = useFormContext();
   const { activePhase, registerPhaseScope } = usePhaseTab("orders");
 
   useEffect(() => {
@@ -127,14 +125,12 @@ export default function OrdersForm() {
   }
 
   const handleSubmit = async () => {
+    flushPhaseScope('orders', activePhase);
     onDataChange('orders', orders)
 
-    await saveCaseData({
-      payload: orders,
-      section: CaseSection.ORDERS,
-      caseId: caseId,
-      phase: activePhase,
-    })
+    if (caseId) {
+      await saveAllPhasesForScope('orders');
+    }
 
     router.push('/admin/case-builder/form/labs')
   }

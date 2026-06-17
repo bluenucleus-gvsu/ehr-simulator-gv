@@ -1,6 +1,7 @@
 import {
   defaultPhaseByScope,
   PHASE_TAB_SCOPES,
+  clampPhaseCount,
   type PhaseByScope,
   type PhaseScopedCache,
   type PhaseTabScope,
@@ -41,9 +42,12 @@ export function phaseByScopeFromCache(
   cache: PhaseScopedCache,
   phaseCount: number,
 ): PhaseByScope {
+  const resolvedCount = clampPhaseCount(
+    Math.max(phaseCount, ...PHASE_TAB_SCOPES.map((s) => maxPhaseInScope(cache, s))),
+  );
   const next = defaultPhaseByScope();
   for (const scope of PHASE_TAB_SCOPES) {
-    const highest = Math.min(phaseCount, Math.max(1, maxPhaseInScope(cache, scope)));
+    const highest = Math.min(resolvedCount, Math.max(1, maxPhaseInScope(cache, scope)));
     next[scope] = { activePhase: 1, highestInitializedPhase: highest };
   }
   return next;

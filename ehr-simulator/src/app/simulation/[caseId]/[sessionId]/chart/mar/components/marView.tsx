@@ -1,6 +1,6 @@
 'use client'
 
-import { addMinutes, differenceInMinutes } from 'date-fns'
+import { differenceInMinutes } from 'date-fns'
 import MedCard from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/medCard";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -16,7 +16,7 @@ import { useSymbologyScanner } from '@use-symbology-scanner/react';
 import { MultiMedPopover } from './multiMedPopover';
 import { toast } from 'sonner';
 import WrongPatientAlert from './wrongPatientAlert';
-import { createColumns } from '@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers';
+import { buildMarDisplayColumns } from '@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers';
 import { PatientStatusBadge } from './marHelpers';
 import ColumnShiftControl from './columnShiftControl';
 import { DatabaseMedAdministration, StudentMedicationAdministration, submitMedicationAdministrations } from '@/actions/simulation';
@@ -76,26 +76,15 @@ export default function MarView({
   // temp time management
   const [timeColumnOffset, setTimeColumnOffset] = useState(0)
   const [localTimelineAnchor] = useState(() => new Date());
-  const anchorDate = useMemo(() => {
+  const sessionStartDate = useMemo(() => {
     if (!simStartTime) {
       return localTimelineAnchor;
     }
-
-    const sessionAnchor = new Date(simStartTime);
-    const minutesSinceSessionStart = Math.abs(differenceInMinutes(new Date(), sessionAnchor));
-
-    // Some sessions remain "in progress" for days. Using that old started_at
-    // makes MAR times diverge from case baseline timelines.
-    // For stale sessions, use a stable local anchor for this page load.
-    if (minutesSinceSessionStart > 12 * 60) {
-      return localTimelineAnchor;
-    }
-
-    return sessionAnchor;
+    return new Date(simStartTime);
   }, [simStartTime, localTimelineAnchor]);
 
   const [elapsedMinutes, setElapsedMinutes] = useState(() => {
-    return differenceInMinutes(new Date(), anchorDate);
+    return differenceInMinutes(new Date(), sessionStartDate);
   });
   // Scanner debugging
   // const [scannedSymbol, setScannedSymbol] = useState('')
@@ -384,20 +373,28 @@ export default function MarView({
 
 
   useEffect(() => {
-    setElapsedMinutes(differenceInMinutes(new Date(), anchorDate));
+    setElapsedMinutes(differenceInMinutes(new Date(), sessionStartDate));
 
     const interval = setInterval(() => {
-      setElapsedMinutes(differenceInMinutes(new Date(), anchorDate));
+      setElapsedMinutes(differenceInMinutes(new Date(), sessionStartDate));
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [anchorDate]);
+  }, [sessionStartDate]);
 
-  const currentSimTime = anchorDate
-    ? addMinutes(anchorDate, elapsedMinutes)
-    : new Date();
+  const displayElapsed = isPresim ? 0 : elapsedMinutes;
 
-  const displayColumns = createColumns(currentSimTime, timeColumnOffset);
+  const displayColumns = useMemo(() => {
+    const caseAdminOffsets = mergedAdministrations
+      .filter((admin) => admin.source_type === "case_administration" || !admin.case_session_id)
+      .map((admin) => admin.time_offset ?? 0);
+    return buildMarDisplayColumns(
+      sessionStartDate,
+      displayElapsed,
+      timeColumnOffset,
+      caseAdminOffsets,
+    );
+  }, [mergedAdministrations, sessionStartDate, displayElapsed, timeColumnOffset]);
 
   if (loading || !simStartTime) {
     return (
@@ -491,7 +488,7 @@ export default function MarView({
             onClearAll={handleClearAllSelections}
             medicationLookup={medsById}
             administrationsLookup={groupedAdministrationsByOrder}
-            sessionStart={anchorDate}
+            sessionStart={sessionStartDate}
             isScanned={isScanned}
             onPtScan={setIsScanned}
             onAdministerMeds={handleAdministerMeds}
@@ -530,9 +527,9 @@ export default function MarView({
               administrations={orderSpecifcAdministrations}
               order={order}
               columns={displayColumns}
-              sessionStart={anchorDate}
+              sessionStart={sessionStartDate}
               isHighlightableColumn={timeColumnOffset === 0}
-              elapsedSimMinutes={elapsedMinutes}
+              elapsedSimMinutes={displayElapsed}
               isPresim={isPresim ?? false}
             />
           )

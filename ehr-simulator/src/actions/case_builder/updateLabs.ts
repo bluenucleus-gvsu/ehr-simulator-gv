@@ -21,6 +21,13 @@ export async function updateLabs(
     phase,
   );
 
+  const hasLabRows = labResults.length > 0;
+  const hasImaging = imagingReports.length > 0;
+  const hasMicro = microbiologyReports.length > 0;
+  if (!hasLabRows && !hasImaging && !hasMicro) {
+    return;
+  }
+
   await deleteLabsForPhase(supabase, caseId, phase);
   const savedLabs = await saveLabs(supabase, labResults, phase);
 

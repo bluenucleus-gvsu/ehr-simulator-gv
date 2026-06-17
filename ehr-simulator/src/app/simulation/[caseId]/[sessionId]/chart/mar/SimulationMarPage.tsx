@@ -4,7 +4,6 @@ import { useMemo } from "react";
 
 import type { DatabaseMedAdministration } from "@/actions/simulation";
 import { buildMarFromCaseBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marFromBundle";
-import { mapDatabaseMedToFrontend } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers";
 import type { AllMedicationTypes, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
 import MarView from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marView";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
@@ -31,8 +30,9 @@ function caseTemplateAdminsFromBundle(
     status: admin.status,
     notes: admin.notes ?? null,
     administered_dose: admin.administeredDose,
+    infusion_rate: null,
     is_in_presim: admin.visibleInPresim,
-    source_type: "case",
+    source_type: "case_administration",
   }));
 }
 
@@ -59,18 +59,6 @@ export default function SimulationMarPage({
       const catalog = built.medsById[order.medicationId];
       if (catalog && !uniqueMedsMap.has(catalog.id)) {
         uniqueMedsMap.set(catalog.id, catalog);
-      }
-    }
-
-    for (const row of caseBundle.medicationOrders ?? []) {
-      const dbMed = row.medications as Record<string, unknown> | null | undefined;
-      if (dbMed && typeof dbMed.id === "string" && !uniqueMedsMap.has(dbMed.id)) {
-        uniqueMedsMap.set(
-          dbMed.id,
-          mapDatabaseMedToFrontend(
-            dbMed as Parameters<typeof mapDatabaseMedToFrontend>[0],
-          ),
-        );
       }
     }
 

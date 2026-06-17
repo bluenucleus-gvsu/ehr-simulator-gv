@@ -4,9 +4,8 @@ import { useFormContext } from "@/context/FormContext"
 import { useRouter } from "next/navigation"
 import { ClipboardCheck } from "lucide-react"
 import { FormShell } from "../../components/formShell"
-import { saveCaseJsonBlob } from "../../api/dump_case_json"
-import { saveCaseData } from "@/actions/case_builder/caseBuilder"
-import { CaseSection } from "@/lib/saveCase"
+import { saveAllCaseBuilderProgress } from "@/lib/caseBuilder/saveCaseBuilderProgress"
+import { extractErrorMessage } from "@/lib/caseBuilder/serializeFormBlob"
 
 const FormReview = () => {
   const {
@@ -20,6 +19,9 @@ const FormReview = () => {
     medOrderData,
     medAdministrationData,
     caseId,
+    setCaseId,
+    getCaseBuilderSaveSnapshot,
+    applyCaseBuilderOverlayToContext,
     registerCaseBuilderLocalOverlay,
   } = useFormContext()
 
@@ -36,30 +38,13 @@ const FormReview = () => {
 
   const handleSubmit = async () => {
     try {
-      if (caseId) {
-        await saveCaseData({
-          payload: ioData,
-          section: CaseSection.INTAKE_OUTPUT,
-          caseId,
-        })
-      }
-      const fullCasePayload = {
-        demographics: demographicData,
-        history: historyData,
-        notes: noteData,
-        orders: orderData,
-        labs: labData,
-        charting: chartingData,
-        inputOutput: ioData,
-        medicationOrders: medOrderData,
-        medicationAdministrations: medAdministrationData
-      }
-      const title = "Case " + demographicData.firstName + " " + demographicData.lastName;
-      await saveCaseJsonBlob(fullCasePayload, title);
+      const snapshot = getCaseBuilderSaveSnapshot();
+      await saveAllCaseBuilderProgress(snapshot, caseId, setCaseId);
+      applyCaseBuilderOverlayToContext();
       router.push("/admin/case-builder/form/success");
     } catch (error) {
       console.error(error)
-      alert("Something went wrong saving the case.")
+      alert(extractErrorMessage(error) || "Something went wrong saving the case.")
     };
   }
 
