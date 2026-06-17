@@ -54,7 +54,7 @@ const Header = ({ tabs }: HeaderProps) => {
     }
   };
   return (
-    <header className="shrink-0 border-b border-white/20 h-(--header-height) bg-black/5 backdrop-blur-[2px]">
+    <header className="shrink-0 border-b border-white/20 h-(--header-height)">
       <div className="flex h-(--header-height) justify-between items-center pl-8 gap-3">
         <div className="flex items-center gap-3">
           <Stethoscope color="white" size={26} strokeWidth={2.5} />
@@ -65,7 +65,7 @@ const Header = ({ tabs }: HeaderProps) => {
             </h1>
           </Link>
           <div
-            className={`rounded-xl border px-3 py-1.5 shadow-lg transition-all duration-200 ${modeClasses}`}
+            className={`hidden lg:block rounded-xl border px-3 py-1.5 shadow-lg transition-all duration-200 text-nowrap ${modeClasses}`}
             aria-live="polite"
           >
             <p className="text-[12px] font-bold leading-tight tracking-[0.1em]">
@@ -74,13 +74,13 @@ const Header = ({ tabs }: HeaderProps) => {
             <p className="text-[10px] font-medium leading-tight opacity-95">{modeSubtext}</p>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-end h-full gap-4">
           {tabs}
         </div>
         <div className="flex pr-8 gap-4">
           <Button
             variant='secondary'
-            className="p-0 size-6 hover:text-blue-600 hover:ring-2"
+            className="p-0 size-7 hover:text-blue-600 hover:ring-2"
             onClick={handleHomeClick}
           >
             <Home />
@@ -88,7 +88,7 @@ const Header = ({ tabs }: HeaderProps) => {
           <Button
             onClick={toggleFullScreen}
             variant='secondary'
-            className="p-0 size-7 bg-white/90 hover:bg-white text-slate-700 hover:text-blue-600 border border-white/70 shadow-sm"
+            className="p-0 size-7 hover:text-blue-600 hover:ring-2"
           >
             {!isFullscreen ? (
               <Expand className="!size-4" />

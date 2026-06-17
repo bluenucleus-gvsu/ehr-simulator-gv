@@ -1,7 +1,7 @@
 import { addMinutes, format, isWithinInterval } from "date-fns";
 import type { MedCardColumn } from "./marHelpers";
 import type { AllMedicationTypes, MedicationOrder } from "./marData.jsx"
-import { Checkbox } from "@/components/ui/checkbox";
+// import { Checkbox } from "@/components/ui/checkbox";
 import { findLastAdminTime, renderMedCardDetails, renderMedTitleRow } from "./marHelpers";
 import { DatabaseMedAdministration } from "@/actions/simulation";
 
@@ -11,13 +11,10 @@ interface MedCardProps {
   order: MedicationOrder;
   columns: MedCardColumn[];
   sessionStart: Date;
-  isSelected: boolean;
-  onSelectionChange: (order: MedicationOrder, checked: boolean) => void;
   isHighlightableColumn: boolean;
   /** Minutes since `sessionStart` for the live simulation clock (wall-clock “now” in sim). */
   elapsedSimMinutes: number;
   isPresim: boolean;
-  selectionDisabled?: boolean;
 }
 
 const MedCard = ({
@@ -26,20 +23,13 @@ const MedCard = ({
   order,
   columns,
   sessionStart,
-  onSelectionChange,
-  isSelected,
   isHighlightableColumn,
   elapsedSimMinutes,
   isPresim,
-  selectionDisabled,
 }: MedCardProps) => {
 
   const simNow = addMinutes(sessionStart, elapsedSimMinutes);
 
-  const handleCheckboxChange = (checked: boolean) => {
-    if (selectionDisabled) return;
-    onSelectionChange(order, checked);
-  };
 
   const visibleAdministrations = administrations.filter(currentAdmin => {
     if (isPresim && currentAdmin.is_in_presim === false) {
@@ -79,16 +69,9 @@ const MedCard = ({
 
   return (
     <div className="relative bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex shrink-0 flex-col md:flex-row">
-      <Checkbox
-        onCheckedChange={handleCheckboxChange}
-        checked={isSelected}
-        id={`checkbox-${order.id}`}
-        className="absolute top-4 left-3"
-        disabled={selectionDisabled}
-      />
       <div className="px-4 py-3 md:w-80 lg:w-110 2xl:w-140 border-b md:border-b-0 md:border-r border-slate-100 bg-slate-50/30 flex flex-col justify-between">
         <div >
-          <div className="pl-6">
+          <div className="pl-2">
             <h4 className="font-bold text-slate-900 text-md xl:text-md pb-1">
               {renderMedTitleRow(medication, order)}
             </h4>

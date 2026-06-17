@@ -21,9 +21,10 @@ import Combobox from "@/components/ui/combobox"
 
 import {
   MedicationOrder,
-  allMedications,
+  // allMedications,
   MedAdministrationInstance,
   AdministrationStatus,
+  AllMedicationTypes,
 } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData"
 import { createColumns } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers"
 import MedAdministrationFormCard from "./components/medAdministrationFormCard"
@@ -35,15 +36,16 @@ import ColumnShiftControl from "@/app/simulation/[caseId]/[sessionId]/chart/mar/
 import { CaseSection } from "@/lib/saveCase"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
 
-function getComboboxData(orders: MedicationOrder[]) {
+function getComboboxData(orders: MedicationOrder[], medications: AllMedicationTypes[]) {
   return orders.map(order => {
-    const linkedMed = allMedications.find(med => med.id === order.medicationId)
+    const linkedMed = medications.find(med => med.id === order.medicationId)
     if (!linkedMed) {
       return { value: "error", label: "Error: Linked medication not found" }
     }
     const brandName = linkedMed.brandName ? `(${linkedMed.brandName})` : '';
     const route = `[${linkedMed.route}]`;
-    const medLabel = `${linkedMed.genericName} ${brandName} ${order.dose} ${linkedMed.strengthUnit} ${route}`;
+    const doseAndUnit = order.dose ? `${order.dose} ${linkedMed.strengthUnit}` : 'variable dose'
+    const medLabel = `${linkedMed.genericName} ${brandName} ${doseAndUnit} ${route}`;
 
     return {
       value: order.id,
@@ -61,7 +63,9 @@ export default function MedicationAdministrationsForm() {
   }, []);
 
   const [medAdministrations, setMedAdministrations] = useState<MedAdministrationInstance[]>(
-    medAdministrationData,
+    medAdministrationData.filter((admin) =>
+      medOrderData.createdOrders.some((order) => order.id === admin.medicationOrderId),
+    ),
   );
   const [selectedOrder, setSelectedOrder] = useState<MedicationOrder>()
   const [selectedOrders, setSelectedOrders] = useState<MedicationOrder[]>(medOrderData.createdOrders)
@@ -101,14 +105,15 @@ export default function MedicationAdministrationsForm() {
     return () => registerCaseBuilderLocalOverlay(null);
   }, [medAdministrations, registerCaseBuilderLocalOverlay]);
 
-  const comboboxData = getComboboxData(medOrderData.createdOrders)
-  const linkedMed = selectedOrder ? allMedications.find(med => med.id === selectedOrder.medicationId) : undefined
+  const comboboxData = getComboboxData(medOrderData.createdOrders, medOrderData.selectedMeds)
+  const linkedMed = selectedOrder ? medOrderData.selectedMeds.find(med => med.id === selectedOrder.medicationId) : undefined
 
   const handleComboboxSelection = (id: string) => {
     const order = medOrderData.createdOrders.find(order => order.id === id);
     if (order) {
       setSelectedOrder(order);
-      setDose(String(order.dose));
+      const dose = order.dose ? String(order.dose) : '0'
+      setDose(dose);
     }
   }
 
@@ -123,7 +128,7 @@ export default function MedicationAdministrationsForm() {
       administratorId: administratorId || "System",
       adminTimeMinuteOffset: isInPast ? -1 * timeOffset : timeOffset,
       status: status,
-      administeredDose: parseFloat(dose),
+      administeredDose: dose ? parseFloat(dose) : 0,
       visibleInPresim: visibleInPresim
     }
 
@@ -271,6 +276,7 @@ export default function MedicationAdministrationsForm() {
                             value={dose}
                             onChange={e => handleDoseChange(e.target.value)}
                             className="pr-12 font-medium"
+                            disabled={!dose}
                           />
                           <span className="absolute right-3 top-2.5 text-xs text-slate-500 font-medium">
                             {linkedMed?.strengthUnit || 'units'}
@@ -351,7 +357,7 @@ export default function MedicationAdministrationsForm() {
                 )}
 
                 {selectedOrders.map((order, index) => {
-                  const linkedMed = allMedications.find(med => med.id === order.medicationId)
+                  const linkedMed = medOrderData.selectedMeds.find(med => med.id === order.medicationId)
                   const linkedAdmins = medAdministrations.filter(admin => admin.medicationOrderId === order.id)
 
                   if (!linkedMed) return null;

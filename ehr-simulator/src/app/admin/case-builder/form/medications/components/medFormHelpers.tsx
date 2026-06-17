@@ -3,52 +3,45 @@ import { isSlidingScaleInsulin, pluralize } from "@/app/simulation/[caseId]/[ses
 import { Separator } from "@/components/ui/separator"
 
 export const renderMedFormTitle = (medication: AllMedicationTypes) => {
+  const brandNameDisplay = `(${medication.brandName})`
+  switch (medication.route) {
+    case 'IV':
+      const diluent = `in ${medication.diluent} ${medication.totalVolume}mL`
+      if (medication.genericName !== 'heparin sodium') {
+        const ivTitle = `${medication.genericName} ${medication.brandName ? brandNameDisplay : ""} ${medication.strength}${medication.strengthUnit} ${medication.diluent ? diluent : ''}`
+        return (
+          <p className="font-semibold">{ivTitle}</p>
+        )
+        // handle continuous Heparin infusion, which has no fixed dose
+      } else if (medication.genericName === 'heparin sodium') {
+        const unitName = (medication.strengthUnit === 'units') ? ' units' : medication.strengthUnit;
+        const ivTitle = `${medication.genericName} ${medication.brandName ? brandNameDisplay : ""} ${medication.strength}${unitName} ${medication.diluent ? diluent : ''}`
+        return (
+          <p className="font-semibold">{ivTitle}</p>
+        )
+      }
 
-  if (medication.route == "IV" && medication.isContinuous) {
-    return (
-      <div className="flex flex-wrap gap-2 h-fit font-semibold">
-        <span className="text-nowrap">{medication.genericName}</span>
-        {medication.brandName && (
-          <span className="text-nowrap">({medication.brandName})</span>
-        )}
-        <span className="text-nowrap">{medication.strength}{medication.strengthUnit}</span>
-      </div>
-    )
-  }
-  if (medication.route == "IV" && !medication.isContinuous) {
-    return (
-      <div className="flex flex-wrap gap-1.5 h-fit font-semibold">
-        <span className="text-nowrap">{medication.genericName}</span>
-        {medication.brandName && (
-          <span className="text-nowrap">({medication.brandName})</span>
-        )}
-        <span className="text-nowrap">{medication.strength}{medication.strengthUnit}</span>
-        {medication.diluent &&
-          <span className="text-nowrap">in {medication.diluent} {medication.totalVolume}mL</span>
-        }
-      </div>
-    )
-  }
-  if (isSlidingScaleInsulin(medication)) {
-    return (
-      <div className="flex flex-wrap gap-2 h-fit font-semibold">
-        <span className="text-nowrap">{medication.genericName}</span>
-        {medication.brandName && (
-          <span className="text-nowrap">({medication.brandName})</span>
-        )}
-      </div>
-    )
-  }
-  else {
-    return (
-      <div className="flex flex-wrap gap-2 h-fit font-semibold">
-        <span className="text-nowrap">{medication.genericName}</span>
-        {medication.brandName && (
-          <span className="text-nowrap">({medication.brandName})</span>
-        )}
-        <span className="text-nowrap">{medication.strength}{medication.strengthUnit}</span>
-      </div>
-    )
+    case "SC":
+      if (medication.isVariableDose) {
+        const medTitle = `${medication.genericName} ${medication.brandName ? brandNameDisplay : ''}`
+        return (
+          <p className="font-semibold">{medTitle}</p>
+        )
+      }
+      else {
+        const strengthUnit = `${medication.strengthUnit === 'units' ? " units" : medication.strengthUnit}`
+        const medTitle = `${medication.genericName} ${medication.brandName ? brandNameDisplay : ''} ${medication.strength}${strengthUnit}`
+        return (
+          <p className="font font-semibold">{medTitle}</p>
+        )
+      }
+
+    default:
+      const medTitle = `${medication.genericName} ${medication.brandName ? brandNameDisplay : ''} ${medication.strength}${medication.strengthUnit}`
+      return (
+        <p className="font font-semibold">{medTitle}</p>
+
+      )
   }
 }
 
@@ -83,12 +76,13 @@ export const renderMedFormDetails = (
 
     case "IV":
       const rate = order.infusionRate || 0;
+      const doseText = medication.isVariableDose ? 'Variable Dose' : `${orderedUnits} ${pluralize(orderedUnits, medication.dispenseUnit)}`
       return (
         <div className="flex gap-2 h-5">
           <span className="text-nowrap">{medication.route}</span>
           <Separator className="bg-gray-300" orientation="vertical" />
           <span className="text-nowrap">
-            {orderedUnits} {pluralize(orderedUnits, medication.dispenseUnit)}
+            {doseText}
           </span>
           {/* Only show rate if it's relevant (unit exists and rate is set) */}
           {medication.infusionRateUnit && rate > 0 && (
@@ -110,8 +104,7 @@ export const renderMedFormDetails = (
 
     case "SC":
       if (isSlidingScaleInsulin(medication)) {
-        const doseRange = `${medication.bgDosing[0]?.units ?? "0"} - ${medication.bgDosing[medication.bgDosing.length - 1]?.units ?? "N/A"
-          }`;
+        const doseRange = `0 - 18`;
         return (
           <div className="flex gap-2 h-5">
             <span className="text-nowrap">{medication.route}</span>
