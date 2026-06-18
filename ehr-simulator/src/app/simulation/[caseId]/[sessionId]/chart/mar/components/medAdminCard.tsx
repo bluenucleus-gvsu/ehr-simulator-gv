@@ -6,8 +6,10 @@ import { Label } from "@/components/ui/label";
 import { renderMedTitleRow, renderMedCardDetails, isSlidingScaleInsulin } from "./marHelpers";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, X } from "lucide-react";
-import { DoseInput } from "./doseInput";
+import { DecimalInput } from "./decimalInput";
 import { DatabaseMedAdministration, StudentMedicationAdministration } from "@/actions/simulation";
+import MedAdminCardTable, { insulinTable } from "./medAdminCardTable";
+import { HeparinBolusCalculator, HeparinInfusionCalculator } from "./heparinModule";
 
 interface MedAdminCardProps {
   medication: AllMedicationTypes;
@@ -22,6 +24,8 @@ interface MedAdminCardProps {
   onCommentChange: (comment: string) => void;
   currentComment: string;
   onOrderRemove: (id: string) => void;
+  administrationInfusionRate: number | undefined;
+  onInfusionRateChange: (rate: number) => void;
 }
 
 // helper function to get the last few times the med was given
@@ -52,6 +56,8 @@ const MedAdminCard = ({
   onCommentChange,
   currentComment,
   onOrderRemove,
+  administrationInfusionRate: infusionRate,
+  onInfusionRateChange
 }: MedAdminCardProps) => {
 
   const handleStatusChange = (newStatus: string) => {
@@ -68,8 +74,10 @@ const MedAdminCard = ({
 
   const threePrevAdministrations = getPreviousAdministrations(administrations, 3);
   const isSlidingScaleInsulinMed = isSlidingScaleInsulin(medication)
-  const isOverdose = currentDose > order.dose;
-
+  const isHeparinContinuous = medication.route === 'IV' && medication.genericName === 'heparin sodium' && medication.diluent;
+  const isHeparinBolus = medication.route === 'IV' && medication.genericName === 'heparin sodium' && !medication.diluent;
+  const isOverdose = order.dose ? currentDose > order.dose : false;
+  const useAdministrationInfusionRate = !order.infusionRate;
   return (
     <div className="relative grid grid-cols-2 gap-6 border bg-white rounded-2xl w-full p-0 overflow-hidden flex-shrink-0 shadow">
       <div className=" flex flex-col justify-between py-3 pl-6 space-y-4">
@@ -86,30 +94,18 @@ const MedAdminCard = ({
           </div>
         )}
 
-        {(isSlidingScaleInsulinMed) && (
-          <div className="overflow-hidden rounded-lg border w-fit">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    BG Range (mg/dL)
-                  </th>
-                  <th scope="col" className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Correction Units
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {medication.bgDosing.map((dose, index) => (
-                  <tr key={index} className={index % 2 === 0 ? '' : 'bg-gray-50'}>
-                    <td className="whitespace-nowrap px-2 py-1 text-xs text-gray-800 font-mono">{dose.bgRange}</td>
-                    <td className="whitespace-nowrap px-2 py-1 text-xs text-gray-800 font-mono">{dose.units}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        {isSlidingScaleInsulinMed && (
+          <MedAdminCardTable table={insulinTable} />
         )}
+
+        {isHeparinContinuous && (
+          <HeparinInfusionCalculator />
+        )}
+
+        {isHeparinBolus && (
+          <HeparinBolusCalculator />
+        )}
+
 
         <div>
           <h2 className="font-light pb-1">Previous Administrations:</h2>
@@ -128,7 +124,6 @@ const MedAdminCard = ({
                 <div key={`${admin.medication_order_id}-${index}`} className={`w-fit text-center p-1 rounded border text-xs ${statusStyle}`}>
                   <div className="font-bold">{format(adminTime, 'HH:mm')}</div>
                   <div className="text-xs">{admin.status}</div>
-
                 </div>
               )
             })}
@@ -143,7 +138,7 @@ const MedAdminCard = ({
         <X size={14} />
       </Button>
 
-      <div className="grid grid-cols-3 py-4 px-2 gap-y-4">
+      <div className="grid grid-cols-3 py-4 px-2 gap-y-4 content-start">
         <MedAdminCardSelector
           options={medActionSelections}
           value={currentStatus}
@@ -159,12 +154,12 @@ const MedAdminCard = ({
         <div className={`w-full space-y-1 `}>
           <Label>Dose</Label>
           <div className="flex group items-end h-9">
-            <DoseInput isOverdose={isOverdose} onDoseChange={onDoseChange} dose={currentDose} />
+            <DecimalInput isOverdose={isOverdose} onValueChange={onDoseChange} value={currentDose} />
             <div className={`h-9 bg-gray-50  border-l-0 rounded-r-lg p-2 shadow-xs ${isOverdose ? "outline-2 outline-red-700 group-focus-within:outline-2 bg-red-50" : "border border-gray-200 group-focus-within:outline-2"}`}>
               <p className="text-sm">{medication.strengthUnit}</p>
             </div>
           </div>
-          {currentDose > order.dose &&
+          {isOverdose &&
             <div className="flex gap-2 pt-1">
               <AlertCircle className="text-red-700 size-4"></AlertCircle>
               <p className="text-red-700 text-xs ">Dose greater than ordered</p>
@@ -172,13 +167,21 @@ const MedAdminCard = ({
           }
 
         </div>
-        {medication.route === "IV" && order.infusionRate &&
+        {((medication.route === "IV" && order.infusionRate) || isHeparinContinuous) && (
           <div className="w-full space-y-1">
             <Label>Rate</Label>
-            <p className="text-sm w-fit border px-3 py-2 rounded-lg shadow-xs">
-              {`${order.infusionRate}${medication.infusionRateUnit}`}
-            </p>
+            <div className="flex group items-end h-9">
+              <DecimalInput
+                value={useAdministrationInfusionRate ? infusionRate : order.infusionRate}
+                onValueChange={onInfusionRateChange}
+                isOverdose={false}
+              />
+              <div className="h-9 bg-gray-50  border-l-0 rounded-r-lg p-2 shadow-xs border border-gray-200 group-focus-within:outline-2">
+                <p className="text-sm">{medication.infusionRateUnit}</p>
+              </div>
+            </div>
           </div>
+        )
         }
         <div className="w-full space-y-1">
           <Label>Date</Label>

@@ -10,18 +10,13 @@ const Visitors = () => {
   const { caseBundle } = useSimulationCase()
   const chartData = buildChartDataFromCaseRow((caseBundle?.caseRow as Record<string, unknown> | null | undefined) ?? null)
 
-  if (!chartData || Object.keys(chartData).length === 0) {
-    return (
-      <Card className="relative col-span-1 pt-2 overflow-hidden h-fit gap-3">
-        <StyledTitle color="bg-red-200" firstLetter="C" secondLetter="ontacts" />
-        <p>No contact info</p>
-      </Card>
-    )
-  }
+  if (!chartData || Object.keys(chartData).length === 0) return null;
 
   const contactItems = chartData.supportPersons.value.length
     ? chartData.supportPersons.value
-    : [{ name: "No contact on file", relationship: "N/A", phone: "N/A" }]
+    : [];
+
+  if (contactItems.length === 0) return null;
 
   return (
     <Card className="relative pt-2 overflow-hidden h-fit gap-3">

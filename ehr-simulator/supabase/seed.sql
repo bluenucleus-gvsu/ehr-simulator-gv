@@ -240,15 +240,75 @@ INSERT INTO medication_orders (
   infusion_rate,
   is_in_presim
 ) 
-VALUES 
+VALUES
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'heparin sodium' AND strength = 10000 LIMIT 1),
+    null, 
+    'Q6H', 
+    'PRN', 
+    null, 
+    'VTE', 
+    'Dr. Gregory House',
+    NULL,
+    TRUE
+  ), 
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'heparin sodium' AND strength = 25000 LIMIT 1),
+    null, 
+    'CONTINUOUS', 
+    'NOW', 
+    null, 
+    'VTE', 
+    'Dr. Gregory House',
+    NULL,
+    TRUE
+  ), 
   (
     'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
     (SELECT id FROM medications WHERE generic_name = 'acetaminophen' AND route = 'PO' AND strength = 650 AND strength_unit = 'mg' LIMIT 1),
-    500, 
+    650, 
     'Q6H', 
     'PRN', 
     'Do not exceed 4000mg per 24 hours.', 
     'Mild pain or fever', 
+    'Dr. Gregory House',
+    NULL,
+    TRUE
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'acetaminophen' AND route = 'PO' AND strength = 650 AND strength_unit = 'mg' LIMIT 1),
+    1950, 
+    'Q6H', 
+    'PRN', 
+    'Do not exceed 4000mg per 24 hours.', 
+    'Mild pain or fever', 
+    'Dr. Gregory House',
+    NULL,
+    TRUE
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'acetaminophen' AND route = 'PO' AND strength = 650 AND strength_unit = 'mg' LIMIT 1),
+    1300, 
+    'Q6H', 
+    'PRN', 
+    'Do not exceed 4000mg per 24 hours.', 
+    'Mild pain or fever', 
+    'Dr. Gregory House',
+    NULL,
+    TRUE
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'albuterol sulfate' LIMIT 1),
+    30, 
+    'Q6H', 
+    'Routine', 
+    null, 
+    'Indic.', 
     'Dr. Gregory House',
     NULL,
     TRUE
@@ -279,6 +339,18 @@ VALUES
   ),
   (
     'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'aspirin' AND strength_unit = 'mg' LIMIT 1),
+    81, 
+    'DAILY', 
+    'Routine', 
+    'Take in the evening.', 
+    'Hyperlipidemia', 
+    'Dr. Gregory House',
+    NULL,
+    TRUE
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
     (SELECT id FROM medications WHERE generic_name = 'normal saline 0.9%' AND route = 'IV' AND strength = 1000 AND strength_unit = 'mL' LIMIT 1), 
     1000, 
     'CONTINUOUS', 
@@ -292,7 +364,7 @@ VALUES
 
   (
     'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
-    (SELECT id FROM medications WHERE generic_name = 'cefazolin' AND route = 'IV' AND strength = 1000 AND strength_unit = 'mg' LIMIT 1), 
+    (SELECT id FROM medications WHERE generic_name = 'cefazolin' LIMIT 1), 
     1000, 
     'Q8H', 
     'Routine', 
@@ -326,20 +398,102 @@ VALUES
     NULL,
     TRUE
   ),
-  -- not in presim
   (
   'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
     (SELECT id FROM medications WHERE generic_name = 'cefazolin' AND route = 'IV' AND strength = 1000 AND strength_unit = 'mg' LIMIT 1), 
     1000, 
     'Q2H', 
     'Routine', 
+    null, 
+    'Prophylaxis', 
+    'Dr. Pepper',
+    125,
+    FALSE
+  ),
+  (
+  'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'ceftriaxone' AND route = 'IV' LIMIT 1), 
+    1, 
+    'Q2H', 
+    'Routine', 
     'Not in Presim Test.', 
     'Prophylaxis', 
     'Dr. Pepper',
-    999,
+    null,
     FALSE
   ),
--- not in presim
+  (
+  'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'dextrose 5% in NS 0.45%' AND route = 'IV' LIMIT 1), 
+    1000, 
+    'Q2H', 
+    'Routine', 
+    'Not in Presim Test.', 
+    'Prophylaxis', 
+    'Dr. Pepper',
+    100,
+    FALSE
+  ),
+  (
+  'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'enoxaparin' LIMIT 1), 
+    40, 
+    'Q2H', 
+    'Routine', 
+    null, 
+    'Prophylaxis', 
+    'Dr. Pepper',
+    null,
+    FALSE
+  ),
+  (
+  'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'furosemide' LIMIT 1), 
+    40, 
+    'Q2H', 
+    'Routine', 
+    null, 
+    'Prophylaxis', 
+    'Dr. Pepper',
+    null,
+    FALSE
+  ),
+  -- (
+  -- 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+  --   (SELECT id FROM medications WHERE generic_name = 'Lactated Ringer''s Injection' LIMIT 1), 
+  --   500, 
+  --   'Q2H', 
+  --   'Routine', 
+  --   null, 
+  --   'Prophylaxis', 
+  --   'Dr. Pepper',
+  --   75,
+  --   FALSE
+  -- ),
+  (
+  'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'methylprednisolone' LIMIT 1), 
+    500, 
+    'Q2H', 
+    'Routine', 
+    null, 
+    'Prophylaxis', 
+    'Dr. Pepper',
+    null,
+    FALSE
+  ),
+  (
+  'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
+    (SELECT id FROM medications WHERE generic_name = 'metoprolol succinate' and strength = 25 LIMIT 1), 
+    75, 
+    'Q2H', 
+    'Routine', 
+    null, 
+    'Prophylaxis', 
+    'Dr. Pepper',
+    null,
+    FALSE
+  ),
   (
     'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 
     (SELECT id FROM medications WHERE generic_name = 'pantoprazole' AND route = 'PO' AND strength = 40 AND strength_unit = 'mg' LIMIT 1), 
@@ -561,50 +715,152 @@ INSERT INTO "public"."clinical_documents" ("id", "case_id", "is_in_presim", "cat
 	('a44db1fc-cf42-4c17-a55f-5fe54fb7e532', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 'Progress', 'Internal Medicine', 'Dr. Adler', 2880, '<h2><u>Subjective</u></h2><p>Patient presented with 3 days of nausea, vomiting, and diarrhea following return from cruise. Reports dizziness, fatigue, and poor oral intake.</p><h2><u>Objective</u></h2><ul class="list-disc ml-6"><li><p>Vitals: T 37.2°C, HR 88, BP 118/72, RR 18, SpO₂ 97% RA</p></li><li><p>Dry mucous membranes, skin tenting noted.</p></li><li><p>Alert and oriented ×3.</p></li><li><p>Abdomen soft, slightly tender, hyperactive bowel sounds.</p></li><li><p>Na⁺ 125 mEq/L, K⁺ 3.7 mEq/L</p></li><li><p>BUN 25 mg/dL, Creatinine 1.1 mg/dL</p></li><li><p>WBC 11,000/µL</p></li><li><p>Lactic acid 1.3 mmol/L</p></li></ul><h2><u>Assessment</u></h2><p>&nbsp;Hyponatremia likely secondary to fluid losses. Mild dehydration. Hemodynamically stable.</p><h2><u>Plan</u></h2><ul class="list-disc ml-6"><li><p>Start NS 75 mL/hr.</p></li><li><p>Advance diet as tolerated.</p></li><li><p>Monitor electrolytes every AM.</p></li><li><p>Fall precautions for dizziness.</p></li><li><p>PT/OT evaluation due to weakness.</p></li></ul><p></p>', '2026-03-19 20:40:02.736559+00'),
 	('191cb1f2-e8d4-4fa3-aba2-96eb53a36509', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 'Admission', 'Emergency Medicine', 'Dr. Chen', 3000, '<p>Chief Complaint: “Vomiting and diarrhea for several days, feeling dizzy.”</p><p>History of Present Illness: 72-year-old male presenting after returning from a cruise 3 days ago. Reports persistent nausea, vomiting, and watery diarrhea since returning home. States he has been unable to tolerate solid food and has had minimal oral intake. Reports dizziness when standing and significant fatigue. Denies chest pain or shortness of breath. No blood in stool. Stool pathogen studies pending.</p><p>Past Medical History: Hypertension, GERD</p><p>Medications:</p><p>Lisinopril 10 mg daily</p><p>Omeprazole 20 mg daily</p><p></p><p>Allergies: No known drug allergies</p><p>Physical Examination:</p><p>General: Appears fatigued, mildly dehydrated</p><p>Neuro: Alert and oriented ×3</p><p>HEENT: Dry mucous membranes</p><p>Cardiac: Regular rate and rhythm</p><p>Respiratory: Clear breath sounds bilaterally</p><p>Abdomen: Soft, mild diffuse tenderness, hyperactive bowel sounds</p><p>Skin: Warm, decreased turgor</p><p></p><p>ED Vital Signs:</p><p>T: 37.6°C, HR: 90, BP: 116/70, RR: 18, SpO₂: 96% RA</p><p></p><p>ED Laboratory Results:</p><p>Na⁺ 125 mEq/L</p><p>K⁺ 3.7 mEq/L</p><p>Cl⁻ 94 mEq/L</p><p>BUN 25 mg/dL</p><p>Creatinine 1.1 mg/dL</p><p>WBC 11,000 /µL</p><p>Lactic acid 1.3 mmol/L</p><p></p><p>ED Treatment Provided:1 L Normal Saline IV bolus. Ondansetron 4 mg IV for nausea. Basic metabolic panel and CBC obtained. Patient monitored for several hours.</p><p>Assessment:</p><p>Hyponatremia and dehydration likely secondary to gastrointestinal illness. Patient stable but symptomatic with dizziness and electrolyte imbalance.</p><p></p><p>Plan:</p><p>Admit to medical-surgical floor for IV fluids, electrolyte monitoring, and observation.</p>', '2026-03-19 20:40:02.736559+00');
 
+-- Harold Data
+-- INSERT INTO "public"."documentation_results" (
+--   "id", "case_id", "is_in_presim", "time_offset", "hr", "hr_source", "bp", "bp_source", 
+--   "rr", "temp", "temp_source", "spo2", "pain_numeric_scale", "weight_kg", "oral_intake_ml", 
+--   "iv_intake_ml", "enteral_intake_ml", "parenteral_intake_ml", "urine_output_ml", 
+--   "emesis_output_ml", "stool_output_ml", "wound_output_ml", "enteral_output_ml", 
+--   "appearance", "safety_check", "mood_and_affect", "head_and_scalp", "eyes", "ears", 
+--   "nose", "mouth_and_throat", "orientation", "speech", "motor_function", "skin", 
+--   "hair_and_nails", "turgor", "wound", "heart_sounds", "cardiac_extremities", 
+--   "jugular_distention", "chest_appearance", "lung_sounds", "abdomen", "bowel_sounds", 
+--   "nausea", "extremity_rom", "gait", "voiding", "iv_site", "iv_type", "iv_location", 
+--   "nursing_care_provided", "ciwa_nausea_vomiting", "ciwa_tremor", "ciwa_sweats", 
+--   "ciwa_anxiety", "ciwa_agitation", "ciwa_tactile", "ciwa_visual", "ciwa_headache", 
+--   "ciwa_orientation", "morse_fall_history", "morse_secondary_diagnosis", "morse_ambulatory_aid", 
+--   "morse_iv", "morse_gait", "morse_mental_status", "braden_sensory_perception", 
+--   "braden_moisture", "braden_activity", "braden_mobility", "braden_nutrition", 
+--   "braden_friction_and_shear", "painad_breathing", "painad_negative_vocalization", 
+--   "painad_facial_expression", "painad_body_language", "painad_consolability", 
+--   "created_at", "spo2_source", "pain_location", "pain_characteristics", "pain_alleviating_factors", 
+--   "pain_aggravating_factors", "pain_interventions", "urine_description", "mean_arterial_pressure", 
+--   "bp_position", "urine_occurrence", "stool_occurrence", "emesis_occurrence", 
+--   "level_of_consciousness", "pupils", "neuro_sensation", "muscle_strength", 
+--   "mental_status", "gi_symptoms"
+-- ) VALUES 
+--   ('08716b3c-ba40-4338-b062-19f99730421a', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'true', '-3000', '90', 'Monitor', '116/70', 'Right upper arm', '18', '37.6', 'Oral', '96', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 'poor', null, null, null, null, null, null, 'tenderness', 'hyperactive', 'yes', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-03-19 22:00:37.030464+00', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), 
+--   ('2f849d33-5854-406a-a039-496d6c610d7a', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'true', '-2880', '88', 'Monitor', '118/72', 'Right upper arm', '18', '37.2', 'Oral', '97', null, '75', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-03-19 22:00:37.030464+00', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), 
+--   ('98d1cf6c-06be-4f88-b9c5-d1992885ae37', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'true', '-2640', '92', 'Monitor', '114/70', 'Right upper arm', '18', '37.4', 'Oral', '97', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 'clean, dry, intact', null, 'left AC', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '3', '3', '3', '3', '2', '2', null, null, null, null, null, '2026-03-19 22:00:37.030464+00', null, null, null, null, null, null, 'concentrated', null, null, null, null, null, null, null, null, null, null, null), 
+--   ('e3843a84-0b28-420e-9fcf-6027d268cf05', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'true', '-2400', '90', 'Monitor', '116/74', 'Right upper arm', '20', '37.6', 'Oral', '96', null, null, '450', '600', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-03-19 22:00:37.030464+00', null, null, null, null, null, null, null, null, null, null, '2', null, null, null, null, null, null, null), 
+--   ('6bcf46ca-d04a-4e28-8e7d-558f5f031335', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'true', '-2390', '104', 'Monitor', '102/68', 'Right upper arm', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-03-19 22:00:37.030464+00', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), 
+--   ('062f2065-108b-47f5-8260-3740473ba78c', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'true', '-2160', '96', 'Monitor', '110/68', 'Right upper arm', '20', '37.8', 'Oral', '96', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 'clean, dry, intact', null, 'left AC', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '3', '3', '3', '3', '2', '2', null, null, null, null, null, '2026-03-19 22:00:37.030464+00', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), 
+--   ('359d22d3-e1a1-4675-bee1-91014f04db76', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'true', '-1920', '98', 'Monitor', '108/66', 'Right upper arm', '20', '37.9', 'Oral', '96', null, null, '300', '600', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-03-19 22:00:37.030464+00', null, null, null, null, null, null, null, null, null, null, '1', null, null, null, null, null, null, null), 
+--   ('aad18a2c-f63d-460c-bd2f-1dfe97ce79cb', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'true', '-1680', '100', 'Monitor', '106/64', 'Right upper arm', '20', '38.0', 'Oral', '96', null, '75.8', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-03-19 22:00:37.030464+00', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), 
+--   ('55a87457-f5bf-4daa-a673-31c2856b5980', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'true', '-1440', '104', 'Monitor', '102/66', 'Right upper arm', '22', '38.1', 'Oral', '95', null, null, '150', '600', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 'flush, warm, diaphoretic', null, null, null, null, null, null, null, 'Clear, diminished', 'tenderness', null, 'yes', null, null, null, 'clean, dry, intact', null, 'left AC', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '3', '3', '3', '3', '2', '2', null, null, null, null, null, '2026-03-19 22:00:37.030464+00', null, null, null, null, null, null, null, null, null, null, '1', null, null, null, null, null, null, null), 
+--   ('08b4cd85-dbe8-4fe7-a2cb-f3c669a96f75', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'true', '-1200', '108', 'Monitor', '98/60', 'Right upper arm', '22', '38.6', 'Oral', '96', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-03-19 22:00:37.030464+00', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), 
+--   ('fff050a6-6200-4d81-aa40-95479f85bed5', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'true', '-960', '110', 'Monitor', '96/58', 'Right upper arm', '22', '38.4', 'Oral', '95', null, null, '200', '600', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-03-19 22:00:37.030464+00', null, null, null, null, null, null, null, null, null, null, '1', null, null, null, null, null, null, null), 
+--   ('10441215-7dbf-45b2-b543-4077daca9233', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'true', '-720', '112', 'Monitor', '94/58', 'Right upper arm', '24', '38.4', 'Oral', '94', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-03-19 22:00:37.030464+00', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), 
+--   ('dfe39c71-cbc0-43c5-b53f-e26015f85572', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'true', '-600', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 'flush, warm, diaphoretic', null, 'poor', null, null, null, null, null, 'Clear, diminished', null, null, null, null, null, null, 'clean, dry, intact', null, 'left AC', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '3', '3', '3', '3', '2', '2', null, null, null, null, null, '2026-03-19 22:00:37.030464+00', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), 
+--   ('74ad8cb0-e81a-4b2a-8ed1-043784800a4e', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'true', '-480', '116', 'Monitor', '92/56', 'Right upper arm', '24', '38.8', 'Oral', '95', null, null, '150', '600', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-03-19 22:00:37.030464+00', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), 
+--   ('2bcbdddd-a961-4892-986c-32c0e0fe47ea', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'true', '-240', '118', 'Monitor', '90/56', 'Right upper arm', '24', '38.4', 'Oral', '95', null, '76.2', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-03-19 22:00:37.030464+00', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), 
+--   ('d6196ba8-690d-447d-ac51-17b1f4589f1d', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'false', '0', ' ', null, null, null, null, null, null, null, null, null, '100', '600', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-03-19 22:00:37.030464+00', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
 
-INSERT INTO "public"."documentation_results" ("id", "case_id", "is_in_presim", "time_offset", "hr", "hr_source", "bp", "bp_source", "rr", "temp", "temp_source", "spo2", "pain", "weight_kg", "oral", "intravenous", "enteral_nutrition", "parenteral_nutrition", "urine", "emesis", "stool", "wound_drainage", "enteral_output", "appearance", "safety_check", "mood_and_affect", "head_and_scalp", "eyes", "ears", "nose", "mouth_and_throat", "orientation", "speech", "motor_function", "integument_status", "skin", "hair_and_nails", "turgor", "wound", "heart_sounds", "extremities", "jugular_distention", "chest_appearance", "lung_sounds", "abdomen", "bowel_sounds", "nausea", "extremity_rom", "gait", "voiding", "iv_site", "iv_type", "iv_location", "nursing_care_provided", "nausea_vomiting", "tremor", "paroxysmal_sweats", "anxiety", "agitation", "tactile_disturbances", "visual_disturbances", "headache", "orientation2", "history_of_falling", "secondary_diagnosis", "ambulatory_aid", "iv_therapy_heparin_lock", "fall_risk_gait", "mental_status", "sensory_perception", "moisture", "activity", "mobility", "nutrition", "friction_and_shear", "breathing_independent_of_vocalization", "negative_vocalization", "facial_expression", "body_language", "consolability", "created_at") VALUES
-	('08716b3c-ba40-4338-b062-19f99730421a', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 3000, '90', 'Monitor', '116/70', 'Right upper arm', '18', '37.6', 'Oral', '96', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'poor', NULL, NULL, NULL, NULL, NULL, NULL, 'tenderness', 'hyperactive', 'yes', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
-	('2f849d33-5854-406a-a039-496d6c610d7a', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 2880, '88', 'Monitor', '118/72', 'Right upper arm', '18', '37.2', 'Oral', '97', NULL, '75', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
-	('98d1cf6c-06be-4f88-b9c5-d1992885ae37', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 2640, '92', 'Monitor', '114/70', 'Right upper arm', '18', '37.4', 'Oral', '97', NULL, NULL, NULL, NULL, NULL, NULL, 'concentrated', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'clean, dry, intact', NULL, 'left AC', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 3, 3, 3, 3, 2, 2, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
-	('e3843a84-0b28-420e-9fcf-6027d268cf05', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 2400, '90', 'Monitor', '116/74', 'Right upper arm', '20', '37.6', 'Oral', '96', NULL, NULL, '450', '600', NULL, NULL, NULL, NULL, '2', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
-	('6bcf46ca-d04a-4e28-8e7d-558f5f031335', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 2390, '104', 'Monitor', '102/68', 'Right upper arm', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
-	('062f2065-108b-47f5-8260-3740473ba78c', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 2160, '96', 'Monitor', '110/68', 'Right upper arm', '20', '37.8', 'Oral', '96', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'clean, dry, intact', NULL, 'left AC', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 3, 3, 3, 3, 2, 2, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
-	('359d22d3-e1a1-4675-bee1-91014f04db76', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 1920, '98', 'Monitor', '108/66', 'Right upper arm', '20', '37.9', 'Oral', '96', NULL, NULL, '300', '600', NULL, NULL, NULL, NULL, '1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
-	('aad18a2c-f63d-460c-bd2f-1dfe97ce79cb', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 1680, '100', 'Monitor', '106/64', 'Right upper arm', '20', '38.0', 'Oral', '96', NULL, '75.8', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
-	('55a87457-f5bf-4daa-a673-31c2856b5980', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 1440, '104', 'Monitor', '102/66', 'Right upper arm', '22', '38.1', 'Oral', '95', NULL, NULL, '150', '600', NULL, NULL, NULL, NULL, '1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'flush, warm, diaphoretic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Clear, diminished', 'tenderness', NULL, 'yes', NULL, NULL, NULL, 'clean, dry, intact', NULL, 'left AC', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 3, 3, 3, 3, 2, 2, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
-	('08b4cd85-dbe8-4fe7-a2cb-f3c669a96f75', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 1200, '108', 'Monitor', '98/60', 'Right upper arm', '22', '38.6', 'Oral', '96', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
-	('fff050a6-6200-4d81-aa40-95479f85bed5', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 960, '110', 'Monitor', '96/58', 'Right upper arm', '22', '38.4', 'Oral', '95', NULL, NULL, '200', '600', NULL, NULL, NULL, NULL, '1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
-	('10441215-7dbf-45b2-b543-4077daca9233', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 720, '112', 'Monitor', '94/58', 'Right upper arm', '24', '38.4', 'Oral', '94', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
-	('dfe39c71-cbc0-43c5-b53f-e26015f85572', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 600, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'flush, warm, diaphoretic', NULL, 'poor', NULL, NULL, NULL, NULL, NULL, 'Clear, diminished', NULL, NULL, NULL, NULL, NULL, NULL, 'clean, dry, intact', NULL, 'left AC', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 3, 3, 3, 3, 2, 2, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
-	('74ad8cb0-e81a-4b2a-8ed1-043784800a4e', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 480, '116', 'Monitor', '92/56', 'Right upper arm', '24', '38.8', 'Oral', '95', NULL, NULL, '150', '600', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
-	('2bcbdddd-a961-4892-986c-32c0e0fe47ea', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 240, '118', 'Monitor', '90/56', 'Right upper arm', '24', '38.4', 'Oral', '95', NULL, '76.2', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
-	('d6196ba8-690d-447d-ac51-17b1f4589f1d', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', false, 0, ' ', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '100', '600', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00');
+-- INSERT INTO "public"."documentation_results" (
+--   "id", "case_id", "is_in_presim", "time_offset", "hr", "hr_source", "bp", "bp_source", 
+--   "rr", "temp", "temp_source", "spo2", "pain_numeric_scale", "weight_kg", "oral_intake_ml", 
+--   "iv_intake_ml", "enteral_intake_ml", "parenteral_intake_ml", "urine_output_ml", 
+--   "emesis_output_ml", "stool_output_ml", "wound_output_ml", "enteral_output_ml", 
+--   "appearance", "safety_check", "mood_and_affect", "head_and_scalp", "eyes", "ears", 
+--   "nose", "mouth_and_throat", "orientation", "speech", "motor_function", "skin", 
+--   "hair_and_nails", "turgor", "wound", "heart_sounds", "cardiac_extremities", 
+--   "jugular_distention", "chest_appearance", "lung_sounds", "abdomen", "bowel_sounds", 
+--   "nausea", "extremity_rom", "gait", "voiding", "iv_site", "iv_type", "iv_location", 
+--   "nursing_care_provided", "ciwa_nausea_vomiting", "ciwa_tremor", "ciwa_sweats", 
+--   "ciwa_anxiety", "ciwa_agitation", "ciwa_tactile", "ciwa_visual", "ciwa_headache", 
+--   "ciwa_orientation", "morse_fall_history", "morse_secondary_diagnosis", "morse_ambulatory_aid", 
+--   "morse_iv", "morse_gait", "morse_mental_status", "braden_sensory_perception", 
+--   "braden_moisture", "braden_activity", "braden_mobility", "braden_nutrition", 
+--   "braden_friction_and_shear", "painad_breathing", "painad_negative_vocalization", 
+--   "painad_facial_expression", "painad_body_language", "painad_consolability", 
+--   "created_at", "spo2_source", "pain_location", "pain_characteristics", "pain_alleviating_factors", 
+--   "pain_aggravating_factors", "pain_interventions", "urine_description", "mean_arterial_pressure", 
+--   "bp_position", "urine_occurrence", "stool_occurrence", "emesis_occurrence", 
+--   "level_of_consciousness", "pupils", "neuro_sensation", "muscle_strength", 
+--   "mental_status", "gi_symptoms"
+-- ) VALUES
+--   ('040ef9a8-14a7-4e60-aa6b-a0847cb5f772', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 'true', '-180', '85', null, '122/80', null, '16', '37.2', null, '99%', '3', null, null, null, null, null, null, null, null, null, null, 'Resting comfortably', null, null, null, null, null, null, null, null, null, null, null, null, null, null, 'Regular rate and rhythm', null, null, null, 'Clear bilaterally', 'Soft, non-tender', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-04-18 01:22:14.42574+00', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), 
+--   ('040ef9a8-14a7-4e60-aa6b-a0847cb5f782', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 'true', '-180', '85', 'Monitor', '122/80', 'Right upper arm', '16', '37.2', 'Oral', '99%', '3', '78.5', '240', '100', '0', '0', '350', '0', '0', '0', '0', 'Resting comfortably', 'Call light in reach, bed low', 'Calm, cooperative', 'Normocephalic, atraumatic', 'PERRLA', 'No drainage', 'Clear, no lesions', 'Moist mucous membranes', 'Alert and oriented x4', 'Clear, distinct', 'Moves all extremities well', 'Warm, dry, intact', 'Clean, normal distribution', 'Good, elastic', 'None present', 'Regular rate and rhythm', 'Warm, 2+ pulses bilaterally', 'Flat', 'Symmetrical expansion', 'Clear bilaterally', 'Soft, non-tender', 'Normoactive x4 quadrants', 'None', 'Full ROM', 'Steady', 'Spontaneous, unassisted', 'Clean, dry, intact', 'Peripheral', 'Right forearm', 'Assessed vitals, provided water', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '20', '0', '0', '4', '4', '4', '4', '4', '3', '0', '0', '0', '0', '0', '2026-04-18 01:22:14.42574+00', 'Room air', 'Lower back', 'Dull ache', 'Repositioning', 'Movement', 'Repositioned, offered ice', 'Clear, yellow', '94', 'Supine', '1', '0', '0', 'Alert', 'Equal, round, reactive', 'Intact bilaterally', '5/5 bilaterally', 'Baseline', 'None'),
+--   ('e6afef91-a2e9-41c7-886d-9b6bb637451a', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 'true', '-100', '95', null, '130/85', null, '20', '37.4', null, '96%', '6', null, null, null, null, null, null, null, null, null, null, 'Restless, grimacing', null, null, null, null, null, null, null, null, null, null, null, null, null, null, 'Tachycardic', null, null, null, 'Diminished at bases', 'Guarding noted', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-04-18 01:22:14.42574+00', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), 
+--   ('e3c84adf-4495-4859-bbe1-dc50560815aa', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 'true', '-30', '82', null, '120/80', null, '16', '37.1', null, '98%', '2', null, null, null, null, null, null, null, null, null, null, 'Calm and cooperative', null, null, null, null, null, null, null, null, null, null, null, null, null, null, 'Regular rate and rhythm', null, null, null, 'Clear bilaterally', 'Soft, non-tender', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-04-18 01:22:14.42574+00', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null), 
+--   ('47f0467b-a69a-4389-aed7-7558db6f0ddc', 'e5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9d', 'true', '0', '88', null, '125/82', null, '18', '37.3', null, '97%', '4', null, null, null, null, null, null, null, null, null, null, 'Slightly anxious', null, null, null, null, null, null, null, null, null, null, null, null, null, null, 'Regular rate and rhythm', null, null, null, 'Clear bilaterally', 'Mildly tender', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-04-18 01:22:14.42574+00', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null); 
 
 
-INSERT INTO "public"."lab_results" ("id", "case_id", "time_offset", "is_in_presim", "sodium", "potassium", "chloride", "bun", "creatinine", "glucose", "co2", "calcium", "lactate", "rbc", "wbc", "platelets", "hemoglobin", "hematocrit", "mcv", "mch", "mchc", "troponin", "ckmb", "myoglobin", "ast", "alt", "alp", "total_bilirubin", "albumin", "ammonia", "pco2", "po2", "hco3", "specific_gravity", "urine_ph", "protein", "urine_glucose", "ketones", "leukocyte_esterase", "nitrites", "blood", "pt", "ptt", "crp", "esr", "tsh", "free_t3", "free_t4", "total_cholesterol", "hdl_cholesterol", "ldl_cholesterol", "triglycerides", "magnesium", "phosphate", "amylase", "lipase", "data", "created_at") VALUES
-	('38bfebf6-0e38-4174-bd1c-f77dc31000ff', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 2880, true, 125, 3.7, 94, 25, 1.1, 108, 94, 9.1, 1.3, 6.2, 11, 220, 15.2, 46, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1.03, 6, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1.8, 3.2, NULL, NULL, '{"unstructured": {"pH": "", "BNP": "", "INR": null, "HbA1c": "", "D-Dimer": "", "O2 Sat.": null, "Basophils": "", "Monocytes": "6", "Eosinophils": "", "Lymphocytes": "20", "Neutrophils": "72", "Procalcitonin": ""}}', '2026-03-19 21:05:12.560184+00'),
-	('112ff01d-b6d4-444c-b0da-a1b2da55d3f4', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 1440, true, 129, 3.6, 95, 28, 1.2, 118, NULL, NULL, NULL, NULL, 13.5, 210, 15, 45, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '{"unstructured": {"pH": null, "BNP": null, "INR": null, "HbA1c": "", "D-Dimer": null, "O2 Sat.": null, "Basophils": "", "Monocytes": "", "Eosinophils": "", "Lymphocytes": "", "Neutrophils": "78", "Procalcitonin": null}}', '2026-03-19 21:05:12.560184+00'),
-	('ca69c267-a116-48a6-b5e3-5185dd8ea22c', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 120, true, 126, 3.5, 93, 32, 1.4, 130, NULL, NULL, 2.4, NULL, 18.5, 200, 14.8, 44, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '{"unstructured": {"pH": null, "BNP": null, "INR": null, "HbA1c": null, "D-Dimer": null, "O2 Sat.": null, "Basophils": null, "Monocytes": "", "Eosinophils": "", "Lymphocytes": "", "Neutrophils": "85", "Procalcitonin": null}}', '2026-03-19 21:05:12.560184+00'),
-	('9e9200d4-965b-4753-bb0e-58568774be55', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 0, false, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '{"unstructured": {"pH": null, "BNP": "", "INR": null, "HbA1c": "", "D-Dimer": "", "O2 Sat.": null, "Basophils": "", "Monocytes": "", "Eosinophils": "", "Lymphocytes": "", "Neutrophils": "", "Procalcitonin": ""}}', '2026-03-19 21:05:12.560184+00');
+-- INSERT INTO "public"."documentation_results" ("id", "case_id", "is_in_presim", "time_offset", "hr", "hr_source", "bp", "bp_source", "rr", "temp", "temp_source", "spo2", "pain", "weight_kg", "oral", "intravenous", "enteral_nutrition", "parenteral_nutrition", "urine", "emesis", "stool", "wound_drainage", "enteral_output", "appearance", "safety_check", "mood_and_affect", "head_and_scalp", "eyes", "ears", "nose", "mouth_and_throat", "orientation", "speech", "motor_function", "integument_status", "skin", "hair_and_nails", "turgor", "wound", "heart_sounds", "extremities", "jugular_distention", "chest_appearance", "lung_sounds", "abdomen", "bowel_sounds", "nausea", "extremity_rom", "gait", "voiding", "iv_site", "iv_type", "iv_location", "nursing_care_provided", "nausea_vomiting", "tremor", "paroxysmal_sweats", "anxiety", "agitation", "tactile_disturbances", "visual_disturbances", "headache", "orientation2", "history_of_falling", "secondary_diagnosis", "ambulatory_aid", "iv_therapy_heparin_lock", "fall_risk_gait", "mental_status", "sensory_perception", "moisture", "activity", "mobility", "nutrition", "friction_and_shear", "breathing_independent_of_vocalization", "negative_vocalization", "facial_expression", "body_language", "consolability", "created_at") VALUES
+-- 	('08716b3c-ba40-4338-b062-19f99730421a', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 3000, '90', 'Monitor', '116/70', 'Right upper arm', '18', '37.6', 'Oral', '96', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'poor', NULL, NULL, NULL, NULL, NULL, NULL, 'tenderness', 'hyperactive', 'yes', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+-- 	('2f849d33-5854-406a-a039-496d6c610d7a', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 2880, '88', 'Monitor', '118/72', 'Right upper arm', '18', '37.2', 'Oral', '97', NULL, '75', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+-- 	('98d1cf6c-06be-4f88-b9c5-d1992885ae37', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 2640, '92', 'Monitor', '114/70', 'Right upper arm', '18', '37.4', 'Oral', '97', NULL, NULL, NULL, NULL, NULL, NULL, 'concentrated', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'clean, dry, intact', NULL, 'left AC', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 3, 3, 3, 3, 2, 2, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+-- 	('e3843a84-0b28-420e-9fcf-6027d268cf05', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 2400, '90', 'Monitor', '116/74', 'Right upper arm', '20', '37.6', 'Oral', '96', NULL, NULL, '450', '600', NULL, NULL, NULL, NULL, '2', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+-- 	('6bcf46ca-d04a-4e28-8e7d-558f5f031335', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 2390, '104', 'Monitor', '102/68', 'Right upper arm', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+-- 	('062f2065-108b-47f5-8260-3740473ba78c', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 2160, '96', 'Monitor', '110/68', 'Right upper arm', '20', '37.8', 'Oral', '96', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'clean, dry, intact', NULL, 'left AC', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 3, 3, 3, 3, 2, 2, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+-- 	('359d22d3-e1a1-4675-bee1-91014f04db76', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 1920, '98', 'Monitor', '108/66', 'Right upper arm', '20', '37.9', 'Oral', '96', NULL, NULL, '300', '600', NULL, NULL, NULL, NULL, '1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+-- 	('aad18a2c-f63d-460c-bd2f-1dfe97ce79cb', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 1680, '100', 'Monitor', '106/64', 'Right upper arm', '20', '38.0', 'Oral', '96', NULL, '75.8', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+-- 	('55a87457-f5bf-4daa-a673-31c2856b5980', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 1440, '104', 'Monitor', '102/66', 'Right upper arm', '22', '38.1', 'Oral', '95', NULL, NULL, '150', '600', NULL, NULL, NULL, NULL, '1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'flush, warm, diaphoretic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Clear, diminished', 'tenderness', NULL, 'yes', NULL, NULL, NULL, 'clean, dry, intact', NULL, 'left AC', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 3, 3, 3, 3, 2, 2, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+-- 	('08b4cd85-dbe8-4fe7-a2cb-f3c669a96f75', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 1200, '108', 'Monitor', '98/60', 'Right upper arm', '22', '38.6', 'Oral', '96', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+-- 	('fff050a6-6200-4d81-aa40-95479f85bed5', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 960, '110', 'Monitor', '96/58', 'Right upper arm', '22', '38.4', 'Oral', '95', NULL, NULL, '200', '600', NULL, NULL, NULL, NULL, '1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+-- 	('10441215-7dbf-45b2-b543-4077daca9233', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 720, '112', 'Monitor', '94/58', 'Right upper arm', '24', '38.4', 'Oral', '94', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+-- 	('dfe39c71-cbc0-43c5-b53f-e26015f85572', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 600, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'flush, warm, diaphoretic', NULL, 'poor', NULL, NULL, NULL, NULL, NULL, 'Clear, diminished', NULL, NULL, NULL, NULL, NULL, NULL, 'clean, dry, intact', NULL, 'left AC', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 3, 3, 3, 3, 2, 2, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+-- 	('74ad8cb0-e81a-4b2a-8ed1-043784800a4e', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 480, '116', 'Monitor', '92/56', 'Right upper arm', '24', '38.8', 'Oral', '95', NULL, NULL, '150', '600', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+-- 	('2bcbdddd-a961-4892-986c-32c0e0fe47ea', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 240, '118', 'Monitor', '90/56', 'Right upper arm', '24', '38.4', 'Oral', '95', NULL, '76.2', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+-- 	('d6196ba8-690d-447d-ac51-17b1f4589f1d', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', false, 0, ' ', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '100', '600', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00');
 
 
-INSERT INTO "public"."orders" ("id", "case_id", "category", "title", "details", "status", "provider", "is_important", "is_in_presim", "created_at") VALUES
-	('99408d41-fc72-4933-b27f-47a81361c4ef', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Laboratory', 'Basic Metabolic Panel (BMP)', 'Collect Basic Metabolic Panel (BMP).', 'Active', 'Dr. John Smith, MD', true, true, '2026-03-19 20:52:48.147762+00'),
-	('be6fe6d6-222f-4ec9-a590-377e2f23c24b', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Laboratory', 'Complete Blood Count (CBC)', 'Collect Complete Blood Count (CBC).', 'Active', 'Dr. John Smith, MD', true, true, '2026-03-19 20:52:48.147762+00'),
-	('6da9a8d4-53bf-4a99-8aef-3371d24389cd', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Respiratory', 'Incentive Spirometry', 'Instruct patient to use incentive spirometer 10 times per hour while awake. Document effort and results', 'Active', 'Dr. Azzedine Habz', false, true, '2026-03-19 20:52:48.147762+00'),
-	('953bc3d3-4617-4bc4-a3c5-c96cf317abc7', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Nursing', 'Vital Signs Monitoring (q4h)', 'Monitor BP, HR, RR, Temp, SpO₂ every 4 hours. Notify provider for Temp > 38.0°C (100.4°F), Systolic BP > 160 mmHg or < 100 mmHg, HR > 110 bpm or < 50 bpm.', 'Active', 'Dr. John Smith, MD', true, true, '2026-03-19 20:52:48.147762+00'),
-	('6e3c426b-9b7f-4a14-a5d8-b0dc49b9076c', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Nursing', 'Insert and Maintain IV', '', 'Active', 'Dr. John Smith, MD', true, true, '2026-03-19 20:52:48.147762+00'),
-	('0b4cf35b-8ee9-4298-974e-12994cc8a082', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Nursing', 'Activity: As Tolerated', 'Encourage patient activity as tolerated. Assist with ambulation as needed.', 'Active', 'Dr. John Smith, MD', false, true, '2026-03-19 20:52:48.147762+00'),
-	('10c9db54-63cf-4bce-88c6-e0751914dd9c', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Nursing', 'Fall Risk Precautions', 'Implement standard fall risk protocol. Ensure bed in low position and call light within reach.', 'Active', 'Dr. John Smith, MD', false, true, '2026-03-19 20:52:48.147762+00'),
-	('8572aa2e-1e38-40ee-8b3f-1088e8e638f6', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Respiratory', 'Oxygen Therapy', 'Titrate oxygen via nasal cannula to maintain SpO₂ ≥ 95%.', 'Active', 'Dr. Chen', false, true, '2026-03-19 20:52:48.147762+00'),
-	('5dfe30af-8171-43a8-a239-d9f90dfb4899', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Nursing', 'Cardiac Monitoring', 'Acute Electrolyte imbalance', 'Active', 'Dr. Chen', true, true, '2026-03-19 20:52:48.147762+00'),
-	('f3fef073-c341-4f83-a26d-fe314e5023d0', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Nursing', 'I&O', 'q8hr', 'Active', 'Dr. Chen', true, true, '2026-03-19 20:52:48.147762+00'),
-	('e3705f20-28af-43e0-a5bf-f0863fca775e', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Nursing', 'Orthostatic Vitals', 'Document BP & HR with patient supine, sitting, standing. Perform daily.', 'Active', 'Dr. Chen', true, true, '2026-03-19 20:52:48.147762+00'),
-	('a49dc81b-1845-4b24-ab9e-9284db141f27', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Diet', 'Diet', 'Heart Healthy. 2L Fluid Restriction. ', 'Active', 'Dr. Chen', true, true, '2026-03-19 20:52:48.147762+00');
+-- INSERT INTO "public"."documentation_results" (
+--   "id", "case_id", "is_in_presim", "time_offset", 
+--   "hr", "hr_source", "bp", "bp_source", "mean_arterial_pressure", "bp_position", "rr", "temp", "temp_source", "spo2", "spo2_source", "pain_numeric_scale", "weight_kg", 
+--   "oral_intake_ml", "iv_intake_ml", "enteral_intake_ml", "parenteral_intake_ml", "urine_output_ml", "urine_occurrence", "emesis_output_ml", "emesis_occurrence", "stool_output_ml", "stool_occurrence", "wound_output_ml", "enteral_output_ml", "pain_location", "pain_characteristics", "pain_alleviating_factors", "pain_aggravating_factors", "pain_interventions", "urine_description", 
+--   "appearance", "safety_check", "mood_and_affect", "head_and_scalp", "eyes", "ears", "nose", "mouth_and_throat", 
+--   "orientation", "mental_status", "level_of_consciousness", "pupils", "neuro_sensation", "speech", "motor_function", "skin", 
+--   "hair_and_nails", "turgor", "wound", "heart_sounds", "cardiac_extremities", "jugular_distention", "chest_appearance", "lung_sounds", "abdomen", "bowel_sounds", "gi_symptoms", 
+--   "nausea", "extremity_rom", "gait", "muscle_strength", "voiding", "iv_site", "iv_type", "iv_location", "nursing_care_provided", 
+--   "ciwa_nausea_vomiting", "ciwa_tremor", "ciwa_sweats", "ciwa_anxiety", "ciwa_agitation", "ciwa_tactile", 
+--   "ciwa_visual", "ciwa_headache", "ciwa_orientation", "morse_fall_history", "morse_secondary_diagnosis", 
+--   "morse_ambulatory_aid", "morse_iv", "morse_gait", "morse_mental_status", "braden_sensory_perception", 
+--   "braden_moisture", "braden_activity", "braden_mobility", "braden_nutrition", "braden_friction_and_shear", "painad_breathing", 
+--   "painad_negative_vocalization", "painad_facial_expression", "painad_body_language", "painad_consolability", 
+--   "created_at"
+-- ) VALUES
+--   ('08716b3c-ba40-4338-b062-19f99730421a', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 3000, '90', 'Monitor', '116/70', 'Right upper arm', NULL, NULL, '18', '37.6', 'Oral', '96', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'poor', NULL, NULL, NULL, NULL, NULL, NULL, 'tenderness', 'hyperactive', 'yes', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+--   ('2f849d33-5854-406a-a039-496d6c610d7a', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 2880, '88', 'Monitor', '118/72', 'Right upper arm', NULL, NULL, '18', '37.2', 'Oral', '97', NULL, NULL, '75', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+--   ('98d1cf6c-06be-4f88-b9c5-d1992885ae37', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 2640, '92', 'Monitor', '114/70', 'Right upper arm', NULL, NULL, '18', '37.4', 'Oral', '97', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'concentrated', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'clean, dry, intact', NULL, 'left AC', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 3, 3, 3, 3, 2, 2, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+--   ('e3843a84-0b28-420e-9fcf-6027d268cf05', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 2400, '90', 'Monitor', '116/74', 'Right upper arm', NULL, NULL, '20', '37.6', 'Oral', '96', NULL, NULL, NULL, '450', '600', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+--   ('6bcf46ca-d04a-4e28-8e7d-558f5f031335', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 2390, '104', 'Monitor', '102/68', 'Right upper arm', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+--   ('062f2065-108b-47f5-8260-3740473ba78c', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 2160, '96', 'Monitor', '110/68', 'Right upper arm', NULL, NULL, '20', '37.8', 'Oral', '96', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'clean, dry, intact', NULL, 'left AC', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 3, 3, 3, 3, 2, 2, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+--   ('359d22d3-e1a1-4675-bee1-91014f04db76', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 1920, '98', 'Monitor', '108/66', 'Right upper arm', NULL, NULL, '20', '37.9', 'Oral', '96', NULL, NULL, NULL, '300', '600', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+--   ('aad18a2c-f63d-460c-bd2f-1dfe97ce79cb', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 1680, '100', 'Monitor', '106/64', 'Right upper arm', NULL, NULL, '20', '38.0', 'Oral', '96', NULL, NULL, '75.8', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+--   ('55a87457-f5bf-4daa-a673-31c2856b5980', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 1440, '104', 'Monitor', '102/66', 'Right upper arm', NULL, NULL, '22', '38.1', 'Oral', '95', NULL, NULL, NULL, '150', '600', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'flush, warm, diaphoretic', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Clear, diminished', 'tenderness', NULL, 'yes', NULL, NULL, NULL, NULL, NULL, 'clean, dry, intact', NULL, 'left AC', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 3, 3, 3, 3, 2, 2, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+--   ('08b4cd85-dbe8-4fe7-a2cb-f3c669a96f75', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 1200, '108', 'Monitor', '98/60', 'Right upper arm', NULL, NULL, '22', '38.6', 'Oral', '96', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+--   ('fff050a6-6200-4d81-aa40-95479f85bed5', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 960, '110', 'Monitor', '96/58', 'Right upper arm', NULL, NULL, '22', '38.4', 'Oral', '95', NULL, NULL, NULL, '200', '600', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+--   ('10441215-7dbf-45b2-b543-4077daca9233', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 720, '112', 'Monitor', '94/58', 'Right upper arm', NULL, NULL, '24', '38.4', 'Oral', '94', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+--   ('dfe39c71-cbc0-43c5-b53f-e26015f85572', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 600, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'flush, warm, diaphoretic', NULL, 'poor', NULL, NULL, NULL, NULL, NULL, 'Clear, diminished', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'clean, dry, intact', NULL, 'left AC', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 3, 3, 3, 3, 2, 2, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+--   ('74ad8cb0-e81a-4b2a-8ed1-043784800a4e', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 480, '116', 'Monitor', '92/56', 'Right upper arm', NULL, NULL, '24', '38.8', 'Oral', '95', NULL, NULL, NULL, '150', '600', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+--   ('2bcbdddd-a961-4892-986c-32c0e0fe47ea', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 240, '118', 'Monitor', '90/56', 'Right upper arm', NULL, NULL, '24', '38.4', 'Oral', '95', NULL, NULL, '76.2', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00'),
+--   ('d6196ba8-690d-447d-ac51-17b1f4589f1d', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', false, 0, ' ', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '100', '600', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-19 22:00:37.030464+00');
+
+-- INSERT INTO "public"."lab_results" ("id", "case_id", "time_offset", "is_in_presim", "sodium", "potassium", "chloride", "bun", "creatinine", "glucose", "co2", "calcium", "lactate", "rbc", "wbc", "platelets", "hemoglobin", "hematocrit", "mcv", "mch", "mchc", "troponin", "ckmb", "myoglobin", "ast", "alt", "alp", "total_bilirubin", "albumin", "ammonia", "pco2", "po2", "hco3", "specific_gravity", "urine_ph", "urine_protein", "urine_glucose", "urine_ketones", "leukocyte_esterase", "urine_nitrites", "urine_blood", "pt", "ptt", "crp", "esr", "tsh", "free_t3", "free_t4", "total_cholesterol", "hdl_cholesterol", "ldl_cholesterol", "triglycerides", "magnesium", "phosphate", "amylase", "lipase", "data", "created_at") VALUES
+-- 	('38bfebf6-0e38-4174-bd1c-f77dc31000ff', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 2880, true, 125, 3.7, 94, 25, 1.1, 108, 94, 9.1, 1.3, 6.2, 11, 220, 15.2, 46, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1.03, 6, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1.8, 3.2, NULL, NULL, '{"unstructured": {"pH": "", "BNP": "", "INR": null, "HbA1c": "", "D-Dimer": "", "O2 Sat.": null, "Basophils": "", "Monocytes": "6", "Eosinophils": "", "Lymphocytes": "20", "Neutrophils": "72", "Procalcitonin": ""}}', '2026-03-19 21:05:12.560184+00'),
+-- 	('112ff01d-b6d4-444c-b0da-a1b2da55d3f4', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 1440, true, 129, 3.6, 95, 28, 1.2, 118, NULL, NULL, NULL, NULL, 13.5, 210, 15, 45, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '{"unstructured": {"pH": null, "BNP": null, "INR": null, "HbA1c": "", "D-Dimer": null, "O2 Sat.": null, "Basophils": "", "Monocytes": "", "Eosinophils": "", "Lymphocytes": "", "Neutrophils": "78", "Procalcitonin": null}}', '2026-03-19 21:05:12.560184+00'),
+-- 	('ca69c267-a116-48a6-b5e3-5185dd8ea22c', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 120, true, 126, 3.5, 93, 32, 1.4, 130, NULL, NULL, 2.4, NULL, 18.5, 200, 14.8, 44, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '{"unstructured": {"pH": null, "BNP": null, "INR": null, "HbA1c": null, "D-Dimer": null, "O2 Sat.": null, "Basophils": null, "Monocytes": "", "Eosinophils": "", "Lymphocytes": "", "Neutrophils": "85", "Procalcitonin": null}}', '2026-03-19 21:05:12.560184+00'),
+-- 	('9e9200d4-965b-4753-bb0e-58568774be55', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 0, false, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '{"unstructured": {"pH": null, "BNP": "", "INR": null, "HbA1c": "", "D-Dimer": "", "O2 Sat.": null, "Basophils": "", "Monocytes": "", "Eosinophils": "", "Lymphocytes": "", "Neutrophils": "", "Procalcitonin": ""}}', '2026-03-19 21:05:12.560184+00');
 
 
-SELECT pg_catalog.setval('"public"."dispense_units_id_seq"', 18, true);
+-- INSERT INTO "public"."orders" ("id", "case_id", "category", "title", "details", "status", "provider", "is_important", "is_in_presim", "created_at") VALUES
+-- 	('99408d41-fc72-4933-b27f-47a81361c4ef', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Laboratory', 'Basic Metabolic Panel (BMP)', 'Collect Basic Metabolic Panel (BMP).', 'Active', 'Dr. John Smith, MD', true, true, '2026-03-19 20:52:48.147762+00'),
+-- 	('be6fe6d6-222f-4ec9-a590-377e2f23c24b', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Laboratory', 'Complete Blood Count (CBC)', 'Collect Complete Blood Count (CBC).', 'Active', 'Dr. John Smith, MD', true, true, '2026-03-19 20:52:48.147762+00'),
+-- 	('6da9a8d4-53bf-4a99-8aef-3371d24389cd', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Respiratory', 'Incentive Spirometry', 'Instruct patient to use incentive spirometer 10 times per hour while awake. Document effort and results', 'Active', 'Dr. Azzedine Habz', false, true, '2026-03-19 20:52:48.147762+00'),
+-- 	('953bc3d3-4617-4bc4-a3c5-c96cf317abc7', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Nursing', 'Vital Signs Monitoring (q4h)', 'Monitor BP, HR, RR, Temp, SpO₂ every 4 hours. Notify provider for Temp > 38.0°C (100.4°F), Systolic BP > 160 mmHg or < 100 mmHg, HR > 110 bpm or < 50 bpm.', 'Active', 'Dr. John Smith, MD', true, true, '2026-03-19 20:52:48.147762+00'),
+-- 	('6e3c426b-9b7f-4a14-a5d8-b0dc49b9076c', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Nursing', 'Insert and Maintain IV', '', 'Active', 'Dr. John Smith, MD', true, true, '2026-03-19 20:52:48.147762+00'),
+-- 	('0b4cf35b-8ee9-4298-974e-12994cc8a082', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Nursing', 'Activity: As Tolerated', 'Encourage patient activity as tolerated. Assist with ambulation as needed.', 'Active', 'Dr. John Smith, MD', false, true, '2026-03-19 20:52:48.147762+00'),
+-- 	('10c9db54-63cf-4bce-88c6-e0751914dd9c', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Nursing', 'Fall Risk Precautions', 'Implement standard fall risk protocol. Ensure bed in low position and call light within reach.', 'Active', 'Dr. John Smith, MD', false, true, '2026-03-19 20:52:48.147762+00'),
+-- 	('8572aa2e-1e38-40ee-8b3f-1088e8e638f6', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Respiratory', 'Oxygen Therapy', 'Titrate oxygen via nasal cannula to maintain SpO₂ ≥ 95%.', 'Active', 'Dr. Chen', false, true, '2026-03-19 20:52:48.147762+00'),
+-- 	('5dfe30af-8171-43a8-a239-d9f90dfb4899', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Nursing', 'Cardiac Monitoring', 'Acute Electrolyte imbalance', 'Active', 'Dr. Chen', true, true, '2026-03-19 20:52:48.147762+00'),
+-- 	('f3fef073-c341-4f83-a26d-fe314e5023d0', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Nursing', 'I&O', 'q8hr', 'Active', 'Dr. Chen', true, true, '2026-03-19 20:52:48.147762+00'),
+-- 	('e3705f20-28af-43e0-a5bf-f0863fca775e', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Nursing', 'Orthostatic Vitals', 'Document BP & HR with patient supine, sitting, standing. Perform daily.', 'Active', 'Dr. Chen', true, true, '2026-03-19 20:52:48.147762+00'),
+-- 	('a49dc81b-1845-4b24-ab9e-9284db141f27', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Diet', 'Diet', 'Heart Healthy. 2L Fluid Restriction. ', 'Active', 'Dr. Chen', true, true, '2026-03-19 20:52:48.147762+00');
 
 
-RESET ALL;
+-- SELECT pg_catalog.setval('"public"."dispense_units_id_seq"', 18, true);
+
+
+-- RESET ALL;

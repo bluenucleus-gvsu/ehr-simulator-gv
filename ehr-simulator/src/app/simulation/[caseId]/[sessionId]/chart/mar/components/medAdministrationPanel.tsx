@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button"
 import {
   PencilLine,
-  ScanBarcode,
   ExternalLink,
   Pill,
   PillBottle,
@@ -59,7 +58,6 @@ const MedAdministrationPanel = ({
   newAdministrations,
   onUpdateAdministration,
   isScanned,
-  onPtScan,
   onAdministerMeds: handleAdministerMeds,
   isOpen,
   handlePopoverClose,
@@ -69,8 +67,12 @@ const MedAdministrationPanel = ({
   const [isLoading] = useState(false)
   const hasSelections = selectedOrders.length > 0;
   const hasOverdose = selectedOrders.some(order => {
-    const na = newAdministrations[order.id];
-    return na && order.dose < (na.administered_dose ?? 0);
+
+    const administeredDose = newAdministrations[order.id]?.administered_dose
+    if (!administeredDose || !order.dose) {
+      return false
+    }
+    return order.dose < administeredDose
   })
 
   const mustConfirmPatient = isPresim === false;
@@ -107,55 +109,27 @@ const MedAdministrationPanel = ({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="flex flex-col md:max-w-3xl xl:max-w-4xl max-w-5xl h-[90vh] p-0 gap-0 overflow-hidden bg-white border-slate-200">
+      <DialogContent
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        className="flex flex-col md:max-w-3xl xl:max-w-4xl max-w-5xl h-[90vh] p-0 gap-0 overflow-hidden bg-white border-slate-200"
+      >
 
         <DialogHeader className="px-6 py-4 bg-gray-100 border-b border-gray-300 flex-shrink-0 shadow-[0_2px_4px_-1px_rgba(0,0,0,0.1)]">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <DialogTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                <div className="p-2 bg-blue-200 rounded-lg text-blue-700">
-                  <Pill size={20} fill="white" />
-                </div>
-                Medication Administration
-              </DialogTitle>
-            </div>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pr-6">
+            <DialogTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <div className="p-2 bg-blue-200 rounded-lg text-blue-700">
+                <Pill size={20} fill="white" />
+              </div>
+              Medication Administration
+            </DialogTitle>
 
-            <div className="flex items-center gap-3 mr-6">
-              <PatientStatusBadge isScanned={isScanned} />
-              {!readOnly && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => onPtScan(!isScanned)}
-                  className="text-xs border size-6 border-blue-600 hover:bg-blue-100"
-                  type="button"
-                  title="Toggle patient wristband scan (simulation)"
-                >
-                  <ScanBarcode className="text-blue-600" />
-                </Button>
-              )}
-            </div>
+            <PatientStatusBadge isScanned={isScanned} />
+
+
           </div>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-6">
-          {!readOnly && mustConfirmPatient && !isScanned && (
-            <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-              <p className="font-medium">Confirm patient identity</p>
-              <p className="mt-1 text-xs text-amber-900/90">
-                Scan the simulated wristband, or use the button below to record the same bedside check when you do not have a scanner.
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-3 border-amber-300 bg-white hover:bg-amber-100"
-                onClick={() => onPtScan(true)}
-              >
-                Confirm patient identity
-              </Button>
-            </div>
-          )}
           {selectedOrders.length === 0 && (
             <div className="h-48 mt-4 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center text-slate-400">
               <PillBottle className="w-8 h-8 mb-2 opacity-50" />
@@ -164,7 +138,7 @@ const MedAdministrationPanel = ({
           )}
           <div className="grid gap-6 pb-10">
             {selectedOrders.map(order => {
-              const currentAdminData = newAdministrations[order.id] || { status: "Given", administered_dose: 666 };
+              const currentAdminData = newAdministrations[order.id] || { status: "Given", administered_dose: 0 };
 
               return (
                 <MedAdminCard
@@ -189,6 +163,10 @@ const MedAdministrationPanel = ({
                     onUpdateAdministration(order.id, 'notes', value)
                   }}
                   currentComment={currentAdminData.notes || ''}
+                  administrationInfusionRate={currentAdminData.infusion_rate || 0}
+                  onInfusionRateChange={(value) => {
+                    onUpdateAdministration(order.id, 'infusion_rate', value)
+                  }}
                 />
               )
             })}
