@@ -368,42 +368,6 @@ export async function updateCaseSession(session: CaseSessionUpsert) {
   );
 }
 
-export async function completeCaseSessionFromSessionID(sessionId: string) {
-  // Changes the completed_at to now, and status to 'completed'
-  // Connected to ../simulation/[caseId]/[sessionId]/components/header.tsx
-
-  const supabase = createClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-
-  // Update case_sessions table
-  const { error } = await supabase
-    .from("case_sessions")
-    .update({ completed_at: new Date().toISOString(),
-              status: 'completed'
-     })
-    .eq("id", sessionId);
-
-  
-  // Return error 
-  if (error) {
-    return {
-      success: false,
-      message: "Failed to update completed_at.",
-      error,
-      data: null
-    };
-  }
-  
-  // Return successful 
-  return {
-        success: true,
-        message: `completed_at updated:${sessionId}`,
-        data: null,
-  }
-}
-
 // extracts type of data from ActionResponse for use in frontend
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ExtractData<T extends (...args: any) => Promise<ActionResponse<any>>> =

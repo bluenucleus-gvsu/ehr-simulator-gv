@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
-import { completeCaseSessionFromSessionID } from "@/actions/cases";
+import { completeSession } from "@/actions/simulation";
 
 interface HeaderProps {
   tabs?: ReactNode;
@@ -35,7 +35,7 @@ const Header = ({ tabs, sessionId}: HeaderProps) => {
   const handleHomeClick = async () => {
 
     // Changes status and completed_at in case_sessions...
-    const response = await completeCaseSessionFromSessionID(sessionId)
+    const response = await completeSession(sessionId)
 
     // Error handle for response
     if(response.error){
