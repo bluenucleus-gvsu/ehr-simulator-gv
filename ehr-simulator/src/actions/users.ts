@@ -1,13 +1,10 @@
 "use server"
 
-import { createClient } from "@supabase/supabase-js";
 import { ActionResponse } from "./cases";
+import { createServiceSupabase } from "@/utils/supabase/service";
 
 export async function getAllUsers() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const supabase = createServiceSupabase();
 
   const { data, error } = await supabase
     .from("users")
@@ -19,10 +16,7 @@ export async function getAllUsers() {
 }
 
 export async function getAllStudentUsers() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const supabase = createServiceSupabase();
 
   const { data, error } = await supabase
     .from("users")
@@ -35,10 +29,7 @@ export async function getAllStudentUsers() {
 }
 
 export async function getAllAdminUsers() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const supabase = createServiceSupabase();
 
   const { data, error } = await supabase
     .from("users")
@@ -50,10 +41,7 @@ export async function getAllAdminUsers() {
 }
 
 export async function getAllFacultyUsers() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const supabase = createServiceSupabase();
 
   const { data, error } = await supabase
     .from("users")
@@ -65,10 +53,7 @@ export async function getAllFacultyUsers() {
 }
 
 export async function provisionStudents(students: { email?: string | null; full_name?: string | null }[]) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const supabase = createServiceSupabase();
 
   // Find which emails already have a record in the users table
   const emails = students.map(s => s.email).filter(Boolean) as string[];
@@ -104,10 +89,7 @@ export async function provisionStudents(students: { email?: string | null; full_
 }
 
 export async function getUsersByEmails(emails: string[]) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const supabase = createServiceSupabase();
 
   const { data, error } = await supabase
     .from("users")
@@ -118,10 +100,7 @@ export async function getUsersByEmails(emails: string[]) {
   return data || []
 }
 export async function getUsersGroupId(userId: string) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const supabase = createServiceSupabase();
 
   const { data, error } = await supabase
     .from('users')

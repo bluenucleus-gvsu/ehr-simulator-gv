@@ -1,6 +1,7 @@
 import React from "react";
 import { notFound } from "next/navigation";
 import { createServerSupabase } from "@/utils/supabase/server";
+import { createServiceSupabase } from "@/utils/supabase/service";
 import FacultyHeader from "@/app/faculty/components/FacultyHeader";
 import FacultyCoursesView, { Course } from "@/app/faculty/components/FacultyCoursesView";
 
@@ -144,6 +145,7 @@ export default async function FacultyPage({
   const { id } = await params;
 
   const supabase = await createServerSupabase();
+  const serviceSupabase = createServiceSupabase();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -163,7 +165,7 @@ export default async function FacultyPage({
       "Faculty";
     avatarUrl = user.user_metadata?.avatar_url || "";
   } else {
-    const { data: profile } = await supabase
+    const { data: profile } = await serviceSupabase
       .from("users")
       .select("full_name, email")
       .eq("id", id)
