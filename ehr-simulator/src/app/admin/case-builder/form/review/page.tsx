@@ -119,7 +119,7 @@ const FormReview = () => {
     >
       <div className="flex flex-col h-screen w-full bg-slate-50/50 overflow-hidden">
         <main className="flex-1 overflow-y-auto p-6 md:px-8 lg:px-12">
-          <div className="grid grid-cols-1 2xl:grid-cols-12 gap-6 h-full max-w-7xl mx-auto pb-20">
+          <div className="grid grid-cols-1 gap-6 h-full max-w-7xl mx-auto pb-20">
             <div className="flex flex-col gap-2">
 
               <Card>
