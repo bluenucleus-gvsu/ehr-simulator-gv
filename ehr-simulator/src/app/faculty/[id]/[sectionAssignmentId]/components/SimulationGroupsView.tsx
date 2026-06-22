@@ -2,18 +2,9 @@
 import React, { useState } from "react";
 import FeedbackModal from "@/app/faculty/components/FeedbackModal";
 import { FeedbackTarget, ActiveSimView } from "@/app/faculty/lib/types";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { updateCurrentPhase } from "@/actions/simulation"; // Removed getCurrentPhases
+import { updateCurrentPhase } from "@/actions/simulation";
 import { useRouter } from "next/navigation";
+import AdvanceAlertDialog from "./AdvanceAlertDialog";
 
 function formatSimTime(dateStr: string) {
   return new Date(dateStr).toLocaleString(undefined, {
@@ -277,23 +268,13 @@ export default function SimulationGroupsView({
       )}
 
       {/* Next Phase Alert Dialog */}
-      <AlertDialog open={phaseDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Advance {pendingPhaseGroup ? pendingPhaseGroup.name : ""} to the Next Phase
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to advance {pendingPhaseGroup ? pendingPhaseGroup.name : ""} to
-              the next phase? You cannot go back after advancing.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelPhaseAdvancement}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmPhaseAdvancement}>Advance</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <AdvanceAlertDialog
+        phaseDialog={phaseDialog}
+        pendingPhaseGroup={pendingPhaseGroup}
+        cancelPhaseAdvancement={cancelPhaseAdvancement}
+        confirmPhaseAdvancement={confirmPhaseAdvancement}
+      />
+
     </div>
   );
 }
