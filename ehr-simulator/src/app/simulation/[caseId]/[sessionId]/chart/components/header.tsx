@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
 import NavigationAlert from "./navigationAlert";
 import { completeSession } from "@/actions/simulation";
+import { getUserRoute } from "@/utils/routes";
 
 interface HeaderProps {
   tabs?: ReactNode;
@@ -36,17 +37,13 @@ const Header = ({ tabs, sessionId}: HeaderProps) => {
   }, [])
 
   const handleHomeClick = async () => {
-    let destination = `/`
-    if (userRole === 'student' && userId) {
-      destination = `/user/profile/${userId}`
-    } else if (userRole === 'admin') {
-      destination = '/admin'
-    } else if (userRole === 'faculty' && userId) {
-      destination = `/faculty/${userId}`
-    }
+    // Get user specific route
+    const destination = getUserRoute(userId, userRole)
 
+    // Set destination as pending path
     setPendingPath(destination)
 
+    // If the flex sheet has been updated, show Navigation Alert
     if(hasUnsavedCharting){
       setShowWarning(true);
     }
@@ -58,7 +55,8 @@ const Header = ({ tabs, sessionId}: HeaderProps) => {
       if(response.error){
         console.error('Failed to set complete', response)
       }
-      
+
+      // Push user to destination
       router.push(destination)
     }
   }
