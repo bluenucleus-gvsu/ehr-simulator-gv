@@ -9,6 +9,7 @@ import { useSimSessionContext } from "@/context/SimSessionContext";
 import NavigationAlert from "./navigationAlert";
 import { completeSession } from "@/actions/simulation";
 import { getUserRoute } from "@/utils/routes";
+import HomeButtonAlert from "./homeButtonAlert";
 
 interface HeaderProps {
   tabs?: ReactNode;
@@ -19,6 +20,7 @@ const Header = ({ tabs, sessionId}: HeaderProps) => {
   const [isFullscreen, setIsFullScreen] = useState(false)
   const { userId, userRole, isPresim, loading, hasUnsavedCharting } = useSimSessionContext();
   const [showWarning, setShowWarning] = useState(false);
+  const [homeClickWarning, setHomeClickWarning] = useState(false);
   const router = useRouter()
   const [pendingPath, setPendingPath] = useState<string | null>(null);
   const isPreSimMode = isPresim ?? true;
@@ -48,16 +50,7 @@ const Header = ({ tabs, sessionId}: HeaderProps) => {
       setShowWarning(true);
     }
     else{
-      // Changes status and completed_at in case_sessions...
-      const response = await completeSession(sessionId)
-
-      // Error handle for response
-      if(response.error){
-        console.error('Failed to set complete', response)
-      }
-
-      // Push user to destination
-      router.push(destination)
+      setHomeClickWarning(true);
     }
   }
 
@@ -137,6 +130,13 @@ const Header = ({ tabs, sessionId}: HeaderProps) => {
       <NavigationAlert
         showWarning={showWarning}
         setShowWarning={setShowWarning}
+        pendingPath={pendingPath}
+        setPendingPath={setPendingPath}
+        handleConfirmNavigation={handleConfirmNavigation}
+      />
+      <HomeButtonAlert
+        homeClickWarning={homeClickWarning}
+        setHomeClickWarning={setHomeClickWarning}
         pendingPath={pendingPath}
         setPendingPath={setPendingPath}
         handleConfirmNavigation={handleConfirmNavigation}
