@@ -32,13 +32,13 @@ export default function HomeButtonAlert({
           {pendingPath ? (
             <AlertDialogAction
               onClick={() => handleConfirmNavigation(pendingPath)}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="bg-red-600 hover:bg-red-700 text-white"
             >
               Leave Simulation
             </AlertDialogAction>
           ) : (
             <AlertDialogAction
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="bg-red-600 hover:bg-red-700 text-white"
               disabled={true}
             >
               No link available
