@@ -97,4 +97,4 @@ Once the PR is merged, move it to the "Done" column.
 ## 5. Responding to Review Feedback
 Reply to comments and make revisions in a timely manner. Ping the reviewer after committing revisions. If you disagree with feedback, explain your reasoning and have a discussion.
 
-The reviewer should resolve comment threads as revisions are made.
+Reply to every comment received and resolve it once you've made the appropriate updates or an agreement has been made offline. Responses can be short. "Done" is acceptable.
