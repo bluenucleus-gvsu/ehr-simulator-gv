@@ -8,13 +8,11 @@ import { createServerSupabase } from "@/utils/supabase/server";
 import { getUserCourses } from "@/actions/getUserCourses";
 import ProfileSimulationEntryButtons from "@/app/user/components/ProfileSimulationEntryButtons";
 import { isTesterModeServer } from "@/utils/testerModeServer";
-import { createServiceSupabase } from "@/utils/supabase/service";
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   const supabase = await createServerSupabase();
-  const serviceSupabase = createServiceSupabase();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -30,11 +28,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     studentName = user.user_metadata?.full_name || user.user_metadata?.name || user.email || "Student";
     avatarUrl = user.user_metadata?.avatar_url || "";
   } else {
-    const { data: profile } = await serviceSupabase
-      .from("users")
-      .select("full_name, email, role")
-      .eq("id", id)
-      .single();
+    const { data: profile } = await supabase.from("users").select("full_name, email, role").eq("id", id).single();
     studentName = profile?.full_name || profile?.email || "Student";
 
     const profileRole = profile?.role as string | undefined;

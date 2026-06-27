@@ -2,7 +2,6 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { emailIsDevAdminAllowlist } from "@/lib/devAdminEmails";
 import { createServerSupabase } from "@/utils/supabase/server";
-import { createServiceSupabase } from "@/utils/supabase/service";
 import { isTesterModeServer } from "@/utils/testerModeServer";
 
 export default async function AdminLayout({
@@ -13,7 +12,6 @@ export default async function AdminLayout({
   // Server-side check: ensure the current user is an admin before rendering admin UI
   try {
     const supabase = await createServerSupabase();
-    const serviceSupabase = createServiceSupabase();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -31,7 +29,7 @@ export default async function AdminLayout({
     }
 
     // Check role from the application's users table (public.users)
-    const { data: profile, error: profileError } = await serviceSupabase
+    const { data: profile, error: profileError } = await supabase
       .from("users")
       .select("role")
       .eq("id", user.id)
