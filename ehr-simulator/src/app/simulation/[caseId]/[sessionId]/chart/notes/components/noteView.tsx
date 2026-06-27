@@ -35,7 +35,7 @@ const NoteView = ({
   sessionId
 }: NoteViewProps) => {
   const { caseBundle } = useSimulationCase();
-  const { simStartTime, userName, userId, groupId } = useSimSessionContext();
+  const { simStartTime, userName, userId, groupId, isPresim } = useSimSessionContext();
   const { canEdit } = useStudentSimulationEditAccess();
   const [filteredSpecialties, setFilteredSpecialties] = useState<string[]>([]);
   const [testerNotes, setTesterNotes] = useState<ClinicalDocumentView[]>([]);
@@ -54,16 +54,25 @@ const NoteView = ({
   );
 
   const specialties = useMemo(() => {
-    return [...new Set(mergedNotes.map((note) => note.specialty))];
-  }, [mergedNotes]);
+    const visibleNotes = isPresim
+      ? mergedNotes.filter(note => note.is_in_presim)
+      : mergedNotes;
+
+    return [...new Set(visibleNotes.map(note => note.specialty))];
+  }, [mergedNotes, isPresim]);
 
   const filteredNotesData = useMemo(() => {
-    const sorted_notes = [...mergedNotes].sort((a, b) => b.time_offset - a.time_offset);
-    if (filteredSpecialties.length === 0) {
-      return sorted_notes;
-    }
-    return sorted_notes.filter(note => filteredSpecialties.includes(note.specialty))
-  }, [mergedNotes, filteredSpecialties]);
+    const visibleNotes = isPresim
+      ? mergedNotes.filter(note => note.is_in_presim)
+      : mergedNotes;
+
+    const sortedNotes = [...visibleNotes].sort((a, b) => b.time_offset - a.time_offset);
+
+    const hasSpecialtyFilter = filteredSpecialties.length > 0;
+    return hasSpecialtyFilter
+      ? sortedNotes.filter(note => filteredSpecialties.includes(note.specialty))
+      : sortedNotes;
+  }, [mergedNotes, filteredSpecialties, isPresim]);
 
   const handleFilterChange = (specialty: string, checked: boolean | "indeterminate") => {
     setFilteredSpecialties(prev => {
