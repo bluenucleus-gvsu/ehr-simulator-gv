@@ -1,6 +1,6 @@
 "use client";
 
-import { LAB_FIELD_TO_COLUMN, type LabResultInsert } from "@/lib/labTypes";
+import { type LabResultInsert } from "@/lib/labTypes";
 import type { LabTableData, ImagingData, MicrobiologyReportData } from "./labsData";
 
 type DbLabResult = {
@@ -142,10 +142,10 @@ export function buildLabRowsFromBundle(
       };
 
       if (templateRow.rowType === "results") {
-        const mappedColumn = LAB_FIELD_TO_COLUMN[templateRow.field] as keyof LabResultInsert | undefined;
+        const dbRow = templateRow.dbColumn as keyof LabResultInsert | undefined;
         for (const offset of timePoints) {
           const source = labByOffset.get(offset);
-          const value = mappedColumn ? source?.[mappedColumn as string] : undefined;
+          const value = dbRow ? source?.[dbRow as string] : undefined;
           nextRow[offset] = toDisplayValue(value);
         }
       }

@@ -54,16 +54,6 @@ function ensureNumberSet(raw: unknown): Set<number> {
   return out;
 }
 
-function ensureStringSet(raw: unknown): Set<string> {
-  if (raw instanceof Set) return raw as Set<string>;
-  if (!Array.isArray(raw)) return new Set();
-  const out = new Set<string>();
-  for (const v of raw) {
-    if (typeof v === "string" && v) out.add(v);
-  }
-  return out;
-}
-
 function estimatedIsoDobFromDemographics(d?: DemographicFormData): string {
   if (!d) return "";
   const monthIdx = months.indexOf(d.DOBMonth);
@@ -194,7 +184,6 @@ export function buildTesterCaseBundleFromDraft(caseId: string): CaseBundle {
           ? labsPayload.timePoints
           : [0],
       timePointsInPreSim: ensureNumberSet(labsPayload.timePointsInPreSim),
-      visibleItems: ensureStringSet(labsPayload.visibleItems),
     });
 
     labResults = normalized.labResults.map((lr, i) => {
@@ -218,15 +207,15 @@ export function buildTesterCaseBundleFromDraft(caseId: string): CaseBundle {
         findings:
           Array.isArray(imaging?.findings) && imaging.findings.length > 0
             ? imaging.findings.reduce(
-                (acc, f) => ({ ...acc, [f.region]: f.description }),
-                {} as Record<string, string>,
-              )
+              (acc, f) => ({ ...acc, [f.region]: f.description }),
+              {} as Record<string, string>,
+            )
             : null,
         impressions: imaging?.impressions ?? [],
         is_critical: Boolean(
           imaging?.isCritical === true ||
-            (typeof imaging?.isCritical === "string" &&
-              imaging.isCritical.toLowerCase().includes("critical")),
+          (typeof imaging?.isCritical === "string" &&
+            imaging.isCritical.toLowerCase().includes("critical")),
         ),
       };
     });
@@ -246,7 +235,7 @@ export function buildTesterCaseBundleFromDraft(caseId: string): CaseBundle {
         reporter: mb?.reporter ?? "N/A",
         is_critical:
           mb?.isCritical === true ||
-          (typeof mb?.isCritical === "string" && mb.isCritical.toLowerCase().includes("critical"))
+            (typeof mb?.isCritical === "string" && mb.isCritical.toLowerCase().includes("critical"))
             ? "true"
             : "false",
       };
@@ -392,7 +381,7 @@ export function mergeTesterCaseBundlePreferDraft(
     documentationResults,
     medicationAdministrations:
       Array.isArray(draftBundle.medicationAdministrations) &&
-      draftBundle.medicationAdministrations.length > 0
+        draftBundle.medicationAdministrations.length > 0
         ? draftBundle.medicationAdministrations
         : server.medicationAdministrations,
     medicationOrders:
