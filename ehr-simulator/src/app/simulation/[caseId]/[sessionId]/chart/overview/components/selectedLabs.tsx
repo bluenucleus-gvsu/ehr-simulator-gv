@@ -31,12 +31,14 @@ export function SelectedLabs() {
     const { rows, timePoints } = buildLabRowsFromBundle(caseBundle, labTemplate)
     // timePoints from bundle are sorted descending (largest offset = furthest in the past).
     // Smaller offset = closer to sim "now" → most recent; iterate ascending to pick latest result.
+
     const labTimesMostRecentFirst = [...timePoints].sort((a, b) => a - b)
     return {
       filteredData: rows.filter(row => row.rowType === "results" && selectedLabs.includes(row.field)),
       labTimesMostRecentFirst,
     }
   }, [caseBundle])
+
 
   const selectedLabData = filteredData.map(row => {
     const selectedLab = {
@@ -61,6 +63,9 @@ export function SelectedLabs() {
     }
     return undefined
   }).filter(Boolean)
+
+  // Hide card if no lab data to display
+  if (selectedLabData.length === 0) return null
 
   return (
     <Card className="relative col-span-1 h-fit max-w-full min-w-0 gap-3 overflow-hidden p-0 pt-2">

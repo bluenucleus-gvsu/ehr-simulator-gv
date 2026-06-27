@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, Settings, User, BookOpenText, Hospital, Presentation, LogOut } from "lucide-react";
+import { Home, Settings, User, BookOpenText, Hospital, Presentation, LogOut, ScanBarcode } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -36,6 +36,11 @@ const adminRoutes = [
     title: "Cases",
     url: "/admin/cases",
     icom: Hospital,
+  },
+  {
+    title: "Barcode Printing",
+    url: "/admin/barcodes",
+    icom: ScanBarcode,
   },
   {
     title: "Active Simulations (WIP)",

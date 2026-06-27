@@ -26,6 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { appendTesterMedicationAdministrations, getTesterMedicationAdministrations } from '@/utils/testerLocalStore';
 import { isTesterModeClient } from '@/utils/testerMode';
 import { useStudentSimulationEditAccess } from '@/utils/studentSimulationEditAccess';
+import { useParams } from 'next/navigation';
 
 
 export interface NewAdministrationData {
@@ -42,8 +43,6 @@ interface MarViewData {
   }
 }
 
-const patientMRN = 'pt12345678'
-
 const filterOptions = ["Scheduled", "Continuous", "PRN"]
 export default function MarView({
   medications,
@@ -58,6 +57,8 @@ export default function MarView({
   // context
   const { userId, groupId, isPresim, userName, simStartTime, loading } = useSimSessionContext();
   const { canEdit } = useStudentSimulationEditAccess();
+  const { caseId } = useParams()
+  const patientWristband = String(caseId)
   // med data
   const [selectedOrders, setSelectedOrders] = useState<MedicationOrder[]>([]);
   const [newAdministrations, setNewAdministrations] = useState<NewAdministrationData>({});
@@ -98,15 +99,13 @@ export default function MarView({
   });
   // Scanner debugging
   // const [scannedSymbol, setScannedSymbol] = useState('')
-
   const handleScan = (symbol: string) => {
-    if (!canEdit) {
-      toast.info("Medication documentation is view-only in pre-simulation.");
-      return;
-    }
+
+    symbol = symbol.trim()
+
     // handle patient wristband scans
-    if (symbol.slice(0, 2) === 'pt') {
-      if (symbol === patientMRN) {
+    if (symbol.slice(0, 3) === '~pt') {
+      if (symbol.slice(3) === patientWristband) {
         setIsScanned(true);
         return;
       } else {
@@ -117,11 +116,10 @@ export default function MarView({
       }
     }
 
-    // find all orders that use this medication
     const associatedOrders = medicationOrders.filter(order => order.medicationId === symbol);
 
     if (associatedOrders.length === 0) {
-      toast.info(`No associated orders found with ${symbol}`)
+      toast.info(`No orders found with medication ID: ${symbol}`)
       return
     }
 
@@ -155,7 +153,8 @@ export default function MarView({
           ...prev,
           [targetOrder.id]: {
             ...currentAdmin,
-            administered_dose: (currentAdmin.administered_dose || 0) + targetOrder.dose
+            administered_dose: (currentAdmin.administered_dose || 0) + (targetOrder.dose || 0)
+
           }
         };
       })
@@ -177,9 +176,10 @@ export default function MarView({
 
           status: "Given",
           administrator: userName,
-          time_offset: 0,
+          time_offset: 0, // updated on submission
           administered_dose: targetOrder.dose,
-          is_in_presim: isPresim ?? false,
+          infusion_rate: targetOrder.infusionRate,
+          is_in_presim: false,
           notes: '',
         }
       }));
@@ -204,8 +204,9 @@ export default function MarView({
         status: "Given",
         administrator: userName,
         time_offset: 0,
+        infusion_rate: order.infusionRate,
         administered_dose: order.dose,
-        is_in_presim: isPresim ?? false,
+        is_in_presim: false,
         notes: '',
       }
     }))
@@ -237,7 +238,7 @@ export default function MarView({
 
   useSymbologyScanner(handleScan,
     {
-      scannerOptions: { prefix: '~', suffix: '', maxDelay: 20 },
+      scannerOptions: { prefix: '', suffix: '', maxDelay: 40 },
       symbologies: ["Data Matrix"]
     },
   )
@@ -246,46 +247,6 @@ export default function MarView({
     if (!isTesterModeClient()) return;
     setTesterAdministrations(getTesterMedicationAdministrations(sessionKey) as DatabaseMedAdministration[]);
   }, [sessionKey]);
-
-  const handleMedCheckboxChange = (order: MedicationOrder, checked: boolean) => {
-    if (!canEdit) {
-      toast.info("Medication documentation is view-only in pre-simulation.");
-      return;
-    }
-    if (!groupId || !userId) {
-      toast.error('missing an id')
-      return
-    }
-    if (checked) {
-      setSelectedOrders(prev => [...prev, order]);
-
-      setNewAdministrations(prev => ({
-        ...prev,
-        [order.id]: {
-          case_id: resolvedCaseId,
-          case_session_id: params.sessionId,
-          medication_order_id: order.id,
-          user_id: userId,
-          group_id: groupId,
-
-          status: "Given",
-          administrator: userName,
-          time_offset: 0,
-          administered_dose: order.dose,
-          is_in_presim: isPresim ?? false,
-          notes: '',
-        }
-      }));
-    } else {
-      setSelectedOrders(prev => prev.filter(existingOrder => existingOrder.id !== order.id));
-
-      setNewAdministrations(prev => {
-        const copy = { ...prev };
-        delete copy[order.id];
-        return copy;
-      });
-    }
-  };
 
   const handleTimeColChange = (offset: number | string) => {
     if (typeof offset === "number") {
@@ -319,7 +280,6 @@ export default function MarView({
       };
     });
   };
-
   const handleClearAllSelections = () => {
     setSelectedOrders([]);
     setNewAdministrations({});
@@ -343,7 +303,7 @@ export default function MarView({
       const currentAdmin = newAdministrations[orderId]
       return {
         ...currentAdmin,
-        time_offset: displayTimeOffsetMinutes,
+        time_offset: elapsedMinutes,
       };
     });
 
@@ -424,53 +384,17 @@ export default function MarView({
 
 
   useEffect(() => {
-    // 1. Immediately sync elapsed time when the component mounts or anchorDate changes
     setElapsedMinutes(differenceInMinutes(new Date(), anchorDate));
 
-    // 2. Start the interval to update it every minute
     const interval = setInterval(() => {
       setElapsedMinutes(differenceInMinutes(new Date(), anchorDate));
-    }, 60000); // Update every minute
+    }, 60000);
 
     return () => clearInterval(interval);
   }, [anchorDate]);
 
-  const displayTimeOffsetMinutes = useMemo(() => {
-    const nonDueOffsets = mergedAdministrations
-      .filter((admin) => admin.status !== "Due")
-      .map((admin) => admin.time_offset)
-      .filter((offset): offset is number => typeof offset === "number");
-
-    const allOffsets = mergedAdministrations
-      .map((admin) => admin.time_offset)
-      .filter((offset): offset is number => typeof offset === "number");
-
-    const adminOffsets = nonDueOffsets.length > 0 ? nonDueOffsets : allOffsets;
-
-    if (adminOffsets.length === 0) {
-      return elapsedMinutes;
-    }
-
-    // Six columns represent ~6h centered near sim "now"; if administrations fall in that window, stay on elapsed time.
-    const windowStart = elapsedMinutes - (3 * 60);
-    const windowEnd = elapsedMinutes + (2 * 60);
-    const hasVisibleRangeHit = adminOffsets.some(
-      (offset) => offset >= windowStart && offset <= windowEnd,
-    );
-
-    if (hasVisibleRangeHit) {
-      return elapsedMinutes;
-    }
-
-    return adminOffsets.reduce((closest, offset) => {
-      const currentDistance = Math.abs(offset - elapsedMinutes);
-      const closestDistance = Math.abs(closest - elapsedMinutes);
-      return currentDistance < closestDistance ? offset : closest;
-    }, adminOffsets[0]);
-  }, [elapsedMinutes, mergedAdministrations]);
-
   const currentSimTime = anchorDate
-    ? addMinutes(anchorDate, displayTimeOffsetMinutes)
+    ? addMinutes(anchorDate, elapsedMinutes)
     : new Date();
 
   const displayColumns = createColumns(currentSimTime, timeColumnOffset);
@@ -539,7 +463,6 @@ export default function MarView({
               </div>
             </PopoverContent>
           </Popover>
-
           <Toggle
             pressed={isDue}
             onPressedChange={setIsDue}
@@ -591,7 +514,7 @@ export default function MarView({
           </div>
         )}
         {filteredMedOrders.map((order) => {
-          const isSelected = selectedOrders.includes(order);
+          // const isSelected = selectedOrders.includes(order);
           const associatedMedication = medsById[order.medicationId]
           const orderSpecifcAdministrations = groupedAdministrationsByOrder[order.id] || [];
 
@@ -608,12 +531,9 @@ export default function MarView({
               order={order}
               columns={displayColumns}
               sessionStart={anchorDate}
-              onSelectionChange={handleMedCheckboxChange}
-              isSelected={isSelected}
               isHighlightableColumn={timeColumnOffset === 0}
               elapsedSimMinutes={elapsedMinutes}
               isPresim={isPresim ?? false}
-              selectionDisabled={!canEdit}
             />
           )
         })}

@@ -2,22 +2,22 @@ import { Input } from '@/components/ui/input';
 import React, { useState, useEffect } from 'react';
 
 interface DoseInputProps {
-  dose: number;
-  onDoseChange: (newDose: number) => void;
+  value: number | undefined;
+  onValueChange: (newDose: number) => void;
   isOverdose: boolean;
 }
 
 // Component to parse numerical dose from string input
-export const DoseInput = ({ dose, onDoseChange, isOverdose }: DoseInputProps) => {
-  const [inputValue, setInputValue] = useState<string>(dose ? dose.toString() : '');
+export const DecimalInput = ({ value, onValueChange, isOverdose }: DoseInputProps) => {
+  const [inputValue, setInputValue] = useState<string>(value ? value.toString() : '');
 
   useEffect(() => {
     const parsedInput = Number(inputValue);
-    if (!isNaN(parsedInput) && parsedInput !== dose) {
-      setInputValue(dose.toString());
+    if (!isNaN(parsedInput) && parsedInput !== value && value) {
+      setInputValue(value.toString());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dose]);
+  }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -28,9 +28,9 @@ export const DoseInput = ({ dose, onDoseChange, isOverdose }: DoseInputProps) =>
 
       // Handle edge cases like empty string or a lone "." before casting
       if (value === '' || value === '.') {
-        onDoseChange(0);
+        onValueChange(0);
       } else {
-        onDoseChange(Number(value));
+        onValueChange(Number(value));
       }
     }
   };

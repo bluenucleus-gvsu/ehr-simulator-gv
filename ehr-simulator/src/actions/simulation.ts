@@ -184,6 +184,35 @@ export async function getAllClinicalDocuments(caseId: string, caseSessionId: str
     message: 'Successfully retrieved clinical documents'
   }
 }
+export async function getAllMedications() {
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  const { data, error } = await supabase
+    .from('medications')
+    .select(`*,
+        dispense_units(
+          name
+        )
+      `)
+    .order('generic_name')
+
+  if (error) {
+    return {
+      success: false,
+      message: 'Failed to retrieve medications',
+      error
+    }
+  }
+
+  return {
+    success: true,
+    data,
+    message: 'Successfully retrieved medications'
+  }
+}
 
 export async function getMedicationOrders(caseId: string) {
   const supabase = createClient<Database>(
@@ -209,7 +238,7 @@ export async function getMedicationOrders(caseId: string) {
       infusion_rate_unit,
       diluent,
       total_volume,
-      is_continuous 
+      is_variable_dose 
     )
   `)
     .eq('case_id', caseId);
@@ -249,73 +278,13 @@ export async function getMedicationAdministrations(caseId: string, sessionId: st
     }
   }
 
-  if ((error as { code?: string }).code === 'PGRST205') {
-    const [caseAdmRes, studentAdmRes] = await Promise.all([
-      supabase
-        .from('medication_administrations')
-        .select(
-          'case_id, medication_order_id, administrator, time_offset, status, notes, administered_dose, is_in_presim',
-        )
-        .eq('case_id', caseId),
-      supabase
-        .from('student_medication_administrations')
-        .select(
-          'case_id, case_session_id, medication_order_id, administrator, time_offset, status, notes, administered_dose, is_in_presim',
-        )
-        .eq('case_id', caseId)
-        .eq('case_session_id', sessionId),
-    ])
-
-    const studentAdmMissing = (studentAdmRes.error as { code?: string } | null)?.code === 'PGRST205'
-
-    if (caseAdmRes.error || (studentAdmRes.error && !studentAdmMissing)) {
-      return {
-        success: false,
-        message: 'Failed to retrieve medication administrations',
-        error: caseAdmRes.error ?? studentAdmRes.error ?? error,
-      }
-    }
-
-    const merged: DatabaseMedAdministration[] = [
-      ...(caseAdmRes.data ?? []).map((row) => ({
-        case_id: row.case_id,
-        case_session_id: null,
-        medication_order_id: row.medication_order_id,
-        administrator: row.administrator,
-        time_offset: row.time_offset,
-        status: row.status,
-        notes: row.notes,
-        administered_dose: row.administered_dose,
-        is_in_presim: row.is_in_presim,
-        source_type: 'case_administration',
-      })),
-      ...((studentAdmMissing ? [] : (studentAdmRes.data ?? [])).map((row) => ({
-        case_id: row.case_id,
-        case_session_id: row.case_session_id,
-        medication_order_id: row.medication_order_id,
-        administrator: row.administrator,
-        time_offset: row.time_offset,
-        status: row.status,
-        notes: row.notes,
-        administered_dose: row.administered_dose,
-        is_in_presim: row.is_in_presim,
-        source_type: 'student_administration',
-      }))),
-    ]
-
-    return {
-      success: true,
-      data: merged,
-      message: 'Successfully retrieved medication administrations',
-    }
-  }
-
   return {
     success: false,
     message: 'Failed to retrieve medication administrations',
     error
   }
 }
+
 
 type OrderAndMedicationType = ExtractData<typeof getMedicationOrders>;
 export type DatabaseMedication = OrderAndMedicationType[number]["medications"]
@@ -368,7 +337,7 @@ export async function submitMedicationAdministrations(
 
     return {
       success: true,
-      data: (data ?? []) as StudentMedicationAdministrationRow[],
+      data: data,
       message: 'Medications successfully documented'
     }
   }, async () => ({
@@ -467,81 +436,81 @@ export async function upsertDocumentationRows(payload: StudentDatabaseDocumentat
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-  const unsupportedLegacyColumns = new Set([
-    'spo2_source',
-    'pain_location',
-    'pain_characteristics',
-    'pain_alleviating_factors',
-    'pain_aggravating_factors',
-    'pain_interventions',
-    'urine_description',
-  ]);
+    const unsupportedLegacyColumns = new Set([
+      'spo2_source',
+      'pain_location',
+      'pain_characteristics',
+      'pain_alleviating_factors',
+      'pain_aggravating_factors',
+      'pain_interventions',
+      'urine_description',
+    ]);
 
-  const sanitizePayload = <T extends Record<string, unknown>>(rows: T[]): T[] =>
-    rows.map((row) =>
-      Object.fromEntries(
-        Object.entries(row).filter(([key]) => !unsupportedLegacyColumns.has(key))
-      ) as T
-    );
+    const sanitizePayload = <T extends Record<string, unknown>>(rows: T[]): T[] =>
+      rows.map((row) =>
+        Object.fromEntries(
+          Object.entries(row).filter(([key]) => !unsupportedLegacyColumns.has(key))
+        ) as T
+      );
 
-  const { data, error } = await supabase
-    .from('editable_documentation_results')
-    .upsert(payload, {
-      onConflict: 'case_session_id, time_offset'
-    });
-
-  if (!error) {
-    return { data, error: null };
-  }
-
-  // Some databases are missing newer documentation columns.
-  // Retry with a legacy-safe payload before broader table fallbacks.
-  const legacySafePayload = sanitizePayload(payload as Record<string, unknown>[]) as StudentDatabaseDocumentation[];
-  if ((error as { code?: string } | null)?.code === '42703' || (error as { code?: string } | null)?.code === 'PGRST204') {
-    const safeUpsertRes = await supabase
+    const { data, error } = await supabase
       .from('editable_documentation_results')
-      .upsert(legacySafePayload, {
+      .upsert(payload, {
         onConflict: 'case_session_id, time_offset'
       });
-    if (!safeUpsertRes.error) {
-      return { data: safeUpsertRes.data, error: null };
+
+    if (!error) {
+      return { data, error: null };
     }
-  }
 
-  // Some environments miss the unique constraint needed by upsert.
-  if ((error as { code?: string } | null)?.code === '42P10') {
-    const insertRes = await supabase
-      .from('editable_documentation_results')
-      .insert(legacySafePayload);
-    if (!insertRes.error) {
-      return { data: insertRes.data, error: null };
+    // Some databases are missing newer documentation columns.
+    // Retry with a legacy-safe payload before broader table fallbacks.
+    const legacySafePayload = sanitizePayload(payload as Record<string, unknown>[]) as StudentDatabaseDocumentation[];
+    if ((error as { code?: string } | null)?.code === '42703' || (error as { code?: string } | null)?.code === 'PGRST204') {
+      const safeUpsertRes = await supabase
+        .from('editable_documentation_results')
+        .upsert(legacySafePayload, {
+          onConflict: 'case_session_id, time_offset'
+        });
+      if (!safeUpsertRes.error) {
+        return { data: safeUpsertRes.data, error: null };
+      }
     }
-    return { data: insertRes.data, error: insertRes.error };
-  }
 
-  // Backward-compatible fallback for environments without editable_documentation_results.
-  if ((error as { code?: string } | null)?.code === 'PGRST205') {
-    const fallbackPayload: Database['public']['Tables']['documentation_results']['Insert'][] = legacySafePayload.map((row) => {
-      const {
-        case_session_id: _caseSessionId,
-        user_id: _userId,
-        group_id: _groupId,
-        ...rest
-      } = row;
-      return {
-        ...rest,
-      };
-    });
-
-    const fallbackRes = await supabase
-      .from('documentation_results')
-      .insert(fallbackPayload);
-
-    if (!fallbackRes.error) {
-      return { data: fallbackRes.data, error: null };
+    // Some environments miss the unique constraint needed by upsert.
+    if ((error as { code?: string } | null)?.code === '42P10') {
+      const insertRes = await supabase
+        .from('editable_documentation_results')
+        .insert(legacySafePayload);
+      if (!insertRes.error) {
+        return { data: insertRes.data, error: null };
+      }
+      return { data: insertRes.data, error: insertRes.error };
     }
-    return { data: fallbackRes.data, error: fallbackRes.error };
-  }
+
+    // Backward-compatible fallback for environments without editable_documentation_results.
+    if ((error as { code?: string } | null)?.code === 'PGRST205') {
+      const fallbackPayload: Database['public']['Tables']['documentation_results']['Insert'][] = legacySafePayload.map((row) => {
+        const {
+          case_session_id: _caseSessionId,
+          user_id: _userId,
+          group_id: _groupId,
+          ...rest
+        } = row;
+        return {
+          ...rest,
+        };
+      });
+
+      const fallbackRes = await supabase
+        .from('documentation_results')
+        .insert(fallbackPayload);
+
+      if (!fallbackRes.error) {
+        return { data: fallbackRes.data, error: null };
+      }
+      return { data: fallbackRes.data, error: fallbackRes.error };
+    }
 
     return { data, error };
   }, async () => ({ data: payload, error: null }));
