@@ -20,7 +20,6 @@ export async function updateLabs(
     data: payload.data ?? [],
     timePoints: payload.timePoints ?? [],
     timePointsInPreSim: new Set(payload.timePointsInPreSim ?? []),
-    visibleItems: new Set(payload.visibleItems ?? []),
   });
   const { error } = await supabase.rpc("case_builder_replace_labs", {
     p_case_id: caseId,
