@@ -17,7 +17,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Dot } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 
 interface OrdersTableProps<T> {
   columnNames: string[],
@@ -66,11 +65,6 @@ const OrdersTable = <T extends Record<string, string | boolean | undefined>>({
           const row = info.row.original as T & { title?: string; isImportant?: boolean };
           return (
             <div className="flex flex-col items-end gap-1 text-right">
-              {row.isImportant ? (
-                <Badge variant="outline" className="text-[10px] font-semibold tracking-wide border-amber-300 bg-amber-50 text-amber-900 shrink-0">
-                  IMPORTANT
-                </Badge>
-              ) : null}
               <h1 className="text-xs font-medium text-wrap tracking-tight">{row.title}</h1>
             </div>
           )

@@ -6,7 +6,7 @@ interface BaseMedication {
   strength: number;
   strengthUnit: string;
   dispenseUnit: string; // e.g., "Tablet", "Solution", "Cream", "Vial", "Syringe"
-  // administrationFrequencies: string[];
+  isVariableDose: boolean;
 }
 
 
@@ -26,7 +26,6 @@ export interface IvMedication extends BaseMedication {
   diluent?: string;
   totalVolume?: number;
   infusionDurationHours?: number;
-  isContinuous: boolean;
 }
 
 export interface InjectableMedication extends BaseMedication {
@@ -77,7 +76,7 @@ export interface MedicationOrder {
   // status: "active" | "completed" | "Held" | "cancelled";
   orderingProvider: string;
   infusionRate?: number
-  dose: number,
+  dose: number | null,
   visibleInPresim: boolean
 }
 
@@ -85,7 +84,7 @@ export type AdministrationStatus = 'Given' | 'Held' | 'Missed' | 'Refused' | 'Du
 
 export interface MedAdministrationInstance {
   id?: string;
-  medicationOrderId: string;    // link to specific med order
+  medicationOrderId: string;
   administratorId: string;
   adminTimeMinuteOffset: number;
   status: AdministrationStatus;
@@ -93,6 +92,7 @@ export interface MedAdministrationInstance {
   administeredDose: number;
   visibleInPresim: boolean;
 }
+
 
 export const allMedications: AllMedicationTypes[] = [
   {
@@ -103,6 +103,7 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 25,
     strengthUnit: "mg",
     dispenseUnit: "Tablet",
+    isVariableDose: false
   },
   {
     id: "medPantoprazoleIv40",
@@ -112,6 +113,7 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 40,
     strengthUnit: "mg",
     dispenseUnit: "Tablet",
+    isVariableDose: false
   },
 
   {
@@ -127,7 +129,7 @@ export const allMedications: AllMedicationTypes[] = [
     diluent: "normal saline 0.9%",
     totalVolume: 50,
     infusionDurationHours: 0.5,
-    isContinuous: false,
+    isVariableDose: false
   },
   {
     id: "medAcetaminophenIv",
@@ -141,7 +143,7 @@ export const allMedications: AllMedicationTypes[] = [
     infusionRateUnit: 'mL/hr',
     totalVolume: 50,
     infusionDurationHours: 0.5,
-    isContinuous: false,
+    isVariableDose: false
   },
   {
     id: "medNormalSaline09Iv",
@@ -153,7 +155,7 @@ export const allMedications: AllMedicationTypes[] = [
     infusionRateUnit: 'mL/hr',
     totalVolume: 1000,
     infusionDurationHours: 10,
-    isContinuous: true,
+    isVariableDose: false
   },
   {
     id: "medLactatedRingersIV",
@@ -165,7 +167,7 @@ export const allMedications: AllMedicationTypes[] = [
     infusionRateUnit: 'mL/hr',
     totalVolume: 1000,
     infusionDurationHours: 10,
-    isContinuous: true,
+    isVariableDose: false
   },
   {
     id: "medPiperacillinTazobactamIV",
@@ -178,7 +180,7 @@ export const allMedications: AllMedicationTypes[] = [
     diluent: 'normal saline 0.9%',
     totalVolume: 100,
     infusionDurationHours: 10,
-    isContinuous: false,
+    isVariableDose: false
   },
   {
     id: "medLisinoprilOral10",
@@ -188,6 +190,7 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 10,
     strengthUnit: "mg",
     dispenseUnit: "Tablet",
+    isVariableDose: false
   },
   {
     id: "medVancomycinIv1000",
@@ -201,7 +204,7 @@ export const allMedications: AllMedicationTypes[] = [
     diluent: "sodium chloride 0.9%",
     totalVolume: 250,
     infusionDurationHours: 2,
-    isContinuous: false,
+    isVariableDose: false
   },
   {
     id: "medAtorvastatinOral40",
@@ -211,6 +214,7 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 40,
     strengthUnit: "mg",
     dispenseUnit: "Tablet",
+    isVariableDose: false
   },
   {
     id: "medAcetaminophenOral650",
@@ -220,6 +224,7 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 650,
     strengthUnit: "mg",
     dispenseUnit: "Tablet",
+    isVariableDose: false
   },
   {
     id: "medInsulinGlargineSc",
@@ -229,6 +234,7 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 1,
     strengthUnit: "units",
     dispenseUnit: "Unit",
+    isVariableDose: false
   },
   {
     id: "medInsulinAspartHum",
@@ -237,6 +243,7 @@ export const allMedications: AllMedicationTypes[] = [
     route: "SC",
     strength: 1,
     strengthUnit: "units",
+    isVariableDose: false,
     dispenseUnit: "Unit",
     bgDosing: [
       { bgRange: "<70", units: "0" },
@@ -257,6 +264,7 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 20,
     strengthUnit: "mg",
     dispenseUnit: "Tablet",
+    isVariableDose: false
   },
   // {
   //   id: "medPantoprazoleIv40",
@@ -285,6 +293,7 @@ export const allMedications: AllMedicationTypes[] = [
     needleGauge: "30G",
     needleLength: "5/16 inch",
     reconstitutionRequired: false,
+    isVariableDose: false
   },
   {
     id: "medMorphineIv10",
@@ -295,7 +304,7 @@ export const allMedications: AllMedicationTypes[] = [
     strengthUnit: "mg",
     dispenseUnit: "Ampule",
     infusionDurationHours: 1,
-    isContinuous: false,
+    isVariableDose: false
   },
   {
     id: "medAlbuterolInhalation",
@@ -308,6 +317,7 @@ export const allMedications: AllMedicationTypes[] = [
     deviceType: "MDI",
     requiresSpacer: false,
     inhalationsPerDose: 2,
+    isVariableDose: false
   },
   {
     id: "medOndansetronIv4",
@@ -317,7 +327,7 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 4,
     strengthUnit: "mg",
     dispenseUnit: "Vial",
-    isContinuous: false,
+    isVariableDose: false
   },
   {
     id: "medCeftriaxoneIm250",
@@ -332,6 +342,7 @@ export const allMedications: AllMedicationTypes[] = [
     needleLength: "1.5 inches",
     reconstitutionRequired: true,
     reconstitutionInstructions: "Reconstitute with 1.8 mL sterile water for injection",
+    isVariableDose: false
   },
   {
     id: "medCeftriaxoneIv1g",
@@ -341,7 +352,7 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 1,
     strengthUnit: "g",
     dispenseUnit: "Syringe",
-    isContinuous: false
+    isVariableDose: false
   },
   {
     id: "medEpinephrineIm1mg",
@@ -355,6 +366,7 @@ export const allMedications: AllMedicationTypes[] = [
     needleGauge: "23G",
     needleLength: "0.5 inches",
     reconstitutionRequired: false,
+    isVariableDose: false
   },
   {
     id: "medMethylprednisoloneIv125",
@@ -368,7 +380,7 @@ export const allMedications: AllMedicationTypes[] = [
     diluent: "NS 0.9%",
     totalVolume: 100,
     infusionDurationHours: 1,
-    isContinuous: false,
+    isVariableDose: false
   },
   {
     id: "medMetoprololIvPush",
@@ -378,7 +390,7 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 10,
     strengthUnit: "mg",
     dispenseUnit: "Vial",
-    isContinuous: false,
+    isVariableDose: false
   },
   {
     id: "medNitroglycerin04mgSl",
@@ -388,6 +400,7 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 0.4,
     strengthUnit: "mg",
     dispenseUnit: "Tab",
+    isVariableDose: false
   },
   {
     id: 'medLidocaineInDex5',
@@ -400,7 +413,7 @@ export const allMedications: AllMedicationTypes[] = [
     diluent: "dextrose 5.0%",
     totalVolume: 500,
     infusionDurationHours: 10,
-    isContinuous: false,
+    isVariableDose: false
   },
   {
     id: "medDopamine400InDex5",
@@ -412,7 +425,7 @@ export const allMedications: AllMedicationTypes[] = [
     infusionRateUnit: "mL/hr",
     diluent: "dextrose 5.0%",
     totalVolume: 250,
-    isContinuous: false,
+    isVariableDose: false
   },
   {
     id: "medAtropinePush",
@@ -421,7 +434,7 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 0.5,
     strengthUnit: "mg",
     dispenseUnit: "Syringe",
-    isContinuous: false,
+    isVariableDose: false
   },
   {
     id: "medDextrose5inNS45",
@@ -431,7 +444,7 @@ export const allMedications: AllMedicationTypes[] = [
     strengthUnit: 'mL',
     dispenseUnit: 'Bag',
     infusionRateUnit: 'mL/hr',
-    isContinuous: true,
+    isVariableDose: false
   },
   {
     id: "medAcetaminophenOral325",
@@ -441,6 +454,7 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 325,
     strengthUnit: "mg",
     dispenseUnit: "Tablet",
+    isVariableDose: false
   },
   {
     id: "medCefazolin1000",
@@ -450,7 +464,7 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 1000,
     strengthUnit: "mg",
     dispenseUnit: 'Vial',
-    isContinuous: false,
+    isVariableDose: false,
     infusionRateUnit: 'mL/hr'
   },
   {
@@ -460,6 +474,7 @@ export const allMedications: AllMedicationTypes[] = [
     strength: 1,
     strengthUnit: "g",
     dispenseUnit: 'Tablet',
+    isVariableDose: false
   }
 ];
 
