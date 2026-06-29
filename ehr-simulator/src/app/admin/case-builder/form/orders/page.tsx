@@ -154,9 +154,9 @@ export default function OrdersForm() {
       continueButtonTooltip="Proceed to Next Page"
       backButtonTooltip="Return to Previous Page"
     >
-      <div className="flex flex-col h-screen w-full bg-slate-50/50">
+      <div className="flex flex-col h-full w-full bg-slate-50/50">
         <PhaseTabNav scope="orders" />
-        <div className="flex-1 grid grid-cols-1 2xl:grid-cols-12 gap-6 h-full w-full overflow-y-auto pt-2 pb-30 px-8 lg:px-12 mx-auto">
+        <div className="flex-1 grid grid-cols-1 2xl:grid-cols-12 gap-6 w-full overflow-y-auto pt-4 pb-30 px-6 sm:px-8 lg:px-12 mx-auto">
           <div className="lg:col-span-5 space-y-6">
             <Card className="border-slate-200 shadow-sm h-fit pt-0">
               <CardHeader className="bg-slate-50/50 border-b border-slate-200/70 rounded-t-xl pt-3 !pb-3">

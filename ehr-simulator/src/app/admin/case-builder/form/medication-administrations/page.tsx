@@ -218,10 +218,10 @@ export default function MedicationAdministrationsForm() {
       continueButtonTooltip="Proceed to Next Page"
       backButtonTooltip="Return to Previous Page"
     >
-      <div className="flex flex-col h-screen w-full bg-slate-50/50 overflow-hidden">
+      <div className="flex flex-col h-full w-full bg-slate-50/50 overflow-hidden">
+        <PhaseTabNav scope="mar" />
         <main className="flex-1 overflow-y-auto p-6 md:px-8 lg:px-12">
-          <div className="max-w-6xl mx-auto space-y-8 pb-20">
-            <PhaseTabNav scope="mar" />
+          <div className="max-w-6xl mx-auto space-y-6 pb-20">
             <Card className="border-slate-200 shadow-sm overflow-hidden py-0">
               <CardHeader className="bg-slate-50/50 border-b border-slate-100 pt-4 !pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">

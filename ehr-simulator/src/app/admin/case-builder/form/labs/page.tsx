@@ -294,9 +294,10 @@ function LabFormInner() {
       continueButtonTooltip="Proceed to Next Page"
       backButtonTooltip="Return to Previous Page"
     >
-      <div className="bg-slate-50/50 flex-1 flex flex-col min-h-0 px-6 pt-4">
+      <div className="bg-slate-50/50 flex flex-1 flex-col min-h-0">
         <PhaseTabNav scope="labs" />
-        <div className="h-12 px-4 w-full flex justify-start gap-12 mb-3 items-end">
+        <div className="flex flex-1 flex-col min-h-0 px-6 pt-4 sm:px-8 lg:px-12">
+        <div className="h-12 px-0 w-full flex justify-start gap-12 mb-3 items-end">
           <AddTableColumn handleColumnAdd={addTimePoint} />
           <div>
             <Label>Imaging Options</Label>
@@ -324,6 +325,7 @@ function LabFormInner() {
               return `${baseClass} ${colorClass}`;
             }}
           />
+        </div>
         </div>
       </div>
     </FormShell>

@@ -71,7 +71,7 @@ function FormShellHeaderFallback({
             </h1>
             <p className="text-xs text-slate-500 mt-1 line-clamp-2">{stepDescription}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 shrink-0 self-center">
             <CasePhaseControls />
             {showSaveButton ? (
               <Button
@@ -149,7 +149,7 @@ function FormShellHeaderResolved({
             </h1>
             <p className="text-xs text-slate-500 mt-1 line-clamp-2">{stepDescription}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 shrink-0 self-center">
             <CasePhaseControls />
             {showSaveButton ? (
               <Button

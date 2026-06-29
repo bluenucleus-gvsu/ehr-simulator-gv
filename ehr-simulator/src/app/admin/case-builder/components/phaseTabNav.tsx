@@ -49,12 +49,19 @@ export function PhaseTabNav({ scope }: PhaseTabNavProps) {
     }
   };
 
+  const phaseHint =
+    activePhase > 1
+      ? `Editing Phase ${activePhase}. Changes save when you switch phases or continue.`
+      : "Start in Phase 1. Changes save when you switch phases or continue.";
+
   return (
-    <div className="flex flex-col items-center gap-2 border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
-        Simulation phase
-      </p>
-      <div className="flex flex-wrap items-center justify-center gap-2">
+    <div className="w-full shrink-0 border-b border-slate-200 bg-white">
+      <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-2.5 px-4 py-3 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 shrink-0 sm:w-28">
+            Phase
+          </p>
+          <div className="flex flex-wrap items-center gap-2 sm:flex-1">
         {Array.from({ length: highestInitializedPhase }, (_, i) => i + 1).map((p) => {
           const style = getPhaseStyle(p);
           const isActive = activePhase === p;
@@ -66,9 +73,9 @@ export function PhaseTabNav({ scope }: PhaseTabNavProps) {
               variant={isActive ? "default" : "outline"}
               disabled={busy}
               className={cn(
-                "h-9 min-w-[88px] text-sm font-semibold border-2 transition-all",
+                "h-8 min-w-[5.25rem] px-3 text-sm font-semibold border-2 transition-colors",
                 isActive
-                  ? cn(style.badge, "ring-2 ring-offset-2 ring-slate-400 scale-105")
+                  ? cn(style.badge, "shadow-sm ring-2 ring-slate-300/80")
                   : cn(style.selectTrigger, "hover:opacity-90"),
               )}
               onClick={() =>
@@ -90,7 +97,7 @@ export function PhaseTabNav({ scope }: PhaseTabNavProps) {
             variant="outline"
             disabled={busy}
             className={cn(
-              "h-9 gap-1 border-2 border-dashed font-semibold",
+              "h-8 gap-1.5 border-2 border-dashed px-3 font-semibold",
               getPhaseStyle(nextPhaseNum).selectTrigger,
             )}
             onClick={() =>
@@ -111,7 +118,7 @@ export function PhaseTabNav({ scope }: PhaseTabNavProps) {
             size="sm"
             variant="outline"
             disabled={busy}
-            className="h-9 gap-1 border-2 border-red-200 text-red-700 hover:bg-red-50 font-semibold"
+            className="h-8 gap-1.5 border-2 border-red-200 px-3 text-red-700 hover:bg-red-50 font-semibold"
             onClick={() =>
               void runPhaseAction(async () => {
                 const ok = await deleteScopePhase();
@@ -123,16 +130,12 @@ export function PhaseTabNav({ scope }: PhaseTabNavProps) {
             Delete Phase {activePhase}
           </Button>
         ) : null}
+          </div>
+        </div>
+        <p className="text-xs leading-relaxed text-slate-500 sm:pl-32">
+          {phaseHint}
+        </p>
       </div>
-      {activePhase > 1 ? (
-        <p className="text-xs text-slate-500 text-center max-w-lg">
-          Editing Phase {activePhase}. All phases save automatically when you switch, create a new phase, or continue.
-        </p>
-      ) : (
-        <p className="text-xs text-slate-500 text-center max-w-lg">
-          Start in Phase 1. Changes save when you switch phases, add a phase, or click Continue.
-        </p>
-      )}
     </div>
   );
 }

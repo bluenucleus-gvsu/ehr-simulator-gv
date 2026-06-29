@@ -93,8 +93,8 @@ export function CasePhaseControls() {
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 shadow-sm">
-        <Label htmlFor="phase-count-input" className="text-[11px] font-medium text-slate-600 shrink-0">
+      <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5">
+        <Label htmlFor="phase-count-input" className="text-xs font-medium text-slate-600 whitespace-nowrap">
           Max phases
         </Label>
         <Input
@@ -104,14 +104,14 @@ export function CasePhaseControls() {
           max={MAX_CASE_PHASES}
           value={draftCount}
           onChange={(e) => setDraftCount(e.target.value)}
-          className="h-7 w-14 bg-white text-xs px-2"
+          className="h-8 w-14 bg-white text-center text-sm px-1"
           title="Maximum number of phases faculty can create on Orders, Labs, and MAR tabs"
         />
         <Button
           type="button"
           size="sm"
           variant="secondary"
-          className="h-7 text-xs px-2"
+          className="h-8 px-3 text-xs"
           disabled={isUpdating}
           onClick={handleUpdateCount}
         >

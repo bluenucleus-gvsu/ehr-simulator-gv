@@ -175,10 +175,10 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
       continueButtonTooltip="Proceed to Next Page"
       backButtonTooltip="Return to Previous Page"
     >
-      <div className="flex overflow-y-auto flex-col w-full bg-slate-50/50">
+      <div className="flex flex-col w-full bg-slate-50/50 overflow-y-auto">
+        <PhaseTabNav scope="medOrders" />
         <div className="flex-1 p-6 md:px-12 lg:px-24">
           <div className="max-w-4xl mx-auto space-y-6 pb-20">
-            <PhaseTabNav scope="medOrders" />
             <Card className="p-4">
               <Label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                 <Search className="w-4 h-4 text-blue-600" />
