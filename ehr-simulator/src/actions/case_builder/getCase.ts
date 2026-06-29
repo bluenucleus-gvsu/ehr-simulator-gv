@@ -147,7 +147,10 @@ export async function getCaseBundle(
 
   let medicationOrders = rawOrders
   if (medicationIds.length > 0) {
-    const medsRes = await supabase.from("medications").select("*").in("id", medicationIds)
+    const medsRes = await supabase
+      .from("medications")
+      .select("*, dispense_units ( name )")
+      .in("id", medicationIds)
     if (medsRes.error) throw medsRes.error
     const byId = new Map((medsRes.data ?? []).map((m: { id: string }) => [m.id, m]))
     medicationOrders = rawOrders.map((row: { medication_id?: string | null }) => ({

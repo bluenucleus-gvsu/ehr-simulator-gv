@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   Pill,
   Search,
@@ -11,10 +11,10 @@ import { AllMedicationTypes, MedicationOrder } from "@/app/simulation/[caseId]/[
 import Combobox from "@/components/ui/combobox"
 import MedCardForm from "./components/medCardForm"
 import { useRouter } from "next/navigation"
-import { useFormContext } from "@/context/FormContext"
+import { useFormContext, usePhaseTab } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
-import { CaseSection } from "@/lib/saveCase"
-import { saveCaseData } from "@/actions/case_builder/caseBuilder"
+import { PhaseTabNav } from "../../components/phaseTabNav"
+import { toast } from "sonner"
 
 function getComboboxData(medications: AllMedicationTypes[]) {
   return medications.map(med => {
@@ -30,16 +30,39 @@ function getComboboxData(medications: AllMedicationTypes[]) {
   })
 }
 
+function selectedMedsForOrders(
+  orders: MedicationOrder[],
+  medications: AllMedicationTypes[],
+): AllMedicationTypes[] {
+  return orders
+    .map((order) => medications.find((med) => med.id === order.medicationId))
+    .filter((med): med is AllMedicationTypes => Boolean(med));
+}
+
 interface MedicationOrderFormProps {
   medications: AllMedicationTypes[];
 }
 
 export default function MedicationOrderForm({ medications }: MedicationOrderFormProps) {
   const router = useRouter()
-  const { onDataChange, medOrderData, caseId, medAdministrationData } = useFormContext()
+  const {
+    onDataChange,
+    medOrderData,
+    caseId,
+    registerCaseBuilderLocalOverlay,
+    saveAllPhasesForScope,
+    flushPhaseScope,
+  } = useFormContext()
+  const { activePhase } = usePhaseTab("medOrders");
+
   const [selectedMed, setSelectedMed] = useState('')
   const [selectedMeds, setSelectedMeds] = useState<AllMedicationTypes[]>(medOrderData.selectedMeds)
   const [medOrders, setMedOrders] = useState<MedicationOrder[]>(medOrderData.createdOrders)
+
+  const medOrdersRef = useRef(medOrders)
+  const selectedMedsRef = useRef(selectedMeds)
+  medOrdersRef.current = medOrders
+  selectedMedsRef.current = selectedMeds
 
   const handleAddMedication = (newMedId: string) => {
     setSelectedMed(newMedId)
@@ -96,6 +119,26 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
     return getComboboxData(medications);
   }, [medications]);
 
+  useEffect(() => {
+    const orders = medOrderData.createdOrders;
+    setMedOrders(orders);
+    setSelectedMeds(
+      medOrderData.selectedMeds.length > 0
+        ? medOrderData.selectedMeds
+        : selectedMedsForOrders(orders, medications),
+    );
+  }, [medOrderData, activePhase, medications]);
+
+  useEffect(() => {
+    registerCaseBuilderLocalOverlay(() => ({
+      medOrders: {
+        createdOrders: medOrdersRef.current,
+        selectedMeds: selectedMedsRef.current,
+      },
+    }));
+    return () => registerCaseBuilderLocalOverlay(null);
+  }, [registerCaseBuilderLocalOverlay]);
+
   const goBack = () => {
     onDataChange('medOrders', {
       createdOrders: medOrders,
@@ -105,23 +148,25 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
   }
 
   const handleSubmit = async () => {
+    flushPhaseScope('medOrders', activePhase);
     onDataChange('medOrders', {
       createdOrders: medOrders,
       selectedMeds: selectedMeds
     });
+    if (medOrders.length === 0) {
+      toast.error("Add at least one medication order before continuing.");
+      return;
+    }
     if (caseId) {
-      await saveCaseData({
-        payload: { orders: medOrders, administrations: medAdministrationData },
-        section: CaseSection.MEDICATION_ORDERS,
-        caseId,
-      })
+      await saveAllPhasesForScope('medOrders');
+      toast.success("Medication orders saved.");
     }
     router.push('/admin/case-builder/form/medication-administrations');
   }
   return (
     <FormShell
       title="Medication Orders"
-      stepDescription="Step 8 of 9: Create Medication Orders"
+      stepDescription="Step 8 of 10: Create Medication Orders"
       icon={<Pill className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}
@@ -133,6 +178,7 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
       <div className="flex overflow-y-auto flex-col w-full bg-slate-50/50">
         <div className="flex-1 p-6 md:px-12 lg:px-24">
           <div className="max-w-4xl mx-auto space-y-6 pb-20">
+            <PhaseTabNav scope="medOrders" />
             <Card className="p-4">
               <Label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                 <Search className="w-4 h-4 text-blue-600" />

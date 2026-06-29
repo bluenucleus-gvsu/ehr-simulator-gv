@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import ContinueButton from "./continueButton";
 import BackButton from "./goBackButton";
 import { CASE_BUILDER_STEPS } from "../caseBuilderSteps";
+import { CasePhaseControls } from "./casePhaseControls";
 import { saveAllCaseBuilderProgress } from "@/lib/caseBuilder/saveCaseBuilderProgress";
 import { extractErrorMessage } from "@/lib/caseBuilder/serializeFormBlob";
 import { useFormContext } from "@/context/FormContext";
@@ -71,6 +72,7 @@ function FormShellHeaderFallback({
             <p className="text-xs text-slate-500 mt-1 line-clamp-2">{stepDescription}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <CasePhaseControls />
             {showSaveButton ? (
               <Button
                 type="button"
@@ -148,6 +150,7 @@ function FormShellHeaderResolved({
             <p className="text-xs text-slate-500 mt-1 line-clamp-2">{stepDescription}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <CasePhaseControls />
             {showSaveButton ? (
               <Button
                 type="button"
@@ -222,7 +225,7 @@ export function FormShell({
   continueButtonTooltip,
   backButtonTooltip,
 }: FormShellProps) {
-  const { caseId, setCaseId, getCaseBuilderSaveBlob, applyCaseBuilderOverlayToContext } = useFormContext();
+  const { caseId, setCaseId, getCaseBuilderSaveSnapshot, applyCaseBuilderOverlayToContext } = useFormContext();
   const [isSaving, setIsSaving] = useState(false);
   /** Tester suite uses local-only persistence; hide DB save after mount to avoid SSR/client cookie mismatch. */
   const [showSaveButton, setShowSaveButton] = useState(true);
@@ -234,8 +237,8 @@ export function FormShell({
   const handleSaveProgress = async () => {
     setIsSaving(true);
     try {
-      const blob = getCaseBuilderSaveBlob();
-      await saveAllCaseBuilderProgress(blob, caseId, setCaseId);
+      const snapshot = getCaseBuilderSaveSnapshot();
+      await saveAllCaseBuilderProgress(snapshot, caseId, setCaseId);
       applyCaseBuilderOverlayToContext();
       toast.success("Case saved.");
     } catch (err) {

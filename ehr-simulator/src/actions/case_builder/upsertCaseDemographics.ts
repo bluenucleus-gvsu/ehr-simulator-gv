@@ -18,22 +18,22 @@ export async function upsertCaseDemographics(
     first_name: d.firstName,
     last_name: d.lastName,
     date_of_birth: computeDob(d),
-    code_status: d.codeStatus ?? null,
+    code_status: requiredEnum(d.codeStatus, "Full"),
     height_ft: toNumeric(d.heightFeet),
     height_in: toNumeric(d.heightInches),
     weight_kg: toNumeric(d.dosingWeight),
-    language: d.language ?? null,
-    insurance: d.insurance ?? null,
-    employment: d.employment ?? null,
-    religion: d.religion ?? null,
+    language: emptyToNull(d.language),
+    insurance: optionalEnum(d.insurance),
+    employment: emptyToNull(d.employment),
+    religion: emptyToNull(d.religion),
     relationship_status_id,
     requires_interpreter: Boolean(d.needsInterpreter),
     admitting_diagnosis: d.admittingDiagnosis ?? null,
     attending_provider: [d.attendingProviderName, d.attendingProviderTitle].filter(Boolean).join(", ") || null,
     inpatient_duration_days: toNumeric(d.admissionDateOffest),
-    time_of_admission: d.admissionTime,
-    emergency_contact_name: d.contact ?? null,
-    emergency_contact_relationship: d.contactRelationship ?? null,
+    time_of_admission: emptyToNull(d.admissionTime),
+    emergency_contact_name: emptyToNull(d.contact),
+    emergency_contact_relationship: emptyToNull(d.contactRelationship),
     emergency_contact_phone: (d.contactPhone ?? "").trim() || null,
     updated_at: new Date().toISOString(),
     created_at: new Date().toISOString(), // Fix: check if exists before setting created_at
@@ -100,6 +100,22 @@ function toNumeric(v: any): number | null {
   if (v === null || v === undefined) return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
+}
+
+function emptyToNull(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  const s = String(value).trim();
+  return s.length > 0 ? s : null;
+}
+
+/** Postgres enums reject ""; nullable enum columns should use null when unset. */
+function optionalEnum(value: unknown): string | null {
+  return emptyToNull(value);
+}
+
+/** NOT NULL enum columns need a valid value when the form field is blank. */
+function requiredEnum(value: unknown, fallback: string): string {
+  return emptyToNull(value) ?? fallback;
 }
 
 function monthToNumber(monthName?: string) {

@@ -5,7 +5,6 @@ import { mapDatabaseMedToFrontend } from "@/app/simulation/[caseId]/[sessionId]/
 const MedicationOrders = async () => {
   const medResponse = await getAllMedications();
 
-
   if (!medResponse.success || medResponse.error) {
     return (
       <div>{medResponse.message}</div>
@@ -14,7 +13,6 @@ const MedicationOrders = async () => {
 
   const dbMeds = medResponse.data;
   const medications = dbMeds.map(dbMed => mapDatabaseMedToFrontend(dbMed))
-
 
   return (
     <MedicationOrderForm medications={medications} />

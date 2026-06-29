@@ -5,6 +5,7 @@ import { MicrobiologyReportData } from "@/app/simulation/[caseId]/[sessionId]/ch
 
 export type LabResultInsert = {
   case_id: string
+  phase?: number
   time_offset: number
   is_in_presim: boolean
 
@@ -163,7 +164,8 @@ function parseNumeric(value: unknown): number | null {
 
 export function transformLabTableToSchema(
   caseId: string,
-  payload: LabFormPayload
+  payload: LabFormPayload,
+  phase: number = 1,
 ): TransformedLabsPayload {
   const { data, timePoints, timePointsInPreSim } = payload
 
@@ -174,6 +176,7 @@ export function transformLabTableToSchema(
   const labResults: LabResultInsert[] = timePoints.map((timePoint) => {
     const baseRow: LabResultInsert = {
       case_id: caseId,
+      phase,
       time_offset: timePoint,
       is_in_presim: timePointsInPreSim.has(timePoint),
       data: {},

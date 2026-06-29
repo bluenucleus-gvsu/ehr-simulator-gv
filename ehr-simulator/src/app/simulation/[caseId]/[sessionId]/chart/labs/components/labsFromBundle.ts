@@ -87,6 +87,15 @@ function toIsCritical(value: unknown): boolean {
   return false;
 }
 
+function readTimeOffset(raw: unknown): number | null {
+  if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+  if (typeof raw === "string" && raw.trim() !== "") {
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
 export function buildLabRowsFromBundle(
   bundle: BundleLike,
   template: LabTableData[],
@@ -98,19 +107,19 @@ export function buildLabRowsFromBundle(
   const timePoints = Array.from(
     new Set(
       labResults
-        .map((row) => row.time_offset)
-        .filter((offset): offset is number => typeof offset === "number"),
+        .map((row) => readTimeOffset(row.time_offset))
+        .filter((offset): offset is number => offset !== null),
     ),
   ).sort((a, b) => a - b);
 
   const labByOffset = new Map<number, DbLabResult>();
   const labOffsetById = new Map<string, number>();
   for (const lab of labResults) {
-    if (typeof lab.time_offset === "number") {
-      labByOffset.set(lab.time_offset, lab);
-    }
-    if (lab.id && typeof lab.time_offset === "number") {
-      labOffsetById.set(lab.id, lab.time_offset);
+    const offset = readTimeOffset(lab.time_offset);
+    if (offset === null) continue;
+    labByOffset.set(offset, lab);
+    if (lab.id) {
+      labOffsetById.set(lab.id, offset);
     }
   }
 
