@@ -175,87 +175,42 @@ const BardcodeGenerator = ({
             <title>Patient Wristbands</title>
             <style>
               * { box-sizing: border-box; margin: 0; padding: 0; }
-              body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 0.5in; background: white; }
-              .page-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-              .wristband-list { display: flex; flex-direction: column; gap: 0.5in; width: 100%; }
-              
-              /* Wristband Layout */
-              .wristband {
-                display: flex;
-                align-items: center;
-                width: 7.5in;
-                height: 1.25in;
-                border: 1px dashed #999;
-                border-radius: 8px;
-                padding: 10px 20px;
-                page-break-inside: avoid;
-                position: relative;
-              }
-              .band-hole-punch {
-                width: 15px;
-                height: 15px;
-                border-radius: 50%;
-                border: 2px solid #ccc;
-                position: absolute;
-                right: 20px;
-              }
-              .qr-container {
-                margin-right: 20px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-              }
-              .qr-container svg { width: 70px; height: 70px; }
-              .divider {
-                width: 2px;
-                height: 80%;
-                background-color: #000;
-                margin-right: 20px;
-              }
-              .patient-info {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                flex-grow: 1;
-              }
-              .patient-name { font-size: 24px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
-              .patient-details { font-size: 14px; color: #333; display: flex; gap: 20px; }
-              .hospital-branding { font-size: 10px; color: #666; position: absolute; bottom: 8px; right: 50px; text-transform: uppercase; letter-spacing: 1px; }
-
-              @media print { body { padding: 0.25in; } .wristband { page-break-inside: avoid; } }
+              @page { size: 8.5in 11in; margin: 0; }
+              body { font-family: Arial, sans-serif; background: white; }
+              .sheet { padding: 0.5in 0.1875in 0 0.1875in; }
+              .label-grid { display: grid; grid-template-columns: repeat(3, 2.625in); column-gap: 0.125in; row-gap: 0; }
+              .label { width: 2.625in; height: 1in; overflow: hidden; display: flex; flex-direction: row; align-items: center; padding: 4px 6px; gap: 6px; page-break-inside: avoid; }
+              .label-barcode { width: 0.75in; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+              .label-barcode svg { width: 0.75in; height: 0.75in; }
+              .label-text { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+              .patient-name { font-weight: bold; font-size: 10pt; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+              .patient-detail { font-size: 7pt; color: #333; line-height: 1.3; }
+              .hospital-tag { font-size: 6pt; color: #666; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
             </style>
           </head>
           <body>
-            <div class="page-header">
-              <h1>Patient Wristbands</h1>
-              <p>Generated: ${new Date().toLocaleDateString()}</p>
-            </div>
-            <div class="wristband-list">
-              ${casesWithBarcodes
-                .map((c) => {
-                  const count = caseQuantities[c.id] || 1;
-                  return Array.from(
-                    { length: count },
-                    () => `
-                  <div class="wristband">
-                    <div class="qr-container">
-                      ${c.qrDataUrl}
-                    </div>
-                    <div class="divider"></div>
-                    <div class="patient-info">
-                      <div class="patient-name">${c.first_name} ${c.last_name}</div>
-                      <div class="patient-details">
-                        <span><strong>DOB:</strong> ${c.date_of_birth || "N/A"}</span>
-                        <span><strong>ID:</strong> ${c.id}</span>
+            <div class="sheet">
+              <div class="label-grid">
+                ${casesWithBarcodes
+                  .map((c) => {
+                    const count = caseQuantities[c.id] || 1;
+                    return Array.from(
+                      { length: count },
+                      () => `
+                      <div class="label">
+                        <div class="label-barcode">${c.qrDataUrl}</div>
+                        <div class="label-text">
+                          <div class="patient-name">${c.first_name} ${c.last_name}</div>
+                          <div class="patient-detail"><strong>DOB:</strong> ${c.date_of_birth || "N/A"}</div>
+                          <div class="patient-detail"><strong>ID:</strong> ${c.id}</div>
+                          <div class="hospital-tag">GVSU SIM CENTER</div>
+                        </div>
                       </div>
-                    </div>
-                    <div class="hospital-branding">GVSU SIM CENTER</div>
-                    <div class="band-hole-punch"></div>
-                  </div>
-                `,
-                  ).join("");
-                })
-                .join("")}
+                    `,
+                    ).join("");
+                  })
+                  .join("")}
+              </div>
             </div>
           </body>
           </html>
