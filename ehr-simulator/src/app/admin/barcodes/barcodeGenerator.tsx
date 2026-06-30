@@ -181,7 +181,7 @@ const BardcodeGenerator = ({
               .label-grid { display: grid; grid-template-columns: repeat(3, 2.625in); column-gap: 0.125in; row-gap: 0; }
               .label { width: 2.625in; height: 1in; overflow: hidden; display: flex; flex-direction: row; align-items: center; padding: 4px 6px; gap: 6px; page-break-inside: avoid; }
               .label-barcode { width: 0.75in; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-              .label-barcode svg { width: 0.75in; height: 0.75in; }
+              .label-barcode svg { width: 0.5in; height: 0.5in; }
               .label-text { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
               .patient-name { font-weight: bold; font-size: 10pt; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
               .patient-detail { font-size: 7pt; color: #333; line-height: 1.3; }
