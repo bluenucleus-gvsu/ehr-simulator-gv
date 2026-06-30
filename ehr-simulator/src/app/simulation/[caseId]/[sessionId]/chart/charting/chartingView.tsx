@@ -6,11 +6,10 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import CheckBoxList from "./components/checkBoxList";
 import { AddTimeColumnButton } from "./components/addTimeColButton";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { toast } from "sonner";
-import FlexSheetSidebar from "./components/flexSheetSidebar";
 import FlexSheetColumnShifter from "./components/flexSheetColumnShifter";
 
 import {
@@ -68,12 +67,12 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   const [timeOffsets, setTimeOffsets] = useState(initialCharting.timeOffsets);
   const [data, setData] = useState<FlexSheetData[]>(initialCharting.rows);
   const [fieldSelections, setFieldSelections] = useState<Record<string, string[]>>({});
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [dirtyColumns, setDirtyColumns] = useState<Set<string>>(new Set());
   const { caseId, sessionId } = params;
   const sessionKey = `${caseId}:${sessionId}`;
   const canSubmit = dirtyColumns.size > 0;
+  const { open, toggleSidebar } = useSidebar()
 
   const maxOffset = Math.max(0, timeOffsets.length - tableWidth);
   const remainder = timeOffsets.length % tableWidth;
@@ -295,16 +294,8 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
     };
   }, [dirtyColumns, handleUnsavedCharting]);
 
-  useEffect(() => {
-    let shouldOpen = false;
-    for (const tool of assessmentTools) {
-      if (visibleSubsetIds.has(tool.name)) {
-        shouldOpen = true;
-        break;
-      }
-    }
-    if (shouldOpen !== isSidebarOpen) setIsSidebarOpen(shouldOpen);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  const hasActiveTools = useMemo(() => {
+    return assessmentTools.some((tool) => visibleSubsetIds.has(tool.name));
   }, [visibleSubsetIds]);
 
   const columns = useMemo(
@@ -449,82 +440,77 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   });
 
   return (
-    <SidebarProvider
-      open={isSidebarOpen}
-      onOpenChange={setIsSidebarOpen}
-      className="h-full min-h-0 max-h-full overflow-hidden"
-    >
-      <SidebarInset className="h-full min-h-0 overflow-hidden">
-        <div className="flex h-full min-h-0 w-full max-w-full flex-col bg-gray-100 px-4">
-          <div className="flex h-full min-h-0 w-full flex-col items-stretch justify-start gap-2 pt-2">
-            <div className="flex w-full shrink-0 justify-start gap-3">
-              <AddTimeColumnButton
-                onColumnAdd={handleColumnAdd}
-                existingTimeColumns={timeOffsets}
-                sessionStartTime={simStartTime}
-                disabled={!canEdit}
-              />
-              <Button
-                onClick={handleSave}
-                disabled={!canEdit || isSaving || !canSubmit}
-                title={!canEdit ? "View-only in pre-simulation" : undefined}
-                className="h-6 bg-lime-500 text-white hover:bg-lime-600 shadow"
-              >
-                {isSaving ? "Saving..." : "File"}
-              </Button>
-              <Button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="bg-white h-6 w-4 text-black hover:bg-gray-200 shadow shadow-black/20"
-              >
-                {isSidebarOpen ? <PanelLeftOpenIcon /> : <PanelLeftCloseIcon />}
-              </Button>
-              <FlexSheetColumnShifter
-                columnOffset={columnOffset}
-                onColumnShift={handleColOffsetChange}
-                columns={timeOffsets}
-                tableWidth={tableWidth}
-                simStartTime={simStartTime}
-              />
-            </div>
-            <div className="flex min-h-0 w-full flex-1 flex-col overflow-auto rounded-md border border-gray-200">
-              <Table className="w-full rounded-md">
-                <TableHeader className=" bg-gray-50">
-                  {ptTable.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <TableHead
-                          style={getPinnedStyles(header.column, 200, true)}
-                          key={header.id}
-                          className="p-0 bg-gray-50 shadow-[inset_0_-1px_0_0_#e5e7eb]"
-                        >
-                          {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody>
-                  {ptTable.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} className="h-6">
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell
-                          key={cell.id}
-                          style={getPinnedStyles(cell.column)}
-                          className={`p-0 min-w-24 text-gray-800 border-separate border-gray-200 border-b ${row.original.rowType === "titleRow" ? "bg-lime-50" : "bg-white border-r border-separate"}`}
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+    <div className="flex h-full min-h-0 w-full max-w-full flex-col bg-gray-100 px-4">
+      <div className="flex h-full min-h-0 w-full flex-col items-stretch justify-start gap-2 pt-2">
+        <div className="flex w-full shrink-0 justify-start gap-3">
+          <span className="absolute -top-1 -right-1 flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-lime-500"></span>
+          </span>
+          <AddTimeColumnButton
+            onColumnAdd={handleColumnAdd}
+            existingTimeColumns={timeOffsets}
+            sessionStartTime={simStartTime}
+            disabled={!canEdit}
+          />
+          <Button
+            onClick={handleSave}
+            disabled={!canEdit || isSaving || !canSubmit}
+            title={!canEdit ? "View-only in pre-simulation" : undefined}
+            className="h-6 bg-lime-500 text-white hover:bg-lime-600 shadow"
+          >
+            {isSaving ? "Saving..." : "File"}
+          </Button>
+          <Button
+            onClick={toggleSidebar}
+            className={`bg-white h-6 w-4 text-black hover:bg-gray-200 shadow shadow-black/20  ${hasActiveTools && !open ? 'text-blue-500' : ''}`}
+          >
+            {open ? <PanelLeftOpenIcon /> : <PanelLeftCloseIcon />}
+          </Button>
+          <FlexSheetColumnShifter
+            columnOffset={columnOffset}
+            onColumnShift={handleColOffsetChange}
+            columns={timeOffsets}
+            tableWidth={tableWidth}
+            simStartTime={simStartTime}
+          />
         </div>
-      </SidebarInset>
-      <FlexSheetSidebar />
-    </SidebarProvider>
+        <div className="flex min-h-0 w-full flex-1 flex-col overflow-auto rounded-md border border-gray-200">
+          <Table className="w-full rounded-md">
+            <TableHeader className=" bg-gray-50">
+              {ptTable.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      style={getPinnedStyles(header.column, 200, true)}
+                      key={header.id}
+                      className="p-0 bg-gray-50 shadow-[inset_0_-1px_0_0_#e5e7eb]"
+                    >
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {ptTable.getRowModel().rows.map((row) => (
+                <TableRow key={row.id} className="h-6">
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      style={getPinnedStyles(cell.column)}
+                      className={`p-0 min-w-24 text-gray-800 border-separate border-gray-200 border-b ${row.original.rowType === "titleRow" ? "bg-lime-50" : "bg-white border-r border-separate"}`}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </div>
   );
 }
 
