@@ -31,7 +31,7 @@ const FormReview = () => {
   }, [registerCaseBuilderLocalOverlay]);
 
   const goBack = () => {
-    router.push("/admin/case-builder/form/medication-administrations");
+    router.push("/admin/case-builder/form/media");
   }
 
   const handleSubmit = async () => {
@@ -66,7 +66,7 @@ const FormReview = () => {
   return (
     <FormShell
       title="Review & Submit Case"
-      stepDescription="Step 10 of 10: Review case before submitting"
+      stepDescription="Step 11 of 11: Review case before submitting"
       icon={<ClipboardCheck className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}
