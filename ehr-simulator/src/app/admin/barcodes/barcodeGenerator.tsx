@@ -121,12 +121,12 @@ const BardcodeGenerator = ({
               body { font-family: Arial, sans-serif; background: white; }
               .sheet { padding: 0.5in 0.45in 0 0.3in; }
               .label-grid { display: grid; grid-template-columns: repeat(4, 1.75in); column-gap: 0.25in; row-gap: 0; }
-              .label { width: 1.75in; height: 0.5in; overflow: hidden; display: flex; flex-direction: row; align-items: center; padding: 1px 3px; gap: 1px; page-break-inside: avoid; }
-              .label-text { width: 0.65in; flex-shrink: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
+              .label { width: 1.75in; height: 0.5in; overflow: hidden; display: flex; flex-direction: row; align-items: center; padding: 1px 3px; gap: 3px; page-break-inside: avoid; }
+              .label-text { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; padding-right: 3px; padding-left: 3px; }
               .med-name { font-weight: bold; font-size: 5.5pt; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; }
               .med-sub { font-size: 4.5pt; color: #444; line-height: 1.15; }
-              .barcode-container { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; height: 100%; }
-              .barcode-container svg { width: 100%; height: 0.38in; }
+              .barcode-container { width: 0.42in; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; height: 100%; }
+              .barcode-container svg { width: 0.42in; height: 0.38in; }
             </style>
           </head>
           <body>
