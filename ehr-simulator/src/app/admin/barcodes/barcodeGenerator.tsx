@@ -119,7 +119,7 @@ const BardcodeGenerator = ({
               * { box-sizing: border-box; margin: 0; padding: 0; }
               @page { size: 8.5in 11in; margin: 0; }
               body { font-family: Arial, sans-serif; background: white; }
-              .sheet { padding: 0.5in 0.45in 0 0.3in; }
+              .sheet { padding: 0.5in 0.33in 0 0.33in; }
               .label-grid { display: grid; grid-template-columns: repeat(4, 1.75in); column-gap: 0.25in; row-gap: 0; }
               .label { width: 1.75in; height: 0.5in; overflow: hidden; display: flex; flex-direction: row; align-items: center; padding: 1px 3px; gap: 3px; page-break-inside: avoid; }
               .label-text { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; padding-right: 3px; padding-left: 3px; }
