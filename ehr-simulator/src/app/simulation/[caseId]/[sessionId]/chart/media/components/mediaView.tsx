@@ -6,16 +6,12 @@ export interface MediaViewProps {
     id: string;
     preview_url:string;
   }[];
-  caseId: string;
-  sessionId: string;
 }
 
 const MediaView = ({
     isError = false,
     isLoading,
-    images,
-    caseId,
-    sessionId
+    images
 }: MediaViewProps) => {
 
     if(isLoading){

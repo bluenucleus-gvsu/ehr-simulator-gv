@@ -9,7 +9,7 @@ interface PageProps {
 }
 
 const media = async ({ params }: PageProps) => {
-    const { caseId, sessionId } = await params;
+    const { caseId } = await params;
     const images = await getMedia(caseId)
 
 
@@ -18,8 +18,6 @@ const media = async ({ params }: PageProps) => {
         isError = {false}
         isLoading={false}
         images={images.data || []}
-        caseId={caseId}
-        sessionId={sessionId}
         />
     )
 }
