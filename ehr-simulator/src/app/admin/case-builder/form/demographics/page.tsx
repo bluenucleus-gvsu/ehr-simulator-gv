@@ -213,6 +213,14 @@ export default function DemographicsForm() {
         visibleInPresim: Boolean(m.is_in_presim),
       })));
 
+      onDataChange(
+        "media",
+        (bundle.caseImages ?? []).map((img: any) => ({
+          id: img.id,
+          previewUrl: img.preview_url ?? img.url ?? "",
+        })),
+      );
+
       setCaseId(editCaseId);
     };
 

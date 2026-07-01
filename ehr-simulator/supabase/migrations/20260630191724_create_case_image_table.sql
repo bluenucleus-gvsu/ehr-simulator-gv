@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS case_images (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    case_id UUID REFERENCES cases(id) ON DELETE CASCADE,
+    preview_url TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE case_images DISABLE ROW LEVEL SECURITY;
