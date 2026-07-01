@@ -125,8 +125,8 @@ const MediaForm = () => {
 
                 {images.length > 0 && (
                   <div className="grid grid-cols-2 gap-4 pt-2">
-                    {images.map((img) => (
-                      <div key={img.id} className="relative group aspect-square border rounded-lg overflow-hidden bg-slate-100">
+                    {images.map((img, idx) => (
+                      <div key={idx} className="relative group aspect-square border rounded-lg overflow-hidden bg-slate-100">
                         <img
                           src={img.previewUrl}
                           alt="preview"
