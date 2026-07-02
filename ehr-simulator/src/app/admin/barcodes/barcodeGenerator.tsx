@@ -4,7 +4,7 @@ import { useState } from "react";
 import bwipjs from "@bwip-js/browser";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SimCase } from "@/actions/cases";
-import { format } from "date-fns";
+import { format, differenceInYears } from "date-fns";
 import { AllMedicationTypes } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
 
 interface BarcodeGeneratorProps {
@@ -119,7 +119,7 @@ const BardcodeGenerator = ({
               * { box-sizing: border-box; margin: 0; padding: 0; }
               @page { size: 8.5in 11in; margin: 0; }
               body { font-family: Arial, sans-serif; background: white; }
-              .sheet { padding: 0.5in 0.33in 0 0.4in; }
+              .sheet { padding: 0.5in 0.33in 0 0.45in; }
               .label-grid { display: grid; grid-template-columns: repeat(4, 1.75in); column-gap: 0.25in; row-gap: 0; }
               .label { width: 1.75in; height: 0.5in; overflow: hidden; display: flex; flex-direction: row; align-items: center; padding: 1px 3px; gap: 3px; page-break-inside: avoid; }
               .label-text { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; padding-right: 3px; padding-left: 3px; }
@@ -194,16 +194,19 @@ const BardcodeGenerator = ({
                 ${casesWithBarcodes
                   .map((c) => {
                     const count = caseQuantities[c.id] || 1;
+                    const age = c.date_of_birth
+                      ? differenceInYears(new Date(), new Date(c.date_of_birth))
+                      : "N/A";
                     return Array.from(
                       { length: count },
                       () => `
                       <div class="label">
-                        <div class="label-barcode">${c.qrDataUrl}</div>
+                      <div class="label-barcode">${c.qrDataUrl}</div>
                         <div class="label-text">
                           <div class="patient-name">${c.first_name} ${c.last_name}</div>
                           <div class="patient-detail"><strong>DOB:</strong> ${c.date_of_birth || "N/A"}</div>
-                          <div class="patient-detail"><strong>ID:</strong> ${c.id}</div>
-                          <div class="hospital-tag">GVSU SIM CENTER</div>
+                          <div class="patient-detail"><strong>Age:</strong> ${age}</div>
+                          <div class="patient-detail"><strong>MRN:</strong> ${c.MRN || "12345678"}</div>
                         </div>
                       </div>
                     `,
