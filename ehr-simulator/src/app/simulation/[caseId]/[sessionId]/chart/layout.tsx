@@ -34,7 +34,7 @@ const ChartLayout = async ({ children, params }: ChartLayoutProps) => {
 
   return (
     <ChartSimulationBootstrap routeContext={routeContext} serverCaseBundle={serverCaseBundle}>
-      <SidebarProvider>
+      <SidebarProvider defaultOpen={false}>
         <SimSessionProvider>
           <SimulationShell>
             <Toaster position="top-right" />

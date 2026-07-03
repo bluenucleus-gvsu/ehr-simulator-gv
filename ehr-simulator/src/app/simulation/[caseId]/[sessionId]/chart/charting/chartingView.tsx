@@ -443,10 +443,6 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
     <div className="flex h-full min-h-0 w-full max-w-full flex-col bg-gray-100 px-4">
       <div className="flex h-full min-h-0 w-full flex-col items-stretch justify-start gap-2 pt-2">
         <div className="flex w-full shrink-0 justify-start gap-3">
-          <span className="absolute -top-1 -right-1 flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-lime-500"></span>
-          </span>
           <AddTimeColumnButton
             onColumnAdd={handleColumnAdd}
             existingTimeColumns={timeOffsets}
