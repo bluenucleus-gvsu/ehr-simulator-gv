@@ -193,7 +193,7 @@ export const labTemplate: LabTableData[] = [
   {
     field: 'Neutrophils',
     dbColumn: 'neutrophils',
-    unit: '%',
+    unit: '(%)',
     rowType: 'results',
     normalRange: { low: 55, high: 70 },
     hideable: true
@@ -201,7 +201,7 @@ export const labTemplate: LabTableData[] = [
   {
     field: 'Lymphocytes',
     dbColumn: 'lymphocytes',
-    unit: '%',
+    unit: '(%)',
     rowType: 'results',
     normalRange: { low: 20, high: 40 },
     hideable: true
@@ -209,7 +209,7 @@ export const labTemplate: LabTableData[] = [
   {
     field: 'Monocytes',
     dbColumn: 'monocytes',
-    unit: '%',
+    unit: '(%)',
     rowType: 'results',
     normalRange: { low: 2, high: 8 },
     hideable: true
@@ -217,7 +217,7 @@ export const labTemplate: LabTableData[] = [
   {
     field: 'Eosinophils',
     dbColumn: 'eosinophils',
-    unit: '%',
+    unit: '(%)',
     rowType: 'results',
     normalRange: { low: 1, high: 4 },
     hideable: true
@@ -225,9 +225,9 @@ export const labTemplate: LabTableData[] = [
   {
     field: 'Basophils',
     dbColumn: 'basophils',
-    unit: '%',
+    unit: '(%)',
     rowType: 'results',
-    normalRange: { low: 0.5, high: 1 },
+    normalRange: { low: 0, high: 1 },
     hideable: true
   },
   {
@@ -604,9 +604,9 @@ export const labTemplate: LabTableData[] = [
   {
     field: "Magnesium",
     dbColumn: "magnesium",
-    unit: "(mEq/L)",
+    unit: "(mg/dL)",
     rowType: "results",
-    normalRange: { low: 1.5, high: 2.5 },
+    normalRange: { low: 1.7, high: 2.2 },
   },
   {
     field: "Phosphate",
