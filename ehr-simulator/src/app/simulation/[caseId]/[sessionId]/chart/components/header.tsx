@@ -1,11 +1,12 @@
 'use client'
 
-import { Expand, Home, Minimize, Stethoscope } from "lucide-react"
+import { Expand, Home, Minimize, PillBottle, Stethoscope } from "lucide-react"
 import { useEffect, useState, type ReactNode } from "react"
 import Link from 'next/link'
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
+import InfoTooltip from "@/components/helpTooltip";
 
 interface HeaderProps {
   tabs?: ReactNode;
@@ -21,6 +22,7 @@ const Header = ({ tabs }: HeaderProps) => {
   const modeClasses = isPreSimMode
     ? "border-violet-200/80 bg-violet-500 text-white shadow-violet-900/30"
     : "border-emerald-200/80 bg-emerald-500 text-white shadow-emerald-900/30";
+  const medReferenceTool = 'https://online-lexi-com.ezproxy.gvsu.edu/lco/action/home';
 
   useEffect(() => {
     const onFullscreenChange = () => {
@@ -78,6 +80,19 @@ const Header = ({ tabs }: HeaderProps) => {
           {tabs}
         </div>
         <div className="flex pr-8 gap-4">
+          {medReferenceTool && (
+            <InfoTooltip content="Lexidrug">
+              <Button
+                variant='secondary'
+                className="p-0 size-7 hover:text-blue-600 hover:ring-2"
+                asChild
+              >
+                <a href={medReferenceTool} target="_blank" rel="noopener noreferrer">
+                  <PillBottle />
+                </a>
+              </Button>
+            </InfoTooltip>
+          )}
           <Button
             variant='secondary'
             className="p-0 size-7 hover:text-blue-600 hover:ring-2"
