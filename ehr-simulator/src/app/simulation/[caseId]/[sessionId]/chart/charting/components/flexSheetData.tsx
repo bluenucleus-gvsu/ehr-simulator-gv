@@ -78,7 +78,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     id: "temp",
     field: "Temp",
     componentType: "input",
-    normalRange: { low: 36.6, high: 37.2 }
+    normalRange: { low: 36.6, high: 38 }
   },
   {
     id: "temp_source",
