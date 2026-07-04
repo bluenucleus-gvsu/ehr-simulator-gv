@@ -7,31 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       case_data: {
@@ -134,7 +109,6 @@ export type Database = {
         Row: {
           case_id: string | null
           completed_at: string | null
-          current_phase: number
           feedback: string | null
           group_id: string | null
           id: string
@@ -146,7 +120,6 @@ export type Database = {
         Insert: {
           case_id?: string | null
           completed_at?: string | null
-          current_phase?: number
           feedback?: string | null
           group_id?: string | null
           id?: string
@@ -158,7 +131,6 @@ export type Database = {
         Update: {
           case_id?: string | null
           completed_at?: string | null
-          current_phase?: number
           feedback?: string | null
           group_id?: string | null
           id?: string
@@ -199,7 +171,6 @@ export type Database = {
           case_creation_complete: boolean
           code_status: Database["public"]["Enums"]["code_status_type"]
           created_at: string | null
-          date_of_birth: string | null
           description: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
@@ -209,7 +180,6 @@ export type Database = {
           height_ft: number | null
           height_in: number | null
           id: string
-          inpatient_duration_days: number | null
           insurance: Database["public"]["Enums"]["insurance_type"] | null
           intake_output_blocks: Json
           isolation_precautions_id: string | null
@@ -218,13 +188,11 @@ export type Database = {
           living_situation: string[] | null
           medical_history: string[] | null
           name: string
-          phase_count: number
           relationship_status_id: string | null
           religion: string | null
           requires_interpreter: boolean
           social_habits: string[] | null
           surgical_history: string[] | null
-          time_of_admission: string | null
           updated_at: string
           weight_kg: number | null
         }
@@ -235,7 +203,6 @@ export type Database = {
           case_creation_complete?: boolean
           code_status: Database["public"]["Enums"]["code_status_type"]
           created_at?: string | null
-          date_of_birth?: string | null
           description?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
@@ -245,7 +212,6 @@ export type Database = {
           height_ft?: number | null
           height_in?: number | null
           id?: string
-          inpatient_duration_days?: number | null
           insurance?: Database["public"]["Enums"]["insurance_type"] | null
           intake_output_blocks?: Json
           isolation_precautions_id?: string | null
@@ -254,13 +220,11 @@ export type Database = {
           living_situation?: string[] | null
           medical_history?: string[] | null
           name: string
-          phase_count?: number
           relationship_status_id?: string | null
           religion?: string | null
           requires_interpreter?: boolean
           social_habits?: string[] | null
           surgical_history?: string[] | null
-          time_of_admission?: string | null
           updated_at?: string
           weight_kg?: number | null
         }
@@ -271,7 +235,6 @@ export type Database = {
           case_creation_complete?: boolean
           code_status?: Database["public"]["Enums"]["code_status_type"]
           created_at?: string | null
-          date_of_birth?: string | null
           description?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
@@ -281,7 +244,6 @@ export type Database = {
           height_ft?: number | null
           height_in?: number | null
           id?: string
-          inpatient_duration_days?: number | null
           insurance?: Database["public"]["Enums"]["insurance_type"] | null
           intake_output_blocks?: Json
           isolation_precautions_id?: string | null
@@ -290,13 +252,11 @@ export type Database = {
           living_situation?: string[] | null
           medical_history?: string[] | null
           name?: string
-          phase_count?: number
           relationship_status_id?: string | null
           religion?: string | null
           requires_interpreter?: boolean
           social_habits?: string[] | null
           surgical_history?: string[] | null
-          time_of_admission?: string | null
           updated_at?: string
           weight_kg?: number | null
         }
@@ -1439,7 +1399,6 @@ export type Database = {
           myoglobin: number | null
           nitrites: string | null
           pco2: number | null
-          phase: number
           phosphate: number | null
           platelets: number | null
           po2: number | null
@@ -1500,7 +1459,6 @@ export type Database = {
           myoglobin?: number | null
           nitrites?: string | null
           pco2?: number | null
-          phase?: number
           phosphate?: number | null
           platelets?: number | null
           po2?: number | null
@@ -1561,7 +1519,6 @@ export type Database = {
           myoglobin?: number | null
           nitrites?: string | null
           pco2?: number | null
-          phase?: number
           phosphate?: number | null
           platelets?: number | null
           po2?: number | null
@@ -1602,7 +1559,6 @@ export type Database = {
           is_in_presim: boolean
           medication_order_id: string | null
           notes: string | null
-          phase: number
           status: string | null
           time_offset: number
         }
@@ -1615,7 +1571,6 @@ export type Database = {
           is_in_presim?: boolean
           medication_order_id?: string | null
           notes?: string | null
-          phase?: number
           status?: string | null
           time_offset: number
         }
@@ -1628,7 +1583,6 @@ export type Database = {
           is_in_presim?: boolean
           medication_order_id?: string | null
           notes?: string | null
-          phase?: number
           status?: string | null
           time_offset?: number
         }
@@ -1661,7 +1615,6 @@ export type Database = {
           is_in_presim: boolean
           medication_id: string
           ordering_provider: string | null
-          phase: number
           priority: Database["public"]["Enums"]["medication_priorities"]
         }
         Insert: {
@@ -1675,7 +1628,6 @@ export type Database = {
           is_in_presim?: boolean
           medication_id: string
           ordering_provider?: string | null
-          phase?: number
           priority: Database["public"]["Enums"]["medication_priorities"]
         }
         Update: {
@@ -1689,7 +1641,6 @@ export type Database = {
           is_in_presim?: boolean
           medication_id?: string
           ordering_provider?: string | null
-          phase?: number
           priority?: Database["public"]["Enums"]["medication_priorities"]
         }
         Relationships: [
@@ -1840,7 +1791,6 @@ export type Database = {
           id: string
           is_important: boolean
           is_in_presim: boolean
-          phase: number
           provider: string
           status: string
           title: string
@@ -1853,7 +1803,6 @@ export type Database = {
           id?: string
           is_important?: boolean
           is_in_presim?: boolean
-          phase?: number
           provider: string
           status: string
           title: string
@@ -1866,7 +1815,6 @@ export type Database = {
           id?: string
           is_important?: boolean
           is_in_presim?: boolean
-          phase?: number
           provider?: string
           status?: string
           title?: string
@@ -2463,9 +2411,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       clinical_doc_category_type: [
@@ -2518,3 +2463,4 @@ export const Constants = {
     },
   },
 } as const
+

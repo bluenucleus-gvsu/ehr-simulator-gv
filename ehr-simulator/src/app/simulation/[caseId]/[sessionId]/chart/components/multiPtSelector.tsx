@@ -14,16 +14,6 @@ import {
 import { Label } from "@/components/ui/label"
 import { Users } from "lucide-react"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
-import { format, parseISO } from "date-fns"
-
-function formatDob(iso: string | null | undefined): string {
-  if (!iso) return "N/A"
-  try {
-    return format(parseISO(String(iso).slice(0, 10)), "MM/dd/yyyy")
-  } catch {
-    return "N/A"
-  }
-}
 
 const MultiPtSelector = () => {
   const { caseBundle } = useSimulationCase()
@@ -69,10 +59,6 @@ const MultiPtSelector = () => {
                   <div className="flex flex-col gap-2 pr-20">
                     <p className="text-sm">
                       <span className="font-light">MRN: </span>N/A
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-light">DOB: </span>
-                      {formatDob(row?.date_of_birth)}
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">

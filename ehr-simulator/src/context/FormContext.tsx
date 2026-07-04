@@ -30,10 +30,6 @@ interface FormContextType {
 }
 
 const defaultDemographicData: DemographicFormData = {
-  DOBDay: '',
-  DOBMonth: '',
-  admissionDateOffest: '',
-  admissionTime: '',
   admittingDiagnosis: '',
   age: '',
   attendingProviderName: '',

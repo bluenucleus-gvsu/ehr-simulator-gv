@@ -429,10 +429,6 @@ async function runCreateFullMockCase() {
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
 
   const demographics: DemographicFormData = {
-    DOBDay: "03",
-    DOBMonth: "February",
-    admissionDateOffest: "3",
-    admissionTime: "07:15",
     admittingDiagnosis: "Severe community-acquired pneumonia with acute hypoxemic respiratory failure",
     age: "72",
     attendingProviderName: "Maya Reynolds",
@@ -600,14 +596,7 @@ async function runCreateFullMockCase() {
   await saveCaseData({ payload: orders, section: CaseSection.ORDERS, caseId });
   await seedChartSections(caseId);
 
-  const counts = await fetchCaseSectionCounts(supabase, caseId);
-
-  console.log(JSON.stringify({
-    success: true,
-    caseId,
-    caseName: created.name,
-    counts,
-  }, null, 2));
+  await fetchCaseSectionCounts(supabase, caseId);
 }
 
 async function fetchCaseSectionCounts(supabase: SupabaseClient, caseId: string) {
