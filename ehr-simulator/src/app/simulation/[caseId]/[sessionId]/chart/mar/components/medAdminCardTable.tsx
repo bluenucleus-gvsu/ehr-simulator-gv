@@ -20,14 +20,11 @@ export const heparinTable: MedCardTable = {
 export const insulinTable: MedCardTable = {
   header: { col1: 'BG Range (mg/dL)', col2: 'Correction Units' },
   rows: [
-    { col1: "<70", col2: "0" },
-    { col1: "70-150", col2: "6" },
-    { col1: "151-200", col2: "8" },
-    { col1: "201-250", col2: "10" },
-    { col1: "251-300", col2: "12" },
-    { col1: "301-350", col2: "14" },
-    { col1: "351-400", col2: "16" },
-    { col1: ">400", col2: "18" },
+    { col1: "<149", col2: "0" },
+    { col1: "150-200", col2: "2" },
+    { col1: "201-250", col2: "4" },
+    { col1: "251-300", col2: "6" },
+    { col1: ">301", col2: "Call physician" },
   ],
 
 }
