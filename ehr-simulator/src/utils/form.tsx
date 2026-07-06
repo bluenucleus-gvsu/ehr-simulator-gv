@@ -69,6 +69,8 @@ export interface MedOrderFormData {
 export interface MediaImageData {
   id: string;
   previewUrl: string;
+  file?: File;
+  storagePath?: string;
 }
 
 export interface FormBlob {

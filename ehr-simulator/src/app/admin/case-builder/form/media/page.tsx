@@ -11,6 +11,7 @@ import { useFormContext } from "@/context/FormContext";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/saveCase";
 import type { MediaImageData } from "@/utils/form";
+import Image from "next/image";
 
 const MediaForm = () => {
   const router = useRouter();
@@ -26,45 +27,21 @@ const MediaForm = () => {
     return () => registerCaseBuilderLocalOverlay(null);
   }, [registerCaseBuilderLocalOverlay, images]);
 
-  const fileToDataUrl = (file: File) =>
-    new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(file);
-    });
-
   const updateImages = (nextImages: MediaImageData[]) => {
     setImages(nextImages);
     onDataChange("media", nextImages);
   };
 
   const handleSubmit = async () => {
-    if (images.length === 0) {
-      onDataChange("media", images);
-      router.push("/admin/case-builder/form/review");
-      return;
-    }
+    if (!caseId) return alert("Please complete earlier steps.");
 
-    if (!caseId) {
-      alert("Please complete the earlier form steps before saving media.");
-      return;
-    }
-
-    try {
-      onDataChange("media", images);
-      const payload = images.map(({ previewUrl }) => ({ previewUrl }));
-      await saveCaseData({
-        payload,
-        section: CaseSection.MEDIA,
-        caseId,
-      });
-      router.push("/admin/case-builder/form/review");
-    } catch (error) {
-      console.error("Upload error:", error);
-      alert("Something went wrong saving the image data.");
-    }
-  };
+    await saveCaseData({
+      payload: images,
+      section: CaseSection.MEDIA,
+      caseId,
+    });
+  router.push("/admin/case-builder/form/review");
+};
 
   const goBack = () => {
     onDataChange("media", images);
@@ -75,12 +52,11 @@ const MediaForm = () => {
     if (!e.target.files) return;
 
     const selectedFiles = Array.from(e.target.files);
-    const newImages = await Promise.all(
-      selectedFiles.map(async (file) => ({
-        id: crypto.randomUUID(),
-        previewUrl: await fileToDataUrl(file),
-      })),
-    );
+    const newImages = selectedFiles.map((file) => ({
+      id: crypto.randomUUID(),
+      previewUrl: URL.createObjectURL(file),
+      file,
+    }));
 
     updateImages([...images, ...newImages]);
     e.target.value = "";
@@ -127,7 +103,7 @@ const MediaForm = () => {
                   <div className="grid grid-cols-2 gap-4 pt-2">
                     {images.map((img, idx) => (
                       <div key={idx} className="relative group aspect-square border rounded-lg overflow-hidden bg-slate-100">
-                        <img
+                        <Image
                           src={img.previewUrl}
                           alt="preview"
                           className="w-full h-full object-contain"
