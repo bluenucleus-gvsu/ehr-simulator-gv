@@ -58,13 +58,18 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   const sourceDocumentation = dbDocumentation.length > 0
     ? dbDocumentation
     : ((caseBundle?.documentationResults ?? []) as DatabaseDocumentation[]);
-  const { groupId, userId, simStartTime, handleUnsavedCharting } = useSimSessionContext();
+  const { groupId, userId, simStartTime, handleUnsavedCharting, isPresim } = useSimSessionContext();
   const { canEdit } = useStudentSimulationEditAccess();
   const initialCharting = useMemo(
     () => buildChartingRowsFromBundle(sourceDocumentation, flexSheetTemplate),
     [sourceDocumentation],
   );
-  const [timeOffsets, setTimeOffsets] = useState(initialCharting.timeOffsets);
+  const [timeOffsets, setTimeOffsets] = useState(isPresim ?
+    Array.from(initialCharting.timePointsInPreSim).sort((a, b) => a - b)
+    : initialCharting.timeOffsets)
+
+
+
   const [data, setData] = useState<FlexSheetData[]>(initialCharting.rows);
   const [fieldSelections, setFieldSelections] = useState<Record<string, string[]>>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -86,11 +91,15 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
       rowsInput = [...sourceDocumentation, ...testerRows];
     }
     const hydrated = buildChartingRowsFromBundle(rowsInput, flexSheetTemplate);
-    setTimeOffsets(hydrated.timeOffsets);
+    const targetOffsets = isPresim ?
+      Array.from(initialCharting.timePointsInPreSim).sort((a, b) => a - b)
+      : hydrated.timeOffsets;
+
+    setTimeOffsets(targetOffsets);
     setData(hydrated.rows);
     setDirtyColumns(new Set());
-    setColumnOffset(Math.max(0, hydrated.timeOffsets.length - tableWidth));
-  }, [sourceDocumentation, sessionKey]);
+    setColumnOffset(Math.max(0, targetOffsets.length - tableWidth));
+  }, [sourceDocumentation, sessionKey, isPresim]);
 
   useEffect(() => {
     setColumnOffset((prev) => Math.min(prev, maxOffset));
@@ -219,9 +228,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
         toast.error("Case data still loading. Please try again.");
         return;
       }
-      const dirtyTimeOffsets = Array.from(dirtyColumns).filter((col) =>
-        Number.isFinite(Number(col)),
-      );
+      const dirtyTimeOffsets = Array.from(dirtyColumns)
       if (dirtyTimeOffsets.length === 0) {
         toast.info("No valid time columns to save.");
         return;

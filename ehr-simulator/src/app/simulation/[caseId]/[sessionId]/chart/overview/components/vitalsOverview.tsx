@@ -60,15 +60,23 @@ function mostRecentVitals(
 
 export function VitalsOverview() {
   const { caseBundle } = useSimulationCase();
-  const { simStartTime } = useSimSessionContext();
+  const { simStartTime, isPresim } = useSimSessionContext();
 
   const { allTimeOffsets, fullChartingData } = useMemo(() => {
     const mapped = buildChartingRowsFromBundle(
       caseBundle?.documentationResults ?? [],
       flexSheetTemplate,
     );
-    return { allTimeOffsets: mapped.timeOffsets, fullChartingData: mapped.rows };
-  }, [caseBundle]);
+
+    const selectedOffsets = isPresim ?
+      Array.from(mapped.timePointsInPreSim)
+      : mapped.timeOffsets;
+
+    return {
+      allTimeOffsets: selectedOffsets,
+      fullChartingData: mapped.rows
+    };
+  }, [caseBundle, isPresim]);
 
   const filteredData = useMemo(() => {
     return fullChartingData.filter(row => vitalSignIds.includes(row.id));
