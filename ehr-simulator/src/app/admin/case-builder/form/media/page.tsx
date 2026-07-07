@@ -11,12 +11,13 @@ import { useFormContext } from "@/context/FormContext";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/saveCase";
 import type { MediaImageData } from "@/utils/form";
-import Image from "next/image";
+import { toast } from "sonner";
 
 const MediaForm = () => {
   const router = useRouter();
   const { caseId, mediaData, onDataChange, registerCaseBuilderLocalOverlay } = useFormContext();
   const [images, setImages] = useState<MediaImageData[]>(mediaData);
+  const MAX_SIZE_MB = 10
 
   useEffect(() => {
     setImages(mediaData);
@@ -33,14 +34,18 @@ const MediaForm = () => {
   };
 
   const handleSubmit = async () => {
-    if (!caseId) return alert("Please complete earlier steps.");
-
-    await saveCaseData({
-      payload: images,
-      section: CaseSection.MEDIA,
-      caseId,
-    });
-  router.push("/admin/case-builder/form/review");
+    if (!caseId) return toast.error("Please complete earlier steps.");
+    try{
+      await saveCaseData({
+        payload: images,
+        section: CaseSection.MEDIA,
+        caseId,
+      });
+    router.push("/admin/case-builder/form/review");
+    } catch(err){
+      console.error(err);
+      toast.error("Failed to save Media.");
+    }
 };
 
   const goBack = () => {
@@ -51,7 +56,15 @@ const MediaForm = () => {
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
 
-    const selectedFiles = Array.from(e.target.files);
+    const selectedFiles = Array.from(e.target.files).filter((file) => {
+      if (!file.type.startsWith('image/')) return false;
+      if (file.size >= MAX_SIZE_MB * 1024 * 1024){
+        toast.error(`${file.name} exceeds ${MAX_SIZE_MB}MB and was skipped.`);
+        return false;
+      }
+      return true;
+    });
+
     const newImages = selectedFiles.map((file) => ({
       id: crypto.randomUUID(),
       previewUrl: URL.createObjectURL(file),
@@ -63,7 +76,11 @@ const MediaForm = () => {
   };
 
   const removeImage = (id: string) => {
+    const target = images.find((img) => img.id === id);
+    if (target?.previewUrl) URL.revokeObjectURL(target.previewUrl);
+
     updateImages(images.filter((img) => img.id !== id));
+    toast.success("Removed image.")
   };
 
   return (
@@ -103,9 +120,9 @@ const MediaForm = () => {
                   <div className="grid grid-cols-2 gap-4 pt-2">
                     {images.map((img, idx) => (
                       <div key={idx} className="relative group aspect-square border rounded-lg overflow-hidden bg-slate-100">
-                        <Image
+                        <img
                           src={img.previewUrl}
-                          alt="preview"
+                          alt="Case media"
                           className="w-full h-full object-contain"
                         />
                         <Button
