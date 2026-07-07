@@ -18,8 +18,6 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createBrowserClient } from "@supabase/ssr";
 import { Button } from "@/components/ui/button";
-import { clearTesterMode } from "@/utils/testerMode";
-import { clearTesterLocalStore } from "@/utils/testerLocalStore";
 
 const adminRoutes = [
   {
@@ -80,8 +78,6 @@ export function AppSidebar() {
     await supabase.auth.signOut();
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem('role');
-      clearTesterLocalStore();
-      clearTesterMode();
     }
     router.push('/auth/login');
   }

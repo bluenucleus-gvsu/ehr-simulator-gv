@@ -4,8 +4,6 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { getUsersGroupId } from '@/actions/users';
 import { useParams } from 'next/navigation';
-import { getTesterSessionStatus } from '@/utils/testerLocalStore';
-import { isTesterModeClient } from '@/utils/testerMode';
 
 const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -68,10 +66,6 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
           nextUserName = response.data.full_name ?? null;
           nextUserRole = response.data.role ?? null;
           nextGroupId = response.data.group_id ?? null;
-        } else if (isTesterModeClient()) {
-          const meta = user.user_metadata as Record<string, string> | undefined;
-          nextUserName = meta?.full_name ?? meta?.name ?? meta?.email ?? "Tester";
-          nextGroupId = `tester-sim:${user.id}`;
         }
       }
 
@@ -102,12 +96,6 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
           } else {
             nextSimStart = Date.now();
           }
-        } else if (isTesterModeClient()) {
-          const localStatus = (getTesterSessionStatus(sessionId) ?? "").toLowerCase();
-          const hasStarted =
-            localStatus === "in progress" || localStatus === "completed";
-          nextIsPresim = !hasStarted;
-          nextSimStart = Date.now();
         } else {
           nextSimStart = Date.now();
           nextIsPresim = false;

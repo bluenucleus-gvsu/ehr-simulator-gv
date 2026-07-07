@@ -4,7 +4,6 @@ import { getSectionCaseAssignments } from "@/actions/cases";
 import { getCaseByCourseId } from "@/actions/cases";
 import { Database } from "../../../../../database.types";
 import CourseAssignmentsClient from "./components/CourseAssignmentsClient";
-import { isTesterModeServer } from "@/utils/testerModeServer";
 
 
 interface CoursePageProps {
@@ -17,7 +16,6 @@ export type Course = Database['public']['Tables']['courses']['Row'];
 export default async function CoursePage({ params }: CoursePageProps) {
   const resolvedParams = await params;
   const coursedId = resolvedParams.id
-  const testerMode = await isTesterModeServer();
 
   const [courseResult, sectionsResult, casesResult] = await Promise.all([
     getCourseById(coursedId),
@@ -25,18 +23,13 @@ export default async function CoursePage({ params }: CoursePageProps) {
     getCaseByCourseId()
   ]);
 
-  if (!sectionsResult.success || !casesResult.success || !courseResult.success || (!courseResult.data && !testerMode)) {
+  if (!sectionsResult.success || !casesResult.success || !courseResult.success || !courseResult.data) {
     return <div>Error loading data: {sectionsResult.message || casesResult.message || courseResult.message}</div>
   }
 
   const sectionsData = sectionsResult.data ?? [];
   const casesData = casesResult.data ?? [];
-  const courseData = courseResult.data ?? {
-    id: coursedId,
-    code: "LOCAL TESTER COURSE",
-    name: "Tester Local Course",
-    active: true,
-  } as Course;
+  const courseData = courseResult.data;
 
   return (
     <div className="h-screen w-full bg-gray-50/50">
@@ -54,7 +47,6 @@ export default async function CoursePage({ params }: CoursePageProps) {
 
       <div className="flex-1 overflow-y-auto px-8 py-6 space-y-8">
         <CourseAssignmentsClient
-          courseId={coursedId}
           sectionsData={sectionsData}
           casesData={casesData}
         />

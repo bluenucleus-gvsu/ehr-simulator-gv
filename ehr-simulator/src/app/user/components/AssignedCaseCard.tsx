@@ -5,8 +5,6 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation"; // Use Next.js router
 import { markSessionInProgress } from "@/actions/simulation"; // Adjust import path
 import { getAssignedSimulationLifecycle } from "@/utils/assignedSimulationLifecycle";
-import { isTesterModeClient } from "@/utils/testerMode";
-import { setTesterSessionStatus } from "@/utils/testerLocalStore";
 
 type Props = {
   id: string;
@@ -50,9 +48,6 @@ export default function AssignedCaseCard({
 
     if (isStartingSim) {
       setIsStarting(true);
-      if (isTesterModeClient()) {
-        setTesterSessionStatus(sessionId, "in progress");
-      }
       const { success } = await markSessionInProgress(sessionId);
 
       if (!success) {
@@ -128,5 +123,4 @@ export default function AssignedCaseCard({
     </div>
   );
 }
-
 
