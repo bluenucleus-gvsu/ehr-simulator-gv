@@ -199,6 +199,7 @@ export type Database = {
           case_creation_complete: boolean
           code_status: Database["public"]["Enums"]["code_status_type"]
           created_at: string | null
+          created_by: string | null
           date_of_birth: string | null
           description: string | null
           emergency_contact_name: string | null
@@ -235,6 +236,7 @@ export type Database = {
           case_creation_complete?: boolean
           code_status: Database["public"]["Enums"]["code_status_type"]
           created_at?: string | null
+          created_by?: string | null
           date_of_birth?: string | null
           description?: string | null
           emergency_contact_name?: string | null
@@ -271,6 +273,7 @@ export type Database = {
           case_creation_complete?: boolean
           code_status?: Database["public"]["Enums"]["code_status_type"]
           created_at?: string | null
+          created_by?: string | null
           date_of_birth?: string | null
           description?: string | null
           emergency_contact_name?: string | null
