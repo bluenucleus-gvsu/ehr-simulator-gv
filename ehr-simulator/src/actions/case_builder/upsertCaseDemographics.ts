@@ -18,7 +18,7 @@ export async function upsertCaseDemographics(
     description: d.summary,
     first_name: d.firstName,
     last_name: d.lastName,
-    code_status: d.codeStatus || null,  // Nullish coallescing operator will pass through empty strings which is not a valid member of our code_status enum
+    code_status: d.codeStatus || null,
     height_ft: toNumeric(d.heightFeet),
     height_in: toNumeric(d.heightInches),
     weight_kg: toNumeric(d.dosingWeight),
