@@ -76,7 +76,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
   },
   {
     id: "temp",
-    field: "Temp",
+    field: "Temp (°C)",
     componentType: "input",
     normalRange: { low: 36.6, high: 38 }
   },
@@ -96,13 +96,18 @@ export const flexSheetTemplate: FlexSheetData[] = [
   },
   {
     id: "spo2",
-    field: "SpO2",
+    field: "SpO2 (%)",
     componentType: "input",
     normalRange: { low: 95, high: 100 }
   },
   {
-    id: "spo2_source",
-    field: "SpO2 Source",
+    id: 'supplemental_o2_rate',
+    field: "Supplemental O2 Rate (Lpm)",
+    componentType: "input",
+  },
+  {
+    id: "oxygen_device",
+    field: "Oxygen Device",
     componentType: "assessmentselect",
     chartingOptions: [
       { subsetId: "Room Air", label: "Room Air" },
