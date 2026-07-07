@@ -12,7 +12,6 @@ import { CASE_BUILDER_STEPS } from "../caseBuilderSteps";
 import { saveAllCaseBuilderProgress } from "@/lib/caseBuilder/saveCaseBuilderProgress";
 import { extractErrorMessage } from "@/lib/caseBuilder/serializeFormBlob";
 import { useFormContext } from "@/context/FormContext";
-import { isTesterModeClient } from "@/utils/testerMode";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -224,12 +223,7 @@ export function FormShell({
 }: FormShellProps) {
   const { caseId, setCaseId, getCaseBuilderSaveBlob, applyCaseBuilderOverlayToContext } = useFormContext();
   const [isSaving, setIsSaving] = useState(false);
-  /** Tester suite uses local-only persistence; hide DB save after mount to avoid SSR/client cookie mismatch. */
-  const [showSaveButton, setShowSaveButton] = useState(true);
-
-  useEffect(() => {
-    setShowSaveButton(!isTesterModeClient());
-  }, []);
+  const showSaveButton = true;
 
   const handleSaveProgress = async () => {
     setIsSaving(true);

@@ -28,8 +28,6 @@ import {
   resolveDocumentationDbColumn,
 } from "./components/chartingFromBundle";
 import { calculateColTotal, formatTimeFromOffset, getPinnedStyles } from "./components/flexSheetHelpers";
-import { appendTesterDocumentationRows, getTesterDocumentationRows } from "@/utils/testerLocalStore";
-import { isTesterModeClient } from "@/utils/testerMode";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
 import { useStudentSimulationEditAccess } from "@/utils/studentSimulationEditAccess";
 
@@ -55,10 +53,17 @@ declare module '@tanstack/react-table' {
 
 export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   const { caseBundle } = useSimulationCase();
-  const sourceDocumentation = dbDocumentation.length > 0
-    ? dbDocumentation
-    : ((caseBundle?.documentationResults ?? []) as DatabaseDocumentation[]);
+
+  const sourceDocumentation = useMemo(
+    () => (
+      dbDocumentation.length > 0
+        ? dbDocumentation
+        : ((caseBundle?.documentationResults ?? []) as DatabaseDocumentation[])
+    ),
+    [caseBundle?.documentationResults, dbDocumentation],
+  );
   const { groupId, userId, simStartTime, handleUnsavedCharting, isPresim } = useSimSessionContext();
+
   const { canEdit } = useStudentSimulationEditAccess();
   const initialCharting = useMemo(
     () => buildChartingRowsFromBundle(sourceDocumentation, flexSheetTemplate),
@@ -75,7 +80,6 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [dirtyColumns, setDirtyColumns] = useState<Set<string>>(new Set());
   const { caseId, sessionId } = params;
-  const sessionKey = `${caseId}:${sessionId}`;
   const canSubmit = dirtyColumns.size > 0;
   const { open, toggleSidebar } = useSidebar()
 
@@ -85,21 +89,16 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   const slicedTimeOffsets = timeOffsets.slice(columnOffset, (columnOffset === 0 && remainder !== 0) ? remainder : columnOffset + tableWidth);
 
   useEffect(() => {
-    let rowsInput: DatabaseDocumentation[] = sourceDocumentation;
-    if (isTesterModeClient()) {
-      const testerRows = getTesterDocumentationRows(sessionKey) as DatabaseDocumentation[];
-      rowsInput = [...sourceDocumentation, ...testerRows];
-    }
-    const hydrated = buildChartingRowsFromBundle(rowsInput, flexSheetTemplate);
-    const targetOffsets = isPresim ?
-      Array.from(initialCharting.timePointsInPreSim).sort((a, b) => a - b)
+    const hydrated = buildChartingRowsFromBundle(sourceDocumentation, flexSheetTemplate);
+    const targetOffsets = isPresim
+      ? Array.from(initialCharting.timePointsInPreSim).sort((a, b) => a - b)
       : hydrated.timeOffsets;
 
     setTimeOffsets(targetOffsets);
     setData(hydrated.rows);
     setDirtyColumns(new Set());
     setColumnOffset(Math.max(0, targetOffsets.length - tableWidth));
-  }, [sourceDocumentation, sessionKey, isPresim]);
+}, [sourceDocumentation, isPresim]);
 
   useEffect(() => {
     setColumnOffset((prev) => Math.min(prev, maxOffset));
@@ -261,13 +260,6 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
 
         return dbRecord;
       });
-
-      if (isTesterModeClient()) {
-        appendTesterDocumentationRows(sessionKey, payload);
-        toast.success("FlexSheet data saved locally (tester mode)!");
-        setDirtyColumns(new Set());
-        return;
-      }
 
       const { error } = await upsertDocumentationRows(payload);
 

@@ -34,8 +34,6 @@ import { SectionCard, SectionGroups, randomlyAssignGroups, generateGroupNames } 
 
 import { getAllFacultyUsers, getAllAdminUsers, provisionStudents, getUsersByEmails } from "@/actions/users"
 import { createCourse, createSection, createGroup, createGroupMembers } from "@/actions/courses"
-import { isTesterModeClient } from "@/utils/testerMode"
-import { setTesterCourseDraft, upsertTesterCourse } from "@/utils/testerLocalStore"
 interface SectionState {
   groups: SectionGroups
   unassigned: Student[]
@@ -131,9 +129,6 @@ export default function CreateCoursePage() {
         const courseResponse = await createCourse({ active: true, code: courseCode, name: courseName })
         if (!courseResponse.success || !courseResponse.data) return
         const courseId = courseResponse.data.id
-        if (isTesterModeClient()) {
-          upsertTesterCourse(courseResponse.data)
-        }
 
         const sectionResults = await Promise.all(
           sections.map((section) =>
@@ -177,14 +172,6 @@ export default function CreateCoursePage() {
               )
             })
           )
-        }
-        if (isTesterModeClient()) {
-          setTesterCourseDraft(courseId, {
-            sections,
-            sectionStates,
-            semester,
-            courseFacultyIds,
-          });
         }
 
         router.push("/admin/courses")

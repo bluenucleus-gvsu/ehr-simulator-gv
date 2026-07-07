@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import NursingNoteEntry from "./nursingNoteEntry";
 import NoteDisplay from "./noteDisplay";
 import { toast } from "sonner";
@@ -15,8 +15,6 @@ import { ClinicalDocumentView, EditableStudentNoteUpsert, submitStudentNote } fr
 import { useSimSessionContext } from "@/context/SimSessionContext";
 import { useStudentSimulationEditAccess } from "@/utils/studentSimulationEditAccess";
 import { Skeleton } from "@/components/ui/skeleton";
-import { appendTesterNote, getTesterNotes } from "@/utils/testerLocalStore";
-import { isTesterModeClient } from "@/utils/testerMode";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
 
 export interface NoteViewProps {
@@ -38,41 +36,28 @@ const NoteView = ({
   const { simStartTime, userName, userId, groupId, isPresim } = useSimSessionContext();
   const { canEdit } = useStudentSimulationEditAccess();
   const [filteredSpecialties, setFilteredSpecialties] = useState<string[]>([]);
-  const [testerNotes, setTesterNotes] = useState<ClinicalDocumentView[]>([]);
-  const sessionKey = `${caseId}:${sessionId}`;
   const fallbackCaseNotes = (caseBundle?.clinicalDocuments ?? []) as ClinicalDocumentView[];
   const sourceNotes = clinicalDocuments.length > 0 ? clinicalDocuments : fallbackCaseNotes;
 
-  useEffect(() => {
-    if (!isTesterModeClient()) return;
-    setTesterNotes(getTesterNotes(sessionKey) as ClinicalDocumentView[]);
-  }, [sessionKey]);
-
-  const mergedNotes = useMemo(
-    () => [...sourceNotes, ...testerNotes],
-    [sourceNotes, testerNotes],
-  );
-
   const specialties = useMemo(() => {
     const visibleNotes = isPresim
-      ? mergedNotes.filter(note => note.is_in_presim)
-      : mergedNotes;
+      ? sourceNotes.filter((note) => note.is_in_presim)
+      : sourceNotes;
 
-    return [...new Set(visibleNotes.map(note => note.specialty))];
-  }, [mergedNotes, isPresim]);
+    return [...new Set(visibleNotes.map((note) => note.specialty))];
+  }, [sourceNotes, isPresim]);
 
   const filteredNotesData = useMemo(() => {
     const visibleNotes = isPresim
-      ? mergedNotes.filter(note => note.is_in_presim)
-      : mergedNotes;
+      ? sourceNotes.filter((note) => note.is_in_presim)
+      : sourceNotes;
 
     const sortedNotes = [...visibleNotes].sort((a, b) => b.time_offset - a.time_offset);
 
-    const hasSpecialtyFilter = filteredSpecialties.length > 0;
-    return hasSpecialtyFilter
-      ? sortedNotes.filter(note => filteredSpecialties.includes(note.specialty))
+    return filteredSpecialties.length > 0
+      ? sortedNotes.filter((note) => filteredSpecialties.includes(note.specialty))
       : sortedNotes;
-  }, [mergedNotes, filteredSpecialties, isPresim]);
+  }, [sourceNotes, filteredSpecialties, isPresim]);
 
   const handleFilterChange = (specialty: string, checked: boolean | "indeterminate") => {
     setFilteredSpecialties(prev => {
@@ -98,7 +83,7 @@ const NoteView = ({
       toast.error("Still loading session data. Please try again in a moment.");
       return false;
     }
-    if (!isTesterModeClient() && !groupId) {
+    if (!groupId) {
       toast.error("Still loading session data. Please try again in a moment.");
       return false;
     }
@@ -114,22 +99,6 @@ const NoteView = ({
       time_offset: now,
       doc_text: noteContent,
       is_in_presim: false
-    }
-
-    if (isTesterModeClient()) {
-      if (!canEdit) {
-        toast.error("Notes are view-only in pre-simulation.");
-        return false;
-      }
-      const localNote = {
-        ...newNote,
-        id: crypto.randomUUID(),
-        source_type: "student_document",
-      } as ClinicalDocumentView;
-      appendTesterNote(sessionKey, localNote);
-      setTesterNotes((prev) => [...prev, localNote]);
-      toast.success("Nursing note saved locally (tester mode).");
-      return true;
     }
 
     const result = await submitStudentNote(newNote);

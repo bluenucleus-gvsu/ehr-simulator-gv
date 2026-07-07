@@ -23,8 +23,6 @@ import { DatabaseMedAdministration, StudentMedicationAdministration, submitMedic
 import { useSimSessionContext } from '@/context/SimSessionContext';
 import { useSimulationCase } from '@/context/SimulationCaseContext';
 import { Skeleton } from '@/components/ui/skeleton';
-import { appendTesterMedicationAdministrations, getTesterMedicationAdministrations } from '@/utils/testerLocalStore';
-import { isTesterModeClient } from '@/utils/testerMode';
 import { useStudentSimulationEditAccess } from '@/utils/studentSimulationEditAccess';
 import { useParams } from 'next/navigation';
 
@@ -53,7 +51,6 @@ export default function MarView({
   const router = useRouter();
   const { routeContext } = useSimulationCase();
   const resolvedCaseId = routeContext?.caseId ?? params.caseId;
-  const sessionKey = `${resolvedCaseId}:${params.sessionId}`;
   // context
   const { userId, groupId, isPresim, userName, simStartTime, loading } = useSimSessionContext();
   const { canEdit } = useStudentSimulationEditAccess();
@@ -72,7 +69,6 @@ export default function MarView({
   const [isMultiOrderPopoverOpen, setIsMultiOrderPopoverOpen] = useState<boolean>(false)
   const [isWrongPtScan, setIsWrongPtScan] = useState<boolean>(false)
   const [isMedAdminPanelOpen, setIsMedAdminPanelOpen] = useState(false);
-  const [testerAdministrations, setTesterAdministrations] = useState<DatabaseMedAdministration[]>([]);
   // temp time management
   const [timeColumnOffset, setTimeColumnOffset] = useState(0)
   const [localTimelineAnchor] = useState(() => new Date());
@@ -243,11 +239,6 @@ export default function MarView({
     },
   )
 
-  useEffect(() => {
-    if (!isTesterModeClient()) return;
-    setTesterAdministrations(getTesterMedicationAdministrations(sessionKey) as DatabaseMedAdministration[]);
-  }, [sessionKey]);
-
   const handleTimeColChange = (offset: number | string) => {
     if (typeof offset === "number") {
       setTimeColumnOffset(prev => prev + offset);
@@ -307,15 +298,6 @@ export default function MarView({
       };
     });
 
-    if (isTesterModeClient()) {
-      appendTesterMedicationAdministrations(sessionKey, payload);
-      setTesterAdministrations(payload as unknown as DatabaseMedAdministration[]);
-      setIsMedAdminPanelOpen(false);
-      toast.success("Medications saved locally (tester mode).");
-      handleClearAllSelections();
-      return;
-    }
-
     const result = await submitMedicationAdministrations(payload, resolvedCaseId, params.sessionId)
 
     if (!result.success) {
@@ -330,20 +312,15 @@ export default function MarView({
   }
 
 
-  const mergedAdministrations = useMemo(
-    () => [...medicationAdministrations, ...testerAdministrations],
-    [medicationAdministrations, testerAdministrations],
-  );
-
   const groupedAdministrationsByOrder = useMemo(() => {
-    return mergedAdministrations.reduce((acc, admin) => {
+    return medicationAdministrations.reduce((acc, admin) => {
       if (!acc[admin.medication_order_id || 'no_associated_order']) {
         acc[admin.medication_order_id || 'no_associated_order'] = [];
       }
       acc[admin.medication_order_id || 'no_associated_order'].push(admin)
       return acc
     }, {} as { [orderId: string]: DatabaseMedAdministration[] })
-  }, [mergedAdministrations]);
+  }, [medicationAdministrations]);
 
   const medsById = useMemo(() => {
     return medications.reduce((acc, med) => {
