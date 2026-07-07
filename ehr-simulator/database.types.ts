@@ -7,31 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       case_data: {
@@ -1407,6 +1382,7 @@ export type Database = {
           amylase: number | null
           ast: number | null
           blood: string | null
+          blood_type: string | null
           bun: number | null
           calcium: number | null
           case_id: string
@@ -1448,6 +1424,7 @@ export type Database = {
           pt: number | null
           ptt: number | null
           rbc: number | null
+          rh_factor: string | null
           sodium: number | null
           specific_gravity: number | null
           time_offset: number
@@ -1468,6 +1445,7 @@ export type Database = {
           amylase?: number | null
           ast?: number | null
           blood?: string | null
+          blood_type?: string | null
           bun?: number | null
           calcium?: number | null
           case_id: string
@@ -1509,6 +1487,7 @@ export type Database = {
           pt?: number | null
           ptt?: number | null
           rbc?: number | null
+          rh_factor?: string | null
           sodium?: number | null
           specific_gravity?: number | null
           time_offset: number
@@ -1529,6 +1508,7 @@ export type Database = {
           amylase?: number | null
           ast?: number | null
           blood?: string | null
+          blood_type?: string | null
           bun?: number | null
           calcium?: number | null
           case_id?: string
@@ -1570,6 +1550,7 @@ export type Database = {
           pt?: number | null
           ptt?: number | null
           rbc?: number | null
+          rh_factor?: string | null
           sodium?: number | null
           specific_gravity?: number | null
           time_offset?: number
@@ -2463,9 +2444,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       clinical_doc_category_type: [
@@ -2518,3 +2496,4 @@ export const Constants = {
     },
   },
 } as const
+

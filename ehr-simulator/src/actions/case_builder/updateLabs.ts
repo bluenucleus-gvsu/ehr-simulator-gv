@@ -13,7 +13,6 @@ export async function updateLabs(
     data: payload.data ?? [],
     timePoints: payload.timePoints ?? [],
     timePointsInPreSim: new Set(payload.timePointsInPreSim ?? []),
-    visibleItems: new Set(payload.visibleItems ?? []),
   })
 
   await deleteLabs(supabase, caseId, payload.timePoints)

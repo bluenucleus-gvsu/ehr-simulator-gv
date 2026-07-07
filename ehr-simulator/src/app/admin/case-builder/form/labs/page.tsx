@@ -9,8 +9,6 @@ import { TooltipPortal } from "@radix-ui/react-tooltip";
 
 import { TestTube2 } from "lucide-react";
 import { AddTableColumn } from "./components/addTimeCol";
-import { Label } from "@/components/ui/label";
-import Combobox from "@/components/ui/combobox";
 import { useRouter } from "next/navigation";
 import { LabTableImagingReport, LabTableInputCell, LabTableMicrobioReport } from "./components/labTableInputCell";
 import { useFormContext } from "@/context/FormContext";
@@ -23,11 +21,6 @@ import { CaseSection } from "@/lib/saveCase";
 
 const columnHelper = createColumnHelper<LabTableData>();
 
-function ensureStringSet(input: unknown): Set<string> {
-  if (input instanceof Set) return input;
-  if (Array.isArray(input)) return new Set(input.filter((v): v is string => typeof v === "string"));
-  return new Set<string>();
-}
 
 function ensureNumberSet(input: unknown): Set<number> {
   if (input instanceof Set) return input;
@@ -44,8 +37,6 @@ function ensureNumberSet(input: unknown): Set<number> {
 function LabForm() {
   const { onDataChange, labData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
   const [labTableData, setLabTableData] = useState<LabTableData[]>(labData.data);
-  const [visibleItems, setVisibleItems] = useState<Set<string>>(ensureStringSet(labData.visibleItems));
-  const [comboboxValue, setComboboxValue] = useState<string>('');
   const {
     timePoints,
     timePointsInPresim,
@@ -62,7 +53,6 @@ function LabForm() {
         data: labTableData,
         timePoints,
         timePointsInPreSim: timePointsInPresim,
-        visibleItems,
       },
     }));
     return () => registerCaseBuilderLocalOverlay(null);
@@ -70,44 +60,14 @@ function LabForm() {
     labTableData,
     timePoints,
     timePointsInPresim,
-    visibleItems,
     registerCaseBuilderLocalOverlay,
   ]);
-
-  // Get all hideable options for Combobox selector
-  const hideableOptions = useMemo(() => {
-    return labTableData
-      .filter(row => row.hideable === true)
-      .filter(row => !visibleItems.has(row.field))
-      .map(row => ({
-        value: row.field,
-        label: row.field
-      }));
-  }, [labTableData, visibleItems]);
-
-  // Filter data to only show visible rows
-  const filteredLabTableData = useMemo(() => {
-    return labTableData.filter(row => {
-      // Always show non-hideable rows
-      if (!row.hideable) return true;
-      return visibleItems.has(row.field);
-    });
-  }, [labTableData, visibleItems]);
-
-  // Handler to add an item to visible list
-  const handleAddVisibleItem = (fieldName: string) => {
-    if (fieldName) {
-      setVisibleItems(prev => new Set([...prev, fieldName]));
-      setComboboxValue("");
-    }
-  };
 
   const goBack = () => {
     onDataChange('labs', {
       data: labTableData,
       timePoints: timePoints,
       timePointsInPreSim: timePointsInPresim,
-      visibleItems: visibleItems
     });
     router.push("/admin/case-builder/form/orders");
   }
@@ -117,7 +77,6 @@ function LabForm() {
       data: labTableData,
       timePoints: timePoints,
       timePointsInPreSim: timePointsInPresim,
-      visibleItems: visibleItems
     });
 
     saveCaseData({
@@ -125,7 +84,6 @@ function LabForm() {
         data: labTableData,
         timePoints,
         timePointsInPreSim: Array.from(timePointsInPresim),
-        visibleItems: Array.from(visibleItems),
       },
       section: CaseSection.LABS,
       caseId: caseId
@@ -251,7 +209,7 @@ function LabForm() {
   );
 
   const ptTable = useReactTable({
-    data: filteredLabTableData,
+    data: labTableData,
     columns,
     enablePinning: true,
     initialState: {
@@ -261,7 +219,7 @@ function LabForm() {
     },
     meta: {
       updateData: (rowIndex, columnId, value) => {
-        const filteredRow = filteredLabTableData[rowIndex];
+        const filteredRow = labTableData[rowIndex];
         const actualIndex = labTableData.findIndex(row => row.field === filteredRow?.field);
         setLabTableData(old =>
           old.map((row, index) => {
@@ -294,10 +252,6 @@ function LabForm() {
       <div className="bg-slate-50/50 flex-1 flex flex-col min-h-0 px-6 pt-4">
         <div className="h-12 px-4 w-full flex justify-start gap-12 mb-3 items-end">
           <AddTableColumn handleColumnAdd={addTimePoint} />
-          <div>
-            <Label>Imaging Options</Label>
-            <Combobox onValueChange={handleAddVisibleItem} value={comboboxValue} displayText="Select scans..." data={hideableOptions} />
-          </div>
           <div className="flex items-end gap-2">
             <div className="space-y-1.5">
               <p className="w-fit items-center  px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-50 text-yellow-600 border border-yellow-300 uppercase tracking-wide">
