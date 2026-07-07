@@ -5,7 +5,6 @@ import { useMemo } from "react";
 import { buildChartDataFromCaseRow } from "./chartData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
-import { useSimSessionContext } from "@/context/SimSessionContext";
 
 // Define types for local state
 interface MarCounts {
@@ -33,18 +32,10 @@ function ChartSidebarSkeleton() {
 
 export default function ChartSidebar() {
   const { caseBundle } = useSimulationCase();
-  const { simStartTime } = useSimSessionContext();
-
-  const referenceTime = useMemo(
-    () => new Date(simStartTime ?? Date.now()),
-    [simStartTime],
-  );
   const sidebarData = useMemo(
     () =>
-      buildChartDataFromCaseRow((caseBundle?.caseRow as Record<string, unknown> | null | undefined) ?? null, {
-        referenceTime,
-      }),
-    [caseBundle?.caseRow, referenceTime],
+      buildChartDataFromCaseRow((caseBundle?.caseRow as Record<string, unknown> | null | undefined) ?? null),
+    [caseBundle?.caseRow],
   );
   const marData = useMemo<MarCounts>(() => {
     const orders = (caseBundle?.medicationOrders ?? []) as Array<{ priority?: string | null; frequency?: string | null }>;
@@ -102,13 +93,6 @@ export default function ChartSidebar() {
           <span className="pl-2 font-normal">{sidebarData.age.value}</span>
         </p>
 
-
-
-        {/* <p className="text-purple-900 text-sm font-light tracking-tight">
-          {sidebarData.dob.label}:
-          <span className="pl-2 font-normal">{sidebarData.dob.value}</span>
-        </p> */}
-
         <p className="text-purple-900 text-sm font-light tracking-tight">
           {sidebarData.code.label}:
           <span className="pl-2 font-normal">{sidebarData.code.value}</span>
@@ -119,11 +103,6 @@ export default function ChartSidebar() {
         {/* Current Admission Data */}
         <div className="relative flex flex-col border bg-white border-purple-900 w-full h-fit px-2 py-3 gap-1 rounded-lg shadow-md">
           <p className="font-medium text-purple-900 tracking-tight -top-3 absolute left-2 bg-white rounded-2xl  px-1">This Admission</p>
-
-          {/* <p className="text-purple-900 text-xs font-light tracking-tight">
-            <span className="underline">{sidebarData.admissionDate.label}:</span>
-            <span className="pl-2 font-normal">{sidebarData.admissionDate.value}</span>
-          </p> */}
           <p className="text-purple-900 text-xs font-light tracking-tight">
             <span className="underline">{sidebarData.attending.label}:</span>
             <span className="pl-2 font-normal">{sidebarData.attending.value}</span>

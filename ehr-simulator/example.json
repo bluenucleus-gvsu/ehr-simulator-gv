@@ -4,7 +4,6 @@
   "case_description": "Example Case Description",
   "patient_first_name": "Jane",
   "patient_last_name": "Doe",
-  "patient_dob": "1990-01-01",
   "code_status": "FULL", // FULL, DNR, PARTIAL
   "patient_height": "180",
   "patient_dosing_weight": "100",
@@ -17,8 +16,6 @@
   "requires_interpreter": true,
   "admitting_diagnosis": "Asthma",
   "attending_provider": "Dr. John Doe",
-  "inpatient_duration": "1",
-  "time_of_admission": "2020-01-01",
   "medical_history": [
     "Asthma",
     "Hypertension"

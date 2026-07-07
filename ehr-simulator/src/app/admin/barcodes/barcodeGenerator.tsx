@@ -220,7 +220,6 @@ const BardcodeGenerator = ({ medications, simCases }: BarcodeGeneratorProps) => 
                     <div class="patient-info">
                       <div class="patient-name">${c.first_name} ${c.last_name}</div>
                       <div class="patient-details">
-                        <span><strong>DOB:</strong> ${c.date_of_birth || 'N/A'}</span>
                         <span><strong>ID:</strong> ${c.id}</span>
                       </div>
                     </div>

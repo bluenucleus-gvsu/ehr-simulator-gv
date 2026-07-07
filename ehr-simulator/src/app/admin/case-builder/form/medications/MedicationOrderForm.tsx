@@ -15,6 +15,7 @@ import { useFormContext } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
 import { CaseSection } from "@/lib/saveCase"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
+import { toast } from "sonner"
 
 function getComboboxData(medications: AllMedicationTypes[]) {
   return medications.map(med => {
@@ -40,6 +41,10 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
   const [selectedMed, setSelectedMed] = useState('')
   const [selectedMeds, setSelectedMeds] = useState<AllMedicationTypes[]>(medOrderData.selectedMeds)
   const [medOrders, setMedOrders] = useState<MedicationOrder[]>(medOrderData.createdOrders)
+  const validateMedOrders = () => {
+    return medOrders.every(order => order.priority && order.frequency && order.orderingProvider)
+  }
+
 
   const handleAddMedication = (newMedId: string) => {
     setSelectedMed(newMedId)
@@ -97,19 +102,21 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
   }, [medications]);
 
   const goBack = () => {
-    onDataChange('medOrders', {
-      createdOrders: medOrders,
-      selectedMeds: selectedMeds
-    });
     router.push("/admin/case-builder/form/intake-output");
   }
 
   const handleSubmit = async () => {
-    onDataChange('medOrders', {
-      createdOrders: medOrders,
-      selectedMeds: selectedMeds
-    });
+    const canSubmit = validateMedOrders()
+    if (!canSubmit) {
+      toast.warning('Every order must be assigned a Priority, Frequency, and Provider.')
+      return
+    }
+
     if (caseId) {
+      onDataChange('medOrders', {
+        createdOrders: medOrders,
+        selectedMeds: selectedMeds
+      });
       await saveCaseData({
         payload: { orders: medOrders, administrations: medAdministrationData },
         section: CaseSection.MEDICATION_ORDERS,

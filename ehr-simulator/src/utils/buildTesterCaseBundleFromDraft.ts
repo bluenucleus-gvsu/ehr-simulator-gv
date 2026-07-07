@@ -16,7 +16,6 @@ import type {
   IntakeOutputFormData,
   MedOrderFormData,
 } from "@/utils/form";
-import { months } from "@/utils/form";
 import { getTesterCaseDraft } from "@/utils/testerLocalStore";
 import { timeColumnCell } from "@/utils/timeColumnCell";
 import { allMedications } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
@@ -64,25 +63,6 @@ function ensureStringSet(raw: unknown): Set<string> {
   return out;
 }
 
-function estimatedIsoDobFromDemographics(d?: DemographicFormData): string {
-  if (!d) return "";
-  const monthIdx = months.indexOf(d.DOBMonth);
-  const day = Number(d.DOBDay);
-  const age = Number.parseInt(String(d.age), 10);
-  const refYear = new Date().getFullYear();
-  const inferredYear =
-    Number.isFinite(age) && age > 0 && age < 120 ? refYear - age : refYear - 35;
-  if (monthIdx < 0 || !Number.isFinite(day) || day < 1 || day > 31) {
-    return Number.isFinite(age) && age > 0 && age < 120
-      ? `${inferredYear}-06-15`
-      : "";
-  }
-  const month = monthIdx + 1;
-  const mm = String(month).padStart(2, "0");
-  const dd = String(day).padStart(2, "0");
-  return `${inferredYear}-${mm}-${dd}`;
-}
-
 function caseRowFromTesterDraft(caseId: string, draft?: TesterCaseDraftBlob | null) {
   const d = draft?.demographics;
   const h = draft?.history;
@@ -93,11 +73,9 @@ function caseRowFromTesterDraft(caseId: string, draft?: TesterCaseDraftBlob | nu
     id: caseId,
     first_name: d?.firstName ?? "",
     last_name: d?.lastName ?? "",
-    date_of_birth: estimatedIsoDobFromDemographics(d),
     description: d?.summary ?? "",
+    age: d?.age ?? "",
     admitting_diagnosis: d?.admittingDiagnosis ?? "",
-    inpatient_duration_days: Number(d?.admissionDateOffest ?? 0) || 0,
-    time_of_admission: d?.admissionTime ?? "",
     attending_provider: attending,
     code_status: d?.codeStatus ?? "",
     weight_kg: d?.dosingWeight ? Number(d.dosingWeight) : null,
@@ -218,15 +196,15 @@ export function buildTesterCaseBundleFromDraft(caseId: string): CaseBundle {
         findings:
           Array.isArray(imaging?.findings) && imaging.findings.length > 0
             ? imaging.findings.reduce(
-                (acc, f) => ({ ...acc, [f.region]: f.description }),
-                {} as Record<string, string>,
-              )
+              (acc, f) => ({ ...acc, [f.region]: f.description }),
+              {} as Record<string, string>,
+            )
             : null,
         impressions: imaging?.impressions ?? [],
         is_critical: Boolean(
           imaging?.isCritical === true ||
-            (typeof imaging?.isCritical === "string" &&
-              imaging.isCritical.toLowerCase().includes("critical")),
+          (typeof imaging?.isCritical === "string" &&
+            imaging.isCritical.toLowerCase().includes("critical")),
         ),
       };
     });
@@ -246,7 +224,7 @@ export function buildTesterCaseBundleFromDraft(caseId: string): CaseBundle {
         reporter: mb?.reporter ?? "N/A",
         is_critical:
           mb?.isCritical === true ||
-          (typeof mb?.isCritical === "string" && mb.isCritical.toLowerCase().includes("critical"))
+            (typeof mb?.isCritical === "string" && mb.isCritical.toLowerCase().includes("critical"))
             ? "true"
             : "false",
       };
@@ -392,7 +370,7 @@ export function mergeTesterCaseBundlePreferDraft(
     documentationResults,
     medicationAdministrations:
       Array.isArray(draftBundle.medicationAdministrations) &&
-      draftBundle.medicationAdministrations.length > 0
+        draftBundle.medicationAdministrations.length > 0
         ? draftBundle.medicationAdministrations
         : server.medicationAdministrations,
     medicationOrders:
