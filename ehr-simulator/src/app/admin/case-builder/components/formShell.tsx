@@ -76,7 +76,7 @@ function FormShellHeaderFallback({
                 variant="outline"
                 size="sm"
                 className="cursor-pointer gap-1.5 border-slate-300"
-                disabled={isSaving}
+                disabled
                 onClick={handleSaveProgress}
                 title="Save all sections to the database without leaving this page"
               >
@@ -153,7 +153,7 @@ function FormShellHeaderResolved({
                 variant="outline"
                 size="sm"
                 className="cursor-pointer gap-1.5 border-slate-300"
-                disabled={isSaving}
+                disabled
                 onClick={handleSaveProgress}
                 title="Save all sections to the database without leaving this page"
               >
