@@ -41,24 +41,23 @@ const NoteView = ({
 
   const specialties = useMemo(() => {
     const visibleNotes = isPresim
-    ? sourceNotes.filter((note) => note.is_in_presim)
-    : sourceNotes;
+      ? sourceNotes.filter((note) => note.is_in_presim)
+      : sourceNotes;
 
-  return [...new Set(visibleNotes.map((note) => note.specialty))];
-}, [sourceNotes, isPresim]);
+    return [...new Set(visibleNotes.map((note) => note.specialty))];
+  }, [sourceNotes, isPresim]);
 
-const filteredNotesData = useMemo(() => {
-  const visibleNotes = isPresim
-    ? sourceNotes.filter((note) => note.is_in_presim)
-    : sourceNotes;
+  const filteredNotesData = useMemo(() => {
+    const visibleNotes = isPresim
+      ? sourceNotes.filter((note) => note.is_in_presim)
+      : sourceNotes;
 
-  const sortedNotes = [...visibleNotes].sort((a, b) => b.time_offset - a.time_offset);
+    const sortedNotes = [...visibleNotes].sort((a, b) => b.time_offset - a.time_offset);
 
-  return filteredSpecialties.length > 0
-    ? sortedNotes.filter((note) => filteredSpecialties.includes(note.specialty))
-    : sortedNotes;
-}, [sourceNotes, filteredSpecialties, isPresim]);
-}
+    return filteredSpecialties.length > 0
+      ? sortedNotes.filter((note) => filteredSpecialties.includes(note.specialty))
+      : sortedNotes;
+  }, [sourceNotes, filteredSpecialties, isPresim]);
 
   const handleFilterChange = (specialty: string, checked: boolean | "indeterminate") => {
     setFilteredSpecialties(prev => {
