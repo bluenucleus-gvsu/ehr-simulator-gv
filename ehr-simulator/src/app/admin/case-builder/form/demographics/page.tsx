@@ -6,7 +6,8 @@ import {
   Briefcase,
   Building2,
   Clock,
-  ChevronDown
+  ChevronDown,
+  Info
 } from "lucide-react";
 import {
   AlertDialog,
@@ -24,7 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import InfoTooltip from "../../components/helpTooltip";
+import InfoTooltip from "../../../../../components/helpTooltip";
 import { differenceInYears } from "date-fns";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -660,7 +661,10 @@ export default function DemographicsForm() {
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     Inpatient Duration
-                    <InfoTooltip content="Number of days hospitalized BEFORE simulation start." />
+                    <InfoTooltip
+                      content="Number of days hospitalized BEFORE simulation start.">
+                      <Info size={16} color="var(--muted-foreground)" />
+                    </InfoTooltip>
                   </Label>
                   <div className="relative max-w-[180px]">
                     <Input

@@ -6,7 +6,8 @@ import {
   User,
   FileText,
   ListPlus,
-  ChevronDown
+  ChevronDown,
+  Info
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import InfoTooltip from "../../components/helpTooltip";
+import InfoTooltip from "../../../../../components/helpTooltip";
 import { useRouter } from "next/navigation";
 import { categories, specialties } from "@/utils/form";
 
@@ -188,7 +189,9 @@ export default function NotesForm() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Label>Time Before Sim</Label>
-                      <InfoTooltip content="How long before the simulation start time was this note written?" />
+                      <InfoTooltip content="How long before the simulation start time was this note written?">
+                        <Info size={16} color="var(--muted-foreground)" />
+                      </InfoTooltip>
                     </div>
                     <div className="flex gap-2">
                       <div className="relative flex-1">
