@@ -9,6 +9,8 @@ import { getCaseBundle } from "@/actions/case_builder/getCase";
 import { isTesterModeServer } from "@/utils/testerModeServer";
 import type { CaseBundle } from "@/actions/case_builder/getCase";
 import { ChartSimulationBootstrap } from "./chartSimulationBootstrap";
+import { SidebarProvider } from "@/components/ui/sidebar"
+import FlexSheetSidebar from "./charting/components/flexSheetSidebar"
 
 type ChartLayoutProps = {
   children: React.ReactNode;
@@ -32,20 +34,23 @@ const ChartLayout = async ({ children, params }: ChartLayoutProps) => {
 
   return (
     <ChartSimulationBootstrap routeContext={routeContext} serverCaseBundle={serverCaseBundle}>
-      <SimSessionProvider>
-        <SimulationShell>
-          <Toaster position="top-right" />
-          <Header tabs={<ChartTabs />} />
-          <div className="flex min-h-0 flex-1 w-full min-w-0">
-            <ChartSidebar />
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-              <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-hidden">
-                {children}
+      <SidebarProvider defaultOpen={false}>
+        <SimSessionProvider>
+          <SimulationShell>
+            <Toaster position="top-right" />
+            <Header tabs={<ChartTabs />} />
+            <div className="flex min-h-0 flex-1 w-full min-w-0">
+              <ChartSidebar />
+              <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-hidden">
+                  {children}
+                </div>
               </div>
             </div>
-          </div>
-        </SimulationShell>
-      </SimSessionProvider>
+          </SimulationShell>
+        </SimSessionProvider>
+        <FlexSheetSidebar />
+      </SidebarProvider>
     </ChartSimulationBootstrap>
   )
 }
