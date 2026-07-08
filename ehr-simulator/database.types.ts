@@ -134,7 +134,6 @@ export type Database = {
         Row: {
           case_id: string | null
           completed_at: string | null
-          current_phase: number
           feedback: string | null
           group_id: string | null
           id: string
@@ -146,7 +145,6 @@ export type Database = {
         Insert: {
           case_id?: string | null
           completed_at?: string | null
-          current_phase?: number
           feedback?: string | null
           group_id?: string | null
           id?: string
@@ -158,7 +156,6 @@ export type Database = {
         Update: {
           case_id?: string | null
           completed_at?: string | null
-          current_phase?: number
           feedback?: string | null
           group_id?: string | null
           id?: string
@@ -217,8 +214,8 @@ export type Database = {
           last_name: string
           living_situation: string[] | null
           medical_history: string[] | null
+          MRN: string | null
           name: string
-          phase_count: number
           relationship_status_id: string | null
           religion: string | null
           requires_interpreter: boolean
@@ -253,8 +250,8 @@ export type Database = {
           last_name: string
           living_situation?: string[] | null
           medical_history?: string[] | null
+          MRN?: string | null
           name: string
-          phase_count?: number
           relationship_status_id?: string | null
           religion?: string | null
           requires_interpreter?: boolean
@@ -289,8 +286,8 @@ export type Database = {
           last_name?: string
           living_situation?: string[] | null
           medical_history?: string[] | null
+          MRN?: string | null
           name?: string
-          phase_count?: number
           relationship_status_id?: string | null
           religion?: string | null
           requires_interpreter?: boolean
@@ -1439,7 +1436,6 @@ export type Database = {
           myoglobin: number | null
           nitrites: string | null
           pco2: number | null
-          phase: number
           phosphate: number | null
           platelets: number | null
           po2: number | null
@@ -1500,7 +1496,6 @@ export type Database = {
           myoglobin?: number | null
           nitrites?: string | null
           pco2?: number | null
-          phase?: number
           phosphate?: number | null
           platelets?: number | null
           po2?: number | null
@@ -1561,7 +1556,6 @@ export type Database = {
           myoglobin?: number | null
           nitrites?: string | null
           pco2?: number | null
-          phase?: number
           phosphate?: number | null
           platelets?: number | null
           po2?: number | null
@@ -1602,7 +1596,6 @@ export type Database = {
           is_in_presim: boolean
           medication_order_id: string | null
           notes: string | null
-          phase: number
           status: string | null
           time_offset: number
         }
@@ -1615,7 +1608,6 @@ export type Database = {
           is_in_presim?: boolean
           medication_order_id?: string | null
           notes?: string | null
-          phase?: number
           status?: string | null
           time_offset: number
         }
@@ -1628,7 +1620,6 @@ export type Database = {
           is_in_presim?: boolean
           medication_order_id?: string | null
           notes?: string | null
-          phase?: number
           status?: string | null
           time_offset?: number
         }
@@ -1661,7 +1652,6 @@ export type Database = {
           is_in_presim: boolean
           medication_id: string
           ordering_provider: string | null
-          phase: number
           priority: Database["public"]["Enums"]["medication_priorities"]
         }
         Insert: {
@@ -1675,7 +1665,6 @@ export type Database = {
           is_in_presim?: boolean
           medication_id: string
           ordering_provider?: string | null
-          phase?: number
           priority: Database["public"]["Enums"]["medication_priorities"]
         }
         Update: {
@@ -1689,7 +1678,6 @@ export type Database = {
           is_in_presim?: boolean
           medication_id?: string
           ordering_provider?: string | null
-          phase?: number
           priority?: Database["public"]["Enums"]["medication_priorities"]
         }
         Relationships: [
@@ -1840,7 +1828,6 @@ export type Database = {
           id: string
           is_important: boolean
           is_in_presim: boolean
-          phase: number
           provider: string
           status: string
           title: string
@@ -1853,7 +1840,6 @@ export type Database = {
           id?: string
           is_important?: boolean
           is_in_presim?: boolean
-          phase?: number
           provider: string
           status: string
           title: string
@@ -1866,7 +1852,6 @@ export type Database = {
           id?: string
           is_important?: boolean
           is_in_presim?: boolean
-          phase?: number
           provider?: string
           status?: string
           title?: string
@@ -2518,3 +2503,4 @@ export const Constants = {
     },
   },
 } as const
+
