@@ -25,6 +25,7 @@ export type ClinicalDocumentView = {
   case_id: UUID,
   case_session_id: UUID | null,
   is_in_presim: boolean,
+  phase: number | null,
   category: string,
   specialty: string,
   author: string,
@@ -56,6 +57,7 @@ export async function submitStudentNote(note: EditableStudentNoteUpsert): Promis
       .insert({
         case_id: note.case_id,
         is_in_presim: note.is_in_presim ?? false,
+        phase: 1,
         category: note.category,
         specialty: note.specialty,
         author: note.author,
@@ -121,7 +123,7 @@ export async function getAllClinicalDocuments(caseId: string, caseSessionId: str
     const [caseDocsRes, studentDocsRes] = await Promise.all([
       supabase
         .from('clinical_documents')
-        .select('id, case_id, is_in_presim, category, specialty, author, time_offset, doc_text')
+        .select('id, case_id, is_in_presim, phase, category, specialty, author, time_offset, doc_text')
         .eq('case_id', caseId),
       supabase
         .from('editable_clinical_documents')
@@ -148,6 +150,7 @@ export async function getAllClinicalDocuments(caseId: string, caseSessionId: str
       })),
       ...((studentDocsMissing ? [] : (studentDocsRes.data ?? [])).map((row) => ({
         ...row,
+        phase: 1,
         source_type: 'student_document',
       }))),
     ]
