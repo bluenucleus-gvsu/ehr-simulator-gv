@@ -44,7 +44,7 @@ export default async function FacultyPage({
   }
 
   // May come from another file in future...
-  const courses = await getFacultyCourses(id)
+  const courses = await getFacultyCourses()
 
   const courseCodes = courses.filter((c) => c.active).map((c) => c.code || c.name);
 

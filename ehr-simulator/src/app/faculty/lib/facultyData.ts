@@ -9,47 +9,42 @@ const getStudentName = (student: any) => {
 };
 
 // Get data from Supabase (May place this somewhere else or use SQL function)
-export async function getFacultyCourses(facultyId: string): Promise<Course[]> {
+export async function getFacultyCourses(): Promise<Course[]> {
   const supabase = await createServerSupabase();
 
   const { data, error } = await supabase
-    .from("faculty_section")
+    .from("sections")
     .select(`
-      section:sections (
+      id,
+      name,
+      meeting_time,
+      semester,
+      course:courses (id, code, name, active),
+      section_assignments (
+        id,
+        sim_time,
+        presim_time,
+        case_id,
+        cases (id, name, first_name, last_name, phase_count),
+        case_sessions (id, group_id, current_phase, status)
+      ),
+      groups (
         id,
         name,
-        meeting_time,
-        semester,
-        course:course_id (id, code, name, active),
-        section_assignments (
+        group_members (
           id,
-          sim_time,
-          presim_time,
-          case_id,
-          cases (id, name, first_name, last_name, phase_count),
-          case_sessions (id, group_id, current_phase, status)
-        ),
-        groups (
-          id,
-          name,
-          group_members (
-            id,
-            student_id,
-            student:student_id (id, full_name, email)
-          )
+          student_id,
+          student:student_id (id, full_name, email)
         )
       )
-    `)
-    .eq("faculty_id", facultyId);
+    `);
 
   if (error) {
     console.error("Failed to fetch faculty courses:", error);
     return [];
   }
 
-  const sections = (data ?? [])
-    .map((row: any) => row.section)
-    .filter(Boolean);
+  const sections = (data ?? []).filter(Boolean);
 
   const courseMap = new Map<string, Course>();
 
