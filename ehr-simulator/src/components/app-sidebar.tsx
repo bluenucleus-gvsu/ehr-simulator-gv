@@ -47,25 +47,30 @@ const adminRoutes = [
   },
 ]
 
-const defaultRoutes = [
-  {
-    title: "Profile",
-    url: "/",
-    icom: User,
-  },
-  {
-    title: "Settings",
-    url: "/auth/login",
-    icom: Settings,
-  },
-];
-
 export function AppSidebar() {
 
-  const { loading } = useUser();
+  const { loading, user } = useUser();
   const pathname = usePathname();
   const router = useRouter();
   const isCurrentPath = (url: string) => pathname === url;
+
+  const defaultRoutes = [
+    {
+      title: "Profile",
+      url: user?.id ? `/user/${user.id}` : "/user",
+      icom: User,
+    },
+    {
+      title: "Faculty Page",
+      url: user?.id ? `/faculty/${user.id}` : "/faculty",
+      icom: Presentation,
+    },
+    {
+      title: "Settings",
+      url: "/",
+      icom: Settings,
+    },
+  ];
 
   if (loading) return null;
 
