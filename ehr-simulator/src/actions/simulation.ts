@@ -5,8 +5,6 @@ import { Database } from "../../database.types";
 import { ActionResponse, ExtractData } from "./cases";
 import { UUID } from "crypto";
 import { revalidatePath } from "next/cache";
-import { runWriteForMode } from "@/utils/testerWriteGateway";
-import { isTesterModeServer } from "@/utils/testerModeServer";
 import { assertStudentActiveSessionWrite } from "@/actions/simulation/assertStudentActiveSessionWrite";
 
 export type EditableStudentNoteUpsert = Database['public']['Tables']['editable_clinical_documents']['Insert'];
@@ -27,6 +25,7 @@ export type ClinicalDocumentView = {
   case_id: UUID,
   case_session_id: UUID | null,
   is_in_presim: boolean,
+  phase: number | null,
   category: string,
   specialty: string,
   author: string,
@@ -41,71 +40,63 @@ export async function submitStudentNote(note: EditableStudentNoteUpsert): Promis
     return { success: false, message: writeGuard.message };
   }
 
-  return runWriteForMode(async () => {
-    const supabase = createClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
-    const { data, error } = await supabase
-      .from('editable_clinical_documents')
-      .insert(note)
+  const { data, error } = await supabase
+    .from('editable_clinical_documents')
+    .insert(note)
+    .select()
+    .single()
+
+  if ((error as { code?: string } | null)?.code === 'PGRST205') {
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from('clinical_documents')
+      .insert({
+        case_id: note.case_id,
+        is_in_presim: note.is_in_presim ?? false,
+        phase: 1,
+        category: note.category,
+        specialty: note.specialty,
+        author: note.author,
+        time_offset: note.time_offset,
+        doc_text: note.doc_text,
+      })
       .select()
-      .single()
+      .single();
 
-    if ((error as { code?: string } | null)?.code === 'PGRST205') {
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from('clinical_documents')
-        .insert({
-          case_id: note.case_id,
-          is_in_presim: note.is_in_presim ?? false,
-          category: note.category,
-          specialty: note.specialty,
-          author: note.author,
-          time_offset: note.time_offset,
-          doc_text: note.doc_text,
-        })
-        .select()
-        .single();
-
-      if (!fallbackError) {
-        revalidatePath(`/simulation/${note.case_id}/${note.case_session_id}/chart/notes`);
-        return {
-          success: true,
-          data: fallbackData,
-          message: 'Successfully recorded note.'
-        }
-      }
-
+    if (!fallbackError) {
+      revalidatePath(`/simulation/${note.case_id}/${note.case_session_id}/chart/notes`);
       return {
-        success: false,
-        message: `Failed to submit note, please try again (${fallbackError.message})`,
-        error: fallbackError
+        success: true,
+        data: fallbackData,
+        message: 'Successfully recorded note.'
       }
     }
-
-    if (error) {
-      return {
-        success: false,
-        message: `Failed to submit note, please try again (${error.message})`,
-        error: error
-      };
-    }
-    revalidatePath(`/simulation/${note.case_id}/${note.case_session_id}/chart/notes`);
 
     return {
-      success: true,
-      data,
-      message: 'Successfully recorded note.'
+      success: false,
+      message: `Failed to submit note, please try again (${fallbackError.message})`,
+      error: fallbackError
     }
-  }, async () => ({
+  }
+
+  if (error) {
+    return {
+      success: false,
+      message: `Failed to submit note, please try again (${error.message})`,
+      error: error
+    };
+  }
+  revalidatePath(`/simulation/${note.case_id}/${note.case_session_id}/chart/notes`);
+
+  return {
     success: true,
-    message: "Note saved locally for tester mode.",
-    data: {
-      ...note,
-      id: crypto.randomUUID() as UUID,
-    } as EditableStudentNote,
-  }));
+    data,
+    message: 'Successfully recorded note.'
+  }
 }
 
 export async function getAllClinicalDocuments(caseId: string, caseSessionId: string): Promise<ActionResponse<ClinicalDocumentView[]>> {
@@ -132,7 +123,7 @@ export async function getAllClinicalDocuments(caseId: string, caseSessionId: str
     const [caseDocsRes, studentDocsRes] = await Promise.all([
       supabase
         .from('clinical_documents')
-        .select('id, case_id, is_in_presim, category, specialty, author, time_offset, doc_text')
+        .select('id, case_id, is_in_presim, phase, category, specialty, author, time_offset, doc_text')
         .eq('case_id', caseId),
       supabase
         .from('editable_clinical_documents')
@@ -159,6 +150,7 @@ export async function getAllClinicalDocuments(caseId: string, caseSessionId: str
       })),
       ...((studentDocsMissing ? [] : (studentDocsRes.data ?? [])).map((row) => ({
         ...row,
+        phase: 1,
         source_type: 'student_document',
       }))),
     ]
@@ -302,49 +294,38 @@ export async function submitMedicationAdministrations(
     };
   }
 
-  return runWriteForMode<{
-    success: boolean;
-    message: string;
-    data?: StudentMedicationAdministrationRow[];
-    error?: PostgrestError | null;
-  }>(async () => {
-    const supabase = createClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-    const { data, error } = await supabase
-      .from('student_medication_administrations')
-      .upsert(medAdministrations)
-      .select()
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const { data, error } = await supabase
+    .from('student_medication_administrations')
+    .upsert(medAdministrations)
+    .select()
 
-    if ((error as { code?: string } | null)?.code === 'PGRST205') {
-      return {
-        success: false,
-        message: 'Failed to document medications (student medication administration table is missing; simulation writes are blocked to protect case baseline data)',
-        error
-      }
-    }
-
-    if (error) {
-      return {
-        success: false,
-        message: `Failed to document medications (${error.message})`,
-        error
-      }
-    }
-
-    revalidatePath(`/simulation/${caseId}/${sessionId}/chart/mar`);
-
+  if ((error as { code?: string } | null)?.code === 'PGRST205') {
     return {
-      success: true,
-      data: data,
-      message: 'Medications successfully documented'
+      success: false,
+      message: 'Failed to document medications (student medication administration table is missing; simulation writes are blocked to protect case baseline data)',
+      error
     }
-  }, async () => ({
+  }
+
+  if (error) {
+    return {
+      success: false,
+      message: `Failed to document medications (${error.message})`,
+      error
+    }
+  }
+
+  revalidatePath(`/simulation/${caseId}/${sessionId}/chart/mar`);
+
+  return {
     success: true,
-    data: medAdministrations as unknown as StudentMedicationAdministrationRow[],
-    message: "Medication administrations saved locally for tester mode.",
-  }));
+    data: data,
+    message: 'Medications successfully documented'
+  }
 }
 
 export async function getAllDocumentationData(caseId: string, sessionId: string) {
@@ -430,90 +411,91 @@ export async function upsertDocumentationRows(payload: StudentDatabaseDocumentat
     }
   }
 
-  return runWriteForMode<{ data: unknown; error: PostgrestError | null }>(async () => {
-    const supabase = createClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const unsupportedLegacyColumns = new Set([
+    'spo2_source',
+    'pain_location',
+    'pain_characteristics',
+    'pain_alleviating_factors',
+    'pain_aggravating_factors',
+    'pain_interventions',
+    'urine_description',
+  ]);
+
+  const sanitizePayload = <T extends Record<string, unknown>>(rows: T[]): T[] =>
+    rows.map((row) =>
+      Object.fromEntries(
+        Object.entries(row).filter(([key]) => !unsupportedLegacyColumns.has(key))
+      ) as T
     );
 
-    const unsupportedLegacyColumns = new Set([
-      'spo2_source',
-      'pain_location',
-      'pain_characteristics',
-      'pain_alleviating_factors',
-      'pain_aggravating_factors',
-      'pain_interventions',
-      'urine_description',
-    ]);
+  const { data, error } = await supabase
+    .from('editable_documentation_results')
+    .upsert(payload, {
+      onConflict: 'case_session_id, time_offset'
+    });
 
-    const sanitizePayload = <T extends Record<string, unknown>>(rows: T[]): T[] =>
-      rows.map((row) =>
-        Object.fromEntries(
-          Object.entries(row).filter(([key]) => !unsupportedLegacyColumns.has(key))
-        ) as T
-      );
+  if (!error) {
+    return { data, error: null };
+  }
 
-    const { data, error } = await supabase
+  // Some databases are missing newer documentation columns.
+  // Retry with a legacy-safe payload before broader table fallbacks.
+  const legacySafePayload = sanitizePayload(payload as Record<string, unknown>[]) as StudentDatabaseDocumentation[];
+  if ((error as { code?: string } | null)?.code === '42703' || (error as { code?: string } | null)?.code === 'PGRST204') {
+    const safeUpsertRes = await supabase
       .from('editable_documentation_results')
-      .upsert(payload, {
+      .upsert(legacySafePayload, {
         onConflict: 'case_session_id, time_offset'
       });
-
-    if (!error) {
-      return { data, error: null };
+    if (!safeUpsertRes.error) {
+      return { data: safeUpsertRes.data, error: null };
     }
+  }
 
-    // Some databases are missing newer documentation columns.
-    // Retry with a legacy-safe payload before broader table fallbacks.
-    const legacySafePayload = sanitizePayload(payload as Record<string, unknown>[]) as StudentDatabaseDocumentation[];
-    if ((error as { code?: string } | null)?.code === '42703' || (error as { code?: string } | null)?.code === 'PGRST204') {
-      const safeUpsertRes = await supabase
-        .from('editable_documentation_results')
-        .upsert(legacySafePayload, {
-          onConflict: 'case_session_id, time_offset'
-        });
-      if (!safeUpsertRes.error) {
-        return { data: safeUpsertRes.data, error: null };
-      }
+  // Some environments miss the unique constraint needed by upsert.
+  if ((error as { code?: string } | null)?.code === '42P10') {
+    const insertRes = await supabase
+      .from('editable_documentation_results')
+      .insert(legacySafePayload);
+    if (!insertRes.error) {
+      return { data: insertRes.data, error: null };
     }
+    return { data: insertRes.data, error: insertRes.error };
+  }
 
-    // Some environments miss the unique constraint needed by upsert.
-    if ((error as { code?: string } | null)?.code === '42P10') {
-      const insertRes = await supabase
-        .from('editable_documentation_results')
-        .insert(legacySafePayload);
-      if (!insertRes.error) {
-        return { data: insertRes.data, error: null };
-      }
-      return { data: insertRes.data, error: insertRes.error };
+  // Backward-compatible fallback for environments without editable_documentation_results.
+  if ((error as { code?: string } | null)?.code === 'PGRST205') {
+    const fallbackPayload: Database['public']['Tables']['documentation_results']['Insert'][] = legacySafePayload.map((row) => {
+      const {
+        case_session_id,
+        user_id,
+        group_id,
+        ...rest
+      } = row;
+      void case_session_id;
+      void user_id;
+      void group_id;
+      return {
+        ...rest,
+      };
+    });
+
+    const fallbackRes = await supabase
+      .from('documentation_results')
+      .insert(fallbackPayload);
+
+    if (!fallbackRes.error) {
+      return { data: fallbackRes.data, error: null };
     }
+    return { data: fallbackRes.data, error: fallbackRes.error };
+  }
 
-    // Backward-compatible fallback for environments without editable_documentation_results.
-    if ((error as { code?: string } | null)?.code === 'PGRST205') {
-      const fallbackPayload: Database['public']['Tables']['documentation_results']['Insert'][] = legacySafePayload.map((row) => {
-        const {
-          case_session_id: _caseSessionId,
-          user_id: _userId,
-          group_id: _groupId,
-          ...rest
-        } = row;
-        return {
-          ...rest,
-        };
-      });
-
-      const fallbackRes = await supabase
-        .from('documentation_results')
-        .insert(fallbackPayload);
-
-      if (!fallbackRes.error) {
-        return { data: fallbackRes.data, error: null };
-      }
-      return { data: fallbackRes.data, error: fallbackRes.error };
-    }
-
-    return { data, error };
-  }, async () => ({ data: payload, error: null }));
+  return { data, error };
 }
 
 
@@ -554,9 +536,6 @@ async function getSessionTransitionContext(sessionId: string) {
 }
 
 export async function startSession(sessionId: string): Promise<SessionTransitionResult> {
-  if (await isTesterModeServer()) {
-    return { success: true };
-  }
   try {
     const { supabase, session } = await getSessionTransitionContext(sessionId);
     const currentStatus = session.status;
@@ -591,9 +570,6 @@ export async function startSession(sessionId: string): Promise<SessionTransition
 }
 
 export async function completeSession(sessionId: string): Promise<SessionTransitionResult> {
-  if (await isTesterModeServer()) {
-    return { success: true };
-  }
   try {
     const { supabase, session } = await getSessionTransitionContext(sessionId);
     const currentStatus = session.status;
@@ -629,9 +605,6 @@ export async function completeSession(sessionId: string): Promise<SessionTransit
 }
 
 export async function expireSession(sessionId: string): Promise<SessionTransitionResult> {
-  if (await isTesterModeServer()) {
-    return { success: true };
-  }
   try {
     const { supabase, session } = await getSessionTransitionContext(sessionId);
     const currentStatus = session.status;
@@ -738,3 +711,4 @@ export async function updateCurrentPhase(updatedPhase: number, sessionId: string
         data: null,
     }
 }
+

@@ -1,14 +1,19 @@
 
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
-import { Info } from "lucide-react"
+import { ReactNode } from "react"
 
-const InfoTooltip = ({ content }: { content: string }) => {
+interface InfoTooltipProps {
+  content: string,
+  children: ReactNode
+}
+
+const InfoTooltip = ({ content, children }: InfoTooltipProps) => {
 
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger type="button">
-          <Info size={16} color="var(--muted-foreground)" />
+          {children}
         </TooltipTrigger>
         <TooltipContent className="w-fit">
           <p className="max-w-120 text-wrap">

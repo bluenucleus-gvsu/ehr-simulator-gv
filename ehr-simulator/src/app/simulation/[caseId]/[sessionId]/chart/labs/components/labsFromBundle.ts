@@ -90,7 +90,7 @@ function toIsCritical(value: unknown): boolean {
 export function buildLabRowsFromBundle(
   bundle: BundleLike,
   template: LabTableData[],
-): { rows: LabTableData[]; timePoints: number[] } {
+): { rows: LabTableData[]; timePoints: number[], timePointsInPresim: number[] } {
   const labResults = bundle?.labResults ?? [];
   const imagingReports = bundle?.imagingReports ?? [];
   const microbiologyReports = bundle?.microbiologyReports ?? [];
@@ -102,6 +102,12 @@ export function buildLabRowsFromBundle(
         .filter((offset): offset is number => typeof offset === "number"),
     ),
   ).sort((a, b) => a - b);
+
+  const timePointsInPresim = Array.from(new Set(
+    labResults
+      .filter((row) => Boolean(row?.is_in_presim))
+      .map((row) => Number(row.time_offset))
+  )).sort((a, b) => a - b);;
 
   const labByOffset = new Map<number, DbLabResult>();
   const labOffsetById = new Map<string, number>();
@@ -197,5 +203,5 @@ export function buildLabRowsFromBundle(
       return timePoints.some((offset) => hasRenderableValue(row[offset]));
     });
 
-  return { rows, timePoints };
+  return { rows, timePoints, timePointsInPresim };
 }

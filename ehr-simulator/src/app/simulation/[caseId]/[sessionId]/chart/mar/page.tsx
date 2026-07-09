@@ -58,9 +58,9 @@ const mar = async ({ params }: PageProps) => {
       instructions: dbOrder.instructions || undefined,
       indication: dbOrder.indication || '',
       orderingProvider: dbOrder.ordering_provider || 'Unknown Provider',
-      // Treat null/undefined as visible in pre-sim so rows are not hidden when the flag is unset.
       visibleInPresim: dbOrder.is_in_presim !== false,
-      infusionRate: dbOrder.infusion_rate || undefined
+      infusionRate: dbOrder.infusion_rate || undefined,
+      phase: dbOrder.phase,
     });
   });
 

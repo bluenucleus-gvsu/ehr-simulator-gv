@@ -2,8 +2,6 @@
 import React from "react";
 import Image from "next/image";
 import { createBrowserClient } from "@supabase/ssr";
-import { clearTesterLocalStore } from "@/utils/testerLocalStore";
-import { clearTesterMode } from "@/utils/testerMode";
 
 type Props = {
   name: string;
@@ -66,8 +64,6 @@ export default function ProfileHeader({ name, avatarUrl, classes = [] }: Props) 
               try {
                 if (typeof window !== "undefined") {
                   window.localStorage.removeItem("role");
-                  clearTesterLocalStore();
-                  clearTesterMode();
                 }
               } catch {}
               // redirect to login
