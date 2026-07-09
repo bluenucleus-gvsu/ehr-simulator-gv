@@ -1,6 +1,13 @@
 import { createServerSupabase } from "@/utils/supabase/server";
 import { Course, Simulation, Group, Section } from "./types";
 
+type CourseRelation = {
+  id: Course["id"];
+  code: Course["code"];
+  name: Course["name"];
+  active: Course["active"];
+};
+
 // Helper Function for getFacultyCourses
 const getStudentName = (student: any) => {
   if (!student) return "Unknown Student";
@@ -49,7 +56,9 @@ export async function getFacultyCourses(): Promise<Course[]> {
   const courseMap = new Map<string, Course>();
 
   for (const section of sections) {
-    const course = section.course;
+    const course = (
+      Array.isArray(section.course) ? section.course[0] : section.course
+    ) as CourseRelation | null | undefined;
     if (!course?.id) continue;
 
     // Lookup table so each group's name/members can be matched by id below
