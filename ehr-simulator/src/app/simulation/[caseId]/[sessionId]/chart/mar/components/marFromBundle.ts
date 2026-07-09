@@ -17,6 +17,7 @@ type DbMedAdmin = {
   notes?: string | null;
   administered_dose?: number | null;
   is_in_presim?: boolean;
+  phase?: number | null;
   created_at?: string;
 };
 
@@ -122,6 +123,7 @@ export function medOrderFormStateFromCaseBundle(caseBundle: CaseBundle | null): 
       infusionRate: parseInfusionRate(row.infusion_rate as string | undefined),
       dose: Number(row.dose ?? 0),
       visibleInPresim: Boolean(row.is_in_presim ?? true),
+      phase: Number(row.phase),
     });
   }
 
@@ -180,6 +182,7 @@ export function buildMarFromCaseBundle(caseBundle: CaseBundle | null): {
       infusionRate: parseInfusionRate(row.infusion_rate as string | undefined),
       dose: Number(row.dose ?? 0),
       visibleInPresim: Boolean(row.is_in_presim ?? true),
+      phase: Number(row.phase),
     };
     medicationOrders.push(mo);
     orderIndex.set(id, mo);
@@ -234,6 +237,7 @@ export function buildMarFromCaseBundle(caseBundle: CaseBundle | null): {
       orderingProvider: "",
       dose: fallbackDose,
       visibleInPresim: true,
+      phase: 1,
     };
     medicationOrders.push(mo);
     orderIndex.set(catalogId, mo);
@@ -268,6 +272,7 @@ export function buildMarFromCaseBundle(caseBundle: CaseBundle | null): {
       notes: a.notes ?? "",
       administeredDose: Number(a.administered_dose ?? 0),
       visibleInPresim: a.is_in_presim ?? true,
+      phase: Number(a.phase),
     });
   });
 

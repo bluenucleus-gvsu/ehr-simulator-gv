@@ -16,6 +16,7 @@ import { useSimSessionContext } from "@/context/SimSessionContext";
 import { useStudentSimulationEditAccess } from "@/utils/studentSimulationEditAccess";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
+import { isVisibleForSimulationPhase } from "@/lib/simulationPhaseVisibility";
 
 export interface NoteViewProps {
   isError: boolean;
@@ -33,31 +34,33 @@ const NoteView = ({
   sessionId
 }: NoteViewProps) => {
   const { caseBundle } = useSimulationCase();
-  const { simStartTime, userName, userId, groupId, isPresim } = useSimSessionContext();
+  const { simStartTime, userName, userId, groupId, isPresim, currentPhase } = useSimSessionContext();
   const { canEdit } = useStudentSimulationEditAccess();
   const [filteredSpecialties, setFilteredSpecialties] = useState<string[]>([]);
   const fallbackCaseNotes = (caseBundle?.clinicalDocuments ?? []) as ClinicalDocumentView[];
   const sourceNotes = clinicalDocuments.length > 0 ? clinicalDocuments : fallbackCaseNotes;
+  const visibleNotes = useMemo(() => {
+    return sourceNotes.filter((note) =>
+      isVisibleForSimulationPhase({
+        isPresim: Boolean(isPresim),
+        isVisibleInPresim: note.is_in_presim,
+        releasePhase: note.phase,
+        currentPhase,
+      }),
+    );
+  }, [sourceNotes, isPresim, currentPhase]);
 
   const specialties = useMemo(() => {
-    const visibleNotes = isPresim
-      ? sourceNotes.filter((note) => note.is_in_presim)
-      : sourceNotes;
-
     return [...new Set(visibleNotes.map((note) => note.specialty))];
-  }, [sourceNotes, isPresim]);
+  }, [visibleNotes]);
 
   const filteredNotesData = useMemo(() => {
-    const visibleNotes = isPresim
-      ? sourceNotes.filter((note) => note.is_in_presim)
-      : sourceNotes;
-
     const sortedNotes = [...visibleNotes].sort((a, b) => b.time_offset - a.time_offset);
 
     return filteredSpecialties.length > 0
       ? sortedNotes.filter((note) => filteredSpecialties.includes(note.specialty))
       : sortedNotes;
-  }, [sourceNotes, filteredSpecialties, isPresim]);
+  }, [visibleNotes, filteredSpecialties]);
 
   const handleFilterChange = (specialty: string, checked: boolean | "indeterminate") => {
     setFilteredSpecialties(prev => {
