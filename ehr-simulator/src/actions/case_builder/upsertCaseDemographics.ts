@@ -35,6 +35,7 @@ export async function upsertCaseDemographics(
     emergency_contact_name: d.contact ?? null,
     emergency_contact_relationship: d.contactRelationship ?? null,
     emergency_contact_phone: (d.contactPhone ?? "").trim() || null,
+    case_photo_url: d.case_photo_url ?? null,
     updated_at: new Date().toISOString(),
     created_at: new Date().toISOString(), // Fix: check if exists before setting created_at
   };
