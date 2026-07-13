@@ -27,11 +27,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import InfoTooltip from "../../../../../components/helpTooltip";
 import { differenceInYears } from "date-fns";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createBrowserSupabase } from "@/utils/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useFormContext } from "@/context/FormContext";
 import { relationshipStatuses, precautions, months, codeStatuses, days, insuranceOptions, DemographicFormData, intakeOutputBlocksFromCaseRow } from "@/utils/form";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { FormShell } from "../../components/formShell";
 import { CaseSection } from "@/lib/saveCase";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
@@ -48,6 +49,26 @@ export default function DemographicsForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showCancelAlert, setShowCancelAlert] = useState<boolean>(false);
+  const [casePhotoFile, setCasePhotoFile] = useState<File | null>(null);
+  const [casePhotoUrl, setCasePhotoUrl] = useState<string | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [photoUploadError, setPhotoUploadError] = useState<string | null>(null);
+  const casePhotoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCasePhotoSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setPhotoUploadError("Please select an image file.");
+      return;
+    }
+
+    setPhotoUploadError(null);
+    setCasePhotoFile(file);
+    setCasePhotoUrl(URL.createObjectURL(file));
+  };
 
   useEffect(() => {
     registerCaseBuilderLocalOverlay(() => ({ demographics: demographicsData }));
@@ -248,9 +269,28 @@ export default function DemographicsForm() {
       caseId: caseId
     });
 
+    const resolvedCaseId = result?.id ?? caseId;
     if (result?.id) {
       setCaseId(result.id)
     }
+
+    if (casePhotoFile) {
+      setIsUploadingPhoto(true);
+      try {
+        const supabase = createBrowserSupabase();
+        const path = `${resolvedCaseId ?? "unassigned"}/${crypto.randomUUID()}-${casePhotoFile.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from("case-photos")
+          .upload(path, casePhotoFile, { upsert: true });
+        if (uploadError) throw uploadError;
+      } catch (err) {
+        setIsUploadingPhoto(false);
+        setPhotoUploadError(err instanceof Error ? err.message : "Upload failed.");
+        return;
+      }
+      setIsUploadingPhoto(false);
+    }
+
     router.push("/admin/case-builder/form/history");
   }
 
@@ -413,6 +453,36 @@ export default function DemographicsForm() {
                         />
                         <span className="absolute right-3 top-2.5 text-xs text-slate-400">y.o.</span>
                       </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="case_photo">Case Profile Photo</Label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          ref={casePhotoInputRef}
+                          id="case_photo"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleCasePhotoSelected}
+                        />
+                        <Button
+                          type="button"
+                          onClick={() => casePhotoInputRef.current?.click()}
+                          disabled={isUploadingPhoto}
+                        >
+                          {isUploadingPhoto ? "Uploading..." : "Upload Image"}
+                        </Button>
+                        {casePhotoUrl && (
+                          <img
+                            src={casePhotoUrl}
+                            alt="Case profile"
+                            className="h-10 w-10 rounded object-cover border"
+                          />
+                        )}
+                      </div>
+                      {photoUploadError && (
+                        <p className="text-xs text-red-500">{photoUploadError}</p>
+                      )}
                     </div>
                   </div>
 
