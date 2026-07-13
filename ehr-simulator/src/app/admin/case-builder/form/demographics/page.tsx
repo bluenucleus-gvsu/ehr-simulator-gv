@@ -275,6 +275,16 @@ export default function DemographicsForm() {
           .from("case-photos")
           .upload(path, casePhotoFile, { upsert: true });
         if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage.from("case-photos").getPublicUrl(path);
+        const updatedDemographics = { ...demographicsData, case_photo_url: data.publicUrl };
+        setDemographicsData(updatedDemographics);
+        onDataChange("demographics", updatedDemographics);
+        await saveCaseData({
+          payload: updatedDemographics,
+          section: CaseSection.DEMOGRAPHICS,
+          caseId: resolvedCaseId
+        });
       } catch (err) {
         setIsUploadingPhoto(false);
         setPhotoUploadError(err instanceof Error ? err.message : "Upload failed.");

@@ -53,6 +53,7 @@ const defaultDemographicData: DemographicFormData = {
   contact: '',
   contactRelationship: '',
   contactPhone: '',
+  case_photo_url: '',
 }
 const defaultHistoryData = {
   medicalHistory: [],
