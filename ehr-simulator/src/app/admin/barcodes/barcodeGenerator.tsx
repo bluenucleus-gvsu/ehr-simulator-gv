@@ -206,7 +206,7 @@ const BardcodeGenerator = ({
                           <div class="patient-name">${c.first_name} ${c.last_name}</div>
                           <div class="patient-detail"><strong>DOB:</strong> ${c.date_of_birth || "N/A"}</div>
                           <div class="patient-detail"><strong>Age:</strong> ${age}</div>
-                          <div class="patient-detail"><strong>MRN:</strong> ${c.MRN || "12345678"}</div>
+                          <div class="patient-detail"><strong>MRN:</strong> ${c.mrn || "12345678"}</div>
                         </div>
                       </div>
                     `,

@@ -214,7 +214,7 @@ export type Database = {
           last_name: string
           living_situation: string[] | null
           medical_history: string[] | null
-          MRN: string | null
+          mrn: number
           name: string
           relationship_status_id: string | null
           religion: string | null
@@ -250,7 +250,7 @@ export type Database = {
           last_name: string
           living_situation?: string[] | null
           medical_history?: string[] | null
-          MRN?: string | null
+          mrn?: never
           name: string
           relationship_status_id?: string | null
           religion?: string | null
@@ -286,7 +286,7 @@ export type Database = {
           last_name?: string
           living_situation?: string[] | null
           medical_history?: string[] | null
-          MRN?: string | null
+          mrn?: never
           name?: string
           relationship_status_id?: string | null
           religion?: string | null
