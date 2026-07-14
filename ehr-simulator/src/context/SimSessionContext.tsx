@@ -4,13 +4,17 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { getUsersGroupId } from '@/actions/users';
 import { useParams } from 'next/navigation';
-import { getTesterSessionStatus } from '@/utils/testerLocalStore';
-import { isTesterModeClient } from '@/utils/testerMode';
+import { Database } from '../../database.types';
 
-const supabase = createBrowserClient(
+const supabase = createBrowserClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
+
+type SessionRealtimeRow = Pick<
+  Database["public"]["Tables"]["case_sessions"]["Row"],
+  "current_phase" | "group_id" | "started_at" | "status"
+>;
 
 export interface SimSessionContextType {
   userName: string | null;
@@ -20,6 +24,7 @@ export interface SimSessionContextType {
   simStartTime: number | null;
   groupId: string | null;
   isPresim: boolean | null;
+  currentPhase: number;
   hasUnsavedCharting: boolean | null;
   handleUnsavedCharting: (chartingStatus: boolean) => void;
 }
@@ -32,6 +37,7 @@ const SimContext = createContext<SimSessionContextType>({
   loading: true,
   simStartTime: null,
   isPresim: true,
+  currentPhase: 1,
   hasUnsavedCharting: false,
   handleUnsavedCharting: () => { }
 });
@@ -44,11 +50,44 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
   const [loading, setLoading] = useState<boolean>(true);
   const [simStartTime, setSimStartTime] = useState<number | null>(null);
   const [isPresim, setIsPresim] = useState<boolean | null>(true);
+  const [currentPhase, setCurrentPhase] = useState<number>(1);
   const [hasUnsavedCharting, setHasUnsavedCharting] = useState<boolean | null>(false);
 
 
   const params = useParams();
   const sessionId = params?.sessionId as string;
+
+  const applySessionState = (sessionData: SessionRealtimeRow | null) => {
+    if (!sessionData) {
+      setSimStartTime(Date.now());
+      setIsPresim(false);
+      setCurrentPhase(1);
+      return;
+    }
+
+    if (sessionData.group_id) {
+      setGroupId(sessionData.group_id);
+    }
+
+    const normalizedStatus = (sessionData.status ?? "").toLowerCase();
+    const hasStarted =
+      Boolean(sessionData.started_at) ||
+      normalizedStatus === "in progress" ||
+      normalizedStatus === "completed";
+
+    setIsPresim(!hasStarted);
+    setCurrentPhase(Number(sessionData.current_phase));
+
+    if (hasStarted) {
+      const startedMs = sessionData.started_at
+        ? new Date(sessionData.started_at).getTime()
+        : Date.now();
+      setSimStartTime(Number.isFinite(startedMs) ? startedMs : Date.now());
+      return;
+    }
+
+    setSimStartTime(Date.now());
+  };
 
   useEffect(() => {
     async function loadSimData() {
@@ -57,8 +96,6 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
       let nextUserName: string | null = null;
       let nextUserRole: string | null = null;
       let nextGroupId: string | null = null;
-      let nextSimStart: number | null = null;
-      let nextIsPresim: boolean | null = true;
 
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.id) {
@@ -68,64 +105,56 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
           nextUserName = response.data.full_name ?? null;
           nextUserRole = response.data.role ?? null;
           nextGroupId = response.data.group_id ?? null;
-        } else if (isTesterModeClient()) {
-          const meta = user.user_metadata as Record<string, string> | undefined;
-          nextUserName = meta?.full_name ?? meta?.name ?? meta?.email ?? "Tester";
-          nextGroupId = `tester-sim:${user.id}`;
         }
       }
 
       if (sessionId) {
         const { data: sessionData, error } = await supabase
           .from("case_sessions")
-          .select("started_at, status, group_id")
+          .select("started_at, status, group_id, current_phase")
           .eq("id", sessionId)
           .maybeSingle();
 
         if (!error && sessionData) {
-          if (sessionData.group_id) {
-            nextGroupId = sessionData.group_id;
-          }
-
-          const normalizedStatus = (sessionData.status ?? "").toLowerCase();
-          const hasStarted =
-            Boolean(sessionData.started_at) ||
-            normalizedStatus === "in progress" ||
-            normalizedStatus === "completed";
-          nextIsPresim = !hasStarted;
-
-          if (hasStarted) {
-            const startedMs = sessionData.started_at
-              ? new Date(sessionData.started_at).getTime()
-              : Date.now();
-            nextSimStart = Number.isFinite(startedMs) ? startedMs : Date.now();
-          } else {
-            nextSimStart = Date.now();
-          }
-        } else if (isTesterModeClient()) {
-          const localStatus = (getTesterSessionStatus(sessionId) ?? "").toLowerCase();
-          const hasStarted =
-            localStatus === "in progress" || localStatus === "completed";
-          nextIsPresim = !hasStarted;
-          nextSimStart = Date.now();
+          nextGroupId = sessionData.group_id ?? nextGroupId;
+          applySessionState(sessionData);
         } else {
-          nextSimStart = Date.now();
-          nextIsPresim = false;
+          applySessionState(null);
         }
-      }
-
-      if (nextSimStart === null) {
-        nextSimStart = Date.now();
+      } else {
+        applySessionState(null);
       }
 
       setUserName(nextUserName);
       setUserRole(nextUserRole);
       setGroupId(nextGroupId);
-      setSimStartTime(nextSimStart);
-      setIsPresim(nextIsPresim);
       setLoading(false);
     }
     loadSimData();
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const channel = supabase
+      .channel(`case-session-${sessionId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "case_sessions",
+          filter: `id=eq.${sessionId}`,
+        },
+        (payload) => {
+          applySessionState(payload.new as SessionRealtimeRow);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, [sessionId]);
 
   const handleUnsavedCharting = (chartingStatus: boolean) => {
@@ -140,6 +169,7 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
     simStartTime,
     groupId,
     isPresim,
+    currentPhase,
     hasUnsavedCharting,
     handleUnsavedCharting
   }

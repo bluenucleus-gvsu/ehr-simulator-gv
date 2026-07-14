@@ -28,8 +28,6 @@ import {
   resolveDocumentationDbColumn,
 } from "./components/chartingFromBundle";
 import { calculateColTotal, formatTimeFromOffset, getPinnedStyles } from "./components/flexSheetHelpers";
-import { appendTesterDocumentationRows, getTesterDocumentationRows } from "@/utils/testerLocalStore";
-import { isTesterModeClient } from "@/utils/testerMode";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
 import { useStudentSimulationEditAccess } from "@/utils/studentSimulationEditAccess";
 
@@ -55,22 +53,33 @@ declare module '@tanstack/react-table' {
 
 export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   const { caseBundle } = useSimulationCase();
-  const sourceDocumentation = dbDocumentation.length > 0
-    ? dbDocumentation
-    : ((caseBundle?.documentationResults ?? []) as DatabaseDocumentation[]);
-  const { groupId, userId, simStartTime, handleUnsavedCharting } = useSimSessionContext();
+
+  const sourceDocumentation = useMemo(
+    () => (
+      dbDocumentation.length > 0
+        ? dbDocumentation
+        : ((caseBundle?.documentationResults ?? []) as DatabaseDocumentation[])
+    ),
+    [caseBundle?.documentationResults, dbDocumentation],
+  );
+  const { groupId, userId, simStartTime, handleUnsavedCharting, isPresim } = useSimSessionContext();
+
   const { canEdit } = useStudentSimulationEditAccess();
   const initialCharting = useMemo(
     () => buildChartingRowsFromBundle(sourceDocumentation, flexSheetTemplate),
     [sourceDocumentation],
   );
-  const [timeOffsets, setTimeOffsets] = useState(initialCharting.timeOffsets);
+  const [timeOffsets, setTimeOffsets] = useState(isPresim ?
+    Array.from(initialCharting.timePointsInPreSim).sort((a, b) => a - b)
+    : initialCharting.timeOffsets)
+
+
+
   const [data, setData] = useState<FlexSheetData[]>(initialCharting.rows);
   const [fieldSelections, setFieldSelections] = useState<Record<string, string[]>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [dirtyColumns, setDirtyColumns] = useState<Set<string>>(new Set());
   const { caseId, sessionId } = params;
-  const sessionKey = `${caseId}:${sessionId}`;
   const canSubmit = dirtyColumns.size > 0;
   const { open, toggleSidebar } = useSidebar()
 
@@ -80,17 +89,16 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   const slicedTimeOffsets = timeOffsets.slice(columnOffset, (columnOffset === 0 && remainder !== 0) ? remainder : columnOffset + tableWidth);
 
   useEffect(() => {
-    let rowsInput: DatabaseDocumentation[] = sourceDocumentation;
-    if (isTesterModeClient()) {
-      const testerRows = getTesterDocumentationRows(sessionKey) as DatabaseDocumentation[];
-      rowsInput = [...sourceDocumentation, ...testerRows];
-    }
-    const hydrated = buildChartingRowsFromBundle(rowsInput, flexSheetTemplate);
-    setTimeOffsets(hydrated.timeOffsets);
+    const hydrated = buildChartingRowsFromBundle(sourceDocumentation, flexSheetTemplate);
+    const targetOffsets = isPresim
+      ? Array.from(initialCharting.timePointsInPreSim).sort((a, b) => a - b)
+      : hydrated.timeOffsets;
+
+    setTimeOffsets(targetOffsets);
     setData(hydrated.rows);
     setDirtyColumns(new Set());
-    setColumnOffset(Math.max(0, hydrated.timeOffsets.length - tableWidth));
-  }, [sourceDocumentation, sessionKey]);
+    setColumnOffset(Math.max(0, targetOffsets.length - tableWidth));
+}, [sourceDocumentation, isPresim]);
 
   useEffect(() => {
     setColumnOffset((prev) => Math.min(prev, maxOffset));
@@ -219,9 +227,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
         toast.error("Case data still loading. Please try again.");
         return;
       }
-      const dirtyTimeOffsets = Array.from(dirtyColumns).filter((col) =>
-        Number.isFinite(Number(col)),
-      );
+      const dirtyTimeOffsets = Array.from(dirtyColumns)
       if (dirtyTimeOffsets.length === 0) {
         toast.info("No valid time columns to save.");
         return;
@@ -254,13 +260,6 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
 
         return dbRecord;
       });
-
-      if (isTesterModeClient()) {
-        appendTesterDocumentationRows(sessionKey, payload);
-        toast.success("FlexSheet data saved locally (tester mode)!");
-        setDirtyColumns(new Set());
-        return;
-      }
 
       const { error } = await upsertDocumentationRows(payload);
 
@@ -443,10 +442,6 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
     <div className="flex h-full min-h-0 w-full max-w-full flex-col bg-gray-100 px-4">
       <div className="flex h-full min-h-0 w-full flex-col items-stretch justify-start gap-2 pt-2">
         <div className="flex w-full shrink-0 justify-start gap-3">
-          <span className="absolute -top-1 -right-1 flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-lime-500"></span>
-          </span>
           <AddTimeColumnButton
             onColumnAdd={handleColumnAdd}
             existingTimeColumns={timeOffsets}

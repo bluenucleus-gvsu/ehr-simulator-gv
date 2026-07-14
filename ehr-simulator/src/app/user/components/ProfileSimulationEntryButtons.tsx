@@ -5,8 +5,6 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { markSessionInProgress } from "@/actions/simulation";
 import { getAssignedSimulationLifecycle } from "@/utils/assignedSimulationLifecycle";
-import { isTesterModeClient } from "@/utils/testerMode";
-import { setTesterSessionStatus } from "@/utils/testerLocalStore";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -46,9 +44,6 @@ async function goToSimulation(
 
   if (isStartingSim) {
     onStartingActiveSession?.(sessionId);
-    if (isTesterModeClient()) {
-      setTesterSessionStatus(sessionId, "in progress");
-    }
     const { success } = await markSessionInProgress(sessionId);
     if (!success) {
       toast.error("Failed to update session status, but proceeding anyway.");

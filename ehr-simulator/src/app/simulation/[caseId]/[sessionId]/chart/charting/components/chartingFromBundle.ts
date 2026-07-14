@@ -34,8 +34,7 @@ export function buildChartingRowsFromBundle(
     docs
       .filter((row) => Boolean(row?.is_in_presim))
       .map((row) => Number(row.time_offset))
-      .filter((offset) => Number.isFinite(offset)),
-  );
+  )
 
   const fallbackOffsets = timeOffsets.length > 0 ? timeOffsets : [0];
   const docByOffset = new Map<number, DocumentationRow>();

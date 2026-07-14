@@ -6,7 +6,6 @@ import SimulationShell from "@/app/simulation/[caseId]/[sessionId]/chart/compone
 import { SimSessionProvider } from "@/context/SimSessionContext";
 import { resolveSimulationRouteContext } from "@/actions/simulation/getSimulationContext";
 import { getCaseBundle } from "@/actions/case_builder/getCase";
-import { isTesterModeServer } from "@/utils/testerModeServer";
 import type { CaseBundle } from "@/actions/case_builder/getCase";
 import { ChartSimulationBootstrap } from "./chartSimulationBootstrap";
 import { SidebarProvider } from "@/components/ui/sidebar"
@@ -23,18 +22,11 @@ type ChartLayoutProps = {
 const ChartLayout = async ({ children, params }: ChartLayoutProps) => {
   const { caseId } = await params;
   const routeContext = await resolveSimulationRouteContext(caseId);
-  const tester = await isTesterModeServer();
-
-  let serverCaseBundle: CaseBundle | null = null;
-  try {
-    serverCaseBundle = await getCaseBundle(routeContext.caseId);
-  } catch {
-    if (!tester) throw new Error(`Case not available for simulation: ${routeContext.caseId}`);
-  }
+  const serverCaseBundle: CaseBundle | null = await getCaseBundle(routeContext.caseId);
 
   return (
     <ChartSimulationBootstrap routeContext={routeContext} serverCaseBundle={serverCaseBundle}>
-      <SidebarProvider>
+      <SidebarProvider defaultOpen={false}>
         <SimSessionProvider>
           <SimulationShell>
             <Toaster position="top-right" />

@@ -4,38 +4,12 @@ import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { saveCaseJsonBlob } from "@/app/admin/case-builder/api/dump_case_json";
 import { CaseSection } from "@/lib/saveCase";
 import type { FormBlob } from "@/utils/form";
-import { isTesterModeClient } from "@/utils/testerMode";
-import { setTesterCaseDraft, upsertTesterCase } from "@/utils/testerLocalStore";
 import {
   documentationPersistPayload,
   extractErrorMessage,
   fullCasePayloadForBlob,
   labsPersistPayload,
 } from "./serializeFormBlob";
-
-function syncTesterCaseMeta(caseId: string, data: FormBlob) {
-  if (!isTesterModeClient()) return;
-  const d = data.demographics;
-  upsertTesterCase({
-    id: caseId,
-    name: `${d.firstName ?? ""} ${d.lastName ?? ""}`.trim(),
-    first_name: d.firstName ?? "",
-    last_name: d.lastName ?? "",
-    description: d.summary ?? "",
-    admitting_diagnosis: d.admittingDiagnosis ?? "",
-  });
-  setTesterCaseDraft(caseId, {
-    demographics: data.demographics,
-    history: data.history,
-    notes: data.notes,
-    orders: data.orders,
-    labs: data.labs,
-    charting: data.charting,
-    intakeOutput: data.intakeOutput,
-    medOrders: data.medOrders,
-    medAdministrationInstances: data.medAdministrationInstances,
-  } as unknown as Record<string, unknown>);
-}
 
 async function saveSection(
   label: string,
@@ -134,8 +108,6 @@ export async function saveAllCaseBuilderProgress(
       caseId: effectiveCaseId,
     }),
   );
-
-  syncTesterCaseMeta(effectiveCaseId, data);
 
   const d = data.demographics;
   const title = `Case ${d.firstName ?? ""} ${d.lastName ?? ""}`.trim() || "Untitled Case";

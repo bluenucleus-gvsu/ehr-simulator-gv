@@ -347,6 +347,7 @@ export type Database = {
           doc_text: string
           id: string
           is_in_presim: boolean
+          phase: number
           specialty: string
           time_offset: number
         }
@@ -358,6 +359,7 @@ export type Database = {
           doc_text: string
           id?: string
           is_in_presim?: boolean
+          phase?: number
           specialty: string
           time_offset: number
         }
@@ -369,6 +371,7 @@ export type Database = {
           doc_text?: string
           id?: string
           is_in_presim?: boolean
+          phase?: number
           specialty?: string
           time_offset?: number
         }
@@ -2148,6 +2151,7 @@ export type Database = {
           doc_text: string | null
           id: string | null
           is_in_presim: boolean | null
+          phase: number | null
           source_type: string | null
           specialty: string | null
           time_offset: number | null
@@ -2268,6 +2272,7 @@ export type Database = {
           is_in_presim: boolean | null
           medication_order_id: string | null
           notes: string | null
+          phase: number | null
           source_type: string | null
           status: string | null
           time_offset: number | null

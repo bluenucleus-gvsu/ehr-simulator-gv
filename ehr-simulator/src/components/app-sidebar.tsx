@@ -18,8 +18,6 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createBrowserClient } from "@supabase/ssr";
 import { Button } from "@/components/ui/button";
-import { clearTesterMode } from "@/utils/testerMode";
-import { clearTesterLocalStore } from "@/utils/testerLocalStore";
 
 const adminRoutes = [
   {
@@ -49,25 +47,30 @@ const adminRoutes = [
   },
 ]
 
-const defaultRoutes = [
-  {
-    title: "Profile",
-    url: "/",
-    icom: User,
-  },
-  {
-    title: "Settings",
-    url: "/auth/login",
-    icom: Settings,
-  },
-];
-
 export function AppSidebar() {
 
-  const { loading } = useUser();
+  const { loading, user } = useUser();
   const pathname = usePathname();
   const router = useRouter();
   const isCurrentPath = (url: string) => pathname === url;
+
+  const defaultRoutes = [
+    {
+      title: "Profile",
+      url: user?.id ? `/user/${user.id}` : "/user",
+      icom: User,
+    },
+    {
+      title: "Faculty Page",
+      url: user?.id ? `/faculty/${user.id}` : "/faculty",
+      icom: Presentation,
+    },
+    {
+      title: "Settings",
+      url: "/",
+      icom: Settings,
+    },
+  ];
 
   if (loading) return null;
 
@@ -80,8 +83,6 @@ export function AppSidebar() {
     await supabase.auth.signOut();
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem('role');
-      clearTesterLocalStore();
-      clearTesterMode();
     }
     router.push('/auth/login');
   }
