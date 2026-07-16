@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 
 const CASE_BUILDER_MAINTENANCE_PATH = '/admin/case-builder-maintenance'
-const DEBUG_CASE_BUILDER_UNDER_MAINTENANCE = false;
+const DEBUG_CASE_BUILDER_UNDER_MAINTENANCE = true;
 
 export async function middleware(request: NextRequest) {
   if (
