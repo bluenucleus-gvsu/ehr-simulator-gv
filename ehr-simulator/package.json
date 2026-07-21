@@ -30,7 +30,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@reduxjs/toolkit": "^2.9.2",
     "@supabase/ssr": "^0.7.0",
-    "@supabase/supabase-js": "^2.75.1",
+    "@supabase/supabase-js": "^2.105.3",
     "@tanstack/react-table": "^8.21.3",
     "@tiptap/extension-highlight": "^3.15.3",
     "@tiptap/extension-list": "^3.15.3",
