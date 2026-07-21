@@ -5,6 +5,7 @@ import { FeedbackTarget, ActiveSimView } from "@/app/faculty/lib/types";
 import { updateCurrentPhase } from "@/actions/simulation";
 import { useRouter } from "next/navigation";
 import AdvanceAlertDialog from "./AdvanceAlertDialog";
+import Phases from "./Phases";
 
 function formatSimTime(dateStr: string) {
   return new Date(dateStr).toLocaleString(undefined, {
@@ -39,16 +40,24 @@ export default function SimulationGroupsView({
 
   const [groupPhase, setGroupPhase] = useState<Record<string, number>>(initialPhases);
   const [phaseDialog, setPhaseDialog] = useState(false);
-  const [pendingPhaseGroup, setPendingPhaseGroup] = useState<{ id: string; name: string } | null>(null);
+  const [pendingPhaseGroup, setPendingPhaseGroup] = useState<{
+    id: string;
+    name: string;
+    selectedPhase: number;
+  } | null>(null);
 
   const handleSubmit = (key: string, feedback: string) => {
     setSubmittedFeedback((prev) => ({ ...prev, [key]: feedback }));
     console.log(`[DUMMY] Feedback submitted for "${key}":`, feedback);
   };
 
-  const handlePhaseAdvancement = (id: string, name: string, currentPhase: number) => {
-    if (currentPhase < phases) {
-      setPendingPhaseGroup({ id, name });
+  const handlePhaseAdvancement = (
+    id: string,
+    name: string,
+    selectedPhase: number
+  ) => {
+    if (selectedPhase <= phases) {
+      setPendingPhaseGroup({ id, name, selectedPhase });
       setPhaseDialog(true);
     }
   };
@@ -59,8 +68,7 @@ export default function SimulationGroupsView({
     // 2. Safely grab the specific group's unique caseSessionId
     const group = simulation.groups.find((g) => g.id === pendingPhaseGroup.id);
     const sessionId = group?.caseSessionId;
-    const currentPhaseNumber = groupPhase[pendingPhaseGroup.id] || 1;
-    const updatedPhase = currentPhaseNumber + 1;
+    const updatedPhase = pendingPhaseGroup.selectedPhase;
 
     if (sessionId) {
       const response = await updateCurrentPhase(updatedPhase, sessionId);
@@ -205,38 +213,15 @@ export default function SimulationGroupsView({
               
               {/* Group Footer for Phase Change */}
               <div className="flex flex-wrap items-center gap-4 py-2">
-                <div className="flex-1 min-w-[18rem] space-y-1">
-                  {phaseRows.map((row, rowIndex) => (
-                    <div key={rowIndex} className="flex flex-wrap items-center">
-                      {row.map((phaseIndex, idx) => (
-                        <button
-                          key={phaseIndex}
-                          onClick={() => phaseIndex === currentPhase + 1 ? handlePhaseAdvancement(group.id, group.name, currentPhase) : null}
-                          style={{
-                            clipPath:
-                              idx === 0
-                                ? "polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%)"
-                                : "polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%)",
-                            marginLeft: idx === 0 ? "0" : "-10px",
-                            zIndex: phaseIndex,
-                          }}
-                          className={`relative px-4 py-1.5 text-sm font-medium text-white ${
-                            phaseIndex < currentPhase
-                              ? "bg-green-500"
-                              : phaseIndex === currentPhase
-                              ? "bg-blue-500"
-                              : "bg-slate-300"
-                          }`}
-                        >
-                          P{phaseIndex}
-                        </button>
-                      ))}
-                    </div>
-                  ))}
-                </div>
+                <Phases
+                  phaseRows={phaseRows}
+                  currentPhase={currentPhase}
+                  handlePhaseAdvancement={handlePhaseAdvancement}
+                  group={group}
+                />
 
                 <button
-                  onClick={() => handlePhaseAdvancement(group.id, group.name, currentPhase)}
+                  onClick={() => handlePhaseAdvancement(group.id, group.name, currentPhase + 1)}
                   disabled={currentPhase >= phases}
                   className="shrink-0 rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
                 >
