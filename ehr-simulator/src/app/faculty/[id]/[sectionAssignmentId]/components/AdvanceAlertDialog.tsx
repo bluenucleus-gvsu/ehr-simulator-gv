@@ -2,7 +2,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 interface AdvanceAlertProps {
     phaseDialog: boolean;
-    pendingPhaseGroup: { id: string; name: string } | null;
+    pendingPhaseGroup: { id: string; name: string; selectedPhase: number } | null;
     cancelPhaseAdvancement: () => void;
     confirmPhaseAdvancement: () => void;
 }
@@ -12,17 +12,17 @@ export default function AdvanceAlertDialog({
     pendingPhaseGroup,
     cancelPhaseAdvancement,
     confirmPhaseAdvancement
-}:AdvanceAlertProps){
+}: AdvanceAlertProps) {
     return (
         <AlertDialog open={phaseDialog}>
             <AlertDialogContent>
                 <AlertDialogHeader>
                 <AlertDialogTitle>
-                    Advance {pendingPhaseGroup ? pendingPhaseGroup.name : ""} to the Next Phase
+                    Advance {pendingPhaseGroup ? pendingPhaseGroup.name : ""} to Phase {pendingPhaseGroup?.selectedPhase ?? ""}
                 </AlertDialogTitle>
                 <AlertDialogDescription>
                     Are you sure you want to advance {pendingPhaseGroup ? pendingPhaseGroup.name : ""} to
-                    the next phase? You cannot go back after advancing.
+                    phase {pendingPhaseGroup?.selectedPhase ?? ""}?
                 </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

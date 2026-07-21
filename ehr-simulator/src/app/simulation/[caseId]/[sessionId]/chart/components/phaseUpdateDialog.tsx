@@ -32,14 +32,6 @@ const sectionIconByKey: Record<SimulationUpdateSectionKey, typeof ClipboardList>
   mar: Pill,
 };
 
-function formatPhaseLabel(fromPhase: number, toPhase: number) {
-  if (fromPhase + 1 === toPhase) {
-    return `Phase ${toPhase} has started`;
-  }
-
-  return `Simulation advanced to phase ${toPhase}`;
-}
-
 export default function PhaseUpdateDialog() {
   const router = useRouter();
   const params = useParams();
@@ -70,7 +62,6 @@ export default function PhaseUpdateDialog() {
     previousPhaseRef.current = currentPhase;
 
     if (isPresim ?? true) return;
-    if (currentPhase <= previousPhase) return;
 
     const nextSummary = buildSimulationPhaseUpdateSummary(caseBundle, previousPhase, currentPhase);
     setSummary(nextSummary);
@@ -95,7 +86,7 @@ export default function PhaseUpdateDialog() {
             </div>
             <div>
               <DialogTitle className="text-xl text-slate-900">
-                {formatPhaseLabel(summary.fromPhase, summary.toPhase)}
+                Phase {summary.toPhase}
               </DialogTitle>
               <DialogDescription className="text-sm text-slate-600">
                 Review the newly released information for this active simulation phase.
