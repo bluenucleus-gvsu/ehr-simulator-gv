@@ -129,14 +129,12 @@ interface SectionCardProps {
   /** 1-based display index, used to derive the section name ("Section 01", etc.) */
   index: number
   groups: SectionGroups
-  groupSize: number
   facultyMembers: FacultyMember[]
   groupFacultyLeads: Record<string, string>
   onGroupFacultyLeadChange: (sectionClientId: string, groupName: string, facultyId: string) => void
   draggedStudent: { student: Student; fromGroup: string; fromSection: string } | null
   dragOverGroup: string | null
   onSectionChange: (field: keyof SectionData, value: string | null) => void
-  onGroupSizeChange: (size: number) => void
   onUnassignAll: () => void
   onAddGroup: () => void
   onRenameGroup: (sectionClientId: string, oldName: string, newName: string) => void
@@ -161,14 +159,12 @@ export const SectionCard = ({
   section,
   index,
   groups,
-  groupSize,
   facultyMembers,
   groupFacultyLeads,
   onGroupFacultyLeadChange,
   draggedStudent,
   dragOverGroup,
   onSectionChange,
-  onGroupSizeChange,
   onUnassignAll,
   onAddGroup,
   onRenameGroup,
@@ -245,22 +241,6 @@ export const SectionCard = ({
 
           {/* Group controls */}
           <div className="flex items-center flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              <Label className="text-xs font-medium text-slate-500 whitespace-nowrap">Group size</Label>
-              <div className="flex items-center gap-1 border border-slate-200 rounded-lg overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => onGroupSizeChange(Math.max(1, groupSize - 1))}
-                  className="h-8 w-8 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer font-medium text-sm"
-                >-</button>
-                <span className="w-8 text-center text-sm font-semibold text-slate-800">{groupSize}</span>
-                <button
-                  type="button"
-                  onClick={() => onGroupSizeChange(Math.min(20, groupSize + 1))}
-                  className="h-8 w-8 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer font-medium text-sm"
-                >+</button>
-              </div>
-            </div>
             <Button
               type="button"
               size="sm"
@@ -289,7 +269,7 @@ export const SectionCard = ({
                     <p className="text-sm text-slate-400 text-center px-4">No groups yet — click "Randomly Assign" or "Add Group"</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-3">
                     {Object.entries(groups)
                       .sort(([a], [b]) => a.localeCompare(b))
                       .map(([groupName, students]) => (

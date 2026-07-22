@@ -78,6 +78,7 @@ function makeSection(index: number): SectionData {
 export default function CreateCoursePage() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const [adminUsers, setAdminUsers] = useState<FacultyMember[]>([])
   const [facultyUsers, setFacultyUsers] = useState<FacultyMember[]>([])
@@ -101,6 +102,7 @@ export default function CreateCoursePage() {
   const [sectionStates, setSectionStates] = useState<Record<string, SectionState>>({
     [makeSectionName(0)]: makeSectionState(),
   })
+  const [globalGroupSize, setGlobalGroupSize] = useState(DEFAULT_GROUP_SIZE)
 
   const [isPending, setIsPending] = useState(false)
   const [triggerSubmit, setTriggerSubmit] = useState(false)
@@ -313,50 +315,53 @@ export default function CreateCoursePage() {
     setSections(prev => prev.map(s => s.name === name ? { ...s, [field]: value } : s))
   }
 
-  const handleGroupSizeChange = (sectionName: string, size: number) => {
-    setSectionStates(prev => ({
-      ...prev,
-      [sectionName]: { ...prev[sectionName], groupSize: size },
-    }))
-  }
-
   const handleRandomAssign = () => {
     setSectionStates(prev => {
-      const sectionNames = sections.map(section => section.name)
-      const all: Student[] = sectionNames.flatMap(name => {
-        const section = prev[name]
-        if (!section) return []
-        return [...section.unassigned, ...Object.values(section.groups).flat()]
-      })
-      if (all.length === 0 || sectionNames.length === 0) return prev
-
-      const shuffled = [...all].sort(() => Math.random() - 0.5)
-      const sectionCount = sectionNames.length
-      const desiredGroupSize = DEFAULT_GROUP_SIZE
-      const groupCount = Math.max(1, Math.ceil(shuffled.length / (sectionCount * desiredGroupSize)))
-      const groupNames = generateGroupNames(groupCount)
-
-      const next: Record<string, SectionState> = { ...prev }
-      sectionNames.forEach(name => {
-        next[name] = {
-          ...prev[name],
-          groups: Object.fromEntries(groupNames.map(groupName => [groupName, []])) as SectionGroups,
-          unassigned: [],
-          groupFacultyLeads: {},
-        }
+      const sectionNames = sections.map((section) => section.name)
+      const allStudents: Student[] = sectionNames.flatMap((sectionName) => {
+        const state = prev[sectionName]
+        return [...state.unassigned, ...Object.values(state.groups).flat()]
       })
 
-      let studentIndex = 0
-      outer: for (const groupName of groupNames) {
-        for (const sectionName of sectionNames) {
-          for (let slot = 0; slot < desiredGroupSize; slot++) {
-            if (studentIndex >= shuffled.length) break outer
-            next[sectionName].groups[groupName].push(shuffled[studentIndex++])
+      if (allStudents.length === 0) return prev
+
+      const shuffled = [...allStudents].sort(() => Math.random() - 0.5)
+      const sectionAssignments: Record<string, Student[]> = Object.fromEntries(
+        sectionNames.map((sectionName) => [sectionName, [] as Student[]])
+      )
+
+      shuffled.forEach((student, index) => {
+        const targetSection = sectionNames[index % sectionNames.length]
+        sectionAssignments[targetSection].push(student)
+      })
+
+      const nextStates = Object.fromEntries(
+        sectionNames.map((sectionName) => {
+          const state = prev[sectionName]
+          const assignedStudents = sectionAssignments[sectionName] ?? []
+
+          if (assignedStudents.length === 0) {
+            return [sectionName, { ...state, groups: {}, unassigned: [], groupFacultyLeads: {} }]
           }
-        }
-      }
 
-      return next
+          const groupSize = Math.max(1, globalGroupSize)
+          const numGroups = Math.max(1, Math.ceil(assignedStudents.length / groupSize))
+          const names = generateGroupNames(numGroups)
+          const newGroups: SectionGroups = {}
+
+          names.forEach((name) => {
+            newGroups[name] = []
+          })
+
+          assignedStudents.forEach((student, i) => {
+            newGroups[names[i % numGroups]].push(student)
+          })
+
+          return [sectionName, { ...state, groups: newGroups, unassigned: [], groupFacultyLeads: {} }]
+        })
+      ) as Record<string, SectionState>
+
+      return { ...prev, ...nextStates }
     })
   }
 
@@ -494,56 +499,82 @@ export default function CreateCoursePage() {
 
     const { student, fromGroup, fromSection } = draggedStudent
 
-    if (fromGroup !== "__unassigned__" && fromSection !== toSection) return
-    if (fromGroup === toGroup && fromSection === toSection) return
+    // Prevent dropping into the exact same spot
+    if (fromGroup === toGroup && fromSection === toSection) {
+      setDraggedStudent(null)
+      setDragOverGroup(null)
+      return
+    }
 
     setSectionStates(prev => {
-      const destState = prev[toSection]
       const originState = prev[fromSection]
-      if (!destState || !originState) return prev
+      const destState = prev[toSection]
+      if (!originState || !destState) return prev
 
-      const newGroups = { ...destState.groups }
-      let newUnassigned = [...destState.unassigned]
       const isComingFromUnassigned = fromGroup === "__unassigned__"
+      const isSameSection = fromSection === toSection
 
+      // 1. Create copies of the origin state
+      let updatedOriginUnassigned = [...originState.unassigned]
+      const updatedOriginGroups = { ...originState.groups }
+
+      // 2. Create copies of the destination state (if same section, point to origin)
+      let updatedDestUnassigned = isSameSection ? updatedOriginUnassigned : [...destState.unassigned]
+      const updatedDestGroups = isSameSection ? updatedOriginGroups : { ...destState.groups }
+
+      // 3. REMOVE student from their origin
       if (isComingFromUnassigned) {
-        const originUnassigned = originState.unassigned.filter(s => s.email !== student.email)
-        newUnassigned = fromSection === toSection ? originUnassigned : newUnassigned
-
-        return {
-          ...prev,
-          [fromSection]: {
-            ...originState,
-            unassigned: originUnassigned,
-          },
-          [toSection]: {
-            ...destState,
-            groups: toGroup === "__unassigned__" ? newGroups : {
-              ...newGroups,
-              [toGroup]: [...(newGroups[toGroup] ?? []), student],
-            },
-            unassigned: toGroup === "__unassigned__" ? [...newUnassigned, student] : newUnassigned,
-          },
-        }
+        updatedOriginUnassigned = updatedOriginUnassigned.filter(s => s.email !== student.email)
+        if (isSameSection) updatedDestUnassigned = updatedOriginUnassigned
+      } else {
+        updatedOriginGroups[fromGroup] = (updatedOriginGroups[fromGroup] ?? []).filter(s => s.email !== student.email)
       }
 
-      newGroups[fromGroup] = (newGroups[fromGroup] ?? []).filter(s => s.email !== student.email)
+      // 4. ADD student to their destination
+      if (toGroup === "__unassigned__") {
+        updatedDestUnassigned = [...updatedDestUnassigned, student]
+      } else {
+        updatedDestGroups[toGroup] = [...(updatedDestGroups[toGroup] ?? []), student]
+      }
 
+      // 5. Return updated states
       return {
         ...prev,
+        [fromSection]: {
+          ...originState,
+          unassigned: updatedOriginUnassigned,
+          groups: updatedOriginGroups,
+        },
         [toSection]: {
           ...destState,
-          groups: toGroup === "__unassigned__" ? newGroups : {
-            ...newGroups,
-            [toGroup]: [...(newGroups[toGroup] ?? []), student],
-          },
-          unassigned: toGroup === "__unassigned__" ? [...newUnassigned, student] : newUnassigned,
-        },
+          unassigned: updatedDestUnassigned,
+          groups: updatedDestGroups,
+        }
       }
     })
 
     setDraggedStudent(null)
     setDragOverGroup(null)
+  }
+
+  const handleContainerDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const scrollThreshold = 50 // pixels from the edge to trigger scroll
+    const scrollSpeed = 10     // pixels to scroll per frame
+
+    const rect = container.getBoundingClientRect()
+    const mouseY = e.clientY
+
+    // Scroll down if near the bottom edge
+    if (rect.bottom - mouseY < scrollThreshold) {
+      container.scrollTop += scrollSpeed
+    }
+    // Scroll up if near the top edge
+    else if (mouseY - rect.top < scrollThreshold) {
+      container.scrollTop -= scrollSpeed
+    }
   }
 
   const toggleCourseFaculty = (member: FacultyMember) => {
@@ -567,6 +598,7 @@ export default function CreateCoursePage() {
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/70 backdrop-blur-sm">
           <Loader2 className="size-10 animate-spin text-slate-700 mb-3" />
           <p className="text-slate-700 font-medium">Creating course...</p>
+          <p className="text-slate-700 font-medium">This may take a few moments</p>
         </div>
       )}
       <header className="sticky top-0 flex items-center justify-between px-4 sm:px-8 py-3 bg-white border-b z-10 shadow gap-4 flex-wrap">
@@ -587,7 +619,7 @@ export default function CreateCoursePage() {
       </header>
 
       <div className="flex-1 p-4 sm:p-6 md:px-12 lg:px-24">
-        <div className="max-w-7xl mx-auto space-y-6 pb-20">
+        <div className="max-w-7xl mx-auto space-y-6">
 
           <Card className="pt-4">
             <CardHeader>
@@ -754,16 +786,34 @@ export default function CreateCoursePage() {
                 </CardTitle>
                 <CardDescription>Add or remove sections for this course</CardDescription>
               </div>
-              <div className="flex items-center gap-2">
-                 <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => handleRandomAssign()}
-                className="cursor-pointer gap-1.5 h-8 text-xs"
-              >
-                <Shuffle className="w-3.5 h-3.5" /> Randomly Assign
-              </Button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2 border border-slate-200 rounded-lg px-2 py-1 bg-white">
+                  <span className="text-xs font-medium text-slate-500">Global group size</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setGlobalGroupSize(Math.max(1, globalGroupSize - 1))}
+                      className="h-7 w-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer font-medium text-sm rounded"
+                    >-
+                    </button>
+                    <span className="w-8 text-center text-sm font-semibold text-slate-800">{globalGroupSize}</span>
+                    <button
+                      type="button"
+                      onClick={() => setGlobalGroupSize(Math.min(20, globalGroupSize + 1))}
+                      className="h-7 w-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer font-medium text-sm rounded"
+                    >+
+                    </button>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleRandomAssign}
+                  className="cursor-pointer gap-1.5 h-8 text-xs"
+                >
+                  <Shuffle className="w-3.5 h-3.5" /> Randomly Assign
+                </Button>
                 <Button
                   type="button"
                   size="sm"
@@ -787,22 +837,24 @@ export default function CreateCoursePage() {
             </CardHeader>
           </Card>
             
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="w-full lg:flex-1">
+          <div className="flex flex-col lg:flex-row gap-4 sticky top-28 z-0">
+            <div 
+              ref={scrollContainerRef}
+              onDragOver={handleContainerDragOver}
+              className="w-full lg:flex-1 max-h-[calc(100vh-8rem)] overflow-y-auto pb-4"
+            >
               {sections.map((section, i) => (
                 <SectionCard
                   key={section.name}
                   section={section}
                   index={i + 1}
                   groups={sectionStates[section.name]?.groups ?? {}}
-                  groupSize={sectionStates[section.name]?.groupSize ?? DEFAULT_GROUP_SIZE}
                   facultyMembers={facultyUsers}
                   groupFacultyLeads={sectionStates[section.name]?.groupFacultyLeads ?? {}}
                   onGroupFacultyLeadChange={handleGroupFacultyLeadChange}
                   draggedStudent={draggedStudent}
                   dragOverGroup={dragOverGroup}
                   onSectionChange={(field, value) => handleSectionDataChange(section.name, field, value)}
-                  onGroupSizeChange={(size) => handleGroupSizeChange(section.name, size)}
                   onUnassignAll={() => handleUnassignAll(section.name)}
                   onAddGroup={() => handleAddGroup(section.name)}
                   onRenameGroup={handleRenameGroup}
@@ -830,7 +882,7 @@ export default function CreateCoursePage() {
                   <span className="text-xs font-semibold text-slate-700">{allUnassignedStudents.length}</span>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-[calc(100vh-12rem)] overflow-y-auto pb-4">
                   {allUnassignedStudents.length === 0 ? (
                     <p className="text-xs text-slate-400 italic text-center py-4">All assigned!</p>
                   ) : (

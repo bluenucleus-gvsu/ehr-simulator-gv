@@ -80,8 +80,8 @@ export const GroupCard = ({
   const dropKey = `${sectionId}::${groupName}`
   const isOver =
     dragOverGroup === dropKey &&
-    draggedStudent?.fromSection === sectionId &&
-    draggedStudent?.fromGroup !== groupName
+    !(draggedStudent?.fromSection === sectionId && 
+    draggedStudent?.fromGroup === groupName)
 
   const handleStartEdit = () => {
     setEditing(true)
@@ -208,7 +208,7 @@ export const GroupCard = ({
       {/* Faculty Lead */}
       <div className="mb-2 pb-2 border-b border-slate-100">
         <p className="text-xs font-semibold text-slate-500 mb-1.5">Faculty Lead</p>
-        <div className="flex items-center gap-1">
+        <div className="flex items-left gap-1">
           <Select
             value={facultyLead}
             onValueChange={(value) => onFacultyLeadChange(sectionId, groupName, value)}
