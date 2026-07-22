@@ -1,7 +1,7 @@
 "use server"
 
-import { createClient } from "@supabase/supabase-js"
 import { CaseSection } from "@/lib/saveCase"
+import { createServiceRoleSupabase } from "@/utils/supabase/service"
 import { upsertCaseDemographics } from "@/actions/case_builder/upsertCaseDemographics";
 import { updatePatientHistory } from "@/actions/case_builder/updatePatientHistory";
 import { updateClinicalDocuments } from "@/actions/case_builder/updateClinicalDocuments";
@@ -26,10 +26,7 @@ type SaveCaseArgs =
   | { section: typeof CaseSection.MEDICATION_ORDERS; payload: { orders: MedicationOrder[]; administrations: MedAdministrationInstance[] }; caseId?: string | null }
 
 export async function saveCaseData({ payload, section, caseId }: SaveCaseArgs) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
+  const supabase = createServiceRoleSupabase();
 
   if (section === CaseSection.DEMOGRAPHICS) {
     return await upsertCaseDemographics(supabase, payload, caseId)
@@ -54,5 +51,4 @@ export async function saveCaseData({ payload, section, caseId }: SaveCaseArgs) {
       return await updateMedications(supabase, payload, caseId);
   }
 }
-
 

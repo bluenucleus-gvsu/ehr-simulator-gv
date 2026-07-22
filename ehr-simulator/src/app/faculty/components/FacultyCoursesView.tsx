@@ -61,8 +61,9 @@ export default function FacultyCoursesView({ courses }: { courses: Course[] }) {
         <div className="ml-4 shrink-0">
           {today ? (
             <button
-              onClick={() => router.push(`/faculty/${user.id}/${sim.id}`)}
-              className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 font-medium"
+              onClick={() => user && router.push(`/faculty/${user.id}/${sim.id}`)}
+              disabled={!user}
+              className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 font-medium disabled:cursor-not-allowed disabled:bg-slate-300"
             >
               Enter Simulation
             </button>
