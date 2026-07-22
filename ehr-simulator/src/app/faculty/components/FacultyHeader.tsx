@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Image from "next/image";
-import { createBrowserClient } from "@supabase/ssr";
+import { createBrowserSupabase } from "@/utils/supabase/client";
 
 type Props = {
   name: string;
@@ -57,10 +57,7 @@ export default function FacultyHeader({ name, avatarUrl, courses = [] }: Props) 
           className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm"
           onClick={async () => {
             try {
-              const supabase = createBrowserClient(
-                process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-              );
+              const supabase = createBrowserSupabase();
               await supabase.auth.signOut();
             } catch {
               // ignore sign out errors

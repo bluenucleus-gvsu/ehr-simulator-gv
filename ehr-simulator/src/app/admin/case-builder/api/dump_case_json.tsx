@@ -1,12 +1,9 @@
 "use server";
 
-import { createClient } from "@supabase/supabase-js"
+import { createServiceRoleSupabase } from "@/utils/supabase/service"
 
 export async function saveCaseJsonBlob(payload: any, title?: string) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
+  const supabase = createServiceRoleSupabase();
 
   const { data, error } = await supabase
     .from("cases_json_blobs")
