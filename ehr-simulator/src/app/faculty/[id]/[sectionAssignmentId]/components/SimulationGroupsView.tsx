@@ -6,6 +6,7 @@ import { updateCurrentPhase } from "@/actions/simulation";
 import { useRouter } from "next/navigation";
 import AdvanceAlertDialog from "./AdvanceAlertDialog";
 import Phases from "./Phases";
+import { toast } from "sonner";
 
 function formatSimTime(dateStr: string) {
   return new Date(dateStr).toLocaleString(undefined, {
@@ -45,6 +46,8 @@ export default function SimulationGroupsView({
     name: string;
     selectedPhase: number;
   } | null>(null);
+  const [isAdvancing, setIsAdvancing] = useState(false);
+  const [advanceError, setAdvanceError] = useState<string | null>(null);
 
   const handleSubmit = (key: string, feedback: string) => {
     setSubmittedFeedback((prev) => ({ ...prev, [key]: feedback }));
@@ -63,36 +66,57 @@ export default function SimulationGroupsView({
   };
 
   const confirmPhaseAdvancement = async () => {
-    if (!pendingPhaseGroup) return;
+    if (!pendingPhaseGroup || isAdvancing) return;
 
-    // 2. Safely grab the specific group's unique caseSessionId
     const group = simulation.groups.find((g) => g.id === pendingPhaseGroup.id);
     const sessionId = group?.caseSessionId;
     const updatedPhase = pendingPhaseGroup.selectedPhase;
+    const groupId = pendingPhaseGroup.id;
 
-    if (sessionId) {
-      const response = await updateCurrentPhase(updatedPhase, sessionId);
-
-      if (response?.error) {
-        console.error("Failed to advance phase", response);
-      } else {
-        // 3. Update the local state seamlessly on success
-        setGroupPhase((prev) => ({
-          ...prev,
-          [pendingPhaseGroup.id]: updatedPhase,
-        }));
-      }
-    } else {
-      console.error("No valid case session ID found for this group.");
+    if (!sessionId) {
+      const message = "No valid case session was found for this group.";
+      setAdvanceError(message);
+      toast.error(message);
+      return;
     }
 
-    setPhaseDialog(false);
-    setPendingPhaseGroup(null);
+    setIsAdvancing(true);
+    setAdvanceError(null);
+
+    try {
+      const response = await updateCurrentPhase(updatedPhase, sessionId);
+
+      if (!response?.success) {
+        const message = response?.message || "The phase could not be advanced. Please try again.";
+        console.error("Failed to advance phase", response);
+        setAdvanceError(message);
+        toast.error(message);
+        return;
+      }
+
+      setGroupPhase((prev) => ({
+        ...prev,
+        [groupId]: updatedPhase,
+      }));
+      setPhaseDialog(false);
+      setPendingPhaseGroup(null);
+      toast.success(`${group.name} advanced to phase ${updatedPhase}.`);
+    } catch (error) {
+      const message = "The phase could not be advanced. Please try again.";
+      console.error("Failed to advance phase", error);
+      setAdvanceError(message);
+      toast.error(message);
+    } finally {
+      setIsAdvancing(false);
+    }
   };
 
   const cancelPhaseAdvancement = () => {
+    if (isAdvancing) return;
+
     setPhaseDialog(false);
     setPendingPhaseGroup(null);
+    setAdvanceError(null);
   };
 
   return (
@@ -258,6 +282,8 @@ export default function SimulationGroupsView({
         pendingPhaseGroup={pendingPhaseGroup}
         cancelPhaseAdvancement={cancelPhaseAdvancement}
         confirmPhaseAdvancement={confirmPhaseAdvancement}
+        isAdvancing={isAdvancing}
+        errorMessage={advanceError}
       />
 
     </div>
