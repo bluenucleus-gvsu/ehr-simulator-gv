@@ -21,16 +21,16 @@ type ChartLayoutProps = {
 };
 
 const ChartLayout = async ({ children, params }: ChartLayoutProps) => {
-  const { caseId } = await params;
+  const { caseId, sessionId } = await params;
   const routeContext = await resolveSimulationRouteContext(caseId);
   const serverCaseBundle: CaseBundle | null = await getCaseBundle(routeContext.caseId);
 
-  if (routeContext.source === "case_session" && serverCaseBundle) {
+  if (serverCaseBundle) {
     const supabase = createServiceRoleSupabase();
     const { data: session } = await supabase
       .from("case_sessions")
       .select("case_photo_url" as never)
-      .eq("id", routeContext.routeId)
+      .eq("id", sessionId)
       .maybeSingle();
     const overridePhotoUrl = (session as { case_photo_url?: string | null } | null)?.case_photo_url;
     if (overridePhotoUrl) {
