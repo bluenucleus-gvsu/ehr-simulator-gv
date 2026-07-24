@@ -701,3 +701,56 @@ export async function updateCurrentPhase(updatedPhase: number, sessionId: string
     };
   }
 }
+
+export async function updateSessionPhoto(photoUrl: string | null, sessionId: string) {
+  const startedAt = Date.now();
+  const supabase = createServiceRoleSupabase();
+
+  try {
+    // case_sessions.case_photo_url isn't in the generated types yet (added via migration; types need regen)
+    const { error } = await supabase
+      .from("case_sessions")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update({ case_photo_url: photoUrl } as any)
+      .eq("id", sessionId)
+
+    if (error) {
+      console.warn('[update-session-photo] Supabase rejected the update', {
+        sessionId,
+        durationMs: Date.now() - startedAt,
+        error: getErrorDetails(error),
+      });
+
+      return {
+        success: false,
+        message: "The photo could not be updated. Please try again.",
+        error,
+        data: null
+      };
+    }
+
+    return {
+      success: true,
+      message: `case_photo_url updated:${sessionId}`,
+      data: null,
+    };
+  } catch (error) {
+    const errorDetails = getErrorDetails(error);
+
+    console.error('[update-session-photo] Supabase request failed', {
+      sessionId,
+      durationMs: Date.now() - startedAt,
+      error: errorDetails,
+    });
+
+    return {
+      success: false,
+      message:
+        errorDetails.name === 'TimeoutError'
+          ? "The photo update timed out. Please try again."
+          : "The photo could not be updated. Please try again.",
+      error: errorDetails,
+      data: null,
+    };
+  }
+}

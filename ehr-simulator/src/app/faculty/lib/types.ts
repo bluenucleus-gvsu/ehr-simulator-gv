@@ -16,6 +16,8 @@ export type Member = Pick<DBUser, "id"> & { name: string };
 export type Group = Pick<DBGroup, "id" | "name"> & {
   caseSessionId:  DBCaseSession["id"];
   currentPhase:   DBCaseSession["current_phase"];
+  // Per-session override of cases.case_photo_url; null falls back to the case default.
+  casePhotoUrl:   string | null;
   members: Member[];
 };
 
