@@ -24,6 +24,8 @@ export interface SimSessionContextType {
   currentPhase: number;
   hasUnsavedCharting: boolean | null;
   handleUnsavedCharting: (chartingStatus: boolean) => void;
+  handlePresimStatusChange: () => void;
+  handlePhaseChange: (phase: number) => void;
 }
 
 const SimContext = createContext<SimSessionContextType>({
@@ -36,7 +38,10 @@ const SimContext = createContext<SimSessionContextType>({
   isPresim: true,
   currentPhase: 1,
   hasUnsavedCharting: false,
-  handleUnsavedCharting: () => { }
+  handleUnsavedCharting: () => { },
+  handlePresimStatusChange: () => null,
+  handlePhaseChange: () => null,
+
 });
 
 export function SimSessionProvider({ children }: { children: React.ReactNode }) {
@@ -57,7 +62,7 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
   const applySessionState = (sessionData: SessionRealtimeRow | null) => {
     if (!sessionData) {
       setSimStartTime(Date.now());
-      setIsPresim(false);
+      setIsPresim(true);
       setCurrentPhase(1);
       return;
     }
@@ -164,6 +169,14 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
     setHasUnsavedCharting(chartingStatus);
   }
 
+  const handlePresimStatusChange = () => {
+    setIsPresim(prev => !prev);
+  }
+
+  const handlePhaseChange = (phase: number) => {
+    setCurrentPhase(phase);
+  }
+
   const value = {
     userName,
     userId,
@@ -174,7 +187,9 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
     isPresim,
     currentPhase,
     hasUnsavedCharting,
-    handleUnsavedCharting
+    handleUnsavedCharting,
+    handlePresimStatusChange,
+    handlePhaseChange
   }
 
   return <SimContext.Provider value={value}>{children}</SimContext.Provider>

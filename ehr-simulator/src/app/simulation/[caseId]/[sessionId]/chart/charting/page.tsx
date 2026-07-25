@@ -8,7 +8,7 @@ interface PageProps {
   }>;
 }
 
-export default async function Mar({ params }: PageProps) {
+export default async function FlexSheets({ params }: PageProps) {
   const awaitedParams = await params;
   const { caseId, sessionId } = awaitedParams;
 

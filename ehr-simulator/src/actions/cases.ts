@@ -224,77 +224,6 @@ export async function deleteSectionCaseAssignment(id: string): Promise<ActionRes
   };
 }
 
-export async function getCourseCaseAssignments() {
-  const supabase = createServiceRoleSupabase();
-
-  const { data, error } = await supabase
-    .from('cases')
-    .select(`
-      id,
-      name,
-      description, 
-      admitting_diagnosis,
-      course_cases (
-        id,
-        course_id,
-        courses (
-          id,
-          name,
-          code
-        )
-      )
-    `);
-
-  if (error) {
-    return {
-      success: false,
-      message: 'Failed to retrieve sim cases.',
-      error,
-      data: null
-    };
-  }
-
-  const assignments = data?.flatMap((caseItem) => {
-    // Handle unassigned cases (Left Join equivalent)
-    if (!caseItem.course_cases || caseItem.course_cases.length === 0) {
-      return [{
-        id: null, // No assignment ID because it's not in course_cases
-        courseId: null,
-        caseId: caseItem.id,
-        courseName: null,
-        courseCode: null,
-        caseName: caseItem.name,
-        description: caseItem.description,
-        diagnosis: caseItem.admitting_diagnosis
-      }];
-    }
-
-    // Handle cases assigned to one or more courses
-    return caseItem.course_cases.map((assignment) => {
-      const course = Array.isArray(assignment.courses)
-        ? assignment.courses[0]
-        : assignment.courses;
-
-      return {
-        id: assignment.id, // The course_cases ID
-        courseId: assignment.course_id,
-        caseId: caseItem.id,
-        courseName: course?.name,
-        courseCode: course?.code,
-        caseName: caseItem.name,
-        description: caseItem.description,
-        diagnosis: caseItem.admitting_diagnosis
-      };
-    });
-  }) ?? [];
-
-  return {
-    success: true,
-    message: 'Successfully retrieved sim cases.',
-    data: assignments,
-  };
-}
-
 export async function updateCaseSession(session: CaseSessionUpsert) {
   const supabase = createServiceRoleSupabase();
 
@@ -325,5 +254,3 @@ export type ExtractData<T extends (...args: any) => Promise<ActionResponse<any>>
 
 export type SectionSimulationsData = ExtractData<typeof getSectionCaseAssignments>;
 export type CasesData = ExtractData<typeof getCaseByCourseId>;
-export type CaseCourseAssignments = ExtractData<typeof getCourseCaseAssignments>;
-export type CaseCourseAssignment = CaseCourseAssignments[number]
