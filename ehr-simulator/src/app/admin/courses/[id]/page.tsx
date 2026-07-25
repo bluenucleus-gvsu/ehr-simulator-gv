@@ -4,6 +4,7 @@ import { getSectionCaseAssignments } from "@/actions/cases";
 import { getCaseByCourseId } from "@/actions/cases";
 import { Database } from "../../../../../database.types";
 import CourseAssignmentsClient from "./components/CourseAssignmentsClient";
+import Link from "next/link";
 
 
 interface CoursePageProps {
@@ -39,9 +40,11 @@ export default async function CoursePage({ params }: CoursePageProps) {
             <h1 className="text-5xl font-bold tracking-tight text-blue-900">
               {courseData.code}
             </h1>
-            <p className="text-xs text-gray-500">Manage assigned for cases this course.</p>
+            <p className="text-xs text-gray-500">Manage assigned cases for this course.</p>
           </div>
-          <Button>Edit Course</Button>
+          <Button asChild>
+            <Link href={`/admin/courses/${coursedId}/edit`}>Edit Course</Link>
+          </Button>
         </div>
       </header>
 
@@ -49,6 +52,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
         <CourseAssignmentsClient
           sectionsData={sectionsData}
           casesData={casesData}
+          courseId={coursedId}
         />
       </div>
     </div>

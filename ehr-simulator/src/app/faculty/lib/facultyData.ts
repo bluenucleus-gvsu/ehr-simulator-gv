@@ -8,14 +8,15 @@ type CourseRelation = {
   active: Course["active"];
 };
 
-// Helper Function for getFacultyCourses
-const getStudentName = (student: any) => {
+const getStudentName = (student: {
+  full_name?: string | null;
+  email?: string | null;
+} | null) => {
   if (!student) return "Unknown Student";
   if (student.full_name) return student.full_name;
   return student.email || "Unknown Student";
 };
 
-// Get data from Supabase (May place this somewhere else or use SQL function)
 export async function getFacultyCourses(): Promise<Course[]> {
   const supabase = await createServerSupabase();
 
@@ -33,15 +34,22 @@ export async function getFacultyCourses(): Promise<Course[]> {
         presim_time,
         case_id,
         cases (id, name, first_name, last_name, phase_count),
-        case_sessions (id, group_id, current_phase, status)
-      ),
-      groups (
-        id,
-        name,
-        group_members (
+        case_sessions (
           id,
-          student_id,
-          student:student_id (id, full_name, email)
+          group_id,
+          current_phase,
+          status,
+          group:groups (
+            id,
+            name,
+            section_assignment_id,
+            active,
+            group_members (
+              id,
+              student_id,
+              student:student_id (id, full_name, email)
+            )
+          )
         )
       )
     `);
@@ -52,7 +60,6 @@ export async function getFacultyCourses(): Promise<Course[]> {
   }
 
   const sections = (data ?? []).filter(Boolean);
-
   const courseMap = new Map<string, Course>();
 
   for (const section of sections) {
@@ -61,48 +68,92 @@ export async function getFacultyCourses(): Promise<Course[]> {
     ) as CourseRelation | null | undefined;
     if (!course?.id) continue;
 
-    // Lookup table so each group's name/members can be matched by id below
-    const groupById = new Map<string, any>(
-      (section.groups ?? []).map((group: any) => [group.id, group])
+    const simulationRows: Simulation[] = (section.section_assignments ?? []).map(
+      (assignment: {
+        id: string;
+        sim_time: string | null;
+        presim_time: string | null;
+        cases:
+          | {
+              name?: string | null;
+              first_name?: string | null;
+              last_name?: string | null;
+              phase_count?: number | null;
+            }
+          | Array<{
+              name?: string | null;
+              first_name?: string | null;
+              last_name?: string | null;
+              phase_count?: number | null;
+            }>
+          | null;
+        case_sessions?: Array<{
+          id: string;
+          group_id: string | null;
+          current_phase: number | null;
+          status: string | null;
+          group:
+            | {
+                id: string;
+                name: string;
+                active?: boolean | null;
+                group_members?: Array<{
+                  id: string;
+                  student?: { id: string; full_name: string | null; email: string | null } | null;
+                }>;
+              }
+            | Array<{
+                id: string;
+                name: string;
+                active?: boolean | null;
+                group_members?: Array<{
+                  id: string;
+                  student?: { id: string; full_name: string | null; email: string | null } | null;
+                }>;
+              }>
+            | null;
+        }>;
+      }) => {
+        const caseRecord = Array.isArray(assignment.cases)
+          ? assignment.cases[0]
+          : assignment.cases;
+        const caseName =
+          caseRecord?.name ||
+          [caseRecord?.first_name, caseRecord?.last_name].filter(Boolean).join(" ") ||
+          "Untitled Simulation";
+
+        const groupRows: Group[] = (assignment.case_sessions ?? [])
+          .filter((session) => {
+            if (!session.group_id || !session.id) return false;
+            const group = Array.isArray(session.group) ? session.group[0] : session.group;
+            return group?.active !== false;
+          })
+          .map((session) => {
+            const group = Array.isArray(session.group) ? session.group[0] : session.group;
+            return {
+              id: session.group_id as string,
+              name: group?.name ?? "Unknown Group",
+              caseSessionId: session.id,
+              currentPhase: session.current_phase ?? 1,
+              members: (group?.group_members ?? [])
+                .map((member) => ({
+                  id: member.student?.id ?? member.id,
+                  name: getStudentName(member.student ?? null),
+                }))
+                .filter((member) => member.id),
+            };
+          });
+
+        return {
+          id: assignment.id,
+          caseName,
+          phaseCount: caseRecord?.phase_count ?? 0,
+          simTime: assignment.sim_time ?? "",
+          presimTime: assignment.presim_time ?? "",
+          groups: groupRows,
+        };
+      }
     );
-
-    // One Simulation per section_assignment; its groups are scoped to THAT
-    // assignment's case_sessions, not the whole section's group list
-    const simulationRows: Simulation[] = (section.section_assignments ?? []).map((assignment: any) => {
-      const caseRecord = assignment.cases;
-      const caseName =
-        caseRecord?.name ||
-        [caseRecord?.first_name, caseRecord?.last_name].filter(Boolean).join(" ") ||
-        "Untitled Simulation";
-
-      // A group only belongs to this simulation if it has a case_session under this assignment
-      const groupRows: Group[] = (assignment.case_sessions ?? [])
-        .filter((session: any) => session.group_id && session.id)
-        .map((session: any) => {
-          const group = groupById.get(session.group_id);
-          return {
-            id: session.group_id,
-            name: group?.name ?? "Unknown Group",
-            caseSessionId: session.id,
-            currentPhase: session.current_phase ?? 1,
-            members: (group?.group_members ?? [])
-              .map((member: any) => ({
-                id: member.student?.id ?? member.id,
-                name: getStudentName(member.student),
-              }))
-              .filter((member: any) => member.id),
-          };
-        });
-
-      return {
-        id: assignment.id,
-        caseName,
-        phaseCount: caseRecord?.phase_count ?? 0,
-        simTime: assignment.sim_time ?? "",
-        presimTime: assignment.presim_time ?? "",
-        groups: groupRows,
-      };
-    });
 
     const sectionPayload: Section = {
       id: section.id,
@@ -126,7 +177,6 @@ export async function getFacultyCourses(): Promise<Course[]> {
 
   return Array.from(courseMap.values());
 }
-
 
 export async function getSectionSimulationDetails(sectionAssignmentId: string) {
   const supabase = await createServerSupabase();
@@ -155,6 +205,8 @@ export async function getSectionSimulationDetails(sectionAssignmentId: string) {
         group: groups(
           id,
           name,
+          section_assignment_id,
+          active,
           group_members (
             id,
             student:users (
@@ -174,7 +226,6 @@ export async function getSectionSimulationDetails(sectionAssignmentId: string) {
     return null;
   }
 
-  // section/course can come back as arrays or objects depending on FK shape — normalize
   const section = Array.isArray(data.section) ? data.section[0] : data.section;
   const course = Array.isArray(section?.course) ? section.course[0] : section?.course;
   const caseRecord = Array.isArray(data.cases) ? data.cases[0] : data.cases;
@@ -185,8 +236,44 @@ export async function getSectionSimulationDetails(sectionAssignmentId: string) {
   }
 
   const groups: Group[] = (data.case_sessions ?? [])
-    .filter((session: any) => session.group) // skip sessions with no linked group
-    .map((session: any) => {
+    .filter((session: {
+      group?:
+        | { active?: boolean | null }
+        | Array<{ active?: boolean | null }>
+        | null;
+    }) => {
+      const group = Array.isArray(session.group) ? session.group[0] : session.group;
+      return Boolean(group) && group?.active !== false;
+    })
+    .map((session: {
+      id: string;
+      current_phase: number | null;
+      group:
+        | {
+            id: string;
+            name: string;
+            active?: boolean | null;
+            group_members?: Array<{
+              id: string;
+              student?:
+                | { id: string; full_name: string | null; email: string | null }
+                | Array<{ id: string; full_name: string | null; email: string | null }>
+                | null;
+            }>;
+          }
+        | Array<{
+            id: string;
+            name: string;
+            active?: boolean | null;
+            group_members?: Array<{
+              id: string;
+              student?:
+                | { id: string; full_name: string | null; email: string | null }
+                | Array<{ id: string; full_name: string | null; email: string | null }>
+                | null;
+            }>;
+          }>;
+    }) => {
       const group = Array.isArray(session.group) ? session.group[0] : session.group;
 
       return {
@@ -195,16 +282,21 @@ export async function getSectionSimulationDetails(sectionAssignmentId: string) {
         caseSessionId: session.id,
         currentPhase: session.current_phase ?? 1,
         members: (group.group_members ?? [])
-          .map((member: any) => ({
-            id: member.student?.id ?? member.id,
-            name: getStudentName(member.student),
-          }))
-          .filter((member: any) => member.id),
+          .map((member) => {
+            const student = Array.isArray(member.student)
+              ? member.student[0]
+              : member.student;
+            return {
+              id: student?.id ?? member.id,
+              name: getStudentName(student ?? null),
+            };
+          })
+          .filter((member) => member.id),
       };
     });
 
   const simulation: Simulation = {
-    id: data.id,   // section_assignments.id
+    id: data.id,
     caseName: caseRecord?.name ?? "Untitled Simulation",
     phaseCount: caseRecord?.phase_count ?? 0,
     simTime: data.sim_time ?? "",

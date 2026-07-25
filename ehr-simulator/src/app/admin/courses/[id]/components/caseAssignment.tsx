@@ -16,7 +16,9 @@ import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { CasesData, createSectionCaseAssignment, deleteSectionCaseAssignment, SectionAssignmentInsert, SectionSimulationsData } from "@/actions/cases";
+import { ensureAssignmentGroupsFromTemplate } from "@/actions/courses";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface CaseAssignmentProps {
   sections: SectionSimulationsData
@@ -32,6 +34,7 @@ interface CaseAssignmentProps {
 }
 
 const CaseAssignment = ({ sections, cases, isEditMode, existing_id, initialData }: CaseAssignmentProps) => {
+  const router = useRouter();
   const [selectedCaseId, setSelectedCaseId] = useState<string>(initialData?.caseId || '');
   const [selectedSectionId, setSelectedSectionId] = useState<string>(initialData?.sectionId || '');
   const [presimDate, setPresimDate] = useState(
@@ -71,10 +74,18 @@ const CaseAssignment = ({ sections, cases, isEditMode, existing_id, initialData 
       return;
     }
 
+    if (!isEditMode && result.data?.id) {
+      const groupsResult = await ensureAssignmentGroupsFromTemplate(result.data.id);
+      if (!groupsResult.success) {
+        toast.error(groupsResult.message);
+      }
+    }
+
     toast.success(result.message);
     setIsOpen(false);
     setIsSubmitting(false);
     handleOpenChange(false);
+    router.refresh();
   }
 
   const handleDeleteAssignment = async (id: string) => {

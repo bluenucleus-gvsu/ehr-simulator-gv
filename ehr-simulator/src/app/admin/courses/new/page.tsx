@@ -15,6 +15,7 @@ import {
   Check,
   ChevronsUpDown,
   Loader2,
+  UserPlus,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -33,13 +34,25 @@ import { Student, FacultyMember, SectionData } from "./types"
 import { SectionCard, SectionGroups, randomlyAssignGroups, generateGroupNames } from "./SectionCard"
 
 import { getAllFacultyUsers, getAllAdminUsers, provisionStudents, getUsersByEmails } from "@/actions/users"
-import { createCourse, createSection, createGroup, createGroupMembers } from "@/actions/courses"
+import {
+  createCourse,
+  createSection,
+  createGroup,
+  createGroupMembers,
+  createSectionEnrollment,
+  createFacultySection,
+  setCourseAdministrators,
+} from "@/actions/courses"
+import AddStudentForm, { type ManualStudentInput } from "@/app/admin/courses/AddStudentForm"
+import { parseStudentCSV } from "@/app/admin/courses/parseStudentCSV"
 interface SectionState {
   groups: SectionGroups
-  unassigned: Student[]
   groupSize: number
   groupFacultyLeads: Record<string, string>
 }
+
+const SHARED_POOL = "__shared__"
+const UNASSIGNED_GROUP = "__unassigned__"
 
 const generateSemesters = (): string[] => {
   const now = new Date()
@@ -55,13 +68,12 @@ const SEMESTERS = generateSemesters()
 
 const DEFAULT_GROUP_SIZE = 4
 
-/** "Section 01", "Section 02", etc. — single source of truth for section names */
 function makeSectionName(index: number): string {
   return `Section ${String(index + 1).padStart(2, "0")}`
 }
 
-function makeSectionState(students: Student[] = []): SectionState {
-  return { groups: {}, unassigned: students, groupSize: DEFAULT_GROUP_SIZE, groupFacultyLeads: {} }
+function makeSectionState(): SectionState {
+  return { groups: {}, groupSize: DEFAULT_GROUP_SIZE, groupFacultyLeads: {} }
 }
 
 function makeSection(index: number): SectionData {
@@ -71,6 +83,15 @@ function makeSection(index: number): SectionData {
     end_date: null,
     meeting_time: null,
   }
+}
+
+function studentKey(student: Student) {
+  return student.email ?? student.full_name ?? ""
+}
+
+function withoutStudent(students: Student[], student: Student) {
+  const key = studentKey(student)
+  return students.filter((s) => studentKey(s) !== key)
 }
 
 export default function CreateCoursePage() {
@@ -88,9 +109,11 @@ export default function CreateCoursePage() {
   const [selectedFile, setSelectedFile] = useState<File>()
   const [fileUploadError, setFileUploadError] = useState("")
   const [allStudents, setAllStudents] = useState<Student[]>([])
+  const [sharedUnassigned, setSharedUnassigned] = useState<Student[]>([])
 
   const [courseName, setCourseName] = useState("")
   const [courseCode, setCourseCode] = useState("")
+  const [courseDescription, setCourseDescription] = useState("")
   const [semester, setSemester] = useState("")
   const [courseFacultyIds, setCourseFacultyIds] = useState<string[]>([])
   const [facultyOpen, setFacultyOpen] = useState(false)
@@ -126,9 +149,18 @@ export default function CreateCoursePage() {
           provisionedUsers.map(u => [u.email, u.id])
         )
 
-        const courseResponse = await createCourse({ active: true, code: courseCode, name: courseName })
+        const courseResponse = await createCourse({
+          active: true,
+          code: courseCode,
+          name: courseName,
+          description: courseDescription.trim() || null,
+        })
         if (!courseResponse.success || !courseResponse.data) return
         const courseId = courseResponse.data.id
+
+        if (courseFacultyIds.length > 0) {
+          await setCourseAdministrators(courseId, courseFacultyIds)
+        }
 
         const sectionResults = await Promise.all(
           sections.map((section) =>
@@ -150,24 +182,45 @@ export default function CreateCoursePage() {
           const sectionId = sectionResult.data.id
           const sectionName = sections[i].name
           const groups = sectionStates[sectionName]?.groups ?? {}
+          const groupFacultyLeads = sectionStates[sectionName]?.groupFacultyLeads ?? {}
+          const enrolledStudentIds = new Set<string>()
 
           await Promise.all(
             Object.entries(groups).map(async ([groupName, students]) => {
-              const groupResponse = await createGroup({ name: groupName, section_id: sectionId })
+              const groupResponse = await createGroup({
+                name: groupName,
+                section_id: sectionId,
+                section_assignment_id: null,
+                active: true,
+              })
               if (!groupResponse.success || !groupResponse.data) return
 
               const groupId = groupResponse.data.id
+              const facultyLeadId = groupFacultyLeads[groupName]
+              if (facultyLeadId) {
+                await createFacultySection({
+                  section_id: sectionId,
+                  faculty_id: facultyLeadId,
+                  active: true,
+                })
+              }
 
               await Promise.all(
                 students
                   .filter((student): student is Student & { email: string } => student.email != null)
-                  .map((student) => {
+                  .map(async (student) => {
                     const studentId = emailToUserId[student.email]
                     if (!studentId) {
                       console.error("No user ID found for student:", student.email)
                       return
                     }
-                    return createGroupMembers({ group_id: groupId, student_id: studentId, active: true })
+                    enrolledStudentIds.add(studentId)
+                    await createGroupMembers({ group_id: groupId, student_id: studentId, active: true })
+                    await createSectionEnrollment({
+                      section_id: sectionId,
+                      student_id: studentId,
+                      active: true,
+                    })
                   })
               )
             })
@@ -189,47 +242,7 @@ export default function CreateCoursePage() {
     setTriggerSubmit(true)
   }
 
-  const parseCSV = (text: string): Student[] => {
-    const lines = text.trim().split("\n")
-    if (lines.length < 2) throw new Error("CSV file is empty or contains only headers")
-
-    const header = lines[0].split(",").map(h => h.replace(/"/g, "").trim())
-    const cols = ["User Name", "First Name", "Last Name"]
-    const indices = cols.map(col => header.indexOf(col))
-
-    if (indices.includes(-1)) {
-      throw new Error(`Missing columns: ${cols.filter((_, i) => indices[i] === -1).join(", ")}`)
-    }
-
-    const [uIdx, fIdx, lIdx] = indices
-
-    return lines.slice(1).filter(line => line.trim()).map(line => {
-      const values: string[] = []
-      let current = ""
-      let inQuotes = false
-      for (const char of line) {
-        if (char === '"') inQuotes = !inQuotes
-        else if (char === "," && !inQuotes) { values.push(current.trim()); current = "" }
-        else current += char
-      }
-      values.push(current.trim())
-
-      const clean = (idx: number) => values[idx]?.replace(/"/g, "") || ""
-      const userName = clean(uIdx)
-      const firstName = clean(fIdx)
-      const lastName = clean(lIdx)
-
-      return {
-        id: crypto.randomUUID(),
-        email: `${userName}@mail.gvsu.edu`,
-        full_name: `${firstName} ${lastName}`.trim(),
-        role: "student",
-        status: null,
-        created_at: null,
-        updated_at: null,
-      } satisfies Student
-    })
-  }
+  const parseCSV = (text: string): Student[] => parseStudentCSV(text)
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -246,20 +259,19 @@ export default function CreateCoursePage() {
     reader.onload = (event) => {
       try {
         const students = parseCSV(event.target?.result as string)
-        setAllStudents(students)
-        setSectionStates(prev => {
-          const next = { ...prev }
-          Object.keys(next).forEach((name, i) => {
-            next[name] = { ...next[name], unassigned: i === 0 ? students : [], groups: {} }
-          })
-          return next
-        })
+        const existingEmails = new Set(
+          allStudents.map((s) => s.email?.toLowerCase()).filter(Boolean) as string[]
+        )
+        const fresh = students.filter(
+          (s) => s.email && !existingEmails.has(s.email.toLowerCase())
+        )
+        setAllStudents((prev) => [...prev, ...fresh])
+        setSharedUnassigned((prev) => [...prev, ...fresh])
         setSelectedFile(file)
         setFileUploadError("")
       } catch (err: any) {
         setFileUploadError(err.message)
         setSelectedFile(undefined)
-        setAllStudents([])
       }
     }
     reader.readAsText(file)
@@ -267,6 +279,7 @@ export default function CreateCoursePage() {
 
   const handleClear = () => {
     setAllStudents([])
+    setSharedUnassigned([])
     setSectionStates(prev => {
       const next = { ...prev }
       Object.keys(next).forEach(name => { next[name] = makeSectionState() })
@@ -275,6 +288,42 @@ export default function CreateCoursePage() {
     setSelectedFile(undefined)
     setFileUploadError("")
     if (fileInputRef.current) fileInputRef.current.value = ""
+  }
+
+  const handleAddManualStudent = (input: ManualStudentInput) => {
+    const emailKey = input.email.toLowerCase()
+    if (allStudents.some((s) => s.email?.toLowerCase() === emailKey)) {
+      throw new Error(`Student with email ${input.email} is already added.`)
+    }
+
+    const student: Student = {
+      id: crypto.randomUUID(),
+      email: input.email,
+      full_name: input.full_name,
+      role: "student",
+      status: null,
+      created_at: null,
+      updated_at: null,
+    }
+
+    setAllStudents((prev) => [...prev, student])
+    setSharedUnassigned((prev) => [...prev, student])
+  }
+
+  const handleRemoveStudent = (student: Student) => {
+    setAllStudents((prev) => withoutStudent(prev, student))
+    setSharedUnassigned((prev) => withoutStudent(prev, student))
+    setSectionStates((prev) => {
+      const next: Record<string, SectionState> = {}
+      for (const [name, state] of Object.entries(prev)) {
+        const groups: SectionGroups = {}
+        for (const [groupName, students] of Object.entries(state.groups)) {
+          groups[groupName] = withoutStudent(students, student)
+        }
+        next[name] = { ...state, groups }
+      }
+      return next
+    })
   }
 
   const handleAddSection = () => {
@@ -287,23 +336,17 @@ export default function CreateCoursePage() {
   const handleRemoveSection = () => {
     if (sections.length <= 1) return
     const removedName = sections[sections.length - 1].name
+    const orphans = Object.values(sectionStates[removedName]?.groups ?? {}).flat()
     setSections(prev => prev.slice(0, -1))
     setSectionStates(prev => {
-      const removed = prev[removedName]
-      const orphans: Student[] = [
-        ...removed.unassigned,
-        ...Object.values(removed.groups).flat(),
-      ]
       const next = { ...prev }
       delete next[removedName]
-      if (orphans.length > 0) {
-        const firstName = sections[0].name
-        next[firstName] = {
-          ...next[firstName],
-          unassigned: [...next[firstName].unassigned, ...orphans],
-        }
-      }
       return next
+    })
+    if (orphans.length === 0) return
+    setSharedUnassigned(prev => {
+      const existing = new Set(prev.map(studentKey))
+      return [...prev, ...orphans.filter((s) => !existing.has(studentKey(s)))]
     })
   }
 
@@ -319,26 +362,31 @@ export default function CreateCoursePage() {
   }
 
   const handleRandomAssign = (sectionName: string) => {
-    setSectionStates(prev => {
-      const state = prev[sectionName]
-      const all: Student[] = [
-        ...state.unassigned,
-        ...Object.values(state.groups).flat(),
-      ]
-      if (all.length === 0) return prev
-      const newGroups = randomlyAssignGroups(all, state.groupSize)
-      return { ...prev, [sectionName]: { ...state, groups: newGroups, unassigned: [] } }
-    })
+    const state = sectionStates[sectionName]
+    if (!state) return
+    const alreadyInSection = Object.values(state.groups).flat()
+    const pool = [...sharedUnassigned, ...alreadyInSection]
+    if (pool.length === 0) return
+    const newGroups = randomlyAssignGroups(pool, state.groupSize)
+    setSectionStates(prev => ({
+      ...prev,
+      [sectionName]: { ...prev[sectionName], groups: newGroups },
+    }))
+    setSharedUnassigned([])
   }
 
   const handleUnassignAll = (sectionName: string) => {
-    setSectionStates(prev => {
-      const state = prev[sectionName]
-      const all: Student[] = [
-        ...state.unassigned,
-        ...Object.values(state.groups).flat(),
-      ]
-      return { ...prev, [sectionName]: { ...state, groups: {}, unassigned: all } }
+    const state = sectionStates[sectionName]
+    if (!state) return
+    const fromGroups = Object.values(state.groups).flat()
+    setSectionStates(prev => ({
+      ...prev,
+      [sectionName]: { ...prev[sectionName], groups: {} },
+    }))
+    if (fromGroups.length === 0) return
+    setSharedUnassigned(prev => {
+      const existing = new Set(prev.map(studentKey))
+      return [...prev, ...fromGroups.filter((s) => !existing.has(studentKey(s)))]
     })
   }
 
@@ -372,22 +420,28 @@ export default function CreateCoursePage() {
   }
 
   const handleDeleteGroup = (sectionName: string, groupName: string) => {
+    const state = sectionStates[sectionName]
+    if (!state) return
+    const students = state.groups[groupName] ?? []
     setSectionStates(prev => {
-      const state = prev[sectionName]
-      const students = state.groups[groupName] ?? []
-      const newGroups = { ...state.groups }
+      const current = prev[sectionName]
+      const newGroups = { ...current.groups }
       delete newGroups[groupName]
-      const newLeads = { ...state.groupFacultyLeads }
+      const newLeads = { ...current.groupFacultyLeads }
       delete newLeads[groupName]
       return {
         ...prev,
         [sectionName]: {
-          ...state,
+          ...current,
           groups: newGroups,
           groupFacultyLeads: newLeads,
-          unassigned: [...state.unassigned, ...students],
         },
       }
+    })
+    if (students.length === 0) return
+    setSharedUnassigned(prev => {
+      const existing = new Set(prev.map(studentKey))
+      return [...prev, ...students.filter((s) => !existing.has(studentKey(s)))]
     })
   }
 
@@ -410,7 +464,6 @@ export default function CreateCoursePage() {
       const movingStudents = from.groups[groupName] ?? []
       const movingFacultyLead = from.groupFacultyLeads[groupName] ?? ""
 
-      // Pick a non-colliding name in the destination
       const existingNames = new Set(Object.keys(to.groups))
       let newName = groupName
       if (existingNames.has(newName)) {
@@ -464,29 +517,79 @@ export default function CreateCoursePage() {
     if (!draggedStudent) return
 
     const { student, fromGroup, fromSection } = draggedStudent
+    const fromShared = fromGroup === UNASSIGNED_GROUP || fromSection === SHARED_POOL
+    const toShared = toGroup === UNASSIGNED_GROUP
 
-    if (fromSection !== toSection) return
-    if (fromGroup === toGroup) return
+    if (fromShared && toShared) return
+    if (!fromShared && fromSection === toSection && fromGroup === toGroup) return
 
-    setSectionStates(prev => {
-      const state = prev[toSection]
-      const newGroups = { ...state.groups }
-      let newUnassigned = [...state.unassigned]
+    if (fromShared && !toShared) {
+      setSharedUnassigned(prev => withoutStudent(prev, student))
+      setSectionStates(prev => {
+        const state = prev[toSection]
+        if (!state) return prev
+        return {
+          ...prev,
+          [toSection]: {
+            ...state,
+            groups: {
+              ...state.groups,
+              [toGroup]: [...withoutStudent(state.groups[toGroup] ?? [], student), student],
+            },
+          },
+        }
+      })
+    } else if (!fromShared && toShared) {
+      setSectionStates(prev => {
+        const state = prev[fromSection]
+        if (!state) return prev
+        return {
+          ...prev,
+          [fromSection]: {
+            ...state,
+            groups: {
+              ...state.groups,
+              [fromGroup]: withoutStudent(state.groups[fromGroup] ?? [], student),
+            },
+          },
+        }
+      })
+      setSharedUnassigned(prev => [...withoutStudent(prev, student), student])
+    } else if (!fromShared && !toShared) {
+      setSectionStates(prev => {
+        const fromState = prev[fromSection]
+        const toState = prev[toSection]
+        if (!fromState || !toState) return prev
 
-      if (fromGroup === "__unassigned__") {
-        newUnassigned = newUnassigned.filter(s => s.email !== student.email)
-      } else {
-        newGroups[fromGroup] = (newGroups[fromGroup] ?? []).filter(s => s.email !== student.email)
-      }
+        if (fromSection === toSection) {
+          const groups = { ...fromState.groups }
+          groups[fromGroup] = withoutStudent(groups[fromGroup] ?? [], student)
+          groups[toGroup] = [...withoutStudent(groups[toGroup] ?? [], student), student]
+          return {
+            ...prev,
+            [toSection]: { ...fromState, groups },
+          }
+        }
 
-      if (toGroup === "__unassigned__") {
-        newUnassigned = [...newUnassigned, student]
-      } else {
-        newGroups[toGroup] = [...(newGroups[toGroup] ?? []), student]
-      }
-
-      return { ...prev, [toSection]: { ...state, groups: newGroups, unassigned: newUnassigned } }
-    })
+        return {
+          ...prev,
+          [fromSection]: {
+            ...fromState,
+            groups: {
+              ...fromState.groups,
+              [fromGroup]: withoutStudent(fromState.groups[fromGroup] ?? [], student),
+            },
+          },
+          [toSection]: {
+            ...toState,
+            groups: {
+              ...toState.groups,
+              [toGroup]: [...withoutStudent(toState.groups[toGroup] ?? [], student), student],
+            },
+          },
+        }
+      })
+    }
 
     setDraggedStudent(null)
     setDragOverGroup(null)
@@ -532,39 +635,60 @@ export default function CreateCoursePage() {
           <Card className="pt-4">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Upload className="size-5 text-blue-600" /> Upload .CSV File
+                <Upload className="size-5 text-blue-600" /> Students
               </CardTitle>
-              <CardDescription>Upload course students information file</CardDescription>
+              <CardDescription>
+                Upload a CSV or type students in manually. CSV columns: User Name, First Name, Last Name
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col w-full gap-2">
-                <div className="flex gap-2">
-                  <Input
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    type="file"
-                    accept=".csv"
-                    className="pt-2 cursor-pointer"
-                  />
-                  <Button className="cursor-pointer flex-shrink-0" variant="secondary" onClick={handleClear}>
-                    <X /> Clear
-                  </Button>
+              <div className="flex flex-col w-full gap-6">
+                <div className="flex flex-col w-full gap-2">
+                  <Label className="text-sm font-medium text-slate-600">Upload .CSV File</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      type="file"
+                      accept=".csv"
+                      className="pt-2 cursor-pointer"
+                    />
+                    <Button className="cursor-pointer flex-shrink-0" variant="secondary" onClick={handleClear}>
+                      <X /> Clear
+                    </Button>
+                  </div>
+                  {fileUploadError && (
+                    <Alert className="bg-red-50" variant="destructive">
+                      <AlertCircleIcon />
+                      <AlertTitle>Upload failed!</AlertTitle>
+                      <AlertDescription>{fileUploadError}</AlertDescription>
+                    </Alert>
+                  )}
+                  {selectedFile && !fileUploadError && (
+                    <Alert className="text-green-600 bg-green-50">
+                      <CheckCircle2Icon />
+                      <AlertTitle>
+                        Success! Loaded students from <span className="font-mono">{selectedFile.name}</span>
+                      </AlertTitle>
+                    </Alert>
+                  )}
                 </div>
-                {fileUploadError && (
-                  <Alert className="bg-red-50" variant="destructive">
-                    <AlertCircleIcon />
-                    <AlertTitle>Upload failed!</AlertTitle>
-                    <AlertDescription>{fileUploadError}</AlertDescription>
-                  </Alert>
-                )}
-                {selectedFile && !fileUploadError && (
-                  <Alert className="text-green-600 bg-green-50">
-                    <CheckCircle2Icon />
-                    <AlertTitle>
-                      Success! {totalStudents} students loaded from <span className="font-mono">{selectedFile.name}</span>
-                    </AlertTitle>
-                  </Alert>
-                )}
+
+                <div className="border-t pt-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <UserPlus className="size-4 text-blue-600" />
+                    <Label className="text-sm font-medium text-slate-600">Add student manually</Label>
+                  </div>
+                  <AddStudentForm onAdd={handleAddManualStudent} disabled={isPending} />
+                  {totalStudents > 0 && (
+                    <p className="text-sm text-slate-500">
+                      {totalStudents} student{totalStudents === 1 ? "" : "s"} ready to assign
+                      {sharedUnassigned.length > 0
+                        ? ` · ${sharedUnassigned.length} unassigned`
+                        : ""}
+                    </p>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -592,7 +716,9 @@ export default function CreateCoursePage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="course-description" className="text-sm font-medium text-slate-600">Course Description</Label>
-                  <Textarea id="course-description" placeholder="Enter a brief description of the course..." className="resize-none" />
+                  <Textarea
+                    value={courseDescription} onChange={(e) => setCourseDescription(e.target.value)}
+                    id="course-description" placeholder="Enter a brief description of the course..." className="resize-none" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-slate-600">Semester</Label>
@@ -724,7 +850,7 @@ export default function CreateCoursePage() {
               section={section}
               index={i + 1}
               groups={sectionStates[section.name]?.groups ?? {}}
-              unassigned={sectionStates[section.name]?.unassigned ?? []}
+              unassigned={sharedUnassigned}
               groupSize={sectionStates[section.name]?.groupSize ?? DEFAULT_GROUP_SIZE}
               facultyMembers={facultyUsers}
               groupFacultyLeads={sectionStates[section.name]?.groupFacultyLeads ?? {}}
@@ -747,6 +873,7 @@ export default function CreateCoursePage() {
                 .filter(s => s.name !== section.name)
                 .map(s => ({ id: s.name, label: s.name }))}
               onMoveGroup={handleMoveGroup}
+              onRemoveStudent={handleRemoveStudent}
             />
           ))}
 

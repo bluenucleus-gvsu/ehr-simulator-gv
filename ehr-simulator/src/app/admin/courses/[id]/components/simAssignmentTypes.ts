@@ -1,10 +1,15 @@
-/** Shared row shape for course simulation assignment tables (admin course detail). */
 export interface SimAssignment {
   id: string;
   simTime: string;
   presimTime: string;
   sessionId: string | null;
   sessionStatus: string | null;
+  sessions?: Array<{
+    id: string;
+    status: string | null;
+    groupId: string | null;
+    currentPhase: number | null;
+  }>;
   sectionName: string;
   sectionId: string;
   caseName: string;

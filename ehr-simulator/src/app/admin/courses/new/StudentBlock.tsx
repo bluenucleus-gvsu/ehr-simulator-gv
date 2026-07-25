@@ -1,14 +1,16 @@
 "use client"
 import React from "react"
-import { GripVertical } from "lucide-react"
+import { GripVertical, X } from "lucide-react"
 import { Student } from "./types"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 interface StudentBlockProps {
   student: Student
   draggable?: boolean
   onDragStart?: (e: React.DragEvent, student: Student, fromGroup?: string, fromSection?: string) => void
   onDragEnd?: () => void
+  onRemove?: (student: Student) => void
   className?: string
   isDimmed?: boolean
   fromGroup?: string
@@ -20,6 +22,7 @@ export const StudentBlock = ({
   draggable = true,
   onDragStart,
   onDragEnd,
+  onRemove,
   className = "",
   isDimmed = false,
   fromGroup,
@@ -46,6 +49,23 @@ export const StudentBlock = ({
           {student.email ?? ""}
         </p>
       </div>
+      {onRemove && (
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="h-6 w-6 p-0 flex-shrink-0 text-slate-400 hover:text-red-600 hover:bg-red-50"
+          onClick={(e) => {
+            e.stopPropagation()
+            e.preventDefault()
+            onRemove(student)
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          aria-label={`Remove ${student.full_name ?? "student"}`}
+        >
+          <X className="w-3.5 h-3.5" />
+        </Button>
+      )}
     </div>
   )
 }

@@ -119,7 +119,9 @@ export async function getSectionCaseAssignments(courseId: string) {
           id,
           status,
           started_at,
-          completed_at
+          completed_at,
+          group_id,
+          current_phase
         ),
         cases!section_assignments_case_id_fkey (
           id,
@@ -141,7 +143,6 @@ export async function getSectionCaseAssignments(courseId: string) {
     return result
   }
 
-  // explicitly get TS to recognize cases as object, not array
   const cleanData = data?.map((item) => {
     const cleanedAssignments = item.section_assignments.map(assignment => {
       const assignmentSessions = Array.isArray((assignment as { case_sessions?: unknown[] }).case_sessions)
@@ -150,6 +151,8 @@ export async function getSectionCaseAssignments(courseId: string) {
           status: string | null;
           started_at: string | null;
           completed_at: string | null;
+          group_id: string | null;
+          current_phase: number | null;
         }>)
         : [];
       const selectedSession =
@@ -165,6 +168,7 @@ export async function getSectionCaseAssignments(courseId: string) {
       return {
         ...assignment,
         cases: _caseData,
+        sessions: assignmentSessions,
         session_id: selectedSession?.id ?? null,
         session_status: selectedSession?.status ?? null,
       };
@@ -204,7 +208,17 @@ export async function createSectionCaseAssignment(payload: SectionAssignmentInse
     };
   }
 
-  revalidatePath('/courses');
+  revalidatePath('/admin/courses');
+  if (data?.section_id) {
+    const { data: section } = await supabase
+      .from("sections")
+      .select("course_id")
+      .eq("id", data.section_id)
+      .maybeSingle();
+    if (section?.course_id) {
+      revalidatePath(`/admin/courses/${section.course_id}`);
+    }
+  }
 
   return {
     success: true,

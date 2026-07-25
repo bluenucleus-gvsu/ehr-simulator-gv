@@ -84,11 +84,11 @@ function toISO(date: Date | undefined, time: string): string | null {
 
 interface DateTimePickerProps {
   label: string
-  value: string | null | undefined   // timestamptz ISO string
+  value: string | null | undefined
   onChange: (iso: string | null) => void
 }
 
-function DateTimePicker({ label, value, onChange }: DateTimePickerProps) {
+export function DateTimePicker({ label, value, onChange }: DateTimePickerProps) {
   const date = isoToDate(value)
   const time = isoToTimeInput(value)
 
@@ -167,6 +167,9 @@ interface SectionCardProps {
   availableSections?: { id: string; label: string }[]
   /** Called when user moves a group to another section */
   onMoveGroup?: (fromSectionId: string, groupName: string, toSectionId: string) => void
+  /** When true, only render group controls (no section header/schedule) */
+  groupsOnly?: boolean
+  onRemoveStudent?: (student: Student) => void
 }
 
 /** Zero-pad a 1-based index: 1 → "01", 12 → "12" */
@@ -199,6 +202,8 @@ export const SectionCard = ({
   onDrop,
   availableSections = [],
   onMoveGroup,
+  groupsOnly = false,
+  onRemoveStudent,
 }: SectionCardProps) => {
   const [expanded, setExpanded] = useState(true)
 
@@ -207,48 +212,11 @@ export const SectionCard = ({
   const unassignedDropKey = `${section.name}::__unassigned__`
   const isOverUnassigned =
     dragOverGroup === unassignedDropKey &&
-    draggedStudent?.fromSection === section.name &&
     draggedStudent?.fromGroup !== "__unassigned__"
 
-  return (
-    <Card className="border-2 border-slate-200 overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setExpanded(v => !v)}
-        className="cursor-pointer w-full flex items-center justify-between gap-2 px-4 sm:px-5 py-3.5 bg-slate-50/60 hover:brightness-95 transition-all text-left"
-      >
-        <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
-          <span className="text-base font-bold text-slate-800 flex-shrink-0">{label}</span>
-          {section.start_date && (
-            <Badge variant="outline" className="text-xs">
-              Starts {format(parseISO(section.start_date as string), "MMM d, yyyy")}
-            </Badge>
-          )}
-          {section.end_date && (
-            <Badge variant="outline" className="text-xs">
-              Ends {format(parseISO(section.end_date as string), "MMM d, yyyy")}
-            </Badge>
-          )}
-          {section.meeting_time && (
-            <Badge variant="outline" className="text-xs">
-              Meets {format(parseISO(section.meeting_time as string), "MMM d, yyyy 'at' h:mm a")}
-            </Badge>
-          )}
-          <Badge variant="secondary" className="text-xs">
-            {totalAssigned} assigned
-          </Badge>
-          <Badge variant="secondary" className="text-xs">
-            {unassigned.length} unassigned
-          </Badge>
-        </div>
-        {expanded
-          ? <ChevronUp className="w-4 h-4 text-slate-500 flex-shrink-0" />
-          : <ChevronDown className="w-4 h-4 text-slate-500 flex-shrink-0" />}
-      </button>
-
-      {expanded && (
-        <CardContent className="p-4 sm:p-5 pt-3 sm:pt-3 space-y-5">
-          {/* Schedule */}
+  const groupControls = (
+          <>
+          {!groupsOnly && (
           <div className="pb-3 border-b border-slate-100">
             <p className="text-xs font-semibold text-slate-500 mb-3">Schedule</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -269,6 +237,7 @@ export const SectionCard = ({
               />
             </div>
           </div>
+          )}
 
           {/* Group controls */}
           <div className="flex items-center flex-wrap gap-2">
@@ -317,78 +286,133 @@ export const SectionCard = ({
             </Button>
           </div>
 
-          {(Object.keys(groups).length > 0 || unassigned.length > 0) && (
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1 min-w-0">
-                {Object.keys(groups).length === 0 ? (
-                  <div className="flex items-center justify-center h-24 border-2 border-dashed border-slate-200 rounded-lg">
-                    <p className="text-sm text-slate-400 text-center px-4">No groups yet — click "Randomly Assign" or "Add Group"</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
-                    {Object.entries(groups)
-                      .sort(([a], [b]) => a.localeCompare(b))
-                      .map(([groupName, students]) => (
-                        <GroupCard
-                          key={groupName}
-                          groupName={groupName}
-                          students={students}
-                          sectionId={section.name}
-                          facultyMembers={facultyMembers}
-                          facultyLead={groupFacultyLeads[groupName] ?? ""}
-                          onFacultyLeadChange={onGroupFacultyLeadChange}
-                          draggedStudent={draggedStudent}
-                          dragOverGroup={dragOverGroup}
-                          onDragStart={onDragStart}
-                          onDragEnd={onDragEnd}
-                          onDragOver={onDragOver}
-                          onDragLeave={onDragLeave}
-                          onDrop={onDrop}
-                          onRenameGroup={onRenameGroup}
-                          onDeleteGroup={onDeleteGroup}
-                          availableSections={availableSections}
-                          onMoveGroup={onMoveGroup}
-                        />
-                      ))}
-                  </div>
-                )}
-              </div>
-
-              <div
-                onDragOver={(e) => onDragOver(e, section.name, "__unassigned__")}
-                onDragLeave={onDragLeave}
-                onDrop={(e) => onDrop(e, "__unassigned__", section.name)}
-                className={`w-full lg:w-52 xl:w-56 flex-shrink-0 border-2 border-dashed rounded-lg p-3 transition-all ${isOverUnassigned
-                  ? "border-blue-400 bg-blue-50"
-                  : "border-slate-200 bg-slate-50/50"
-                  }`}
-              >
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Users2 className="w-3.5 h-3.5 text-slate-400" />
-                  <p className="text-xs font-semibold text-slate-500">Unassigned</p>
-                  <Badge variant="secondary" className="text-xs ml-auto">{unassigned.length}</Badge>
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1 min-w-0">
+              {Object.keys(groups).length === 0 ? (
+                <div
+                  onDragOver={(e) => onDragOver(e, section.name, "__unassigned__")}
+                  onDragLeave={onDragLeave}
+                  onDrop={(e) => onDrop(e, "__unassigned__", section.name)}
+                  className="flex items-center justify-center h-24 border-2 border-dashed border-slate-200 rounded-lg"
+                >
+                  <p className="text-sm text-slate-400 text-center px-4">
+                    No groups yet — click &quot;Randomly Assign&quot; or &quot;Add Group&quot;, or drop students into Unassigned
+                  </p>
                 </div>
-                <div className="space-y-1.5">
-                  {unassigned.length === 0 && (
-                    <p className="text-xs text-slate-400 italic text-center py-4">All assigned!</p>
-                  )}
-                  {[...unassigned]
-                    .sort((a, b) => (a.full_name ?? "").localeCompare(b.full_name ?? ""))
-                    .map(student => (
-                      <StudentBlock
-                        key={student.email}
-                        student={student}
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+                  {Object.entries(groups)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([groupName, students]) => (
+                      <GroupCard
+                        key={groupName}
+                        groupName={groupName}
+                        students={students}
+                        sectionId={section.name}
+                        facultyMembers={facultyMembers}
+                        facultyLead={groupFacultyLeads[groupName] ?? ""}
+                        onFacultyLeadChange={onGroupFacultyLeadChange}
+                        draggedStudent={draggedStudent}
+                        dragOverGroup={dragOverGroup}
                         onDragStart={onDragStart}
                         onDragEnd={onDragEnd}
-                        isDimmed={draggedStudent?.student.email === student.email}
-                        fromGroup="__unassigned__"
-                        fromSection={section.name}
+                        onDragOver={onDragOver}
+                        onDragLeave={onDragLeave}
+                        onDrop={onDrop}
+                        onRenameGroup={onRenameGroup}
+                        onDeleteGroup={onDeleteGroup}
+                        availableSections={availableSections}
+                        onMoveGroup={onMoveGroup}
+                        onRemoveStudent={onRemoveStudent}
                       />
                     ))}
                 </div>
+              )}
+            </div>
+
+            <div
+              onDragOver={(e) => onDragOver(e, section.name, "__unassigned__")}
+              onDragLeave={onDragLeave}
+              onDrop={(e) => onDrop(e, "__unassigned__", section.name)}
+              className={`w-full lg:w-52 xl:w-56 flex-shrink-0 border-2 border-dashed rounded-lg p-3 transition-all ${isOverUnassigned
+                ? "border-blue-400 bg-blue-50"
+                : "border-slate-200 bg-slate-50/50"
+                }`}
+            >
+              <div className="flex items-center gap-1.5 mb-2">
+                <Users2 className="w-3.5 h-3.5 text-slate-400" />
+                <p className="text-xs font-semibold text-slate-500">Unassigned</p>
+                <Badge variant="secondary" className="text-xs ml-auto">{unassigned.length}</Badge>
+              </div>
+              <div className="space-y-1.5">
+                {unassigned.length === 0 && (
+                  <p className="text-xs text-slate-400 italic text-center py-4">
+                    Drop students here
+                  </p>
+                )}
+                {[...unassigned]
+                  .sort((a, b) => (a.full_name ?? "").localeCompare(b.full_name ?? ""))
+                  .map(student => (
+                    <StudentBlock
+                      key={student.email}
+                      student={student}
+                      onDragStart={onDragStart}
+                      onDragEnd={onDragEnd}
+                      onRemove={onRemoveStudent}
+                      isDimmed={draggedStudent?.student.email === student.email}
+                      fromGroup="__unassigned__"
+                      fromSection="__shared__"
+                    />
+                  ))}
               </div>
             </div>
+          </div>
+          </>
+  )
+
+  if (groupsOnly) {
+    return <div className="space-y-5">{groupControls}</div>
+  }
+
+  return (
+    <Card className="border-2 border-slate-200 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setExpanded(v => !v)}
+        className="cursor-pointer w-full flex items-center justify-between gap-2 px-4 sm:px-5 py-3.5 bg-slate-50/60 hover:brightness-95 transition-all text-left"
+      >
+        <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+          <span className="text-base font-bold text-slate-800 flex-shrink-0">{label}</span>
+          {section.start_date && (
+            <Badge variant="outline" className="text-xs">
+              Starts {format(parseISO(section.start_date as string), "MMM d, yyyy")}
+            </Badge>
           )}
+          {section.end_date && (
+            <Badge variant="outline" className="text-xs">
+              Ends {format(parseISO(section.end_date as string), "MMM d, yyyy")}
+            </Badge>
+          )}
+          {section.meeting_time && (
+            <Badge variant="outline" className="text-xs">
+              Meets {format(parseISO(section.meeting_time as string), "MMM d, yyyy 'at' h:mm a")}
+            </Badge>
+          )}
+          <Badge variant="secondary" className="text-xs">
+            {totalAssigned} assigned
+          </Badge>
+          <Badge variant="secondary" className="text-xs">
+            {unassigned.length} unassigned
+          </Badge>
+        </div>
+        {expanded
+          ? <ChevronUp className="w-4 h-4 text-slate-500 flex-shrink-0" />
+          : <ChevronDown className="w-4 h-4 text-slate-500 flex-shrink-0" />}
+      </button>
+
+      {expanded && (
+        <CardContent className="p-4 sm:p-5 pt-3 sm:pt-3 space-y-5">
+          {groupControls}
         </CardContent>
       )}
     </Card>
