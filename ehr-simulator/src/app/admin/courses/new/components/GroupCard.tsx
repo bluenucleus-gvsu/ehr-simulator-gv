@@ -27,7 +27,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Student, FacultyMember } from "./types"
+import { Student, FacultyMember } from "../types"
 import StudentBlock from "./StudentBlock"
 
 export type { Student, FacultyMember }

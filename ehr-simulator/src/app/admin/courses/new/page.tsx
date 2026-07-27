@@ -5,9 +5,6 @@ import {
   X,
   ArrowLeft,
   ArrowRight,
-  Upload,
-  AlertCircleIcon,
-  CheckCircle2Icon,
   Layers,
   Plus,
   Minus,
@@ -16,11 +13,11 @@ import {
   ChevronsUpDown,
   Loader2,
   Shuffle,
+  RefreshCcw,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -29,13 +26,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
-import { ChangeEvent, useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Student, FacultyMember, SectionData } from "./types"
-import { SectionCard, SectionGroups, generateGroupNames } from "./SectionCard"
+import { SectionCard, SectionGroups, generateGroupNames } from "./components/SectionCard"
 
 import { getAllFacultyUsers, getAllAdminUsers, provisionStudents, getUsersByEmails } from "@/actions/users"
 import { createCourse, createSection, createGroup, createGroupMembers } from "@/actions/courses"
-import StudentBlock from "./StudentBlock"
+import StudentBlock from "./components/StudentBlock"
+import AddStudent from "./components/AddStudent"
 interface SectionState {
   groups: SectionGroups
   unassigned: Student[]
@@ -77,7 +75,6 @@ function makeSection(index: number): SectionData {
 
 export default function CreateCoursePage() {
   const router = useRouter()
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const [adminUsers, setAdminUsers] = useState<FacultyMember[]>([])
@@ -88,8 +85,6 @@ export default function CreateCoursePage() {
     getAllFacultyUsers().then(setFacultyUsers)
   }, [])
 
-  const [selectedFile, setSelectedFile] = useState<File>()
-  const [fileUploadError, setFileUploadError] = useState("")
   const [allStudents, setAllStudents] = useState<Student[]>([])
 
   const [courseName, setCourseName] = useState("")
@@ -193,81 +188,33 @@ export default function CreateCoursePage() {
     setTriggerSubmit(true)
   }
 
-  const parseCSV = (text: string): Student[] => {
-    const lines = text.trim().split("\n")
-    if (lines.length < 2) throw new Error("CSV file is empty or contains only headers")
-
-    const header = lines[0].split(",").map(h => h.replace(/"/g, "").trim())
-    const cols = ["User Name", "First Name", "Last Name"]
-    const indices = cols.map(col => header.indexOf(col))
-
-    if (indices.includes(-1)) {
-      throw new Error(`Missing columns: ${cols.filter((_, i) => indices[i] === -1).join(", ")}`)
-    }
-
-    const [uIdx, fIdx, lIdx] = indices
-
-    return lines.slice(1).filter(line => line.trim()).map(line => {
-      const values: string[] = []
-      let current = ""
-      let inQuotes = false
-      for (const char of line) {
-        if (char === '"') inQuotes = !inQuotes
-        else if (char === "," && !inQuotes) { values.push(current.trim()); current = "" }
-        else current += char
-      }
-      values.push(current.trim())
-
-      const clean = (idx: number) => values[idx]?.replace(/"/g, "") || ""
-      const userName = clean(uIdx)
-      const firstName = clean(fIdx)
-      const lastName = clean(lIdx)
-
-      return {
-        id: crypto.randomUUID(),
-        email: `${userName}@mail.gvsu.edu`,
-        full_name: `${firstName} ${lastName}`.trim(),
-        role: "student",
-        status: null,
-        created_at: null,
-        updated_at: null,
-      } satisfies Student
+  const handleImportStudents = (students: Student[]) => {
+    setAllStudents(students)
+    setSectionStates(prev => {
+      const next = { ...prev }
+      Object.keys(next).forEach((name, i) => {
+        next[name] = { ...next[name], unassigned: i === 0 ? students : [], groups: {} }
+      })
+      return next
     })
   }
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const handleAddStudent = (newStudent: Student) => {
+    setAllStudents((prev) => [...prev, newStudent]);
 
-    if (file.name.split(".").pop()?.toLowerCase() !== "csv") {
-      setFileUploadError(`Expected .csv, received .${file.name.split(".").pop()}`)
-      setSelectedFile(undefined)
-      setAllStudents([])
-      return
-    }
+    setSectionStates((prev) => {
+      const firstSectionName = sections[0]?.name || makeSectionName(0);
+      const firstSectionState = prev[firstSectionName] || makeSectionState();
 
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      try {
-        const students = parseCSV(event.target?.result as string)
-        setAllStudents(students)
-        setSectionStates(prev => {
-          const next = { ...prev }
-          Object.keys(next).forEach((name, i) => {
-            next[name] = { ...next[name], unassigned: i === 0 ? students : [], groups: {} }
-          })
-          return next
-        })
-        setSelectedFile(file)
-        setFileUploadError("")
-      } catch (err: any) {
-        setFileUploadError(err.message)
-        setSelectedFile(undefined)
-        setAllStudents([])
-      }
-    }
-    reader.readAsText(file)
-  }
+      return {
+        ...prev,
+        [firstSectionName]: {
+          ...firstSectionState,
+          unassigned: [...firstSectionState.unassigned, newStudent],
+        },
+      };
+    });
+  };
 
   const handleClear = () => {
     setAllStudents([])
@@ -276,9 +223,6 @@ export default function CreateCoursePage() {
       Object.keys(next).forEach(name => { next[name] = makeSectionState() })
       return next
     })
-    setSelectedFile(undefined)
-    setFileUploadError("")
-    if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
   const handleAddSection = () => {
@@ -373,6 +317,12 @@ export default function CreateCoursePage() {
         ...Object.values(state.groups).flat(),
       ]
       return { ...prev, [sectionName]: { ...state, groups: {}, unassigned: all } }
+    })
+  }
+
+  const handleReset = () => {
+    sections.map((section) => {
+      handleUnassignAll(section.name)
     })
   }
 
@@ -584,7 +534,6 @@ export default function CreateCoursePage() {
   }
 
   const assignedCourseFaculty = adminUsers.filter(f => courseFacultyIds.includes(f.id))
-  const totalStudents = allStudents.length
   const allUnassignedStudents = sections.flatMap((section) =>
     (sectionStates[section.name]?.unassigned ?? []).map((student) => ({
       sectionId: section.name,
@@ -621,45 +570,11 @@ export default function CreateCoursePage() {
       <div className="flex-1 p-4 sm:p-6 md:px-12 lg:px-24">
         <div className="max-w-7xl mx-auto space-y-6">
 
-          <Card className="pt-4">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Upload className="size-5 text-blue-600" /> Upload .CSV File
-              </CardTitle>
-              <CardDescription>Upload course students information file</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col w-full gap-2">
-                <div className="flex gap-2">
-                  <Input
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    type="file"
-                    accept=".csv"
-                    className="pt-2 cursor-pointer"
-                  />
-                  <Button className="cursor-pointer flex-shrink-0" variant="secondary" onClick={handleClear}>
-                    <X /> Clear
-                  </Button>
-                </div>
-                {fileUploadError && (
-                  <Alert className="bg-red-50" variant="destructive">
-                    <AlertCircleIcon />
-                    <AlertTitle>Upload failed!</AlertTitle>
-                    <AlertDescription>{fileUploadError}</AlertDescription>
-                  </Alert>
-                )}
-                {selectedFile && !fileUploadError && (
-                  <Alert className="text-green-600 bg-green-50">
-                    <CheckCircle2Icon />
-                    <AlertTitle>
-                      Success! {totalStudents} students loaded from <span className="font-mono">{selectedFile.name}</span>
-                    </AlertTitle>
-                  </Alert>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <AddStudent
+            onAddStudent={handleAddStudent}
+            onImportStudents={handleImportStudents}
+            onClearStudents={handleClear}
+          />
 
           <Card className="pt-4">
             <CardHeader>
@@ -784,9 +699,18 @@ export default function CreateCoursePage() {
                     {sections.length} {sections.length === 1 ? "section" : "sections"}
                   </Badge>
                 </CardTitle>
-                <CardDescription>Add or remove sections for this course</CardDescription>
+                <CardDescription>Section editing for this course</CardDescription>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleReset}
+                  className="cursor-pointer gap-1.5 h-8 text-xs"
+                >
+                  <RefreshCcw className="w-3.5 h-3.5"/> Reset
+                </Button>
                 <div className="flex items-center gap-2 border border-slate-200 rounded-lg px-2 py-1 bg-white">
                   <span className="text-xs font-medium text-slate-500">Global group size</span>
                   <div className="flex items-center gap-1">
@@ -849,6 +773,7 @@ export default function CreateCoursePage() {
                   section={section}
                   index={i + 1}
                   groups={sectionStates[section.name]?.groups ?? {}}
+                  unassigned={sectionStates[section.name]?.unassigned ?? []}
                   facultyMembers={facultyUsers}
                   groupFacultyLeads={sectionStates[section.name]?.groupFacultyLeads ?? {}}
                   onGroupFacultyLeadChange={handleGroupFacultyLeadChange}

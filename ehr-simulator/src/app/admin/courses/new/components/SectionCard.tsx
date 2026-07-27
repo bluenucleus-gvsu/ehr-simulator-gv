@@ -16,7 +16,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { Student, FacultyMember, SectionData } from "./types"
+import { Student, FacultyMember, SectionData } from "../types"
 import { GroupCard } from "./GroupCard"
 export type { FacultyMember, SectionData }
 
@@ -129,6 +129,7 @@ interface SectionCardProps {
   /** 1-based display index, used to derive the section name ("Section 01", etc.) */
   index: number
   groups: SectionGroups
+  unassigned: Student[]
   facultyMembers: FacultyMember[]
   groupFacultyLeads: Record<string, string>
   onGroupFacultyLeadChange: (sectionClientId: string, groupName: string, facultyId: string) => void
@@ -159,6 +160,7 @@ export const SectionCard = ({
   section,
   index,
   groups,
+  unassigned,
   facultyMembers,
   groupFacultyLeads,
   onGroupFacultyLeadChange,
@@ -261,11 +263,11 @@ export const SectionCard = ({
             </Button>
           </div>
 
-          {Object.keys(groups).length > 0 && (
+          {(Object.keys(groups).length > 0 || unassigned.length > 0) && (
             <div className="flex flex-col gap-4">
               <div className="flex-1 min-w-0">
                 {Object.keys(groups).length === 0 ? (
-                  <div className="flex items-center justify-center h-24 border-2 border-dashed border-slate-200 rounded-lg">
+                  <div className="flex items-center justify-center h-24 w-full border-2 border-dashed border-slate-200 rounded-lg">
                     <p className="text-sm text-slate-400 text-center px-4">No groups yet — click "Randomly Assign" or "Add Group"</p>
                   </div>
                 ) : (
