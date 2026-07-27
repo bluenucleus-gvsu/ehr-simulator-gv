@@ -18,6 +18,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Student, FacultyMember, SectionData } from "../types"
 import { GroupCard } from "./GroupCard"
+import UnassignDialog from "./UnassignDialog"
 export type { FacultyMember, SectionData }
 
 export type SectionGroups = Record<string, Student[]>
@@ -243,15 +244,22 @@ export const SectionCard = ({
 
           {/* Group controls */}
           <div className="flex items-center flex-wrap gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={onUnassignAll}
-              className="cursor-pointer gap-1.5 h-8 text-xs"
-            >
-              <UserX className="w-3.5 h-3.5" /> Unassign All
-            </Button>
+            {/* Unassign Dialog with Button Trigger */}
+            <UnassignDialog
+              title={`Unassign all students in ${label}?`}
+              confirmText="Unassign All"
+              onConfirm={onUnassignAll}
+              trigger={
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="cursor-pointer gap-1.5 h-8 text-xs"
+                >
+                  <UserX className="w-3.5 h-3.5" /> Unassign All
+                </Button>
+              }
+            />
             <Button
               type="button"
               size="sm"

@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react"
-import { Pencil, Check, Trash2, User, UserCog, X, ArrowUpDown } from "lucide-react"
+import { Pencil, Check, User, UserCog, X, ArrowUpDown } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,23 +12,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog"
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Student, FacultyMember } from "../types"
 import StudentBlock from "./StudentBlock"
+import UnassignDialog from "./UnassignDialog"
 
 export type { Student, FacultyMember }
 
@@ -177,27 +167,11 @@ export const GroupCard = ({
             )}
 
             {/* Delete */}
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button size="sm" variant="ghost" className="cursor-pointer h-6 w-6 p-0 flex-shrink-0">
-                  <Trash2 className="w-3 h-3 text-red-400" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Group {groupName}?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Students in this group will be moved to the unassigned pool.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onDeleteGroup(sectionId, groupName)} className="bg-red-600">
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <UnassignDialog
+              title={`Delete Group ${groupName}?`}
+              confirmText="Delete"
+              onConfirm={() => onDeleteGroup(sectionId, groupName)}
+            />
           </div>
         )}
         <Badge variant="secondary" className="text-xs whitespace-nowrap flex-shrink-0">

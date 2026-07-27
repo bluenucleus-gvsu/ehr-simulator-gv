@@ -34,6 +34,7 @@ import { getAllFacultyUsers, getAllAdminUsers, provisionStudents, getUsersByEmai
 import { createCourse, createSection, createGroup, createGroupMembers } from "@/actions/courses"
 import StudentBlock from "./components/StudentBlock"
 import AddStudent from "./components/AddStudent"
+import UnassignDialog from "./components/UnassignDialog"
 interface SectionState {
   groups: SectionGroups
   unassigned: Student[]
@@ -694,15 +695,22 @@ export default function CreateCoursePage() {
                 <CardDescription>Section editing for this course</CardDescription>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={handleReset}
-                  className="cursor-pointer gap-1.5 h-8 text-xs"
-                >
-                  <RefreshCcw className="w-3.5 h-3.5"/> Reset
-                </Button>
+                <UnassignDialog
+                  title="Reset all sections?"
+                  description="All students across every section will be returned to the unassigned pool."
+                  confirmText="Reset All"
+                  onConfirm={handleReset}
+                  trigger={
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="cursor-pointer gap-1.5 h-8 text-xs"
+                    >
+                      <RefreshCcw className="w-3.5 h-3.5" /> Reset
+                    </Button>
+                  }
+                />
                 <div className="flex items-center gap-2 border border-slate-200 rounded-lg px-2 py-1 bg-white">
                   <span className="text-xs font-medium text-slate-500">Global group size</span>
                   <div className="flex items-center gap-1">
