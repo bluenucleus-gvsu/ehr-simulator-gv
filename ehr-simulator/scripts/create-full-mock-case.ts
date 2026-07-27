@@ -455,6 +455,7 @@ async function runCreateFullMockCase() {
     contact: "Daniel Hart",
     contactRelationship: "Son",
     contactPhone: "(616) 555-0100",
+    case_photo_url: "",
   };
 
   const created = await saveCaseData({
