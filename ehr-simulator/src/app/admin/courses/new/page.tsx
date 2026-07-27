@@ -449,7 +449,6 @@ export default function CreateCoursePage() {
 
     const { student, fromGroup, fromSection } = draggedStudent
 
-    // Prevent dropping into the exact same spot
     if (fromGroup === toGroup && fromSection === toSection) {
       setDraggedStudent(null)
       setDragOverGroup(null)
@@ -464,15 +463,12 @@ export default function CreateCoursePage() {
       const isComingFromUnassigned = fromGroup === "__unassigned__"
       const isSameSection = fromSection === toSection
 
-      // 1. Create copies of the origin state
       let updatedOriginUnassigned = [...originState.unassigned]
       const updatedOriginGroups = { ...originState.groups }
 
-      // 2. Create copies of the destination state (if same section, point to origin)
       let updatedDestUnassigned = isSameSection ? updatedOriginUnassigned : [...destState.unassigned]
       const updatedDestGroups = isSameSection ? updatedOriginGroups : { ...destState.groups }
 
-      // 3. REMOVE student from their origin
       if (isComingFromUnassigned) {
         updatedOriginUnassigned = updatedOriginUnassigned.filter(s => s.email !== student.email)
         if (isSameSection) updatedDestUnassigned = updatedOriginUnassigned
@@ -480,14 +476,12 @@ export default function CreateCoursePage() {
         updatedOriginGroups[fromGroup] = (updatedOriginGroups[fromGroup] ?? []).filter(s => s.email !== student.email)
       }
 
-      // 4. ADD student to their destination
       if (toGroup === "__unassigned__") {
         updatedDestUnassigned = [...updatedDestUnassigned, student]
       } else {
         updatedDestGroups[toGroup] = [...(updatedDestGroups[toGroup] ?? []), student]
       }
 
-      // 5. Return updated states
       return {
         ...prev,
         [fromSection]: {
@@ -517,11 +511,9 @@ export default function CreateCoursePage() {
     const rect = container.getBoundingClientRect()
     const mouseY = e.clientY
 
-    // Scroll down if near the bottom edge
     if (rect.bottom - mouseY < scrollThreshold) {
       container.scrollTop += scrollSpeed
     }
-    // Scroll up if near the top edge
     else if (mouseY - rect.top < scrollThreshold) {
       container.scrollTop -= scrollSpeed
     }
