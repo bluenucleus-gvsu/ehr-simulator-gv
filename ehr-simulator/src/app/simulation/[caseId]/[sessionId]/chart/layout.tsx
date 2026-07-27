@@ -25,6 +25,7 @@ const ChartLayout = async ({ children, params }: ChartLayoutProps) => {
   const routeContext = await resolveSimulationRouteContext(caseId);
   const serverCaseBundle: CaseBundle | null = await getCaseBundle(routeContext.caseId);
 
+  let initialPhotoOverride: string | null = null;
   if (serverCaseBundle) {
     const supabase = createServiceRoleSupabase();
     const { data: session } = await supabase
@@ -32,14 +33,15 @@ const ChartLayout = async ({ children, params }: ChartLayoutProps) => {
       .select("case_photo_url" as never)
       .eq("id", sessionId)
       .maybeSingle();
-    const overridePhotoUrl = (session as { case_photo_url?: string | null } | null)?.case_photo_url;
-    if (overridePhotoUrl) {
-      serverCaseBundle.caseRow = { ...serverCaseBundle.caseRow, case_photo_url: overridePhotoUrl };
-    }
+    initialPhotoOverride = (session as { case_photo_url?: string | null } | null)?.case_photo_url ?? null;
   }
 
   return (
-    <ChartSimulationBootstrap routeContext={routeContext} serverCaseBundle={serverCaseBundle}>
+    <ChartSimulationBootstrap
+      routeContext={routeContext}
+      serverCaseBundle={serverCaseBundle}
+      initialPhotoOverride={initialPhotoOverride}
+    >
       <SidebarProvider defaultOpen={false}>
         <SimSessionProvider>
           <SimulationShell>

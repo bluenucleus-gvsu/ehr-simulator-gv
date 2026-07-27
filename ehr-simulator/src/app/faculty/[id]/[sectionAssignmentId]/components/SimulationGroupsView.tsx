@@ -52,6 +52,7 @@ export default function SimulationGroupsView({
 
   const [groupPhoto, setGroupPhoto] = useState<Record<string, string | null>>(initialPhotos);
   const [uploadingPhotoFor, setUploadingPhotoFor] = useState<string | null>(null);
+  const [removingPhotoFor, setRemovingPhotoFor] = useState<string | null>(null);
   const [pendingPhotoGroupId, setPendingPhotoGroupId] = useState<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
@@ -101,6 +102,31 @@ export default function SimulationGroupsView({
       toast.error(error instanceof Error ? error.message : "The photo could not be updated. Please try again.");
     } finally {
       setUploadingPhotoFor(null);
+    }
+  };
+
+  const handleRemovePhotoOverride = async (groupId: string) => {
+    const group = simulation.groups.find((g) => g.id === groupId);
+    const sessionId = group?.caseSessionId;
+    if (!sessionId) {
+      toast.error("No valid case session was found for this group.");
+      return;
+    }
+
+    setRemovingPhotoFor(groupId);
+    try {
+      const response = await updateSessionPhoto(null, sessionId);
+      if (!response?.success) {
+        throw new Error(response?.message || "The photo override could not be removed. Please try again.");
+      }
+
+      setGroupPhoto((prev) => ({ ...prev, [groupId]: null }));
+      toast.success(`${group?.name ?? "Group"} photo override removed.`);
+    } catch (error) {
+      console.error("Failed to remove session photo override", error);
+      toast.error(error instanceof Error ? error.message : "The photo override could not be removed. Please try again.");
+    } finally {
+      setRemovingPhotoFor(null);
     }
   };
 
@@ -224,6 +250,7 @@ export default function SimulationGroupsView({
 
           const photoUrl = groupPhoto[group.id];
           const isUploadingPhoto = uploadingPhotoFor === group.id;
+          const isRemovingPhoto = removingPhotoFor === group.id;
 
           return (
             <div key={group.id} className="bg-white rounded-lg shadow p-4 space-y-3">
@@ -252,11 +279,22 @@ export default function SimulationGroupsView({
               {/* Case photo override */}
               <div className="flex items-center gap-3">
                 {photoUrl && (
-                  <img
-                    src={photoUrl}
-                    alt={`${group.name} case photo override`}
-                    className="h-10 w-10 rounded object-cover border"
-                  />
+                  <div className="flex items-center gap-1">
+                    <img
+                      src={photoUrl}
+                      alt={`${group.name} case photo override`}
+                      className="h-10 w-10 rounded object-cover border"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemovePhotoOverride(group.id)}
+                      disabled={isRemovingPhoto}
+                      aria-label="Remove case photo override"
+                      className="text-black text-sm leading-none disabled:opacity-50"
+                    >
+                      ×
+                    </button>
+                  </div>
                 )}
                 <button
                   type="button"

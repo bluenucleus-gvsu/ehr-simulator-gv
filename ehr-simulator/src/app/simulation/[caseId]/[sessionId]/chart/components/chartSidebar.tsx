@@ -2,11 +2,15 @@
 
 import { CircleUserRound } from "lucide-react";
 import Image from "next/image";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import { buildChartDataFromCaseRow } from "./chartData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
 import { useSimSessionContext } from "@/context/SimSessionContext";
+import { createBrowserSupabase } from "@/utils/supabase/client";
+
+const supabase = createBrowserSupabase();
 
 // Define types for local state
 interface MarCounts {
@@ -33,8 +37,9 @@ function ChartSidebarSkeleton() {
 }
 
 export default function ChartSidebar() {
-  const { caseBundle } = useSimulationCase();
+  const { caseBundle, initialPhotoOverride } = useSimulationCase();
   const { simStartTime } = useSimSessionContext();
+  const basePhotoUrl = (caseBundle?.caseRow as { case_photo_url?: string | null } | null | undefined)?.case_photo_url ?? null;
 
   const referenceTime = useMemo(
     () => new Date(simStartTime ?? Date.now()),
@@ -47,7 +52,34 @@ export default function ChartSidebar() {
       }),
     [caseBundle?.caseRow, referenceTime],
   );
-  const photoUrl = (caseBundle?.caseRow as { case_photo_url?: string | null } | null | undefined)?.case_photo_url;
+  const params = useParams();
+  const sessionId = params?.sessionId as string;
+
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const channel = supabase
+      .channel(`case-session-photo-${sessionId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "case_sessions",
+          filter: `id=eq.${sessionId}`,
+        },
+        (payload) => {
+          const newUrl = (payload.new as { case_photo_url?: string | null }).case_photo_url;
+          setPhotoUrl(newUrl || basePhotoUrl);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [sessionId, basePhotoUrl]);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(initialPhotoOverride || basePhotoUrl);
   const marData = useMemo<MarCounts>(() => {
     const orders = (caseBundle?.medicationOrders ?? []) as Array<{ priority?: string | null; frequency?: string | null }>;
     return orders.reduce(

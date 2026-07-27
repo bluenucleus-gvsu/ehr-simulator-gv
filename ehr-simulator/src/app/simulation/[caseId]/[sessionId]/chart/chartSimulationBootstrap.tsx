@@ -7,14 +7,20 @@ import { SimulationCaseProvider } from "@/context/SimulationCaseContext";
 export function ChartSimulationBootstrap({
   routeContext,
   serverCaseBundle,
+  initialPhotoOverride,
   children,
 }: {
   routeContext: SimulationRouteContext;
   serverCaseBundle: CaseBundle | null;
+  initialPhotoOverride: string | null;
   children: React.ReactNode;
 }) {
   return (
-    <SimulationCaseProvider routeContext={routeContext} caseBundle={serverCaseBundle}>
+    <SimulationCaseProvider
+      routeContext={routeContext}
+      caseBundle={serverCaseBundle}
+      initialPhotoOverride={initialPhotoOverride}
+    >
       {children}
     </SimulationCaseProvider>
   );
