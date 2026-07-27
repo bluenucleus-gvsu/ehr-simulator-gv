@@ -134,6 +134,7 @@ export type Database = {
         Row: {
           case_id: string | null
           completed_at: string | null
+          current_phase: number
           feedback: string | null
           group_id: string | null
           id: string
@@ -145,6 +146,7 @@ export type Database = {
         Insert: {
           case_id?: string | null
           completed_at?: string | null
+          current_phase?: number
           feedback?: string | null
           group_id?: string | null
           id?: string
@@ -156,6 +158,7 @@ export type Database = {
         Update: {
           case_id?: string | null
           completed_at?: string | null
+          current_phase?: number
           feedback?: string | null
           group_id?: string | null
           id?: string
@@ -216,6 +219,7 @@ export type Database = {
           medical_history: string[] | null
           mrn: number
           name: string
+          phase_count: number
           relationship_status_id: string | null
           religion: string | null
           requires_interpreter: boolean
@@ -252,6 +256,7 @@ export type Database = {
           medical_history?: string[] | null
           mrn?: never
           name: string
+          phase_count?: number
           relationship_status_id?: string | null
           religion?: string | null
           requires_interpreter?: boolean
@@ -288,6 +293,7 @@ export type Database = {
           medical_history?: string[] | null
           mrn?: never
           name?: string
+          phase_count?: number
           relationship_status_id?: string | null
           religion?: string | null
           requires_interpreter?: boolean
@@ -537,6 +543,7 @@ export type Database = {
           orientation: string | null
           orientation2: number | null
           output_selections: string | null
+          oxygen_device: string | null
           pain: string | null
           pain_aggravating_factors: string | null
           pain_alleviating_factors: string | null
@@ -554,8 +561,8 @@ export type Database = {
           skin: string | null
           speech: string | null
           spo2: string | null
-          spo2_source: string | null
           stool: string | null
+          supplemental_o2_rate: string | null
           tactile_disturbances: number | null
           temp: string | null
           temp_source: string | null
@@ -640,6 +647,7 @@ export type Database = {
           orientation?: string | null
           orientation2?: number | null
           output_selections?: string | null
+          oxygen_device?: string | null
           pain?: string | null
           pain_aggravating_factors?: string | null
           pain_alleviating_factors?: string | null
@@ -657,8 +665,8 @@ export type Database = {
           skin?: string | null
           speech?: string | null
           spo2?: string | null
-          spo2_source?: string | null
           stool?: string | null
+          supplemental_o2_rate?: string | null
           tactile_disturbances?: number | null
           temp?: string | null
           temp_source?: string | null
@@ -743,6 +751,7 @@ export type Database = {
           orientation?: string | null
           orientation2?: number | null
           output_selections?: string | null
+          oxygen_device?: string | null
           pain?: string | null
           pain_aggravating_factors?: string | null
           pain_alleviating_factors?: string | null
@@ -760,8 +769,8 @@ export type Database = {
           skin?: string | null
           speech?: string | null
           spo2?: string | null
-          spo2_source?: string | null
           stool?: string | null
+          supplemental_o2_rate?: string | null
           tactile_disturbances?: number | null
           temp?: string | null
           temp_source?: string | null
@@ -933,6 +942,7 @@ export type Database = {
           orientation: string | null
           orientation2: number | null
           output_selections: string | null
+          oxygen_device: string | null
           pain: string | null
           pain_aggravating_factors: string | null
           pain_alleviating_factors: string | null
@@ -950,8 +960,8 @@ export type Database = {
           skin: string | null
           speech: string | null
           spo2: string | null
-          spo2_source: string | null
           stool: string | null
+          supplemental_o2_rate: string | null
           tactile_disturbances: number | null
           temp: string | null
           temp_source: string | null
@@ -1039,6 +1049,7 @@ export type Database = {
           orientation?: string | null
           orientation2?: number | null
           output_selections?: string | null
+          oxygen_device?: string | null
           pain?: string | null
           pain_aggravating_factors?: string | null
           pain_alleviating_factors?: string | null
@@ -1056,8 +1067,8 @@ export type Database = {
           skin?: string | null
           speech?: string | null
           spo2?: string | null
-          spo2_source?: string | null
           stool?: string | null
+          supplemental_o2_rate?: string | null
           tactile_disturbances?: number | null
           temp?: string | null
           temp_source?: string | null
@@ -1145,6 +1156,7 @@ export type Database = {
           orientation?: string | null
           orientation2?: number | null
           output_selections?: string | null
+          oxygen_device?: string | null
           pain?: string | null
           pain_aggravating_factors?: string | null
           pain_alleviating_factors?: string | null
@@ -1162,8 +1174,8 @@ export type Database = {
           skin?: string | null
           speech?: string | null
           spo2?: string | null
-          spo2_source?: string | null
           stool?: string | null
+          supplemental_o2_rate?: string | null
           tactile_disturbances?: number | null
           temp?: string | null
           temp_source?: string | null
@@ -1599,6 +1611,7 @@ export type Database = {
           is_in_presim: boolean
           medication_order_id: string | null
           notes: string | null
+          phase: number
           status: string | null
           time_offset: number
         }
@@ -1611,6 +1624,7 @@ export type Database = {
           is_in_presim?: boolean
           medication_order_id?: string | null
           notes?: string | null
+          phase?: number
           status?: string | null
           time_offset: number
         }
@@ -1623,6 +1637,7 @@ export type Database = {
           is_in_presim?: boolean
           medication_order_id?: string | null
           notes?: string | null
+          phase?: number
           status?: string | null
           time_offset?: number
         }
@@ -1655,6 +1670,7 @@ export type Database = {
           is_in_presim: boolean
           medication_id: string
           ordering_provider: string | null
+          phase: number
           priority: Database["public"]["Enums"]["medication_priorities"]
         }
         Insert: {
@@ -1668,6 +1684,7 @@ export type Database = {
           is_in_presim?: boolean
           medication_id: string
           ordering_provider?: string | null
+          phase?: number
           priority: Database["public"]["Enums"]["medication_priorities"]
         }
         Update: {
@@ -1681,6 +1698,7 @@ export type Database = {
           is_in_presim?: boolean
           medication_id?: string
           ordering_provider?: string | null
+          phase?: number
           priority?: Database["public"]["Enums"]["medication_priorities"]
         }
         Relationships: [
@@ -1831,6 +1849,7 @@ export type Database = {
           id: string
           is_important: boolean
           is_in_presim: boolean
+          phase: number
           provider: string
           status: string
           title: string
@@ -1843,6 +1862,7 @@ export type Database = {
           id?: string
           is_important?: boolean
           is_in_presim?: boolean
+          phase?: number
           provider: string
           status: string
           title: string
@@ -1855,6 +1875,7 @@ export type Database = {
           id?: string
           is_important?: boolean
           is_in_presim?: boolean
+          phase?: number
           provider?: string
           status?: string
           title?: string
@@ -2231,6 +2252,7 @@ export type Database = {
           orientation: string | null
           orientation2: number | null
           output_selections: string | null
+          oxygen_device: string | null
           pain: string | null
           parenteral_nutrition: string | null
           paroxysmal_sweats: number | null
@@ -2244,8 +2266,8 @@ export type Database = {
           source_type: string | null
           speech: string | null
           spo2: string | null
-          spo2_source: string | null
           stool: string | null
+          supplemental_o2_rate: string | null
           tactile_disturbances: number | null
           temp: string | null
           temp_source: string | null
