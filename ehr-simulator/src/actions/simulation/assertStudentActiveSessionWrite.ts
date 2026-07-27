@@ -1,8 +1,7 @@
 "use server";
 
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "../../../database.types";
 import { createServerSupabase } from "@/utils/supabase/server";
+import { createServiceRoleSupabase } from "@/utils/supabase/service";
 
 const PRESIM_WRITE_MESSAGE =
   "Documentation is view-only in pre-simulation. Enter the active simulation from your profile to make changes.";
@@ -32,10 +31,7 @@ export async function assertStudentActiveSessionWrite(
     return { allowed: false, message: "You must be signed in to save simulation data." };
   }
 
-  const serviceSupabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
+  const serviceSupabase = createServiceRoleSupabase();
 
   const { data: profile } = await serviceSupabase
     .from("users")

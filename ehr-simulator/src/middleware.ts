@@ -2,9 +2,15 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 
 const CASE_BUILDER_MAINTENANCE_PATH = '/admin/case-builder-maintenance'
-const DEBUG_CASE_BUILDER_UNDER_MAINTENANCE = false;
+const DEBUG_CASE_BUILDER_UNDER_MAINTENANCE = true;
 
 export async function middleware(request: NextRequest) {
+  // Authentication pages must remain reachable even when a persisted session
+  // is corrupt or Supabase Auth is temporarily unavailable.
+  if (request.nextUrl.pathname.startsWith('/auth')) {
+    return NextResponse.next()
+  }
+
   if (
     request.nextUrl.pathname.startsWith('/admin/case-builder') &&
     request.nextUrl.pathname !== CASE_BUILDER_MAINTENANCE_PATH

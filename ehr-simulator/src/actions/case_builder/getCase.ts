@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient } from "@supabase/supabase-js";
+import { createServiceRoleSupabase } from "@/utils/supabase/service";
 
 export interface CaseBundle {
   caseRow: any
@@ -21,10 +21,7 @@ export async function getCaseBundle(
   caseId: string,
 ): Promise<CaseBundle> {
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
+  const supabase = createServiceRoleSupabase();
 
   const [
     caseRes,

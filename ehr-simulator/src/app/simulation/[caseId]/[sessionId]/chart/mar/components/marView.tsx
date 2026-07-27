@@ -57,6 +57,7 @@ export default function MarView({
   const { canEdit } = useStudentSimulationEditAccess();
   const { caseId } = useParams()
   const patientWristband = String(caseId)
+  const [scanningEnabled, setScanningEnabled] = useState(false)
   // med data
   const [selectedOrders, setSelectedOrders] = useState<MedicationOrder[]>([]);
   const [newAdministrations, setNewAdministrations] = useState<NewAdministrationData>({});
@@ -469,10 +470,19 @@ export default function MarView({
             Due
           </Toggle>
 
+
           <PatientStatusBadge isScanned={isScanned} />
         </div>
-
-        <div className='flex gap-4 lg:gap-10 xl:gap-30 2xl:gap-45'>
+        <div className='flex gap-2 h-8 items-center border p-2 rounded-md bg-gray-50'>
+          <Checkbox
+            checked={scanningEnabled}
+            onCheckedChange={() => setScanningEnabled(true)}
+            className='bg-white'
+            disabled={scanningEnabled}
+          />
+          <Label>{!scanningEnabled ? "Enable Scanning" : "Scanning Enabled"}</Label>
+        </div>
+        <div className='flex gap-4 xl:gap-20 2xl:gap-45'>
           <ColumnShiftControl
             columns={displayColumns}
             onColumnShift={handleTimeColChange}
