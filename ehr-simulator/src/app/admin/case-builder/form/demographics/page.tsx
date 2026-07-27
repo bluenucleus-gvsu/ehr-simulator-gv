@@ -147,10 +147,12 @@ export default function DemographicsForm() {
         contact: caseRow.emergency_contact_name ?? "",
         contactRelationship: caseRow.emergency_contact_relationship ?? "",
         contactPhone: caseRow.emergency_contact_phone ?? "",
+        case_photo_url: caseRow.case_photo_url ?? ""
       };
 
       onDataChange("demographics", mappedDemographics);
       setDemographicsData(mappedDemographics);
+      setCasePhotoUrl(mappedDemographics.case_photo_url || null);
 
       onDataChange("history", {
         medicalHistory: caseRow.medical_history ?? [],
