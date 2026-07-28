@@ -66,57 +66,37 @@ export default function SimulationGroupsView({
   };
 
   const confirmPhaseAdvancement = async () => {
-    if (!pendingPhaseGroup || isAdvancing) return;
+    if (!pendingPhaseGroup) return;
 
+    // 2. Safely grab the specific group's unique caseSessionId
     const group = simulation.groups.find((g) => g.id === pendingPhaseGroup.id);
     const sessionId = group?.caseSessionId;
     const updatedPhase = pendingPhaseGroup.selectedPhase;
     const groupId = pendingPhaseGroup.id;
 
-    if (!sessionId) {
-      const message = "No valid case session was found for this group.";
-      setAdvanceError(message);
-      toast.error(message);
-      return;
-    }
-
-    setIsAdvancing(true);
-    setAdvanceError(null);
-
-    try {
+    if (sessionId) {
       const response = await updateCurrentPhase(updatedPhase, sessionId);
 
-      if (!response?.success) {
-        const message = response?.message || "The phase could not be advanced. Please try again.";
+      if (response?.error) {
         console.error("Failed to advance phase", response);
-        setAdvanceError(message);
-        toast.error(message);
-        return;
+      } else {
+        // 3. Update the local state seamlessly on success
+        setGroupPhase((prev) => ({
+          ...prev,
+          [pendingPhaseGroup.id]: updatedPhase,
+        }));
       }
-
-      setGroupPhase((prev) => ({
-        ...prev,
-        [groupId]: updatedPhase,
-      }));
-      setPhaseDialog(false);
-      setPendingPhaseGroup(null);
-      toast.success(`${group.name} advanced to phase ${updatedPhase}.`);
-    } catch (error) {
-      const message = "The phase could not be advanced. Please try again.";
-      console.error("Failed to advance phase", error);
-      setAdvanceError(message);
-      toast.error(message);
-    } finally {
-      setIsAdvancing(false);
+    } else {
+      console.error("No valid case session ID found for this group.");
     }
-  };
-
-  const cancelPhaseAdvancement = () => {
-    if (isAdvancing) return;
 
     setPhaseDialog(false);
     setPendingPhaseGroup(null);
-    setAdvanceError(null);
+  };
+
+  const cancelPhaseAdvancement = () => {
+    setPhaseDialog(false);
+    setPendingPhaseGroup(null);
   };
 
   return (
@@ -282,8 +262,6 @@ export default function SimulationGroupsView({
         pendingPhaseGroup={pendingPhaseGroup}
         cancelPhaseAdvancement={cancelPhaseAdvancement}
         confirmPhaseAdvancement={confirmPhaseAdvancement}
-        isAdvancing={isAdvancing}
-        errorMessage={advanceError}
       />
 
     </div>
