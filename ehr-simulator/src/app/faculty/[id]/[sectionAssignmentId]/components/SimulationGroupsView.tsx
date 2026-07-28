@@ -5,7 +5,6 @@ import { FeedbackTarget, ActiveSimView } from "@/app/faculty/lib/types";
 import { updateCurrentPhase } from "@/actions/simulation";
 import { useRouter } from "next/navigation";
 import AdvanceAlertDialog from "./AdvanceAlertDialog";
-import { toast } from "sonner";
 
 function formatSimTime(dateStr: string) {
   return new Date(dateStr).toLocaleString(undefined, {
@@ -41,8 +40,6 @@ export default function SimulationGroupsView({
   const [groupPhase, setGroupPhase] = useState<Record<string, number>>(initialPhases);
   const [phaseDialog, setPhaseDialog] = useState(false);
   const [pendingPhaseGroup, setPendingPhaseGroup] = useState<{ id: string; name: string } | null>(null);
-  const [isAdvancing, setIsAdvancing] = useState(false);
-  const [advanceError, setAdvanceError] = useState<string | null>(null);
 
   const handleSubmit = (key: string, feedback: string) => {
     setSubmittedFeedback((prev) => ({ ...prev, [key]: feedback }));
@@ -50,66 +47,44 @@ export default function SimulationGroupsView({
   };
 
   const handlePhaseAdvancement = (id: string, name: string, currentPhase: number) => {
-    if (!isAdvancing && currentPhase < phases) {
-      setAdvanceError(null);
+    if (currentPhase < phases) {
       setPendingPhaseGroup({ id, name });
       setPhaseDialog(true);
     }
   };
 
   const confirmPhaseAdvancement = async () => {
-    if (!pendingPhaseGroup || isAdvancing) return;
+    if (!pendingPhaseGroup) return;
 
+    // 2. Safely grab the specific group's unique caseSessionId
     const group = simulation.groups.find((g) => g.id === pendingPhaseGroup.id);
     const sessionId = group?.caseSessionId;
     const currentPhaseNumber = groupPhase[pendingPhaseGroup.id] || 1;
     const updatedPhase = currentPhaseNumber + 1;
-    const groupId = pendingPhaseGroup.id;
 
-    if (!sessionId) {
-      const message = "No valid case session was found for this group.";
-      setAdvanceError(message);
-      toast.error(message);
-      return;
-    }
-
-    setIsAdvancing(true);
-    setAdvanceError(null);
-
-    try {
+    if (sessionId) {
       const response = await updateCurrentPhase(updatedPhase, sessionId);
 
-      if (!response?.success) {
-        const message = response?.message || "The phase could not be advanced. Please try again.";
+      if (response?.error) {
         console.error("Failed to advance phase", response);
-        setAdvanceError(message);
-        toast.error(message);
-        return;
+      } else {
+        // 3. Update the local state seamlessly on success
+        setGroupPhase((prev) => ({
+          ...prev,
+          [pendingPhaseGroup.id]: updatedPhase,
+        }));
       }
-
-      setGroupPhase((prev) => ({
-        ...prev,
-        [groupId]: updatedPhase,
-      }));
-      setPhaseDialog(false);
-      setPendingPhaseGroup(null);
-      toast.success(`${group.name} advanced to phase ${updatedPhase}.`);
-    } catch (error) {
-      const message = "The phase could not be advanced. Please try again.";
-      console.error("Failed to advance phase", error);
-      setAdvanceError(message);
-      toast.error(message);
-    } finally {
-      setIsAdvancing(false);
+    } else {
+      console.error("No valid case session ID found for this group.");
     }
-  };
-
-  const cancelPhaseAdvancement = () => {
-    if (isAdvancing) return;
 
     setPhaseDialog(false);
     setPendingPhaseGroup(null);
-    setAdvanceError(null);
+  };
+
+  const cancelPhaseAdvancement = () => {
+    setPhaseDialog(false);
+    setPendingPhaseGroup(null);
   };
 
   return (
@@ -237,7 +212,6 @@ export default function SimulationGroupsView({
                         <button
                           key={phaseIndex}
                           onClick={() => phaseIndex === currentPhase + 1 ? handlePhaseAdvancement(group.id, group.name, currentPhase) : null}
-                          disabled={isAdvancing || phaseIndex !== currentPhase + 1}
                           style={{
                             clipPath:
                               idx === 0
@@ -263,7 +237,7 @@ export default function SimulationGroupsView({
 
                 <button
                   onClick={() => handlePhaseAdvancement(group.id, group.name, currentPhase)}
-                  disabled={isAdvancing || currentPhase >= phases}
+                  disabled={currentPhase >= phases}
                   className="shrink-0 rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
                 >
                   Next Phase
@@ -299,8 +273,6 @@ export default function SimulationGroupsView({
         pendingPhaseGroup={pendingPhaseGroup}
         cancelPhaseAdvancement={cancelPhaseAdvancement}
         confirmPhaseAdvancement={confirmPhaseAdvancement}
-        isAdvancing={isAdvancing}
-        errorMessage={advanceError}
       />
 
     </div>
