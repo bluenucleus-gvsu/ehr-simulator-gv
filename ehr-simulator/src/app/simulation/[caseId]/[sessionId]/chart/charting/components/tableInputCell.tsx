@@ -42,9 +42,11 @@ export const TableInputCell = ({ getValue, row, column, table, readOnly = false 
 
   if (readOnly) {
     return (
-      <p className={`w-full h-6 text-right pr-2 text-xs ${alertFlag ? "text-red-600 font-medium" : "text-neutral-700"}`}>
-        {value}
-      </p>
+      <div className="flex items-center h-6">
+        <p className={`w-full text-right pr-2 text-xs ${alertFlag ? "text-red-600 font-medium" : "text-neutral-700"}`}>
+          {value}
+        </p>
+      </div>
     );
   }
 

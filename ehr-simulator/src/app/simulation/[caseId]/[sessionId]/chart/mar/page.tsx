@@ -11,7 +11,7 @@ interface PageProps {
   }>;
 }
 
-const mar = async ({ params }: PageProps) => {
+const Mar = async ({ params }: PageProps) => {
   const awaitedParams = await params;
   const { caseId: routeCaseId, sessionId } = awaitedParams;
   const routeContext = await resolveSimulationRouteContext(routeCaseId);
@@ -78,4 +78,4 @@ const mar = async ({ params }: PageProps) => {
 
 }
 
-export default mar;
+export default Mar;

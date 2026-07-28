@@ -348,5 +348,3 @@ export type ExtractData<T extends (...args: any) => Promise<ActionResponse<any>>
 
 export type SectionSimulationsData = ExtractData<typeof getSectionCaseAssignments>;
 export type CasesData = ExtractData<typeof getCaseByCourseId>;
-export type CaseCourseAssignments = ExtractData<typeof getCourseCaseAssignments>;
-export type CaseCourseAssignment = CaseCourseAssignments[number]
