@@ -34,6 +34,9 @@ export type ClinicalDocumentView = {
   source_type: string
 }
 
+const resolvePreviewSessionId = (id: string) =>
+  id === "preview" ? "00000000-0000-0000-0000-000000000000" : id;
+
 export async function submitStudentNote(note: EditableStudentNoteUpsert): Promise<ActionResponse<EditableStudentNote | ClinicalDocument>> {
   const writeGuard = await assertStudentActiveSessionWrite(note.case_session_id);
   if (!writeGuard.allowed) {
@@ -105,11 +108,13 @@ export async function getAllClinicalDocuments(caseId: string, caseSessionId: str
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
+  sessionId = resolvePreviewSessionId(sessionId);
+
   const { data, error } = await supabase
     .from('all_clinical_documents')
     .select('*')
     .eq('case_id', caseId)
-    .or(`case_session_id.eq.${caseSessionId},case_session_id.is.null`);
+    .or(`case_session_id.eq.${sessionId},case_session_id.is.null`);
 
   if (!error) {
     return {
@@ -129,7 +134,7 @@ export async function getAllClinicalDocuments(caseId: string, caseSessionId: str
         .from('editable_clinical_documents')
         .select('id, case_id, case_session_id, is_in_presim, category, specialty, author, time_offset, doc_text')
         .eq('case_id', caseId)
-        .eq('case_session_id', caseSessionId),
+        .eq('case_session_id', sessionId),
     ])
 
     const studentDocsMissing = (studentDocsRes.error as { code?: string } | null)?.code === 'PGRST205'
@@ -256,6 +261,8 @@ export async function getMedicationAdministrations(caseId: string, sessionId: st
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
+  sessionId = resolvePreviewSessionId(sessionId);
+
   const { data, error } = await supabase
     .from('all_medication_administrations')
     .select('*')
@@ -333,6 +340,8 @@ export async function getAllDocumentationData(caseId: string, sessionId: string)
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+
+  sessionId = resolvePreviewSessionId(sessionId);
 
   const { data, error } = await supabase
     .from('all_documentation_results')
@@ -416,23 +425,6 @@ export async function upsertDocumentationRows(payload: StudentDatabaseDocumentat
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const unsupportedLegacyColumns = new Set([
-    'spo2_source',
-    'pain_location',
-    'pain_characteristics',
-    'pain_alleviating_factors',
-    'pain_aggravating_factors',
-    'pain_interventions',
-    'urine_description',
-  ]);
-
-  const sanitizePayload = <T extends Record<string, unknown>>(rows: T[]): T[] =>
-    rows.map((row) =>
-      Object.fromEntries(
-        Object.entries(row).filter(([key]) => !unsupportedLegacyColumns.has(key))
-      ) as T
-    );
-
   const { data, error } = await supabase
     .from('editable_documentation_results')
     .upsert(payload, {
@@ -441,58 +433,6 @@ export async function upsertDocumentationRows(payload: StudentDatabaseDocumentat
 
   if (!error) {
     return { data, error: null };
-  }
-
-  // Some databases are missing newer documentation columns.
-  // Retry with a legacy-safe payload before broader table fallbacks.
-  const legacySafePayload = sanitizePayload(payload as Record<string, unknown>[]) as StudentDatabaseDocumentation[];
-  if ((error as { code?: string } | null)?.code === '42703' || (error as { code?: string } | null)?.code === 'PGRST204') {
-    const safeUpsertRes = await supabase
-      .from('editable_documentation_results')
-      .upsert(legacySafePayload, {
-        onConflict: 'case_session_id, time_offset'
-      });
-    if (!safeUpsertRes.error) {
-      return { data: safeUpsertRes.data, error: null };
-    }
-  }
-
-  // Some environments miss the unique constraint needed by upsert.
-  if ((error as { code?: string } | null)?.code === '42P10') {
-    const insertRes = await supabase
-      .from('editable_documentation_results')
-      .insert(legacySafePayload);
-    if (!insertRes.error) {
-      return { data: insertRes.data, error: null };
-    }
-    return { data: insertRes.data, error: insertRes.error };
-  }
-
-  // Backward-compatible fallback for environments without editable_documentation_results.
-  if ((error as { code?: string } | null)?.code === 'PGRST205') {
-    const fallbackPayload: Database['public']['Tables']['documentation_results']['Insert'][] = legacySafePayload.map((row) => {
-      const {
-        case_session_id,
-        user_id,
-        group_id,
-        ...rest
-      } = row;
-      void case_session_id;
-      void user_id;
-      void group_id;
-      return {
-        ...rest,
-      };
-    });
-
-    const fallbackRes = await supabase
-      .from('documentation_results')
-      .insert(fallbackPayload);
-
-    if (!fallbackRes.error) {
-      return { data: fallbackRes.data, error: null };
-    }
-    return { data: fallbackRes.data, error: fallbackRes.error };
   }
 
   return { data, error };
