@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import FeedbackModal from "@/app/faculty/components/FeedbackModal";
 import { FeedbackTarget, ActiveSimView } from "@/app/faculty/lib/types";
 import { updateCurrentPhase } from "@/actions/simulation";
@@ -33,7 +33,12 @@ export default function SimulationGroupsView({
   const phases = simulation.phaseCount; 
   const maxPhasesPerRow = 5; 
 
-  // 1. Initialize state directly from the clean backend data!
+  const sortedGroups = useMemo(() => {
+    return [...simulation.groups].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" })
+    );
+  }, [simulation.groups]);
+
   const initialPhases = simulation.groups.reduce((acc, group) => {
     acc[group.id] = group.currentPhase;
     return acc;
@@ -133,7 +138,7 @@ export default function SimulationGroupsView({
       {/* Groups */}
       <h3 className="text-base font-semibold px-1">Assigned Groups</h3>
       <div className="grid gap-4 md:grid-cols-2">
-        {simulation.groups.map((group) => {
+        {sortedGroups.map((group) => {
           const groupFeedbackKey = `group:${group.id}`;
           const hasGroupFeedback = !!submittedFeedback[groupFeedbackKey];
 
