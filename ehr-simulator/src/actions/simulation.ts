@@ -102,7 +102,7 @@ export async function submitStudentNote(note: EditableStudentNoteUpsert): Promis
   }
 }
 
-export async function getAllClinicalDocuments(caseId: string, caseSessionId: string): Promise<ActionResponse<ClinicalDocumentView[]>> {
+export async function getAllClinicalDocuments(caseId: string, sessionId: string): Promise<ActionResponse<ClinicalDocumentView[]>> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -623,14 +623,15 @@ export async function updateCurrentPhase(updatedPhase: number, sessionId: string
 
   // Establish Connection
   const supabase = createClient<Database>(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
-        );
-  
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
   // Update based on sessionId
   const { error } = await supabase
     .from("case_sessions")
-    .update({ current_phase: updatedPhase
+    .update({
+      current_phase: updatedPhase
     })
     .eq("id", sessionId)
 
@@ -646,9 +647,9 @@ export async function updateCurrentPhase(updatedPhase: number, sessionId: string
 
   // Return successful 
   return {
-        success: true,
-        message: `current_phase updated:${sessionId}`,
-        data: null,
-    }
+    success: true,
+    message: `current_phase updated:${sessionId}`,
+    data: null,
+  }
 }
 
