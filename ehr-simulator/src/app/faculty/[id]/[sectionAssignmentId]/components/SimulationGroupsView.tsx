@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import FeedbackModal from "@/app/faculty/components/FeedbackModal";
 import { FeedbackTarget, ActiveSimView } from "@/app/faculty/lib/types";
 import { updateCurrentPhase, updateSessionPhoto } from "@/actions/simulation";
