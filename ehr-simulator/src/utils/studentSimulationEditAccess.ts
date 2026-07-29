@@ -1,6 +1,7 @@
 "use client";
 
 import { useSimSessionContext } from "@/context/SimSessionContext";
+import { useParams } from "next/navigation";
 
 /** Students may edit only after the session has started (active simulation). */
 export function canStudentEditSimulation(input: {
@@ -15,9 +16,10 @@ export function canStudentEditSimulation(input: {
 }
 
 export function useStudentSimulationEditAccess() {
+  const { sessionId } = useParams();
   const { userRole, isPresim, loading } = useSimSessionContext();
   const isStudent = userRole?.trim().toLowerCase() === "student";
-  const canEdit = !loading && canStudentEditSimulation({ userRole, isPresim });
+  const canEdit = !loading && canStudentEditSimulation({ userRole, isPresim }) && sessionId !== 'preview';
 
   return {
     canEdit,
