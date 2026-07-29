@@ -1,13 +1,11 @@
 'use server'
 
-import type { PostgrestError } from "@supabase/supabase-js";
-import type { Database } from "../../database.types";
+import { createClient, type PostgrestError } from "@supabase/supabase-js";
+import { Database } from "../../database.types";
 import { ActionResponse, ExtractData } from "./cases";
 import { UUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { assertStudentActiveSessionWrite } from "@/actions/simulation/assertStudentActiveSessionWrite";
-import { createServiceRoleSupabase } from "@/utils/supabase/service";
-import { getErrorDetails } from "@/utils/supabase/fetchWithTimeout";
 
 export type EditableStudentNoteUpsert = Database['public']['Tables']['editable_clinical_documents']['Insert'];
 export type EditableStudentNote = Database['public']['Tables']['editable_clinical_documents']['Row'];
@@ -36,13 +34,19 @@ export type ClinicalDocumentView = {
   source_type: string
 }
 
+const resolvePreviewSessionId = (id: string) =>
+  id === "preview" ? "00000000-0000-0000-0000-000000000000" : id;
+
 export async function submitStudentNote(note: EditableStudentNoteUpsert): Promise<ActionResponse<EditableStudentNote | ClinicalDocument>> {
   const writeGuard = await assertStudentActiveSessionWrite(note.case_session_id);
   if (!writeGuard.allowed) {
     return { success: false, message: writeGuard.message };
   }
 
-  const supabase = createServiceRoleSupabase();
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const { data, error } = await supabase
     .from('editable_clinical_documents')
@@ -98,14 +102,19 @@ export async function submitStudentNote(note: EditableStudentNoteUpsert): Promis
   }
 }
 
-export async function getAllClinicalDocuments(caseId: string, caseSessionId: string): Promise<ActionResponse<ClinicalDocumentView[]>> {
-  const supabase = createServiceRoleSupabase();
+export async function getAllClinicalDocuments(caseId: string, sessionId: string): Promise<ActionResponse<ClinicalDocumentView[]>> {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  sessionId = resolvePreviewSessionId(sessionId);
 
   const { data, error } = await supabase
     .from('all_clinical_documents')
     .select('*')
     .eq('case_id', caseId)
-    .or(`case_session_id.eq.${caseSessionId},case_session_id.is.null`);
+    .or(`case_session_id.eq.${sessionId},case_session_id.is.null`);
 
   if (!error) {
     return {
@@ -125,7 +134,7 @@ export async function getAllClinicalDocuments(caseId: string, caseSessionId: str
         .from('editable_clinical_documents')
         .select('id, case_id, case_session_id, is_in_presim, category, specialty, author, time_offset, doc_text')
         .eq('case_id', caseId)
-        .eq('case_session_id', caseSessionId),
+        .eq('case_session_id', sessionId),
     ])
 
     const studentDocsMissing = (studentDocsRes.error as { code?: string } | null)?.code === 'PGRST205'
@@ -173,7 +182,10 @@ export async function getAllClinicalDocuments(caseId: string, caseSessionId: str
   }
 }
 export async function getAllMedications() {
-  const supabase = createServiceRoleSupabase();
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
 
   const { data, error } = await supabase
     .from('medications')
@@ -200,7 +212,10 @@ export async function getAllMedications() {
 }
 
 export async function getMedicationOrders(caseId: string) {
-  const supabase = createServiceRoleSupabase();
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
 
   const { data, error } = await supabase
     .from('medication_orders')
@@ -241,7 +256,12 @@ export async function getMedicationOrders(caseId: string) {
 }
 
 export async function getMedicationAdministrations(caseId: string, sessionId: string) {
-  const supabase = createServiceRoleSupabase();
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  sessionId = resolvePreviewSessionId(sessionId);
 
   const { data, error } = await supabase
     .from('all_medication_administrations')
@@ -281,7 +301,10 @@ export async function submitMedicationAdministrations(
     };
   }
 
-  const supabase = createServiceRoleSupabase();
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
   const { data, error } = await supabase
     .from('student_medication_administrations')
     .upsert(medAdministrations)
@@ -313,7 +336,12 @@ export async function submitMedicationAdministrations(
 }
 
 export async function getAllDocumentationData(caseId: string, sessionId: string) {
-  const supabase = createServiceRoleSupabase();
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  sessionId = resolvePreviewSessionId(sessionId);
 
   const { data, error } = await supabase
     .from('all_documentation_results')
@@ -392,24 +420,10 @@ export async function upsertDocumentationRows(payload: StudentDatabaseDocumentat
     }
   }
 
-  const supabase = createServiceRoleSupabase();
-
-  const unsupportedLegacyColumns = new Set([
-    'spo2_source',
-    'pain_location',
-    'pain_characteristics',
-    'pain_alleviating_factors',
-    'pain_aggravating_factors',
-    'pain_interventions',
-    'urine_description',
-  ]);
-
-  const sanitizePayload = <T extends Record<string, unknown>>(rows: T[]): T[] =>
-    rows.map((row) =>
-      Object.fromEntries(
-        Object.entries(row).filter(([key]) => !unsupportedLegacyColumns.has(key))
-      ) as T
-    );
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const { data, error } = await supabase
     .from('editable_documentation_results')
@@ -419,58 +433,6 @@ export async function upsertDocumentationRows(payload: StudentDatabaseDocumentat
 
   if (!error) {
     return { data, error: null };
-  }
-
-  // Some databases are missing newer documentation columns.
-  // Retry with a legacy-safe payload before broader table fallbacks.
-  const legacySafePayload = sanitizePayload(payload as Record<string, unknown>[]) as StudentDatabaseDocumentation[];
-  if ((error as { code?: string } | null)?.code === '42703' || (error as { code?: string } | null)?.code === 'PGRST204') {
-    const safeUpsertRes = await supabase
-      .from('editable_documentation_results')
-      .upsert(legacySafePayload, {
-        onConflict: 'case_session_id, time_offset'
-      });
-    if (!safeUpsertRes.error) {
-      return { data: safeUpsertRes.data, error: null };
-    }
-  }
-
-  // Some environments miss the unique constraint needed by upsert.
-  if ((error as { code?: string } | null)?.code === '42P10') {
-    const insertRes = await supabase
-      .from('editable_documentation_results')
-      .insert(legacySafePayload);
-    if (!insertRes.error) {
-      return { data: insertRes.data, error: null };
-    }
-    return { data: insertRes.data, error: insertRes.error };
-  }
-
-  // Backward-compatible fallback for environments without editable_documentation_results.
-  if ((error as { code?: string } | null)?.code === 'PGRST205') {
-    const fallbackPayload: Database['public']['Tables']['documentation_results']['Insert'][] = legacySafePayload.map((row) => {
-      const {
-        case_session_id,
-        user_id,
-        group_id,
-        ...rest
-      } = row;
-      void case_session_id;
-      void user_id;
-      void group_id;
-      return {
-        ...rest,
-      };
-    });
-
-    const fallbackRes = await supabase
-      .from('documentation_results')
-      .insert(fallbackPayload);
-
-    if (!fallbackRes.error) {
-      return { data: fallbackRes.data, error: null };
-    }
-    return { data: fallbackRes.data, error: fallbackRes.error };
   }
 
   return { data, error };
@@ -491,7 +453,10 @@ type SessionTransitionResult = {
 };
 
 function createServiceSupabase() {
-  return createServiceRoleSupabase();
+  return createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 }
 
 async function getSessionTransitionContext(sessionId: string) {
@@ -625,7 +590,10 @@ export async function getCurrentPhases(
     return { success: false, message: "Failed to fetch phases, no session Ids", data: null };
   }
 
-  const supabase = createServiceRoleSupabase();
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const { data, error } = await supabase
     .from("case_sessions")
@@ -650,54 +618,38 @@ export async function getCurrentPhases(
 }
 
 export async function updateCurrentPhase(updatedPhase: number, sessionId: string) {
-  const startedAt = Date.now();
-  const supabase = createServiceRoleSupabase();
+  // Function used to updated the current_phase in case_sessions table
+  // Used in faculty/components/FacultyCoursesView.tsx
 
-  try {
-    const { error } = await supabase
-      .from("case_sessions")
-      .update({ current_phase: updatedPhase })
-      .eq("id", sessionId)
+  // Establish Connection
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
-    if (error) {
-      console.warn('[update-current-phase] Supabase rejected the update', {
-        sessionId,
-        updatedPhase,
-        durationMs: Date.now() - startedAt,
-        error: getErrorDetails(error),
-      });
+  // Update based on sessionId
+  const { error } = await supabase
+    .from("case_sessions")
+    .update({
+      current_phase: updatedPhase
+    })
+    .eq("id", sessionId)
 
-      return {
-        success: false,
-        message: "The phase could not be advanced. Please try again.",
-        error,
-        data: null
-      };
-    }
-
-    return {
-      success: true,
-      message: `current_phase updated:${sessionId}`,
-      data: null,
-    };
-  } catch (error) {
-    const errorDetails = getErrorDetails(error);
-
-    console.error('[update-current-phase] Supabase request failed', {
-      sessionId,
-      updatedPhase,
-      durationMs: Date.now() - startedAt,
-      error: errorDetails,
-    });
-
+  // Return error 
+  if (error) {
     return {
       success: false,
-      message:
-        errorDetails.name === 'TimeoutError'
-          ? "The phase update timed out. Please try again."
-          : "The phase could not be advanced. Please try again.",
-      error: errorDetails,
-      data: null,
+      message: "Failed to update current_phase.",
+      error,
+      data: null
     };
   }
+
+  // Return successful 
+  return {
+    success: true,
+    message: `current_phase updated:${sessionId}`,
+    data: null,
+  }
 }
+

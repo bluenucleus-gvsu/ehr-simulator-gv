@@ -98,7 +98,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
     setData(hydrated.rows);
     setDirtyColumns(new Set());
     setColumnOffset(Math.max(0, targetOffsets.length - tableWidth));
-}, [sourceDocumentation, isPresim]);
+  }, [sourceDocumentation, isPresim]);
 
   useEffect(() => {
     setColumnOffset((prev) => Math.min(prev, maxOffset));

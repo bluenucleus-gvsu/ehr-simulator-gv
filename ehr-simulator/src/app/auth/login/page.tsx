@@ -1,10 +1,13 @@
 'use client'
 
+import { createBrowserClient } from '@supabase/ssr'
 import { Stethoscope } from 'lucide-react'
-import { createBrowserSupabase } from '@/utils/supabase/client'
 
 export default function LoginPage() {
-  const supabase = createBrowserSupabase()
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+  )
 
   const handleSignIn = async () => {
     await supabase.auth.signInWithOAuth({

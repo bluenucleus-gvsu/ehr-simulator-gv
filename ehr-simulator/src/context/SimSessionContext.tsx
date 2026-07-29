@@ -1,12 +1,15 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
 import { getUsersGroupId } from '@/actions/users';
 import { useParams } from 'next/navigation';
 import { Database } from '../../database.types';
-import { createBrowserSupabase } from '@/utils/supabase/client';
 
-const supabase = createBrowserSupabase();
+const supabase = createBrowserClient<Database>(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 type SessionRealtimeRow = Pick<
   Database["public"]["Tables"]["case_sessions"]["Row"],
@@ -24,6 +27,8 @@ export interface SimSessionContextType {
   currentPhase: number;
   hasUnsavedCharting: boolean | null;
   handleUnsavedCharting: (chartingStatus: boolean) => void;
+  handlePresimStatusChange: () => void;
+  handlePhaseChange: (phase: number) => void;
 }
 
 const SimContext = createContext<SimSessionContextType>({
@@ -36,7 +41,10 @@ const SimContext = createContext<SimSessionContextType>({
   isPresim: true,
   currentPhase: 1,
   hasUnsavedCharting: false,
-  handleUnsavedCharting: () => { }
+  handleUnsavedCharting: () => { },
+  handlePresimStatusChange: () => null,
+  handlePhaseChange: () => null,
+
 });
 
 export function SimSessionProvider({ children }: { children: React.ReactNode }) {
@@ -57,7 +65,7 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
   const applySessionState = (sessionData: SessionRealtimeRow | null) => {
     if (!sessionData) {
       setSimStartTime(Date.now());
-      setIsPresim(false);
+      setIsPresim(true);
       setCurrentPhase(1);
       return;
     }
@@ -90,48 +98,42 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
     async function loadSimData() {
       setLoading(true);
 
-      try {
-        let nextUserName: string | null = null;
-        let nextUserRole: string | null = null;
-        let nextGroupId: string | null = null;
+      let nextUserName: string | null = null;
+      let nextUserRole: string | null = null;
+      let nextGroupId: string | null = null;
 
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.id) {
-          setUserId(user.id);
-          const response = await getUsersGroupId(user.id);
-          if (response.success && response.data) {
-            nextUserName = response.data.full_name ?? null;
-            nextUserRole = response.data.role ?? null;
-            nextGroupId = response.data.group_id ?? null;
-          }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) {
+        setUserId(user.id);
+        const response = await getUsersGroupId(user.id);
+        if (response.success && response.data) {
+          nextUserName = response.data.full_name ?? null;
+          nextUserRole = response.data.role ?? null;
+          nextGroupId = response.data.group_id ?? null;
         }
+      }
 
-        if (sessionId) {
-          const { data: sessionData, error } = await supabase
-            .from("case_sessions")
-            .select("started_at, status, group_id, current_phase")
-            .eq("id", sessionId)
-            .maybeSingle();
+      if (sessionId) {
+        const { data: sessionData, error } = await supabase
+          .from("case_sessions")
+          .select("started_at, status, group_id, current_phase")
+          .eq("id", sessionId)
+          .maybeSingle();
 
-          if (!error && sessionData) {
-            nextGroupId = sessionData.group_id ?? nextGroupId;
-            applySessionState(sessionData);
-          } else {
-            applySessionState(null);
-          }
+        if (!error && sessionData) {
+          nextGroupId = sessionData.group_id ?? nextGroupId;
+          applySessionState(sessionData);
         } else {
           applySessionState(null);
         }
-
-        setUserName(nextUserName);
-        setUserRole(nextUserRole);
-        setGroupId(nextGroupId);
-      } catch (error) {
-        console.error('[simulation-context] Failed to load simulation data', error);
+      } else {
         applySessionState(null);
-      } finally {
-        setLoading(false);
       }
+
+      setUserName(nextUserName);
+      setUserRole(nextUserRole);
+      setGroupId(nextGroupId);
+      setLoading(false);
     }
     loadSimData();
   }, [sessionId]);
@@ -164,6 +166,14 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
     setHasUnsavedCharting(chartingStatus);
   }
 
+  const handlePresimStatusChange = () => {
+    setIsPresim(prev => !prev);
+  }
+
+  const handlePhaseChange = (phase: number) => {
+    setCurrentPhase(phase);
+  }
+
   const value = {
     userName,
     userId,
@@ -174,7 +184,9 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
     isPresim,
     currentPhase,
     hasUnsavedCharting,
-    handleUnsavedCharting
+    handleUnsavedCharting,
+    handlePresimStatusChange,
+    handlePhaseChange
   }
 
   return <SimContext.Provider value={value}>{children}</SimContext.Provider>

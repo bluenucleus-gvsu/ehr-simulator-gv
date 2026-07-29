@@ -12,7 +12,7 @@ const InfoTooltip = ({ content, children }: InfoTooltipProps) => {
   return (
     <TooltipProvider>
       <Tooltip>
-        <TooltipTrigger type="button">
+        <TooltipTrigger type="button" asChild>
           {children}
         </TooltipTrigger>
         <TooltipContent className="w-fit">
