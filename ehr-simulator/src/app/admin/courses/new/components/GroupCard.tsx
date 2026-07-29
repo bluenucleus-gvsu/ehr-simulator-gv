@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react"
-import { Pencil, Check, User, UserCog, X, ArrowUpDown } from "lucide-react"
+import { Pencil, Check, User, UserCog, X, ArrowUpDown, Trash2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -171,6 +171,11 @@ export const GroupCard = ({
               title={`Delete Group ${groupName}?`}
               confirmText="Delete"
               onConfirm={() => onDeleteGroup(sectionId, groupName)}
+              trigger={
+                <Button size="sm" variant="ghost" className="cursor-pointer h-6 w-6 p-0 flex-shrink-0">
+                    <Trash2 className="w-3 h-3 text-red-400" />
+                </Button>
+              }
             />
           </div>
         )}

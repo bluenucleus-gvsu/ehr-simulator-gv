@@ -26,20 +26,7 @@ export default function AddStudent({ onAddStudent, onImportStudents, onClearStud
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const parseCSV = (text: string): Student[] => {
-    const lines = text.trim().split("\n");
-    if (lines.length < 2) throw new Error("CSV file is empty or contains only headers");
-
-    const header = lines[0].split(",").map((h) => h.replace(/"/g, "").trim());
-    const cols = ["User Name", "First Name", "Last Name"];
-    const indices = cols.map((col) => header.indexOf(col));
-
-    if (indices.includes(-1)) {
-      throw new Error(`Missing columns: ${cols.filter((_, i) => indices[i] === -1).join(", ")}`);
-    }
-
-    const [uIdx, fIdx, lIdx] = indices;
-
-    return lines.slice(1).filter((line) => line.trim()).map((line) => {
+    const splitLine = (line: string) => {
       const values: string[] = [];
       let current = "";
       let inQuotes = false;
@@ -51,16 +38,35 @@ export default function AddStudent({ onAddStudent, onImportStudents, onClearStud
         } else current += char;
       }
       values.push(current.trim());
+      return values;
+    };
 
-      const clean = (idx: number) => values[idx]?.replace(/"/g, "") || "";
-      const userName = clean(uIdx);
-      const firstName = clean(fIdx);
-      const lastName = clean(lIdx);
+    const rows = text.trim().split("\n").filter((line) => line.trim());
+    if (rows.length < 2) throw new Error("CSV file is empty or contains only headers");
+
+    const header = splitLine(rows[0]).map((h) => h.replace(/"/g, "").trim().toLowerCase());
+    const colIndex = (...aliases: string[]) => aliases.map((a) => header.indexOf(a)).find((i) => i !== -1) ?? -1;
+
+    const emailIdx = colIndex("email", "email address", "e-mail");
+    const usernameIdx = colIndex("user name", "username", "user");
+    const firstIdx = colIndex("first name", "first");
+    const lastIdx = colIndex("last name", "last");
+    const fullNameIdx = colIndex("name", "full name", "student name");
+
+    if (emailIdx === -1 && usernameIdx === -1) throw new Error("Missing columns: Email or User Name");
+    if (fullNameIdx === -1 && firstIdx === -1 && lastIdx === -1) throw new Error("Missing columns: Name, or First Name/Last Name");
+
+    return rows.slice(1).map((line) => {
+      const values = splitLine(line).map((v) => v.replace(/"/g, "").trim());
+      const cell = (idx: number) => (idx === -1 ? "" : values[idx] ?? "");
+
+      const email = emailIdx !== -1 ? cell(emailIdx) : `${cell(usernameIdx)}@mail.gvsu.edu`;
+      const fullName = fullNameIdx !== -1 ? cell(fullNameIdx) : `${cell(firstIdx)} ${cell(lastIdx)}`.trim();
 
       return {
         id: crypto.randomUUID(),
-        email: `${userName}@mail.gvsu.edu`,
-        full_name: `${firstName} ${lastName}`.trim(),
+        email,
+        full_name: fullName,
         role: "student",
         status: null,
         created_at: null,
