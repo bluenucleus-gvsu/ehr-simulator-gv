@@ -51,6 +51,7 @@ export default function DemographicsForm() {
   const [showCancelAlert, setShowCancelAlert] = useState<boolean>(false);
   const [casePhotoFile, setCasePhotoFile] = useState<File | null>(null);
   const [casePhotoUrl, setCasePhotoUrl] = useState<string | null>(null);
+  const [casePhotoRemoved, setCasePhotoRemoved] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [photoUploadError, setPhotoUploadError] = useState<string | null>(null);
   const casePhotoInputRef = useRef<HTMLInputElement>(null);
@@ -68,6 +69,14 @@ export default function DemographicsForm() {
     setPhotoUploadError(null);
     setCasePhotoFile(file);
     setCasePhotoUrl(URL.createObjectURL(file));
+    setCasePhotoRemoved(false);
+  };
+
+  const handleRemoveCasePhoto = () => {
+    setCasePhotoFile(null);
+    setCasePhotoUrl(null);
+    setCasePhotoRemoved(true);
+    setPhotoUploadError(null);
   };
 
   useEffect(() => {
@@ -153,6 +162,8 @@ export default function DemographicsForm() {
       onDataChange("demographics", mappedDemographics);
       setDemographicsData(mappedDemographics);
       setCasePhotoUrl(mappedDemographics.case_photo_url || null);
+      setCasePhotoFile(null);
+      setCasePhotoRemoved(false);
 
       onDataChange("history", {
         medicalHistory: caseRow.medical_history ?? [],
@@ -264,9 +275,13 @@ export default function DemographicsForm() {
   }
 
   const handleSubmit = async () => {
-    onDataChange("demographics", demographicsData)
+    const initialPayload = casePhotoRemoved && !casePhotoFile
+      ? { ...demographicsData, case_photo_url: "" }
+      : demographicsData;
+    setDemographicsData(initialPayload);
+    onDataChange("demographics", initialPayload)
     const result = await saveCaseData({
-      payload: demographicsData,
+      payload: initialPayload,
       section: CaseSection.DEMOGRAPHICS,
       caseId: caseId
     });
@@ -287,7 +302,7 @@ export default function DemographicsForm() {
         if (uploadError) throw uploadError;
 
         const { data } = supabase.storage.from("case-photos").getPublicUrl(path);
-        const updatedDemographics = { ...demographicsData, case_photo_url: data.publicUrl };
+        const updatedDemographics = { ...initialPayload, case_photo_url: data.publicUrl };
         setDemographicsData(updatedDemographics);
         onDataChange("demographics", updatedDemographics);
         await saveCaseData({
@@ -485,11 +500,22 @@ export default function DemographicsForm() {
                           {isUploadingPhoto ? "Uploading..." : "Upload Image"}
                         </Button>
                         {casePhotoUrl && (
-                          <img
-                            src={casePhotoUrl}
-                            alt="Case profile"
-                            className="h-10 w-10 rounded object-cover border"
-                          />
+                          <div className="flex items-center gap-1">
+                            <img
+                              src={casePhotoUrl}
+                              alt="Case profile"
+                              className="h-10 w-10 rounded object-cover border"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleRemoveCasePhoto}
+                              disabled={isUploadingPhoto}
+                              aria-label="Remove case photo"
+                              className="text-slate-400 hover:text-slate-600 text-sm leading-none disabled:opacity-50"
+                            >
+                              ×
+                            </button>
+                          </div>
                         )}
                       </div>
                       {photoUploadError && (
