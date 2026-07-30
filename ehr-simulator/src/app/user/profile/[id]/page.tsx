@@ -1,4 +1,3 @@
-import React from "react";
 import { notFound, redirect } from "next/navigation";
 import ProfileHeader from "@/app/user/components/ProfileHeader";
 import CompletedCaseCard from "@/app/user/components/CompletedCaseCard";

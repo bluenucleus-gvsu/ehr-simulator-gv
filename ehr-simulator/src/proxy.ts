@@ -4,7 +4,7 @@ import { updateSession } from '@/utils/supabase/middleware'
 const CASE_BUILDER_MAINTENANCE_PATH = '/admin/case-builder-maintenance'
 const DEBUG_CASE_BUILDER_UNDER_MAINTENANCE = true;
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   if (
     request.nextUrl.pathname.startsWith('/admin/case-builder') &&
     request.nextUrl.pathname !== CASE_BUILDER_MAINTENANCE_PATH
