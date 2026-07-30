@@ -1,4 +1,3 @@
-import React from "react";
 import { notFound } from "next/navigation";
 import { createServerSupabase } from "@/utils/supabase/server";
 import FacultyHeader from "@/app/faculty/components/FacultyHeader";
