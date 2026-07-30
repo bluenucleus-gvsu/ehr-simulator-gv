@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import { useState } from "react";
 import FeedbackModal from "@/app/faculty/components/FeedbackModal";
 import { FeedbackTarget, ActiveSimView } from "@/app/faculty/lib/types";
 import { updateCurrentPhase } from "@/actions/simulation";

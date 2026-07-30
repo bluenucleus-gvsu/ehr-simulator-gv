@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation";
 import CreateCaseButton from "./CreateCaseButton";
