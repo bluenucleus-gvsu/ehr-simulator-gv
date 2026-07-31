@@ -1,7 +1,7 @@
 # Run the EHR Simulator (macOS and Windows)
 **Project Mission**: Develop a software to aid in medical simulation, mimicking medical standards, such as EPIC.
 
-**Technical Description**: This app is a **Next.js 15** frontend in the `ehr-simulator` folder. It talks to **Supabase** (Postgres, Auth, and server actions that use the service role key). You can point it at a **hosted Supabase project** or run **Supabase locally** with Docker all found at [Supabase Setup](#5-supabase-choose-one-path).
+**Technical Description**: This app is a **Next.js 16** frontend in the `ehr-simulator` folder. It talks to **Supabase** (Postgres, Auth, and server actions that use the service role key). You can point it at a **hosted Supabase project** or run **Supabase locally** with Docker all found at [Supabase Setup](#5-supabase-choose-one-path).
 
 ---
 ## Table of Contents
