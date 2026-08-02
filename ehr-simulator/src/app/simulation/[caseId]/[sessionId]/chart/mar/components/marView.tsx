@@ -12,7 +12,6 @@ import { ClipboardClock, Filter, PillBottle } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Toggle } from '@/components/ui/toggle';
-import { useSymbologyScanner } from '@use-symbology-scanner/react';
 import { MultiMedPopover } from './multiMedPopover';
 import { toast } from 'sonner';
 import WrongPatientAlert from './wrongPatientAlert';
@@ -26,6 +25,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useStudentSimulationEditAccess } from '@/utils/studentSimulationEditAccess';
 import { useParams } from 'next/navigation';
 import { isVisibleForSimulationPhase } from '@/lib/simulationPhaseVisibility';
+import { useSimulationScanner } from '@/hooks/useSimulationScanner';
 
 
 export interface NewAdministrationData {
@@ -57,7 +57,6 @@ export default function MarView({
   const { canEdit } = useStudentSimulationEditAccess();
   const { caseId } = useParams()
   const patientWristband = String(caseId)
-  const [scanningEnabled, setScanningEnabled] = useState(false)
   // med data
   const [selectedOrders, setSelectedOrders] = useState<MedicationOrder[]>([]);
   const [newAdministrations, setNewAdministrations] = useState<NewAdministrationData>({});
@@ -73,31 +72,28 @@ export default function MarView({
   const [isMedAdminPanelOpen, setIsMedAdminPanelOpen] = useState(false);
   // temp time management
   const [timeColumnOffset, setTimeColumnOffset] = useState(0)
-  const [localTimelineAnchor] = useState(() => new Date());
+  const [fallbackTime] = useState(() => new Date());
   const anchorDate = useMemo(() => {
     if (!simStartTime) {
-      return localTimelineAnchor;
+      return fallbackTime;
     }
 
     const sessionAnchor = new Date(simStartTime);
-    const minutesSinceSessionStart = Math.abs(differenceInMinutes(new Date(), sessionAnchor));
-
-    // Some sessions remain "in progress" for days. Using that old started_at
-    // makes MAR times diverge from case baseline timelines.
-    // For stale sessions, use a stable local anchor for this page load.
-    if (minutesSinceSessionStart > 12 * 60) {
-      return localTimelineAnchor;
-    }
 
     return sessionAnchor;
-  }, [simStartTime, localTimelineAnchor]);
+  }, [simStartTime, fallbackTime]);
 
   const [elapsedMinutes, setElapsedMinutes] = useState(() => {
     return differenceInMinutes(new Date(), anchorDate);
   });
-  // Scanner debugging
-  // const [scannedSymbol, setScannedSymbol] = useState('')
+
   const handleScan = (symbol: string) => {
+    // Patient wristband scan is 39 chars, if scans are failing due to excessive length 
+    // check the scanner's prefix settings.
+    if (symbol.length > 39) {
+      toast.warning('Your scanner might be configured incorrectly. Please report this to your Sim instructor.')
+      return
+    }
 
     symbol = symbol.trim()
 
@@ -133,7 +129,7 @@ export default function MarView({
       return
     }
 
-    if (!isPopoverOpen) {
+    if (!isMedAdminPanelOpen) {
       setIsMedAdminPanelOpen(true)
     }
     const targetOrder = existingSelectedOrder || associatedOrders[0];
@@ -234,12 +230,7 @@ export default function MarView({
     })
   }
 
-  useSymbologyScanner(handleScan,
-    {
-      scannerOptions: { prefix: '', suffix: '', maxDelay: 40 },
-      symbologies: ["Data Matrix"]
-    },
-  )
+  useSimulationScanner(handleScan)
 
   const handleTimeColChange = (offset: number | string) => {
     if (typeof offset === "number") {
@@ -473,15 +464,6 @@ export default function MarView({
 
           <PatientStatusBadge isScanned={isScanned} />
         </div>
-        <div className='flex gap-2 h-8 items-center border p-2 rounded-md bg-gray-50'>
-          <Checkbox
-            checked={scanningEnabled}
-            onCheckedChange={() => setScanningEnabled(true)}
-            className='bg-white'
-            disabled={scanningEnabled}
-          />
-          <Label>{!scanningEnabled ? "Enable Scanning" : "Scanning Enabled"}</Label>
-        </div>
         <div className='flex gap-4 xl:gap-20 2xl:gap-45'>
           <ColumnShiftControl
             columns={displayColumns}
@@ -518,7 +500,6 @@ export default function MarView({
           </div>
         )}
         {filteredMedOrders.map((order) => {
-          // const isSelected = selectedOrders.includes(order);
           const associatedMedication = medsById[order.medicationId]
           const orderSpecifcAdministrations = groupedAdministrationsByOrder[order.id] || [];
 
