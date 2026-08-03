@@ -1299,32 +1299,97 @@ export type Database = {
       }
       groups: {
         Row: {
+          active: boolean
           created_at: string | null
+          faculty_lead_id: string | null
           id: string
           name: string
+          section_assignment_id: string | null
           section_id: string | null
           updated_at: string | null
         }
         Insert: {
+          active?: boolean
           created_at?: string | null
+          faculty_lead_id?: string | null
           id?: string
           name: string
+          section_assignment_id?: string | null
           section_id?: string | null
           updated_at?: string | null
         }
         Update: {
+          active?: boolean
           created_at?: string | null
+          faculty_lead_id?: string | null
           id?: string
           name?: string
+          section_assignment_id?: string | null
           section_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
           {
+            foreignKeyName: "groups_faculty_lead_id_fkey"
+            columns: ["faculty_lead_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "groups_section_assignment_id_fkey"
+            columns: ["section_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "section_assignments"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "groups_section_id_fkey"
             columns: ["section_id"]
             isOneToOne: false
             referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      section_enrollments: {
+        Row: {
+          active: boolean
+          created_at: string | null
+          id: string
+          section_id: string
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string | null
+          id?: string
+          section_id: string
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string | null
+          id?: string
+          section_id?: string
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "section_enrollments_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "section_enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]

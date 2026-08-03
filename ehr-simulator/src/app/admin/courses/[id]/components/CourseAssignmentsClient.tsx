@@ -84,7 +84,10 @@ export default function CourseAssignmentsClient({
                   presimTime: assignment.presimTime,
                 }}
               />
-              <AdminSessionActions sessionId={assignment.sessionId} sessionStatus={assignment.sessionStatus} />
+              <AdminSessionActions
+                assignmentId={assignment.id}
+                sessionStatus={assignment.sessionStatus}
+              />
             </div>
           )}
         />
@@ -103,7 +106,10 @@ export default function CourseAssignmentsClient({
               <Badge variant="outline" className="text-amber-700 border-amber-200 bg-amber-50">
                 Scheduled Time Passed
               </Badge>
-              <AdminSessionActions sessionId={assignment.sessionId} sessionStatus={assignment.sessionStatus} />
+              <AdminSessionActions
+                assignmentId={assignment.id}
+                sessionStatus={assignment.sessionStatus}
+              />
               <DeleteCaseButton caseId={assignment.id} />
             </div>
           )}

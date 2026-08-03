@@ -2,9 +2,8 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { getUsersGroupId } from '@/actions/users';
-import { useParams } from 'next/navigation';
-import { Database } from '../../database.types';
+import { useParams } from 'next/navigation'
+import { Database } from '../../database.types'
 
 const supabase = createBrowserClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -105,11 +104,14 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.id) {
         setUserId(user.id);
-        const response = await getUsersGroupId(user.id);
-        if (response.success && response.data) {
-          nextUserName = response.data.full_name ?? null;
-          nextUserRole = response.data.role ?? null;
-          nextGroupId = response.data.group_id ?? null;
+        const { data: profile } = await supabase
+          .from("users")
+          .select("full_name, role")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (profile) {
+          nextUserName = profile.full_name ?? null;
+          nextUserRole = profile.role ?? null;
         }
       }
 
@@ -121,7 +123,7 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
           .maybeSingle();
 
         if (!error && sessionData) {
-          nextGroupId = sessionData.group_id ?? nextGroupId;
+          nextGroupId = sessionData.group_id ?? null;
           applySessionState(sessionData);
         } else {
           applySessionState(null);

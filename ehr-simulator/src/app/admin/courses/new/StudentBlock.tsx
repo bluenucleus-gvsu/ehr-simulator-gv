@@ -1,8 +1,20 @@
 "use client"
 import React from "react"
-import { GripVertical } from "lucide-react"
+import { GripVertical, Trash2 } from "lucide-react"
 import { Student } from "./types"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface StudentBlockProps {
   student: Student
@@ -13,6 +25,7 @@ interface StudentBlockProps {
   isDimmed?: boolean
   fromGroup?: string
   fromSection?: string
+  onDelete?: (student: Student) => void
 }
 
 export const StudentBlock = ({
@@ -24,6 +37,7 @@ export const StudentBlock = ({
   isDimmed = false,
   fromGroup,
   fromSection,
+  onDelete,
 }: StudentBlockProps) => {
   return (
     <div
@@ -46,6 +60,39 @@ export const StudentBlock = ({
           {student.email ?? ""}
         </p>
       </div>
+      {onDelete && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-6 w-6 p-0 flex-shrink-0"
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <Trash2 className="w-3.5 h-3.5 text-red-400" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove {student.full_name ?? "student"}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This removes them from this course roster and any groups.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-red-600"
+                onClick={() => onDelete(student)}
+              >
+                Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   )
 }

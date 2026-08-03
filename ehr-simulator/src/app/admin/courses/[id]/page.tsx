@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getCourseById } from "@/actions/courses";
 import { Button } from "@/components/ui/button";
 import { getSectionCaseAssignments } from "@/actions/cases";
@@ -5,26 +6,34 @@ import { getCaseByCourseId } from "@/actions/cases";
 import { Database } from "../../../../../database.types";
 import CourseAssignmentsClient from "./components/CourseAssignmentsClient";
 
-
 interface CoursePageProps {
   params: Promise<{ id: string }>;
 }
 
-export type Course = Database['public']['Tables']['courses']['Row'];
-
+export type Course = Database["public"]["Tables"]["courses"]["Row"];
 
 export default async function CoursePage({ params }: CoursePageProps) {
   const resolvedParams = await params;
-  const coursedId = resolvedParams.id
+  const coursedId = resolvedParams.id;
 
   const [courseResult, sectionsResult, casesResult] = await Promise.all([
     getCourseById(coursedId),
     getSectionCaseAssignments(coursedId),
-    getCaseByCourseId()
+    getCaseByCourseId(),
   ]);
 
-  if (!sectionsResult.success || !casesResult.success || !courseResult.success || !courseResult.data) {
-    return <div>Error loading data: {sectionsResult.message || casesResult.message || courseResult.message}</div>
+  if (
+    !sectionsResult.success ||
+    !casesResult.success ||
+    !courseResult.success ||
+    !courseResult.data
+  ) {
+    return (
+      <div>
+        Error loading data:{" "}
+        {sectionsResult.message || casesResult.message || courseResult.message}
+      </div>
+    );
   }
 
   const sectionsData = sectionsResult.data ?? [];
@@ -39,9 +48,13 @@ export default async function CoursePage({ params }: CoursePageProps) {
             <h1 className="text-5xl font-bold tracking-tight text-blue-900">
               {courseData.code}
             </h1>
-            <p className="text-xs text-gray-500">Manage assigned for cases this course.</p>
+            <p className="text-xs text-gray-500">
+              Manage assigned for cases this course.
+            </p>
           </div>
-          <Button>Edit Course</Button>
+          <Button asChild>
+            <Link href={`/admin/courses/${coursedId}/edit`}>Edit Course</Link>
+          </Button>
         </div>
       </header>
 

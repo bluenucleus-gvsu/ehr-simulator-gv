@@ -82,13 +82,13 @@ function toISO(date: Date | undefined, time: string): string | null {
 
 // ─── DateTimePicker sub-component ────────────────────────────────────────────
 
-interface DateTimePickerProps {
+export interface DateTimePickerProps {
   label: string
   value: string | null | undefined   // timestamptz ISO string
   onChange: (iso: string | null) => void
 }
 
-function DateTimePicker({ label, value, onChange }: DateTimePickerProps) {
+export function DateTimePicker({ label, value, onChange }: DateTimePickerProps) {
   const date = isoToDate(value)
   const time = isoToTimeInput(value)
 

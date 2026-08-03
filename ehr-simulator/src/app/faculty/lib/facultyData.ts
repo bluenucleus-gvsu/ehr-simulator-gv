@@ -33,15 +33,20 @@ export async function getFacultyCourses(): Promise<Course[]> {
         presim_time,
         case_id,
         cases (id, name, first_name, last_name, phase_count),
-        case_sessions (id, group_id, current_phase, status)
-      ),
-      groups (
-        id,
-        name,
-        group_members (
+        case_sessions (
           id,
-          student_id,
-          student:student_id (id, full_name, email)
+          group_id,
+          current_phase,
+          status,
+          group:groups (
+            id,
+            name,
+            group_members (
+              id,
+              student_id,
+              student:student_id (id, full_name, email)
+            )
+          )
         )
       )
     `);
@@ -61,13 +66,6 @@ export async function getFacultyCourses(): Promise<Course[]> {
     ) as CourseRelation | null | undefined;
     if (!course?.id) continue;
 
-    // Lookup table so each group's name/members can be matched by id below
-    const groupById = new Map<string, any>(
-      (section.groups ?? []).map((group: any) => [group.id, group])
-    );
-
-    // One Simulation per section_assignment; its groups are scoped to THAT
-    // assignment's case_sessions, not the whole section's group list
     const simulationRows: Simulation[] = (section.section_assignments ?? []).map((assignment: any) => {
       const caseRecord = assignment.cases;
       const caseName =
@@ -75,13 +73,12 @@ export async function getFacultyCourses(): Promise<Course[]> {
         [caseRecord?.first_name, caseRecord?.last_name].filter(Boolean).join(" ") ||
         "Untitled Simulation";
 
-      // A group only belongs to this simulation if it has a case_session under this assignment
       const groupRows: Group[] = (assignment.case_sessions ?? [])
-        .filter((session: any) => session.group_id && session.id)
+        .filter((session: any) => session.id && session.group)
         .map((session: any) => {
-          const group = groupById.get(session.group_id);
+          const group = Array.isArray(session.group) ? session.group[0] : session.group;
           return {
-            id: session.group_id,
+            id: group?.id ?? session.group_id,
             name: group?.name ?? "Unknown Group",
             caseSessionId: session.id,
             currentPhase: session.current_phase ?? 1,

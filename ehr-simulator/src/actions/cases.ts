@@ -204,7 +204,21 @@ export async function createSectionCaseAssignment(payload: SectionAssignmentInse
     };
   }
 
-  revalidatePath('/courses');
+  const { ensureAssignmentGroupsFromTemplate } = await import("./courses");
+  await ensureAssignmentGroupsFromTemplate(data.id);
+
+  if (payload.section_id) {
+    const { data: section } = await supabase
+      .from("sections")
+      .select("course_id")
+      .eq("id", payload.section_id)
+      .maybeSingle();
+    if (section?.course_id) {
+      revalidatePath(`/admin/courses/${section.course_id}`);
+      revalidatePath(`/admin/courses/${section.course_id}/edit`);
+    }
+  }
+  revalidatePath("/admin/courses");
 
   return {
     success: true,

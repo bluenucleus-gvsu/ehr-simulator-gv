@@ -111,7 +111,7 @@ export async function getUsersByEmails(emails: string[]) {
 
   const { data, error } = await supabase
     .from("users")
-    .select("id, email")
+    .select("id, email, full_name")
     .in("email", emails)
 
   if (error) throw new Error(error.message)
