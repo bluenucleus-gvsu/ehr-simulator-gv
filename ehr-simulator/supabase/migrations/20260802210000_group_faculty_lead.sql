@@ -1,0 +1,2 @@
+ALTER TABLE public.groups
+  ADD COLUMN IF NOT EXISTS faculty_lead_id UUID REFERENCES public.users(id) ON DELETE SET NULL ON UPDATE CASCADE;

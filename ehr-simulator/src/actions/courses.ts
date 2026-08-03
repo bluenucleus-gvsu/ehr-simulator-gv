@@ -187,80 +187,8 @@ export async function updateSection(section: SectionUpdate & { id: string }): Pr
     return { success: false, message: "Failed to update the section.", error };
   }
 
-
   revalidateCoursePaths(data.course_id ?? undefined);
   return { success: true, message: "Section updated successfully.", data };
-}
-
-export async function deleteSection(
-  sectionId: string,
-  courseId?: string
-): Promise<ActionResponse> {
-  const supabase = serviceClient();
-
-  const { error: facultyError } = await supabase
-    .from("faculty_section")
-    .delete()
-    .eq("section_id", sectionId);
-
-  if (facultyError) {
-    return {
-      success: false,
-      message: "Failed to remove section faculty links.",
-      error: facultyError,
-    };
-  }
-
-  const { error } = await supabase.from("sections").delete().eq("id", sectionId);
-
-  if (error) {
-    return { success: false, message: "Failed to delete the section.", error };
-  }
-
-  revalidateCoursePaths(courseId);
-  return { success: true, message: "Section deleted." };
-}
-
-export async function deleteCourse(courseId: string): Promise<ActionResponse> {
-  const supabase = serviceClient();
-
-  const { data: sections, error: sectionsError } = await supabase
-    .from("sections")
-    .select("id")
-    .eq("course_id", courseId);
-
-  if (sectionsError) {
-    return {
-      success: false,
-      message: "Failed to load course sections for deletion.",
-      error: sectionsError,
-    };
-  }
-
-  const sectionIds = (sections ?? []).map((s) => s.id);
-  if (sectionIds.length > 0) {
-    const { error: facultyError } = await supabase
-      .from("faculty_section")
-      .delete()
-      .in("section_id", sectionIds);
-
-    if (facultyError) {
-      return {
-        success: false,
-        message: "Failed to remove section faculty links.",
-        error: facultyError,
-      };
-    }
-  }
-
-  const { error } = await supabase.from("courses").delete().eq("id", courseId);
-
-  if (error) {
-    return { success: false, message: "Failed to delete the course.", error };
-  }
-
-  revalidatePath("/admin/courses");
-  return { success: true, message: "Course deleted." };
 }
 
 export async function createGroup(group: GroupInsert) {
@@ -329,380 +257,6 @@ export async function createSectionEnrollment(
   return { success: true, message: "Student enrolled.", data };
 }
 
-export async function removeStudentFromCourse(
-  courseId: string,
-  studentId: string
-): Promise<ActionResponse> {
-  const supabase = serviceClient();
-
-  const { data: sections, error: sectionsError } = await supabase
-    .from("sections")
-    .select("id")
-    .eq("course_id", courseId);
-
-  if (sectionsError) {
-    return {
-      success: false,
-      message: "Failed to load course sections.",
-      error: sectionsError,
-    };
-  }
-
-  const sectionIds = (sections ?? []).map((s) => s.id);
-  if (sectionIds.length === 0) {
-    revalidateCoursePaths(courseId);
-    return { success: true, message: "Student removed." };
-  }
-
-  const { data: groups } = await supabase
-    .from("groups")
-    .select("id")
-    .in("section_id", sectionIds);
-
-  const groupIds = (groups ?? []).map((g) => g.id);
-  if (groupIds.length > 0) {
-    const { error: membersError } = await supabase
-      .from("group_members")
-      .delete()
-      .in("group_id", groupIds)
-      .eq("student_id", studentId);
-
-    if (membersError) {
-      return {
-        success: false,
-        message: "Failed to remove student from groups.",
-        error: membersError,
-      };
-    }
-  }
-
-  const { error: enrollError } = await supabase
-    .from("section_enrollments")
-    .delete()
-    .in("section_id", sectionIds)
-    .eq("student_id", studentId);
-
-  if (enrollError) {
-    return {
-      success: false,
-      message: "Failed to remove student enrollments.",
-      error: enrollError,
-    };
-  }
-
-  revalidateCoursePaths(courseId);
-  return { success: true, message: "Student removed from course." };
-}
-
-export async function addStudentsToCourse(
-  courseId: string,
-  students: Array<{ email: string; full_name: string }>
-): Promise<
-  ActionResponse<{
-    added: Array<{ id: string; email: string; full_name: string | null }>;
-  }>
-> {
-  if (students.length === 0) {
-    return { success: false, message: "No students to add." };
-  }
-
-  const normalized = students
-    .map((s) => ({
-      email: s.email.trim(),
-      full_name: s.full_name.trim(),
-    }))
-    .filter((s) => s.email);
-
-  if (normalized.length === 0) {
-    return { success: false, message: "Each student needs an email." };
-  }
-
-  const supabase = serviceClient();
-
-  const { data: sections, error: sectionsError } = await supabase
-    .from("sections")
-    .select("id")
-    .eq("course_id", courseId);
-
-  if (sectionsError) {
-    return {
-      success: false,
-      message: "Failed to load course sections.",
-      error: sectionsError,
-    };
-  }
-
-  const sectionIds = (sections ?? []).map((s) => s.id);
-  if (sectionIds.length === 0) {
-    return {
-      success: false,
-      message: "Add at least one section before enrolling students.",
-    };
-  }
-
-  const emails = normalized.map((s) => s.email);
-
-  const { data: existingUsers, error: existingError } = await supabase
-    .from("users")
-    .select("id, email, full_name")
-    .in("email", emails);
-
-  if (existingError) {
-    return {
-      success: false,
-      message: "Failed to look up existing students.",
-      error: existingError,
-    };
-  }
-
-  const byEmail = new Map(
-    (existingUsers ?? [])
-      .filter((u) => u.email)
-      .map((u) => [u.email!.toLowerCase(), u])
-  );
-
-  const toInsert = normalized.filter((s) => !byEmail.has(s.email.toLowerCase()));
-
-  if (toInsert.length > 0) {
-    const rows = toInsert.map((s) => ({
-      id: crypto.randomUUID(),
-      email: s.email,
-      full_name: s.full_name,
-      role: "student" as const,
-      is_active: false,
-    }));
-
-    const { data: inserted, error: insertError } = await supabase
-      .from("users")
-      .insert(rows)
-      .select("id, email, full_name");
-
-    if (insertError) {
-      return {
-        success: false,
-        message: "Failed to create student accounts.",
-        error: insertError,
-      };
-    }
-
-    for (const u of inserted ?? []) {
-      if (u.email) byEmail.set(u.email.toLowerCase(), u);
-    }
-  }
-
-  const added: Array<{ id: string; email: string; full_name: string | null }> = [];
-
-  for (const student of normalized) {
-    const user = byEmail.get(student.email.toLowerCase());
-    if (!user) continue;
-
-    for (const sectionId of sectionIds) {
-      const { error: enrollError } = await supabase
-        .from("section_enrollments")
-        .upsert(
-          {
-            section_id: sectionId,
-            student_id: user.id,
-            active: true,
-          },
-          { onConflict: "section_id,student_id" }
-        );
-
-      if (enrollError) {
-        return {
-          success: false,
-          message: `Failed to enroll ${student.full_name || student.email}.`,
-          error: enrollError,
-        };
-      }
-    }
-
-    added.push({
-      id: user.id,
-      email: user.email ?? student.email,
-      full_name: user.full_name ?? student.full_name,
-    });
-  }
-
-  revalidateCoursePaths(courseId);
-  return {
-    success: true,
-    message: `Added ${added.length} student${added.length === 1 ? "" : "s"} to unassigned in every section.`,
-    data: { added },
-  };
-}
-
-export async function addStudentsToSection(
-  sectionId: string,
-  students: Array<{ email: string; full_name: string }>,
-  courseId?: string
-): Promise<
-  ActionResponse<{
-    added: Array<{ id: string; email: string; full_name: string | null }>;
-  }>
-> {
-  if (students.length === 0) {
-    return { success: false, message: "No students to add." };
-  }
-
-  const normalized = students
-    .map((s) => ({
-      email: s.email.trim(),
-      full_name: s.full_name.trim(),
-    }))
-    .filter((s) => s.email);
-
-  if (normalized.length === 0) {
-    return { success: false, message: "Each student needs an email." };
-  }
-
-  const supabase = serviceClient();
-  const emails = normalized.map((s) => s.email);
-
-  const { data: existingUsers, error: existingError } = await supabase
-    .from("users")
-    .select("id, email, full_name")
-    .in("email", emails);
-
-  if (existingError) {
-    return {
-      success: false,
-      message: "Failed to look up existing students.",
-      error: existingError,
-    };
-  }
-
-  const byEmail = new Map(
-    (existingUsers ?? [])
-      .filter((u) => u.email)
-      .map((u) => [u.email!.toLowerCase(), u])
-  );
-
-  const toInsert = normalized.filter((s) => !byEmail.has(s.email.toLowerCase()));
-
-  if (toInsert.length > 0) {
-    const rows = toInsert.map((s) => ({
-      id: crypto.randomUUID(),
-      email: s.email,
-      full_name: s.full_name,
-      role: "student" as const,
-      is_active: false,
-    }));
-
-    const { data: inserted, error: insertError } = await supabase
-      .from("users")
-      .insert(rows)
-      .select("id, email, full_name");
-
-    if (insertError) {
-      return {
-        success: false,
-        message: "Failed to create student accounts.",
-        error: insertError,
-      };
-    }
-
-    for (const u of inserted ?? []) {
-      if (u.email) byEmail.set(u.email.toLowerCase(), u);
-    }
-  }
-
-  const added: Array<{ id: string; email: string; full_name: string | null }> = [];
-
-  for (const student of normalized) {
-    const user = byEmail.get(student.email.toLowerCase());
-    if (!user) continue;
-
-    const { error: enrollError } = await supabase
-      .from("section_enrollments")
-      .upsert(
-        {
-          section_id: sectionId,
-          student_id: user.id,
-          active: true,
-        },
-        { onConflict: "section_id,student_id" }
-      );
-
-    if (enrollError) {
-      return {
-        success: false,
-        message: `Failed to enroll ${student.full_name || student.email}.`,
-        error: enrollError,
-      };
-    }
-
-    added.push({
-      id: user.id,
-      email: user.email ?? student.email,
-      full_name: user.full_name ?? student.full_name,
-    });
-  }
-
-  revalidateCoursePaths(courseId);
-  return {
-    success: true,
-    message: `Added ${added.length} student${added.length === 1 ? "" : "s"}.`,
-    data: { added },
-  };
-}
-
-export async function setCourseAdministrators(
-  courseId: string,
-  adminIds: string[]
-): Promise<ActionResponse<{ count: number }>> {
-  const supabase = serviceClient();
-
-  const { data: existing, error: fetchError } = await supabase
-    .from("course_administrators")
-    .select("id, admin_id, active")
-    .eq("course_id", courseId);
-
-  if (fetchError) {
-    return { success: false, message: "Failed to load course administrators.", error: fetchError };
-  }
-
-  const desired = new Set(adminIds);
-  const existingByAdmin = new Map((existing ?? []).map((row) => [row.admin_id, row]));
-
-  for (const row of existing ?? []) {
-    if (!desired.has(row.admin_id) && row.active) {
-      const { error } = await supabase
-        .from("course_administrators")
-        .update({ active: false })
-        .eq("id", row.id);
-      if (error) {
-        return { success: false, message: "Failed to remove course administrator.", error };
-      }
-    }
-  }
-
-  for (const adminId of adminIds) {
-    const row = existingByAdmin.get(adminId);
-    if (row) {
-      if (!row.active) {
-        const { error } = await supabase
-          .from("course_administrators")
-          .update({ active: true })
-          .eq("id", row.id);
-        if (error) {
-          return { success: false, message: "Failed to restore course administrator.", error };
-        }
-      }
-      continue;
-    }
-    const { error } = await supabase
-      .from("course_administrators")
-      .insert({ course_id: courseId, admin_id: adminId, active: true });
-    if (error) {
-      return { success: false, message: "Failed to add course administrator.", error };
-    }
-  }
-
-  revalidateCoursePaths(courseId);
-  return { success: true, message: "Course administrators updated.", data: { count: adminIds.length } };
-}
-
 export async function createFacultySection(
   payload: FacultySectionInsert
 ): Promise<ActionResponse<FacultySection>> {
@@ -717,6 +271,58 @@ export async function createFacultySection(
     return { success: false, message: "Failed to assign faculty to section.", error };
   }
   return { success: true, message: "Faculty assigned.", data };
+}
+
+export async function deleteCourse(courseId: string): Promise<ActionResponse> {
+  const supabase = serviceClient();
+  const { data: sections } = await supabase
+    .from("sections")
+    .select("id")
+    .eq("course_id", courseId);
+  const sectionIds = (sections ?? []).map((s) => s.id);
+  if (sectionIds.length > 0) {
+    await supabase.from("faculty_section").delete().in("section_id", sectionIds);
+  }
+  const { error } = await supabase.from("courses").delete().eq("id", courseId);
+  if (error) {
+    return { success: false, message: error.message || "Failed to delete course.", error };
+  }
+  revalidatePath("/admin/courses");
+  return { success: true, message: "Course deleted." };
+}
+
+export async function removeStudentFromCourse(
+  courseId: string,
+  studentId: string
+): Promise<ActionResponse> {
+  const supabase = serviceClient();
+  const { data: sections } = await supabase
+    .from("sections")
+    .select("id")
+    .eq("course_id", courseId);
+  const sectionIds = (sections ?? []).map((s) => s.id);
+  if (sectionIds.length === 0) {
+    return { success: true, message: "No sections to update." };
+  }
+  await supabase
+    .from("section_enrollments")
+    .delete()
+    .in("section_id", sectionIds)
+    .eq("student_id", studentId);
+  const { data: groups } = await supabase
+    .from("groups")
+    .select("id")
+    .in("section_id", sectionIds);
+  const groupIds = (groups ?? []).map((g) => g.id);
+  if (groupIds.length > 0) {
+    await supabase
+      .from("group_members")
+      .delete()
+      .in("group_id", groupIds)
+      .eq("student_id", studentId);
+  }
+  revalidateCoursePaths(courseId);
+  return { success: true, message: "Student removed from course." };
 }
 
 export type CourseEditStudent = {
@@ -738,6 +344,7 @@ export type CourseEditGroup = {
   active: boolean;
   section_id: string | null;
   section_assignment_id: string | null;
+  faculty_lead_id: string | null;
   members: CourseEditGroupMember[];
   session: {
     id: string;
@@ -750,7 +357,7 @@ export type CourseEditGroup = {
 
 export type CourseEditAssignment = {
   id: string;
-  case_id: string | null;
+  case_id: string;
   sim_time: string;
   presim_time: string;
   case: {
@@ -789,12 +396,6 @@ export type CourseEditSection = {
 
 export type CourseEditBundle = {
   course: Course;
-  administrators: Array<{
-    id: string;
-    admin_id: string;
-    active: boolean;
-    admin: CourseEditStudent | null;
-  }>;
   sections: CourseEditSection[];
 };
 
@@ -827,17 +428,6 @@ export async function getCourseEditBundle(
     };
   }
 
-  const { data: administratorsRaw } = await supabase
-    .from("course_administrators")
-    .select(`
-      id,
-      admin_id,
-      active,
-      admin:users!course_administrators_admin_id_fkey (id, full_name, email)
-    `)
-    .eq("course_id", courseId)
-    .eq("active", true);
-
   const { data: sectionsRaw, error: sectionsError } = await supabase
     .from("sections")
     .select(`
@@ -865,6 +455,7 @@ export async function getCourseEditBundle(
         active,
         section_id,
         section_assignment_id,
+        faculty_lead_id,
         group_members (
           id,
           student_id,
@@ -920,6 +511,7 @@ export async function getCourseEditBundle(
         active: group.active ?? true,
         section_id: group.section_id,
         section_assignment_id: group.section_assignment_id,
+        faculty_lead_id: group.faculty_lead_id ?? null,
         members,
         session: null as CourseEditGroup["session"],
       };
@@ -927,56 +519,58 @@ export async function getCourseEditBundle(
 
     const templateGroups = allGroups.filter((g) => !g.section_assignment_id && g.active);
 
-    const assignments: CourseEditAssignment[] = (section.section_assignments ?? []).map((assignment) => {
-      const caseRaw = Array.isArray(assignment.cases) ? assignment.cases[0] : assignment.cases;
-      const sessions = assignment.case_sessions ?? [];
-      const sessionByGroup = new Map(
-        sessions
-          .filter((s) => s.group_id)
-          .map((s) => [s.group_id as string, s])
-      );
+    const assignments: CourseEditAssignment[] = (section.section_assignments ?? [])
+      .filter((assignment) => Boolean(assignment.case_id))
+      .map((assignment) => {
+        const caseRaw = Array.isArray(assignment.cases) ? assignment.cases[0] : assignment.cases;
+        const sessions = assignment.case_sessions ?? [];
+        const sessionByGroup = new Map(
+          sessions
+            .filter((s) => s.group_id)
+            .map((s) => [s.group_id as string, s])
+        );
 
-      const groups = allGroups
-        .filter((g) => g.section_assignment_id === assignment.id && g.active)
-        .map((g) => {
-          const session = sessionByGroup.get(g.id) ?? null;
-          return {
-            ...g,
-            session: session
-              ? {
-                  id: session.id,
-                  status: session.status,
-                  current_phase: session.current_phase,
-                  started_at: session.started_at,
-                  completed_at: session.completed_at,
-                }
-              : null,
-          };
+        const groups = allGroups
+          .filter((g) => g.section_assignment_id === assignment.id && g.active)
+          .map((g) => {
+            const session = sessionByGroup.get(g.id) ?? null;
+            return {
+              ...g,
+              session: session
+                ? {
+                    id: session.id,
+                    status: session.status,
+                    current_phase: session.current_phase,
+                    started_at: session.started_at,
+                    completed_at: session.completed_at,
+                  }
+                : null,
+            };
+          });
+
+        const locked = groups.some((g) => {
+          const status = g.session?.status?.toLowerCase() ?? "";
+          return status === "in progress" || status === "completed" || status === "archived";
         });
 
-      const locked = groups.some((g) => {
-        const status = g.session?.status?.toLowerCase() ?? "";
-        return status === "in progress" || status === "completed" || status === "archived";
+        return {
+          id: assignment.id,
+          case_id: assignment.case_id as string,
+          sim_time: assignment.sim_time,
+          presim_time: assignment.presim_time,
+          case: caseRaw
+            ? {
+                id: caseRaw.id,
+                name: caseRaw.name,
+                description: caseRaw.description,
+                admitting_diagnosis: caseRaw.admitting_diagnosis,
+                phase_count: caseRaw.phase_count,
+              }
+            : null,
+          groups,
+          canEditGroups: !locked,
+        };
       });
-
-      return {
-        id: assignment.id,
-        case_id: assignment.case_id,
-        sim_time: assignment.sim_time,
-        presim_time: assignment.presim_time,
-        case: caseRaw
-          ? {
-              id: caseRaw.id,
-              name: caseRaw.name,
-              description: caseRaw.description,
-              admitting_diagnosis: caseRaw.admitting_diagnosis,
-              phase_count: caseRaw.phase_count,
-            }
-          : null,
-        groups,
-        canEditGroups: !locked,
-      };
-    });
 
     return {
       id: section.id,
@@ -1002,17 +596,10 @@ export async function getCourseEditBundle(
     };
   });
 
-  const administrators = (administratorsRaw ?? []).map((a) => ({
-    id: a.id,
-    admin_id: a.admin_id,
-    active: a.active,
-    admin: normalizeStudent(a.admin),
-  }));
-
   return {
     success: true,
     message: "Course edit bundle loaded.",
-    data: { course, administrators, sections },
+    data: { course, sections },
   };
 }
 
@@ -1020,48 +607,132 @@ export type AssignmentGroupPayload = {
   id?: string;
   name: string;
   studentIds: string[];
+  facultyLeadId?: string | null;
 };
 
-/**
- * Resolve payload rows onto existing groups so saves update in place.
- * Match order: explicit id → exact name → remaining by order (covers renames).
- */
-function matchGroupPayloadsToExisting(
-  existing: Array<{ id: string; name: string }>,
-  payloads: AssignmentGroupPayload[]
-): AssignmentGroupPayload[] {
-  const existingIds = new Set(existing.map((g) => g.id));
-  const used = new Set<string>();
-  const result = payloads.map((p) => ({ ...p, id: p.id || undefined }));
+export async function replaceSectionTemplateGroups(
+  sectionId: string,
+  groupsPayload: AssignmentGroupPayload[],
+  options?: { courseId?: string }
+): Promise<ActionResponse<{ groupCount: number }>> {
+  const supabase = serviceClient();
 
-  for (const p of result) {
-    if (p.id && existingIds.has(p.id)) {
-      used.add(p.id);
+  const { data: existingGroups } = await supabase
+    .from("groups")
+    .select("id")
+    .eq("section_id", sectionId)
+    .is("section_assignment_id", null);
+
+  const keepIds = new Set(
+    groupsPayload.map((g) => g.id).filter((id): id is string => Boolean(id))
+  );
+
+  for (const existing of existingGroups ?? []) {
+    if (keepIds.has(existing.id)) continue;
+    await supabase.from("group_members").delete().eq("group_id", existing.id);
+    await supabase.from("groups").delete().eq("id", existing.id);
+  }
+
+  for (const payload of groupsPayload) {
+    let groupId = payload.id;
+    const faculty_lead_id = payload.facultyLeadId || null;
+    if (groupId) {
+      const { data: existing } = await supabase
+        .from("groups")
+        .select("name")
+        .eq("id", groupId)
+        .single();
+      await supabase
+        .from("groups")
+        .update({
+          name: payload.name,
+          active: true,
+          section_id: sectionId,
+          section_assignment_id: null,
+          faculty_lead_id,
+        })
+        .eq("id", groupId);
+      if (existing?.name && existing.name !== payload.name) {
+        await supabase
+          .from("groups")
+          .update({ name: payload.name })
+          .eq("section_id", sectionId)
+          .eq("name", existing.name);
+      }
     } else {
-      p.id = undefined;
+      const { data: created, error: createError } = await supabase
+        .from("groups")
+        .insert({
+          name: payload.name,
+          section_id: sectionId,
+          section_assignment_id: null,
+          active: true,
+          faculty_lead_id,
+        })
+        .select()
+        .single();
+      if (createError || !created) {
+        return {
+          success: false,
+          message: `Failed to create group ${payload.name}.`,
+          error: createError ?? undefined,
+        };
+      }
+      groupId = created.id;
+    }
+
+    await supabase.from("group_members").delete().eq("group_id", groupId);
+    if (payload.studentIds.length > 0) {
+      const { error: memberError } = await supabase.from("group_members").insert(
+        payload.studentIds.map((studentId) => ({
+          group_id: groupId!,
+          student_id: studentId,
+          active: true,
+        }))
+      );
+      if (memberError) {
+        return { success: false, message: "Failed to update group members.", error: memberError };
+      }
+    }
+
+    for (const studentId of payload.studentIds) {
+      await supabase.from("section_enrollments").upsert(
+        { section_id: sectionId, student_id: studentId, active: true },
+        { onConflict: "section_id,student_id" }
+      );
     }
   }
 
-  for (const p of result) {
-    if (p.id) continue;
-    const match = existing.find((e) => e.name === p.name && !used.has(e.id));
-    if (match) {
-      p.id = match.id;
-      used.add(match.id);
-    }
+  // Keep per-simulation groups in sync with the section template (by name).
+  const { data: assignments } = await supabase
+    .from("section_assignments")
+    .select("id")
+    .eq("section_id", sectionId);
+  for (const assignment of assignments ?? []) {
+    const { data: assignmentGroups } = await supabase
+      .from("groups")
+      .select("id, name")
+      .eq("section_assignment_id", assignment.id);
+    const byName = Object.fromEntries((assignmentGroups ?? []).map((g) => [g.name, g.id]));
+    const synced = await replaceAssignmentGroups(
+      assignment.id,
+      groupsPayload.map((g) => ({
+        id: byName[g.name],
+        name: g.name,
+        studentIds: g.studentIds,
+        facultyLeadId: g.facultyLeadId,
+      })),
+      { force: true, courseId: options?.courseId }
+    );
+    if (!synced.success) return synced;
   }
 
-  const remaining = existing.filter((e) => !used.has(e.id));
-  let idx = 0;
-  for (const p of result) {
-    if (p.id) continue;
-    if (idx < remaining.length) {
-      p.id = remaining[idx++].id;
-      used.add(p.id);
-    }
-  }
-
-  return result;
+  revalidateCoursePaths(options?.courseId);
+  return {
+    success: true,
+    message: "Section groups updated.",
+    data: { groupCount: groupsPayload.length },
+  };
 }
 
 export async function replaceAssignmentGroups(
@@ -1105,34 +776,26 @@ export async function replaceAssignmentGroups(
     .select("id, name, active")
     .eq("section_assignment_id", assignmentId);
 
-  const activeExisting = (existingGroups ?? []).filter((g) => g.active !== false);
-  const matchedPayload = matchGroupPayloadsToExisting(
-    activeExisting.length > 0 ? activeExisting : existingGroups ?? [],
-    groupsPayload
-  );
-
   const keepIds = new Set(
-    matchedPayload.map((g) => g.id).filter((id): id is string => Boolean(id))
+    groupsPayload.map((g) => g.id).filter((id): id is string => Boolean(id))
   );
 
   for (const existing of existingGroups ?? []) {
     if (keepIds.has(existing.id)) continue;
-    if (locked) {
+    const hasSession = (existingSessions ?? []).some((s) => s.group_id === existing.id);
+    if (hasSession || locked) {
       await supabase.from("groups").update({ active: false }).eq("id", existing.id);
     } else {
       await supabase.from("group_members").delete().eq("group_id", existing.id);
-      await supabase
-        .from("case_sessions")
-        .delete()
-        .eq("group_id", existing.id)
-        .eq("section_assignment_id", assignmentId);
+      await supabase.from("case_sessions").delete().eq("group_id", existing.id).eq("section_assignment_id", assignmentId);
       await supabase.from("groups").delete().eq("id", existing.id);
     }
   }
 
-  for (const payload of matchedPayload) {
+  for (const payload of groupsPayload) {
     let groupId = payload.id;
 
+    const faculty_lead_id = payload.facultyLeadId || null;
     if (groupId) {
       await supabase
         .from("groups")
@@ -1141,6 +804,7 @@ export async function replaceAssignmentGroups(
           active: true,
           section_id: assignment.section_id,
           section_assignment_id: assignmentId,
+          faculty_lead_id,
         })
         .eq("id", groupId);
     } else {
@@ -1151,6 +815,7 @@ export async function replaceAssignmentGroups(
           section_id: assignment.section_id,
           section_assignment_id: assignmentId,
           active: true,
+          faculty_lead_id,
         })
         .select()
         .single();
@@ -1188,165 +853,10 @@ export async function replaceAssignmentGroups(
     }
   }
 
-  const assignedStudentIds = [
-    ...new Set(groupsPayload.flatMap((g) => g.studentIds)),
-  ];
-
-  if (assignment.section_id && assignedStudentIds.length > 0) {
-    const { data: sectionRow } = await supabase
-      .from("sections")
-      .select("course_id")
-      .eq("id", assignment.section_id)
-      .single();
-
-    if (sectionRow?.course_id) {
-      const { data: siblingSections } = await supabase
-        .from("sections")
-        .select("id")
-        .eq("course_id", sectionRow.course_id)
-        .neq("id", assignment.section_id);
-
-      const otherSectionIds = (siblingSections ?? []).map((s) => s.id);
-      if (otherSectionIds.length > 0) {
-        await supabase
-          .from("section_enrollments")
-          .delete()
-          .in("section_id", otherSectionIds)
-          .in("student_id", assignedStudentIds);
-      }
-    }
-  }
-
   revalidateCoursePaths(options?.courseId);
   return {
     success: true,
     message: "Assignment groups updated.",
-    data: { groupCount: groupsPayload.length },
-  };
-}
-
-export async function replaceSectionTemplateGroups(
-  sectionId: string,
-  groupsPayload: AssignmentGroupPayload[],
-  options?: { courseId?: string }
-): Promise<ActionResponse<{ groupCount: number }>> {
-  const supabase = serviceClient();
-
-  const { data: existingGroups } = await supabase
-    .from("groups")
-    .select("id, name, active")
-    .eq("section_id", sectionId)
-    .is("section_assignment_id", null);
-
-  const matchedPayload = matchGroupPayloadsToExisting(
-    existingGroups ?? [],
-    groupsPayload
-  );
-
-  const keepIds = new Set(
-    matchedPayload.map((g) => g.id).filter((id): id is string => Boolean(id))
-  );
-
-  for (const existing of existingGroups ?? []) {
-    if (keepIds.has(existing.id)) continue;
-    await supabase.from("group_members").delete().eq("group_id", existing.id);
-    await supabase.from("groups").delete().eq("id", existing.id);
-  }
-
-  for (const payload of matchedPayload) {
-    let groupId = payload.id;
-
-    if (groupId) {
-      await supabase
-        .from("groups")
-        .update({
-          name: payload.name,
-          active: true,
-          section_id: sectionId,
-          section_assignment_id: null,
-        })
-        .eq("id", groupId);
-    } else {
-      const { data: created, error: createError } = await supabase
-        .from("groups")
-        .insert({
-          name: payload.name,
-          section_id: sectionId,
-          section_assignment_id: null,
-          active: true,
-        })
-        .select()
-        .single();
-
-      if (createError || !created) {
-        return {
-          success: false,
-          message: `Failed to create group ${payload.name}.`,
-          error: createError ?? undefined,
-        };
-      }
-      groupId = created.id;
-    }
-
-    await supabase.from("group_members").delete().eq("group_id", groupId);
-    if (payload.studentIds.length > 0) {
-      const { error: memberError } = await supabase.from("group_members").insert(
-        payload.studentIds.map((studentId) => ({
-          group_id: groupId!,
-          student_id: studentId,
-          active: true,
-        }))
-      );
-      if (memberError) {
-        return { success: false, message: "Failed to update group members.", error: memberError };
-      }
-    }
-
-    for (const studentId of payload.studentIds) {
-      await supabase.from("section_enrollments").upsert(
-        {
-          section_id: sectionId,
-          student_id: studentId,
-          active: true,
-        },
-        { onConflict: "section_id,student_id" }
-      );
-    }
-  }
-
-  const assignedStudentIds = [
-    ...new Set(groupsPayload.flatMap((g) => g.studentIds)),
-  ];
-
-  if (assignedStudentIds.length > 0) {
-    const { data: sectionRow } = await supabase
-      .from("sections")
-      .select("course_id")
-      .eq("id", sectionId)
-      .single();
-
-    if (sectionRow?.course_id) {
-      const { data: siblingSections } = await supabase
-        .from("sections")
-        .select("id")
-        .eq("course_id", sectionRow.course_id)
-        .neq("id", sectionId);
-
-      const otherSectionIds = (siblingSections ?? []).map((s) => s.id);
-      if (otherSectionIds.length > 0) {
-        await supabase
-          .from("section_enrollments")
-          .delete()
-          .in("section_id", otherSectionIds)
-          .in("student_id", assignedStudentIds);
-      }
-    }
-  }
-
-  revalidateCoursePaths(options?.courseId);
-  return {
-    success: true,
-    message: "Section groups updated.",
     data: { groupCount: groupsPayload.length },
   };
 }
@@ -1463,7 +973,7 @@ export async function ensureAssignmentGroupsFromTemplate(
 
 export async function completeAllSessionsForAssignment(
   assignmentId: string,
-  options?: { courseId?: string }
+  courseId?: string
 ): Promise<ActionResponse<{ updated: number }>> {
   const supabase = serviceClient();
   const now = new Date().toISOString();
@@ -1494,17 +1004,13 @@ export async function completeAllSessionsForAssignment(
     if (!error) updated += 1;
   }
 
-  revalidateCoursePaths(options?.courseId);
-  return {
-    success: true,
-    message: `Completed ${updated} session(s).`,
-    data: { updated },
-  };
+  revalidateCoursePaths(courseId);
+  return { success: true, message: `Completed ${updated} session(s).`, data: { updated } };
 }
 
 export async function expireAllSessionsForAssignment(
   assignmentId: string,
-  options?: { courseId?: string }
+  courseId?: string
 ): Promise<ActionResponse<{ updated: number }>> {
   const supabase = serviceClient();
 
@@ -1530,10 +1036,6 @@ export async function expireAllSessionsForAssignment(
     if (!error) updated += 1;
   }
 
-  revalidateCoursePaths(options?.courseId);
-  return {
-    success: true,
-    message: `Expired ${updated} session(s).`,
-    data: { updated },
-  };
+  revalidateCoursePaths(courseId);
+  return { success: true, message: `Expired ${updated} session(s).`, data: { updated } };
 }

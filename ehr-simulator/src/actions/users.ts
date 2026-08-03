@@ -111,36 +111,47 @@ export async function getUsersByEmails(emails: string[]) {
 
   const { data, error } = await supabase
     .from("users")
-    .select("id, email")
+    .select("id, email, full_name")
     .in("email", emails)
 
   if (error) throw new Error(error.message)
   return data || []
 }
-export async function getGroupIdForSession(sessionId: string) {
+export async function getUsersGroupId(userId: string) {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
   const { data, error } = await supabase
-    .from("case_sessions")
-    .select("group_id")
-    .eq("id", sessionId)
-    .maybeSingle();
+    .from('users')
+    .select(`id,
+      full_name,
+      role,
+      group_members!inner(group_id)
+      `)
+    .eq('id', userId)
+    .single();
 
   if (error) {
     const response: ActionResponse = {
       success: false,
       error,
-      message: "Failed to retrieve session group",
+      message: 'Failed to retrieve user data'
     };
     return response;
   }
+  const extractedGroupId = data.group_members[0]?.group_id
 
+  const cleanData = {
+    id: data.id,
+    full_name: data.full_name,
+    group_id: extractedGroupId,
+    role: data.role
+  };
   return {
     success: true,
-    data: { group_id: data?.group_id ?? null },
-    message: "Successfully retrieved session group.",
-  };
+    data: cleanData,
+    message: 'Successfully retrieved user data.'
+  }
 }

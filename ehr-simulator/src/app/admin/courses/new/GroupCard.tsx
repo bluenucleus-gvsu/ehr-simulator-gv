@@ -50,9 +50,8 @@ interface GroupCardProps {
   onDeleteGroup: (sectionId: string, groupName: string) => void
   /** Other sections this group can be moved to */
   availableSections?: { id: string; label: string }[]
+  /** Called when the user selects a target section */
   onMoveGroup?: (fromSectionId: string, groupName: string, toSectionId: string) => void
-  showFacultyLead?: boolean
-  onRemoveStudent?: (student: Student) => void
 }
 
 export const GroupCard = ({
@@ -73,8 +72,6 @@ export const GroupCard = ({
   onDeleteGroup,
   availableSections = [],
   onMoveGroup,
-  showFacultyLead = true,
-  onRemoveStudent,
 }: GroupCardProps) => {
   const [editing, setEditing] = useState(false)
   const [editValue, setEditValue] = useState("")
@@ -83,10 +80,8 @@ export const GroupCard = ({
   const dropKey = `${sectionId}::${groupName}`
   const isOver =
     dragOverGroup === dropKey &&
-    !(
-      draggedStudent?.fromSection === sectionId &&
-      draggedStudent?.fromGroup === groupName
-    )
+    draggedStudent?.fromSection === sectionId &&
+    draggedStudent?.fromGroup !== groupName
 
   const handleStartEdit = () => {
     setEditing(true)
@@ -211,7 +206,6 @@ export const GroupCard = ({
       </div>
 
       {/* Faculty Lead */}
-      {showFacultyLead && (
       <div className="mb-2 pb-2 border-b border-slate-100">
         <p className="text-xs font-semibold text-slate-500 mb-1.5">Faculty Lead</p>
         <div className="flex items-center gap-1">
@@ -247,7 +241,6 @@ export const GroupCard = ({
           )}
         </div>
       </div>
-      )}
 
       {/* Students */}
       <div className="space-y-1.5 flex-1">
@@ -263,7 +256,6 @@ export const GroupCard = ({
               draggable
               onDragStart={(e) => onDragStart(e, student, groupName, sectionId)}
               onDragEnd={onDragEnd}
-              onRemove={onRemoveStudent}
               className={draggedStudent?.student.email === student.email ? "opacity-40" : ""}
               fromGroup={groupName}
               fromSection={sectionId}

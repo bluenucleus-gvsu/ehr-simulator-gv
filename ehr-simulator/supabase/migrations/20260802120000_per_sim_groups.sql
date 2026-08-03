@@ -18,13 +18,10 @@ CREATE TABLE IF NOT EXISTS public.section_enrollments (
 CREATE INDEX IF NOT EXISTS section_enrollments_section_id_idx
   ON public.section_enrollments (section_id);
 
-CREATE INDEX IF NOT EXISTS section_enrollments_student_id_idx
-  ON public.section_enrollments (student_id);
-
 INSERT INTO public.section_enrollments (section_id, student_id, active)
 SELECT DISTINCT g.section_id, gm.student_id, COALESCE(gm.active, true)
-FROM public.group_members gm
-JOIN public.groups g ON g.id = gm.group_id
+FROM public.groups g
+JOIN public.group_members gm ON gm.group_id = g.id
 WHERE g.section_id IS NOT NULL
   AND gm.student_id IS NOT NULL
 ON CONFLICT (section_id, student_id) DO NOTHING;
@@ -32,34 +29,39 @@ ON CONFLICT (section_id, student_id) DO NOTHING;
 DO $$
 DECLARE
   assignment RECORD;
-  template_group RECORD;
+  template RECORD;
   new_group_id UUID;
+  member RECORD;
 BEGIN
   FOR assignment IN
     SELECT sa.id AS assignment_id, sa.section_id
     FROM public.section_assignments sa
-    WHERE sa.section_id IS NOT NULL
+    ORDER BY sa.created_at NULLS LAST, sa.id
   LOOP
-    FOR template_group IN
+    FOR template IN
       SELECT g.id, g.name, g.section_id
       FROM public.groups g
       WHERE g.section_id = assignment.section_id
         AND g.section_assignment_id IS NULL
     LOOP
       INSERT INTO public.groups (name, section_id, section_assignment_id, active)
-      VALUES (template_group.name, template_group.section_id, assignment.assignment_id, true)
+      VALUES (template.name, template.section_id, assignment.assignment_id, true)
       RETURNING id INTO new_group_id;
 
-      INSERT INTO public.group_members (group_id, student_id, active)
-      SELECT new_group_id, gm.student_id, COALESCE(gm.active, true)
-      FROM public.group_members gm
-      WHERE gm.group_id = template_group.id
-        AND gm.student_id IS NOT NULL;
+      FOR member IN
+        SELECT student_id, active
+        FROM public.group_members
+        WHERE group_id = template.id
+          AND student_id IS NOT NULL
+      LOOP
+        INSERT INTO public.group_members (group_id, student_id, active)
+        VALUES (new_group_id, member.student_id, COALESCE(member.active, true));
+      END LOOP;
 
       UPDATE public.case_sessions
       SET group_id = new_group_id
       WHERE section_assignment_id = assignment.assignment_id
-        AND group_id = template_group.id;
+        AND group_id = template.id;
     END LOOP;
   END LOOP;
 END $$;
@@ -82,7 +84,7 @@ BEGIN
     NEW.id
   FROM public.groups g
   WHERE g.section_assignment_id = NEW.id
-    AND COALESCE(g.active, true) = true
+    AND COALESCE(g.active, true)
   ON CONFLICT (section_assignment_id, group_id) DO NOTHING;
 
   RETURN NEW;
@@ -100,7 +102,7 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  IF COALESCE(NEW.active, true) = false THEN
+  IF NOT COALESCE(NEW.active, true) THEN
     RETURN NEW;
   END IF;
 
@@ -137,19 +139,7 @@ RETURNS jsonb
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  WITH enrollment_rows AS (
-    SELECT
-      se.section_id,
-      s.course_id,
-      c.name AS course_name,
-      c.code AS course_code,
-      se.active AS enrollment_active
-    FROM public.section_enrollments se
-    JOIN public.sections s ON s.id = se.section_id
-    JOIN public.courses c ON c.id = s.course_id
-    WHERE se.student_id = p_user_id
-  ),
-  membership_rows AS (
+  WITH student_groups AS (
     SELECT
       gm.group_id,
       g.section_id,
@@ -164,29 +154,39 @@ AS $$
     JOIN public.courses c ON c.id = s.course_id
     WHERE gm.student_id = p_user_id
       AND g.section_assignment_id IS NOT NULL
-      AND COALESCE(g.active, true) = true
+      AND COALESCE(g.active, true)
   ),
-  course_keys AS (
-    SELECT course_id, course_name, course_code FROM enrollment_rows
-    UNION
-    SELECT course_id, course_name, course_code FROM membership_rows
+  enrolled_courses AS (
+    SELECT DISTINCT
+      s.course_id,
+      c.name AS course_name,
+      c.code AS course_code,
+      se.active AS enrollment_active
+    FROM public.section_enrollments se
+    JOIN public.sections s ON s.id = se.section_id
+    JOIN public.courses c ON c.id = s.course_id
+    WHERE se.student_id = p_user_id
   ),
   active_course_ids AS (
-    SELECT DISTINCT course_id FROM enrollment_rows WHERE enrollment_active = true
+    SELECT DISTINCT course_id FROM student_groups WHERE member_active = true
     UNION
-    SELECT DISTINCT course_id FROM membership_rows WHERE member_active = true
+    SELECT DISTINCT course_id FROM enrolled_courses WHERE enrollment_active = true
   ),
   courses_distinct AS (
     SELECT DISTINCT
-      ck.course_id,
-      ck.course_name,
-      ck.course_code,
-      (ck.course_id IN (SELECT course_id FROM active_course_ids)) AS is_active
-    FROM course_keys ck
+      x.course_id,
+      x.course_name,
+      x.course_code,
+      (x.course_id IN (SELECT course_id FROM active_course_ids)) AS is_active
+    FROM (
+      SELECT course_id, course_name, course_code FROM student_groups
+      UNION
+      SELECT course_id, course_name, course_code FROM enrolled_courses
+    ) x
   ),
   assigned_per_course AS (
     SELECT
-      mr.course_id,
+      sg.course_id,
       jsonb_agg(DISTINCT jsonb_build_object(
         'id', sa.id,
         'case_id', sa.case_id,
@@ -217,50 +217,50 @@ AS $$
           FROM public.group_members gm2
           JOIN public.users u2 ON u2.id = gm2.student_id
           JOIN auth.users au2 ON au2.id = gm2.student_id
-          WHERE gm2.group_id = mr.group_id
+          WHERE gm2.group_id = sg.group_id
             AND gm2.student_id != p_user_id
         )
       )) AS cases
-    FROM membership_rows mr
-    JOIN public.section_assignments sa ON sa.id = mr.section_assignment_id
+    FROM student_groups sg
+    JOIN public.section_assignments sa ON sa.id = sg.section_assignment_id
     JOIN public.cases cd ON cd.id = sa.case_id
     LEFT JOIN public.case_sessions cs
       ON cs.section_assignment_id = sa.id
-     AND cs.group_id = mr.group_id
+     AND cs.group_id = sg.group_id
      AND cs.status NOT IN ('completed', 'archived')
-    WHERE mr.member_active = true
+    WHERE sg.member_active = true
       AND NOT EXISTS (
         SELECT 1
         FROM public.case_sessions cs_terminal
         WHERE cs_terminal.section_assignment_id = sa.id
-          AND cs_terminal.group_id = mr.group_id
+          AND cs_terminal.group_id = sg.group_id
           AND cs_terminal.status IN ('completed', 'archived')
       )
-    GROUP BY mr.course_id
+    GROUP BY sg.course_id
   ),
   completed_sessions AS (
     SELECT DISTINCT
-      mr.course_id,
+      sg.course_id,
       cs.id AS session_id,
       cd.name AS case_name,
       cs.completed_at,
       cs.feedback,
       cs.group_id
-    FROM membership_rows mr
-    JOIN public.case_sessions cs ON cs.group_id = mr.group_id
+    FROM student_groups sg
+    JOIN public.case_sessions cs ON cs.group_id = sg.group_id
     JOIN public.cases cd ON cd.id = cs.case_id
     WHERE cs.status = 'completed'
   ),
   expired_sessions AS (
     SELECT DISTINCT
-      mr.course_id,
+      sg.course_id,
       cs.id AS session_id,
       cd.name AS case_name,
       sa.sim_time AS expired_at,
       cs.feedback,
       cs.group_id
-    FROM membership_rows mr
-    JOIN public.case_sessions cs ON cs.group_id = mr.group_id
+    FROM student_groups sg
+    JOIN public.case_sessions cs ON cs.group_id = sg.group_id
     JOIN public.section_assignments sa ON sa.id = cs.section_assignment_id
     JOIN public.cases cd ON cd.id = cs.case_id
     WHERE cs.status = 'archived'
