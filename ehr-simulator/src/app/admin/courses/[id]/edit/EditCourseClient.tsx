@@ -5,15 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChangeEvent, useRef, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import {
-  AlertCircleIcon,
-  ArrowLeft,
-  CheckCircle2Icon,
-  Loader2,
-  Trash2,
-  Upload,
-  X,
-} from "lucide-react";
+import { AlertCircleIcon, ArrowLeft, Loader2, Trash2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,49 +43,15 @@ import SectionGroupsEditor, {
   useCourseGroupsLive,
 } from "./SectionGroupsEditor";
 import { DateTimePicker } from "../../new/SectionCard";
+import {
+  GVSU_EMAIL_DOMAIN,
+  parseStudentCSV,
+  studentFromCsvFields,
+} from "../../new/csvStudents";
 import type { Student } from "../../new/types";
 
-type Props = {
-  bundle: CourseEditBundle;
-};
-
-function parseCSV(text: string): Student[] {
-  const lines = text.trim().split("\n");
-  if (lines.length < 2) throw new Error("CSV file is empty or contains only headers");
-  const header = lines[0].split(",").map((h) => h.replace(/"/g, "").trim());
-  const cols = ["User Name", "First Name", "Last Name"];
-  const indices = cols.map((col) => header.indexOf(col));
-  if (indices.includes(-1)) {
-    throw new Error(`Missing columns: ${cols.filter((_, i) => indices[i] === -1).join(", ")}`);
-  }
-  const [uIdx, fIdx, lIdx] = indices;
-  return lines
-    .slice(1)
-    .filter((line) => line.trim())
-    .map((line) => {
-      const values: string[] = [];
-      let current = "";
-      let inQuotes = false;
-      for (const char of line) {
-        if (char === '"') inQuotes = !inQuotes;
-        else if (char === "," && !inQuotes) {
-          values.push(current.trim());
-          current = "";
-        } else current += char;
-      }
-      values.push(current.trim());
-      const clean = (idx: number) => values[idx]?.replace(/"/g, "") || "";
-      return {
-        id: crypto.randomUUID(),
-        email: `${clean(uIdx)}@mail.gvsu.edu`,
-        full_name: `${clean(fIdx)} ${clean(lIdx)}`.trim(),
-        role: "student",
-        status: null,
-        created_at: null,
-        updated_at: null,
-      } satisfies Student;
-    });
-}
+type Props = { bundle: CourseEditBundle };
+type SecDraft = Record<"name" | "semester" | "meeting_time" | "start_date" | "end_date", string>;
 
 export default function EditCourseClient({ bundle }: Props) {
   return (
@@ -106,18 +64,15 @@ export default function EditCourseClient({ bundle }: Props) {
 function EditCourseForm({ bundle }: Props) {
   const router = useRouter();
   const { bySection, courseId, unassigned, setUnassigned } = useCourseGroupsLive();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFile, setSelectedFile] = useState<File>();
-  const [fileUploadError, setFileUploadError] = useState("");
-  const [csvCount, setCsvCount] = useState(0);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [csvError, setCsvError] = useState("");
   const [manual, setManual] = useState({ userName: "", firstName: "", lastName: "" });
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const [busy, setBusy] = useState<"save" | "delete" | string | null>(null);
   const [name, setName] = useState(bundle.course.name);
   const [code, setCode] = useState(bundle.course.code);
   const [active, setActive] = useState(bundle.course.active ?? true);
-  const [saving, setSaving] = useState(false);
-  const [sectionDrafts, setSectionDrafts] = useState(
+  const [sectionDrafts, setSectionDrafts] = useState<Record<string, SecDraft>>(
     Object.fromEntries(
       bundle.sections.map((s) => [
         s.id,
@@ -131,19 +86,22 @@ function EditCourseForm({ bundle }: Props) {
       ])
     )
   );
-  const [busyAssignmentId, setBusyAssignmentId] = useState<string | null>(null);
 
-  const resolveGroupName = (sectionId: string, name: string) => {
-    const aliases = bySection[sectionId]?.nameAliases ?? {};
-    let current = name;
-    for (let i = 0; i < 20 && aliases[current]; i++) current = aliases[current];
-    return current;
+  const patchSection = (id: string, patch: Partial<SecDraft>) =>
+    setSectionDrafts((p) => ({ ...p, [id]: { ...p[id], ...patch } }));
+
+  const aliasName = (sectionId: string, n: string) => {
+    const a = bySection[sectionId]?.nameAliases ?? {};
+    let cur = n;
+    for (let i = 0; i < 20 && a[cur]; i++) cur = a[cur];
+    return cur;
   };
 
-  const ingestStudents = async (parsed: Student[]) => {
+  const ingest = async (parsed: Student[]) => {
     await provisionStudents(parsed);
-    const emails = parsed.map((s) => s.email).filter((email): email is string => Boolean(email));
-    const users = await getUsersByEmails(emails);
+    const users = await getUsersByEmails(
+      parsed.map((s) => s.email).filter((e): e is string => Boolean(e))
+    );
     const taken = new Set([
       ...unassigned.map((s) => s.id),
       ...Object.values(bySection).flatMap((d) =>
@@ -159,37 +117,31 @@ function EditCourseForm({ bundle }: Props) {
         role: "student",
         is_active: true,
       }));
-    setUnassigned((prev) => [...prev, ...mapped]);
+    setUnassigned((p) => [...p, ...mapped]);
     return mapped.length;
   };
 
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const onCsv = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.name.split(".").pop()?.toLowerCase() !== "csv") {
-      setFileUploadError(`Expected .csv, received .${file.name.split(".").pop()}`);
-      setSelectedFile(undefined);
-      setCsvCount(0);
+      setCsvError(`Expected .csv, received .${file.name.split(".").pop()}`);
       return;
     }
     const reader = new FileReader();
-    reader.onload = async (event) => {
+    reader.onload = async (ev) => {
       try {
-        const count = await ingestStudents(parseCSV(event.target?.result as string));
-        setSelectedFile(file);
-        setCsvCount(count);
-        setFileUploadError("");
-        toast.success(`${count} students added to unassigned.`);
+        const n = await ingest(parseStudentCSV(String(ev.target?.result ?? "")));
+        setCsvError("");
+        toast.success(`${n} students added to unassigned.`);
       } catch (err: unknown) {
-        setFileUploadError(err instanceof Error ? err.message : "Upload failed");
-        setSelectedFile(undefined);
-        setCsvCount(0);
+        setCsvError(err instanceof Error ? err.message : "Upload failed");
       }
     };
     reader.readAsText(file);
   };
 
-  const handleManualAdd = async () => {
+  const onManual = async () => {
     const userName = manual.userName.trim();
     const firstName = manual.firstName.trim();
     const lastName = manual.lastName.trim();
@@ -198,20 +150,10 @@ function EditCourseForm({ bundle }: Props) {
       return;
     }
     try {
-      const count = await ingestStudents([
-        {
-          id: crypto.randomUUID(),
-          email: `${userName}@mail.gvsu.edu`,
-          full_name: `${firstName} ${lastName}`.trim(),
-          role: "student",
-          status: null,
-          created_at: null,
-          updated_at: null,
-        },
-      ]);
-      if (count === 0) toast.error("Student already in this course.");
+      const n = await ingest([studentFromCsvFields(userName, firstName, lastName)]);
+      if (!n) toast.error("Student already in this course.");
       else {
-        toast.success(`Added ${firstName} ${lastName} (${userName}@mail.gvsu.edu) to unassigned.`);
+        toast.success(`Added ${firstName} ${lastName} (${userName}${GVSU_EMAIL_DOMAIN}).`);
         setManual({ userName: "", firstName: "", lastName: "" });
       }
     } catch (err: unknown) {
@@ -219,21 +161,15 @@ function EditCourseForm({ bundle }: Props) {
     }
   };
 
-  const handleClearCsv = () => {
-    setSelectedFile(undefined);
-    setFileUploadError("");
-    setCsvCount(0);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const saveEverything = async () => {
-    setSaving(true);
+  const save = async () => {
+    setBusy("save");
+    const stop = (msg: string) => {
+      toast.error(msg);
+      setBusy(null);
+    };
     const courseResult = await updateCourse({ id: bundle.course.id, name, code, active });
-    if (!courseResult.success) {
-      toast.error(courseResult.message);
-      setSaving(false);
-      return;
-    }
+    if (!courseResult.success) return stop(courseResult.message);
+
     for (const [sectionId, draft] of Object.entries(sectionDrafts)) {
       const sectionResult = await updateSection({
         id: sectionId,
@@ -243,12 +179,9 @@ function EditCourseForm({ bundle }: Props) {
         start_date: draft.start_date || null,
         end_date: draft.end_date || null,
       });
-      if (!sectionResult.success) {
-        toast.error(sectionResult.message);
-        setSaving(false);
-        return;
-      }
-      const groupsDraft = bySection[sectionId] ?? {
+      if (!sectionResult.success) return stop(sectionResult.message);
+
+      const g = bySection[sectionId] ?? {
         groups: {},
         groupIds: {},
         facultyLeads: {},
@@ -256,25 +189,18 @@ function EditCourseForm({ bundle }: Props) {
       };
       const groupsResult = await replaceSectionTemplateGroups(
         sectionId,
-        Object.entries(groupsDraft.groups).map(([groupName, students]) => ({
-          id: groupsDraft.groupIds[groupName],
+        Object.entries(g.groups).map(([groupName, students]) => ({
+          id: g.groupIds[groupName],
           name: groupName,
           studentIds: students.map((s) => s.id),
-          facultyLeadId: groupsDraft.facultyLeads[groupName] || null,
+          facultyLeadId: g.facultyLeads[groupName] || null,
         })),
         { courseId }
       );
-      if (!groupsResult.success) {
-        toast.error(groupsResult.message);
-        setSaving(false);
-        return;
-      }
-      for (const facultyId of new Set(Object.values(groupsDraft.facultyLeads).filter(Boolean))) {
-        await createFacultySection({
-          section_id: sectionId,
-          faculty_id: facultyId,
-          active: true,
-        });
+      if (!groupsResult.success) return stop(groupsResult.message);
+
+      for (const facultyId of new Set(Object.values(g.facultyLeads).filter(Boolean))) {
+        await createFacultySection({ section_id: sectionId, faculty_id: facultyId, active: true });
       }
       for (const student of unassigned) {
         await createSectionEnrollment({
@@ -286,23 +212,23 @@ function EditCourseForm({ bundle }: Props) {
     }
     toast.success("Course saved.");
     router.refresh();
-    setSaving(false);
+    setBusy(null);
   };
 
-  const handleDeleteCourse = async () => {
-    setDeleting(true);
+  const destroy = async () => {
+    setBusy("delete");
     const result = await deleteCourse(bundle.course.id);
     if (!result.success) {
       toast.error(result.message);
-      setDeleting(false);
+      setBusy(null);
       return;
     }
     toast.success("Course deleted.");
     router.push("/admin/courses");
   };
 
-  const runBulk = async (assignmentId: string, action: "complete" | "expire") => {
-    setBusyAssignmentId(assignmentId);
+  const bulk = async (assignmentId: string, action: "complete" | "expire") => {
+    setBusy(assignmentId);
     const result =
       action === "complete"
         ? await completeAllSessionsForAssignment(assignmentId)
@@ -312,67 +238,56 @@ function EditCourseForm({ bundle }: Props) {
       toast.success(result.message);
       router.refresh();
     }
-    setBusyAssignmentId(null);
+    setBusy(null);
   };
 
   return (
     <div className="min-h-screen w-full bg-gray-50/50">
-      <header className="bg-white border-b px-8 py-4 sticky top-0 z-10">
-        <div className="flex justify-between items-center gap-4">
-          <div className="space-y-1">
-            <Button asChild variant="ghost" size="sm" className="-ml-2">
-              <Link href={`/admin/courses/${bundle.course.id}`}>
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Back to assignments
-              </Link>
-            </Button>
-            <h1 className="text-3xl font-bold tracking-tight text-blue-900">Edit Course</h1>
-            <p className="text-xs text-gray-500">
-              Course metadata, section roster, and per-simulation groups.
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <AlertDialog
-              onOpenChange={(open) => {
-                if (!open) setConfirmDelete(false);
-              }}
-            >
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" disabled={saving || deleting}>
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Delete course
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete this course?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This permanently deletes the course, sections, groups, assignments, and sessions.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <label className="flex items-center gap-2 text-sm">
-                  <Checkbox
-                    checked={confirmDelete}
-                    onCheckedChange={(v) => setConfirmDelete(v === true)}
-                  />
-                  I understand this cannot be undone
-                </label>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    className="bg-red-600"
-                    disabled={!confirmDelete || deleting}
-                    onClick={handleDeleteCourse}
-                  >
-                    {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete course"}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-            <Button onClick={saveEverything} disabled={saving || deleting}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save course"}
-            </Button>
-          </div>
+      <header className="bg-white border-b px-8 py-4 sticky top-0 z-10 flex justify-between items-center gap-4">
+        <div className="space-y-1">
+          <Button asChild variant="ghost" size="sm" className="-ml-2">
+            <Link href={`/admin/courses/${bundle.course.id}`}>
+              <ArrowLeft className="h-4 w-4 mr-1" /> Back to assignments
+            </Link>
+          </Button>
+          <h1 className="text-3xl font-bold tracking-tight text-blue-900">Edit Course</h1>
+        </div>
+        <div className="flex gap-2">
+          <AlertDialog onOpenChange={(o) => !o && setConfirmDelete(false)}>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" disabled={!!busy}>
+                <Trash2 className="h-4 w-4 mr-1" /> Delete course
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete this course?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Permanently deletes the course, sections, groups, assignments, and sessions.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox
+                  checked={confirmDelete}
+                  onCheckedChange={(v) => setConfirmDelete(v === true)}
+                />
+                I understand this cannot be undone
+              </label>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-red-600"
+                  disabled={!confirmDelete || busy === "delete"}
+                  onClick={destroy}
+                >
+                  {busy === "delete" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete course"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          <Button onClick={save} disabled={!!busy}>
+            {busy === "save" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save course"}
+          </Button>
         </div>
       </header>
 
@@ -383,8 +298,8 @@ function EditCourseForm({ bundle }: Props) {
               <Upload className="size-5 text-blue-600" /> Add students
             </CardTitle>
             <CardDescription>
-              Upload a CSV or enter User Name, First Name, and Last Name. Email is set to{" "}
-              <span className="font-mono">username@mail.gvsu.edu</span> automatically.
+              CSV or manual (User Name, First Name, Last Name). Email →{" "}
+              <span className="font-mono">username{GVSU_EMAIL_DOMAIN}</span> automatically.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -395,68 +310,50 @@ function EditCourseForm({ bundle }: Props) {
               </TabsList>
               <TabsContent value="csv" className="flex flex-col gap-2 mt-3">
                 <div className="flex gap-2">
-                  <Input
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    type="file"
-                    accept=".csv"
-                    className="pt-2 cursor-pointer"
-                  />
-                  <Button className="cursor-pointer flex-shrink-0" variant="secondary" onClick={handleClearCsv}>
+                  <Input ref={fileRef} onChange={onCsv} type="file" accept=".csv" className="pt-2 cursor-pointer" />
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setCsvError("");
+                      if (fileRef.current) fileRef.current.value = "";
+                    }}
+                  >
                     <X /> Clear
                   </Button>
                 </div>
-                {fileUploadError && (
+                {csvError && (
                   <Alert className="bg-red-50" variant="destructive">
                     <AlertCircleIcon />
                     <AlertTitle>Upload failed!</AlertTitle>
-                    <AlertDescription>{fileUploadError}</AlertDescription>
-                  </Alert>
-                )}
-                {selectedFile && !fileUploadError && (
-                  <Alert className="text-green-600 bg-green-50">
-                    <CheckCircle2Icon />
-                    <AlertTitle>
-                      Success! {csvCount} students loaded from{" "}
-                      <span className="font-mono">{selectedFile.name}</span>
-                    </AlertTitle>
+                    <AlertDescription>{csvError}</AlertDescription>
                   </Alert>
                 )}
               </TabsContent>
               <TabsContent value="manual" className="mt-3 space-y-3">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div>
-                    <Label>User Name</Label>
-                    <Input
-                      value={manual.userName}
-                      onChange={(e) => setManual((m) => ({ ...m, userName: e.target.value }))}
-                      placeholder="muldermm"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Email →{" "}
-                      <span className="font-mono">
-                        {(manual.userName.trim() || "username") + "@mail.gvsu.edu"}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <Label>First Name</Label>
-                    <Input
-                      value={manual.firstName}
-                      onChange={(e) => setManual((m) => ({ ...m, firstName: e.target.value }))}
-                      placeholder="Matt"
-                    />
-                  </div>
-                  <div>
-                    <Label>Last Name</Label>
-                    <Input
-                      value={manual.lastName}
-                      onChange={(e) => setManual((m) => ({ ...m, lastName: e.target.value }))}
-                      placeholder="Miller"
-                    />
-                  </div>
+                  {(
+                    [
+                      ["userName", "User Name", "muldermm"],
+                      ["firstName", "First Name", "Matt"],
+                      ["lastName", "Last Name", "Miller"],
+                    ] as const
+                  ).map(([key, label, ph]) => (
+                    <div key={key}>
+                      <Label>{label}</Label>
+                      <Input
+                        value={manual[key]}
+                        onChange={(e) => setManual((m) => ({ ...m, [key]: e.target.value }))}
+                        placeholder={ph}
+                      />
+                      {key === "userName" && (
+                        <p className="text-xs text-muted-foreground mt-1 font-mono">
+                          {(manual.userName.trim() || "username") + GVSU_EMAIL_DOMAIN}
+                        </p>
+                      )}
+                    </div>
+                  ))}
                 </div>
-                <Button onClick={handleManualAdd}>Add to unassigned</Button>
+                <Button onClick={onManual}>Add to unassigned</Button>
               </TabsContent>
             </Tabs>
           </CardContent>
@@ -466,12 +363,12 @@ function EditCourseForm({ bundle }: Props) {
           <h2 className="text-lg font-semibold">Course</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="course-code">Code</Label>
-              <Input id="course-code" value={code} onChange={(e) => setCode(e.target.value)} />
+              <Label>Code</Label>
+              <Input value={code} onChange={(e) => setCode(e.target.value)} />
             </div>
             <div>
-              <Label htmlFor="course-name">Name</Label>
-              <Input id="course-name" value={name} onChange={(e) => setName(e.target.value)} />
+              <Label>Name</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} />
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -490,142 +387,87 @@ function EditCourseForm({ bundle }: Props) {
                   {section.enrollments.filter((e) => e.active).length} enrolled
                 </Badge>
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <Label>Section name</Label>
                   <Input
                     value={draft?.name ?? ""}
-                    onChange={(e) =>
-                      setSectionDrafts((prev) => ({
-                        ...prev,
-                        [section.id]: { ...prev[section.id], name: e.target.value },
-                      }))
-                    }
+                    onChange={(e) => patchSection(section.id, { name: e.target.value })}
                   />
                 </div>
                 <div>
                   <Label>Semester</Label>
                   <Input
                     value={draft?.semester ?? ""}
-                    onChange={(e) =>
-                      setSectionDrafts((prev) => ({
-                        ...prev,
-                        [section.id]: { ...prev[section.id], semester: e.target.value },
-                      }))
-                    }
+                    onChange={(e) => patchSection(section.id, { semester: e.target.value })}
                   />
                 </div>
               </div>
-
-              <div className="pb-3 border-b border-slate-100">
-                <p className="text-xs font-semibold text-slate-500 mb-3">Schedule</p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="pb-3 border-b border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {(
+                  [
+                    ["start_date", "Start Date"],
+                    ["end_date", "End Date"],
+                    ["meeting_time", "Meeting Time"],
+                  ] as const
+                ).map(([field, label]) => (
                   <DateTimePicker
-                    label="Start Date"
-                    value={draft?.start_date || null}
-                    onChange={(iso) =>
-                      setSectionDrafts((prev) => ({
-                        ...prev,
-                        [section.id]: { ...prev[section.id], start_date: iso ?? "" },
-                      }))
-                    }
+                    key={field}
+                    label={label}
+                    value={draft?.[field] || null}
+                    onChange={(iso) => patchSection(section.id, { [field]: iso ?? "" })}
                   />
-                  <DateTimePicker
-                    label="End Date"
-                    value={draft?.end_date || null}
-                    onChange={(iso) =>
-                      setSectionDrafts((prev) => ({
-                        ...prev,
-                        [section.id]: { ...prev[section.id], end_date: iso ?? "" },
-                      }))
-                    }
-                  />
-                  <DateTimePicker
-                    label="Meeting Time"
-                    value={draft?.meeting_time || null}
-                    onChange={(iso) =>
-                      setSectionDrafts((prev) => ({
-                        ...prev,
-                        [section.id]: { ...prev[section.id], meeting_time: iso ?? "" },
-                      }))
-                    }
-                  />
-                </div>
+                ))}
               </div>
 
               <SectionGroupsEditor section={section} />
 
               <div className="space-y-3">
                 <h3 className="text-sm font-medium">Simulations</h3>
-                {section.assignments.length === 0 && (
+                {!section.assignments.length && (
                   <p className="text-xs text-muted-foreground">No cases assigned yet.</p>
                 )}
-                {section.assignments.map((assignment) => (
-                  <div key={assignment.id} className="border rounded-md p-4 space-y-3">
+                {section.assignments.map((a) => (
+                  <div key={a.id} className="border rounded-md p-4 space-y-3">
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
-                        <p className="font-medium">
-                          {assignment.case?.name || "Untitled case"}
-                        </p>
+                        <p className="font-medium">{a.case?.name || "Untitled case"}</p>
                         <p className="text-xs text-muted-foreground">
-                          Presim{" "}
-                          {assignment.presim_time
-                            ? format(new Date(assignment.presim_time), "PPp")
-                            : "—"}{" "}
-                          · Sim{" "}
-                          {assignment.sim_time
-                            ? format(new Date(assignment.sim_time), "PPp")
-                            : "—"}
+                          Presim {a.presim_time ? format(new Date(a.presim_time), "PPp") : "—"} · Sim{" "}
+                          {a.sim_time ? format(new Date(a.sim_time), "PPp") : "—"}
                         </p>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={busyAssignmentId === assignment.id}
-                          onClick={() => runBulk(assignment.id, "complete")}
-                        >
-                          Complete all
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={busyAssignmentId === assignment.id}
-                          onClick={() => runBulk(assignment.id, "expire")}
-                        >
-                          Expire all
-                        </Button>
+                      <div className="flex gap-2">
+                        {(["complete", "expire"] as const).map((action) => (
+                          <Button
+                            key={action}
+                            size="sm"
+                            variant="outline"
+                            disabled={busy === a.id}
+                            onClick={() => bulk(a.id, action)}
+                          >
+                            {action === "complete" ? "Complete all" : "Expire all"}
+                          </Button>
+                        ))}
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      {assignment.groups.map((group) => (
-                        <div key={group.id} className="bg-slate-50 rounded p-3">
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <p className="text-sm font-medium">
-                              {resolveGroupName(section.id, group.name)}
-                            </p>
-                            <Badge variant="outline" className="text-[10px]">
-                              {group.session?.status ?? "no session"}
-                              {group.session?.current_phase != null
-                                ? ` · phase ${group.session.current_phase}`
-                                : ""}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {group.members
-                              .map(
-                                (m) =>
-                                  m.student?.full_name ||
-                                  m.student?.email ||
-                                  m.student_id
-                              )
-                              .filter(Boolean)
-                              .join(", ") || "No members"}
-                          </p>
+                    {a.groups.map((g) => (
+                      <div key={g.id} className="bg-slate-50 rounded p-3">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <p className="text-sm font-medium">{aliasName(section.id, g.name)}</p>
+                          <Badge variant="outline" className="text-[10px]">
+                            {g.session?.status ?? "no session"}
+                            {g.session?.current_phase != null ? ` · phase ${g.session.current_phase}` : ""}
+                          </Badge>
                         </div>
-                      ))}
-                    </div>
+                        <p className="text-xs text-muted-foreground">
+                          {g.members
+                            .map((m) => m.student?.full_name || m.student?.email || m.student_id)
+                            .filter(Boolean)
+                            .join(", ") || "No members"}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>
