@@ -76,6 +76,35 @@ export default function PhaseUpdateDialog() {
 
   if (!summary) return null;
 
+  const movingBack = summary.fromPhase > summary.toPhase
+
+  if (movingBack) return(
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="max-w-xl bg-white">
+        <DialogHeader className="gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+              <BellRing className="h-5 w-5" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl text-red-600">
+                Moving back to Phase {summary.toPhase}!
+              </DialogTitle>
+              <DialogDescription className="text-sm text-slate-600">
+                Be aware some information may not be present from Phase {summary.fromPhase}
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+        <DialogFooter>
+          <Button type="button" onClick={() => setIsOpen(false)}>
+            Continue Simulation
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="max-w-xl bg-white">
@@ -94,7 +123,6 @@ export default function PhaseUpdateDialog() {
             </div>
           </div>
         </DialogHeader>
-
         <div className="space-y-3">
           {summary.hasAnyNewData ? (
             summary.sections.map((section) => {
