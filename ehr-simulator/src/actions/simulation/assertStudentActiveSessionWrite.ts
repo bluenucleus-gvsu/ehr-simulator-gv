@@ -16,10 +16,12 @@ function sessionHasStarted(status: string | null, startedAt: string | null): boo
   );
 }
 
-/**
- * Blocks student writes while the case session is still in pre-sim (not started).
- * Faculty/admin are not restricted here.
- */
+function simTimeHasStarted(simTime: string | null | undefined): boolean {
+  if (!simTime) return false;
+  const ms = new Date(simTime).getTime();
+  return Number.isFinite(ms) && Date.now() >= ms;
+}
+
 export async function assertStudentActiveSessionWrite(
   caseSessionId: string,
 ): Promise<{ allowed: true } | { allowed: false; message: string }> {
@@ -50,7 +52,7 @@ export async function assertStudentActiveSessionWrite(
 
   const { data: session, error } = await serviceSupabase
     .from("case_sessions")
-    .select("status, started_at")
+    .select("status, started_at, section_assignments ( sim_time )")
     .eq("id", caseSessionId)
     .maybeSingle();
 
@@ -58,9 +60,18 @@ export async function assertStudentActiveSessionWrite(
     return { allowed: false, message: "Could not verify simulation session." };
   }
 
-  if (!sessionHasStarted(session.status, session.started_at)) {
-    return { allowed: false, message: PRESIM_WRITE_MESSAGE };
+  if (sessionHasStarted(session.status, session.started_at)) {
+    return { allowed: true };
   }
 
-  return { allowed: true };
+  const assignment = session.section_assignments;
+  const simTime = Array.isArray(assignment)
+    ? assignment[0]?.sim_time
+    : assignment?.sim_time;
+
+  if (simTimeHasStarted(simTime)) {
+    return { allowed: true };
+  }
+
+  return { allowed: false, message: PRESIM_WRITE_MESSAGE };
 }

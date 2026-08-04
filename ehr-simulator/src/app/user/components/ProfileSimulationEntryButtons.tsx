@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { markSessionInProgress } from "@/actions/simulation";
 import { getAssignedSimulationLifecycle } from "@/utils/assignedSimulationLifecycle";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,23 +30,14 @@ type Props = {
 
 const CHART_OVERVIEW = "chart/overview";
 
-async function goToSimulation(
+function goToSimulation(
   router: ReturnType<typeof useRouter>,
-  opts: { caseId: string; sessionId: string | null; isStartingSim: boolean },
-  onStartingActiveSession?: (sessionId: string) => void
+  opts: { caseId: string; sessionId: string | null }
 ) {
-  const { caseId, sessionId, isStartingSim } = opts;
+  const { caseId, sessionId } = opts;
   if (!sessionId) {
     toast.error("Session is still being generated. Please try again later.");
     return;
-  }
-
-  if (isStartingSim) {
-    onStartingActiveSession?.(sessionId);
-    const { success } = await markSessionInProgress(sessionId);
-    if (!success) {
-      toast.error("Failed to update session status, but proceeding anyway.");
-    }
   }
 
   router.push(`/simulation/${caseId}/${sessionId}/${CHART_OVERVIEW}`);
@@ -57,7 +47,6 @@ export default function ProfileSimulationEntryButtons({ assignments }: Props) {
   const router = useRouter();
   const [presimPickerOpen, setPresimPickerOpen] = useState(false);
   const [activePickerOpen, setActivePickerOpen] = useState(false);
-  const [startingSessionId, setStartingSessionId] = useState<string | null>(null);
 
   const enriched = assignments.map((a) => ({
     ...a,
@@ -75,7 +64,7 @@ export default function ProfileSimulationEntryButtons({ assignments }: Props) {
     if (presimEntries.length === 0) return;
     if (presimEntries.length === 1) {
       const a = presimEntries[0];
-      void goToSimulation(router, { caseId: a.caseId, sessionId: a.sessionId, isStartingSim: false });
+      goToSimulation(router, { caseId: a.caseId, sessionId: a.sessionId });
       return;
     }
     setPresimPickerOpen(true);
@@ -85,23 +74,21 @@ export default function ProfileSimulationEntryButtons({ assignments }: Props) {
     if (activeEntries.length === 0) return;
     if (activeEntries.length === 1) {
       const a = activeEntries[0];
-      void goToSimulation(router, { caseId: a.caseId, sessionId: a.sessionId, isStartingSim: true }, setStartingSessionId);
+      goToSimulation(router, { caseId: a.caseId, sessionId: a.sessionId });
       return;
     }
     setActivePickerOpen(true);
   };
 
   const pickPresim = (a: (typeof presimEntries)[number]) => {
-    void goToSimulation(router, { caseId: a.caseId, sessionId: a.sessionId, isStartingSim: false });
+    goToSimulation(router, { caseId: a.caseId, sessionId: a.sessionId });
     setPresimPickerOpen(false);
   };
 
   const pickActive = (a: (typeof activeEntries)[number]) => {
-    void goToSimulation(router, { caseId: a.caseId, sessionId: a.sessionId, isStartingSim: true }, setStartingSessionId);
+    goToSimulation(router, { caseId: a.caseId, sessionId: a.sessionId });
     setActivePickerOpen(false);
   };
-
-  const isStartingActive = startingSessionId !== null;
 
   return (
     <>
@@ -112,10 +99,10 @@ export default function ProfileSimulationEntryButtons({ assignments }: Props) {
         <Button
           type="button"
           variant="default"
-          disabled={activeEntries.length === 0 || isStartingActive}
+          disabled={activeEntries.length === 0}
           onClick={handleActivePrimaryClick}
         >
-          {isStartingActive ? "Starting…" : "Enter Active Sim"}
+          Enter Active Sim
         </Button>
       </div>
 
@@ -157,7 +144,7 @@ export default function ProfileSimulationEntryButtons({ assignments }: Props) {
               <li key={`${a.id}:${a.sessionId ?? "none"}`}>
                 <button
                   type="button"
-                  disabled={!a.sessionId || isStartingActive}
+                  disabled={!a.sessionId}
                   onClick={() => pickActive(a)}
                   className="w-full rounded-md border border-slate-200 bg-white p-3 text-left text-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >

@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation"; // Use Next.js router
-import { markSessionInProgress } from "@/actions/simulation"; // Adjust import path
+import { useRouter } from "next/navigation";
 import { getAssignedSimulationLifecycle } from "@/utils/assignedSimulationLifecycle";
 
 type Props = {
@@ -28,7 +26,6 @@ export default function AssignedCaseCard({
   groupMembers = [],
 }: Props) {
   const router = useRouter();
-  const [isStarting, setIsStarting] = useState(false); // Add a loading state
 
   const lifecycle = getAssignedSimulationLifecycle({
     simTime,
@@ -40,22 +37,12 @@ export default function AssignedCaseCard({
   const isActivePhase = lifecycle.availability === "active";
   const isPresimPhase = lifecycle.availability === "presim";
   const isCompletedPhase = lifecycle.availability === "completed";
-  const handleRoute = async (pathSuffix: string, isStartingSim: boolean = false) => {
+  const handleRoute = (pathSuffix: string) => {
     if (!sessionId) {
       toast.error("Session is still being generated. Please try again later.");
       return;
     }
 
-    if (isStartingSim) {
-      setIsStarting(true);
-      const { success } = await markSessionInProgress(sessionId);
-
-      if (!success) {
-        toast.error("Failed to update session status, but proceeding anyway.");
-      }
-    }
-
-    // Navigate to the chart
     router.push(`/simulation/${caseId}/${sessionId}/${pathSuffix}`);
   };
 
@@ -84,19 +71,16 @@ export default function AssignedCaseCard({
       <div className="ml-4 flex items-center gap-2">
         {isActivePhase ? (
           <button
-            className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-            // Pass `true` here to trigger the server action!
-            onClick={() => handleRoute('chart/overview', true)}
-            disabled={isStarting}
+            className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+            onClick={() => handleRoute('chart/overview')}
             aria-label={`Start simulation ${name ?? id}`}
           >
-            {isStarting ? "Loading..." : "Enter Active Simulation"}
+            Enter Active Simulation
           </button>
         ) : isPresimPhase ? (
           <button
             className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
-            // Pass `false` (or nothing) so it just routes to the case report without updating the status
-            onClick={() => handleRoute('chart/overview', false)}
+            onClick={() => handleRoute('chart/overview')}
             aria-label={`View pre-sim chart for ${name ?? id}`}
           >
             Enter Pre-Sim Mode
@@ -105,7 +89,7 @@ export default function AssignedCaseCard({
           <button
             type="button"
             className="px-3 py-1 text-sm bg-slate-600 text-white rounded hover:bg-slate-700"
-            onClick={() => handleRoute("chart/overview", false)}
+            onClick={() => handleRoute("chart/overview")}
             aria-label={`Open chart for ${name ?? id}`}
           >
             Open chart

@@ -6,6 +6,7 @@ import { ActionResponse, ExtractData } from "./cases";
 import { UUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { assertStudentActiveSessionWrite } from "@/actions/simulation/assertStudentActiveSessionWrite";
+import { createServerSupabase } from "@/utils/supabase/server";
 
 export type EditableStudentNoteUpsert = Database['public']['Tables']['editable_clinical_documents']['Insert'];
 export type EditableStudentNote = Database['public']['Tables']['editable_clinical_documents']['Row'];
@@ -440,7 +441,6 @@ export async function upsertDocumentationRows(payload: StudentDatabaseDocumentat
 
 
 export async function markSessionInProgress(sessionId: string) {
-  // Compatibility wrapper for existing callers.
   return startSession(sessionId);
 }
 
@@ -457,6 +457,30 @@ function createServiceSupabase() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+}
+
+async function assertStaffSessionTransition(): Promise<SessionTransitionResult | null> {
+  const authSupabase = await createServerSupabase();
+  const {
+    data: { user },
+  } = await authSupabase.auth.getUser();
+
+  if (!user?.id) {
+    return { success: false, message: "You must be signed in." };
+  }
+
+  const { data: profile } = await createServiceSupabase()
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const role = (profile?.role ?? "").trim().toLowerCase();
+  if (role !== "admin" && role !== "faculty") {
+    return { success: false, message: "Only faculty or admin can change simulation status." };
+  }
+
+  return null;
 }
 
 async function getSessionTransitionContext(sessionId: string) {
@@ -477,6 +501,9 @@ async function getSessionTransitionContext(sessionId: string) {
 
 export async function startSession(sessionId: string): Promise<SessionTransitionResult> {
   try {
+    const denied = await assertStaffSessionTransition();
+    if (denied) return denied;
+
     const { supabase, session } = await getSessionTransitionContext(sessionId);
     const currentStatus = session.status;
 
@@ -511,6 +538,9 @@ export async function startSession(sessionId: string): Promise<SessionTransition
 
 export async function completeSession(sessionId: string): Promise<SessionTransitionResult> {
   try {
+    const denied = await assertStaffSessionTransition();
+    if (denied) return denied;
+
     const { supabase, session } = await getSessionTransitionContext(sessionId);
     const currentStatus = session.status;
 
@@ -546,6 +576,9 @@ export async function completeSession(sessionId: string): Promise<SessionTransit
 
 export async function expireSession(sessionId: string): Promise<SessionTransitionResult> {
   try {
+    const denied = await assertStaffSessionTransition();
+    if (denied) return denied;
+
     const { supabase, session } = await getSessionTransitionContext(sessionId);
     const currentStatus = session.status;
 

@@ -103,6 +103,7 @@ export default function CourseAssignmentsClient({
               <Badge variant="outline" className="text-amber-700 border-amber-200 bg-amber-50">
                 Scheduled Time Passed
               </Badge>
+              <span className="text-xs text-muted-foreground">Complete = finished. Expire = closed without completion.</span>
               <AdminSessionActions sessionId={assignment.sessionId} sessionStatus={assignment.sessionStatus} />
               <DeleteCaseButton caseId={assignment.id} />
             </div>
