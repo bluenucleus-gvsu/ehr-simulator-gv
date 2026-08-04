@@ -7,6 +7,7 @@ import { updateCurrentPhase } from "@/actions/simulation";
 import { useRouter } from "next/navigation";
 import AdvanceAlertDialog from "./AdvanceAlertDialog";
 import Phases from "./Phases";
+import { toast } from "sonner";
 
 function formatSimTime(dateStr: string) {
   return new Date(dateStr).toLocaleString(undefined, {
@@ -29,6 +30,9 @@ export default function SimulationGroupsView({
   const { simulation, courseName, sectionName } = activeSimView;
   const [feedbackTarget, setFeedbackTarget] = useState<FeedbackTarget | null>(null);
   const [submittedFeedback, setSubmittedFeedback] = useState<Record<string, string>>({});
+
+  const [isAdvancing, setIsAdvancing] = useState(false);
+  const [advanceError, setAdvanceError] = useState('');
 
   const phases = simulation.phaseCount; 
   const maxPhasesPerRow = 5; 
@@ -63,7 +67,7 @@ export default function SimulationGroupsView({
     selectedPhase: number
   ) => {
     if (selectedPhase <= phases) {
-      setAdvanceError(null);
+      setAdvanceError('');
       setPendingPhaseGroup({ id, name, selectedPhase });
       setPhaseDialog(true);
     }
@@ -76,6 +80,7 @@ export default function SimulationGroupsView({
     const group = simulation.groups.find((g) => g.id === pendingPhaseGroup.id);
     const sessionId = group?.caseSessionId;
     const updatedPhase = pendingPhaseGroup.selectedPhase;
+    const groupId = pendingPhaseGroup.id
 
     if (!sessionId) {
       const message = "No valid case session was found for this group.";
@@ -85,7 +90,7 @@ export default function SimulationGroupsView({
     }
 
     setIsAdvancing(true);
-    setAdvanceError(null);
+    setAdvanceError('');
 
     try {
       const response = await updateCurrentPhase(updatedPhase, sessionId);
