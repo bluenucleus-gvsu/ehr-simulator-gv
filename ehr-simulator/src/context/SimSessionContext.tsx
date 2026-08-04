@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { getUsersGroupId } from '@/actions/users';
 import { useParams } from 'next/navigation';
@@ -57,7 +57,7 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
   const [isPresim, setIsPresim] = useState<boolean | null>(true);
   const [currentPhase, setCurrentPhase] = useState<number>(1);
   const [hasUnsavedCharting, setHasUnsavedCharting] = useState<boolean | null>(false);
-
+  const assignmentSimMsRef = useRef<number | null>(null);
 
   const params = useParams();
   const sessionId = params?.sessionId as string;
@@ -75,10 +75,14 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
     }
 
     const normalizedStatus = (sessionData.status ?? "").toLowerCase();
+    const pastSimStart =
+      assignmentSimMsRef.current != null &&
+      Date.now() >= assignmentSimMsRef.current;
     const hasStarted =
       Boolean(sessionData.started_at) ||
       normalizedStatus === "in progress" ||
-      normalizedStatus === "completed";
+      normalizedStatus === "completed" ||
+      pastSimStart;
 
     setIsPresim(!hasStarted);
     setCurrentPhase(Number(sessionData.current_phase));
@@ -86,7 +90,9 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
     if (hasStarted) {
       const startedMs = sessionData.started_at
         ? new Date(sessionData.started_at).getTime()
-        : Date.now();
+        : pastSimStart && assignmentSimMsRef.current != null
+          ? assignmentSimMsRef.current
+          : Date.now();
       setSimStartTime(Number.isFinite(startedMs) ? startedMs : Date.now());
       return;
     }
@@ -116,17 +122,25 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
       if (sessionId) {
         const { data: sessionData, error } = await supabase
           .from("case_sessions")
-          .select("started_at, status, group_id, current_phase")
+          .select("started_at, status, group_id, current_phase, section_assignments ( sim_time )")
           .eq("id", sessionId)
           .maybeSingle();
 
         if (!error && sessionData) {
           nextGroupId = sessionData.group_id ?? nextGroupId;
+          const assignment = sessionData.section_assignments;
+          const simTime = Array.isArray(assignment)
+            ? assignment[0]?.sim_time
+            : assignment?.sim_time;
+          const simMs = simTime ? new Date(simTime).getTime() : NaN;
+          assignmentSimMsRef.current = Number.isFinite(simMs) ? simMs : null;
           applySessionState(sessionData);
         } else {
+          assignmentSimMsRef.current = null;
           applySessionState(null);
         }
       } else {
+        assignmentSimMsRef.current = null;
         applySessionState(null);
       }
 
