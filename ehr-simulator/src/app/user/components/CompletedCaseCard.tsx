@@ -7,9 +7,19 @@ type Props = {
   groupMembers?: string[];
   date?: string | null;
   feedback?: string | null;
+  statusLabel?: string;
+  dateLabel?: string;
 };
 
-export default function CompletedCaseCard({ id, name, groupMembers = [], date, feedback }: Props) {
+export default function CompletedCaseCard({
+  id,
+  name,
+  groupMembers = [],
+  date,
+  feedback,
+  statusLabel = "Completed",
+  dateLabel = "Ended",
+}: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -17,8 +27,9 @@ export default function CompletedCaseCard({ id, name, groupMembers = [], date, f
       <div className="flex items-start justify-between">
         <div>
           <div className="font-semibold">{name ?? "Untitled Simulation"}</div>
+          <div className="text-xs font-medium text-slate-600 mt-1">{statusLabel}</div>
           <div className="text-sm text-muted-foreground">Group: {groupMembers.length ? groupMembers.join(", ") : "No members"}</div>
-          {date ? <div className="text-xs text-muted-foreground mt-1">{new Date(date).toLocaleString()}</div> : null}
+          {date ? <div className="text-xs text-muted-foreground mt-1">{dateLabel}: {new Date(date).toLocaleString()}</div> : null}
         </div>
 
         <div className="ml-4 flex items-center gap-2">

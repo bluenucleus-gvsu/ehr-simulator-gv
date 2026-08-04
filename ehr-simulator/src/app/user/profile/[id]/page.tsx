@@ -124,6 +124,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
                   <details className="bg-slate-50 p-2 rounded">
                     <summary className="cursor-pointer font-medium">Completed Cases</summary>
+                    <div className="mt-2 text-xs text-muted-foreground">Finished by faculty/admin.</div>
                     <div className="mt-2">
                       {course.completed.length === 0 ? (
                         <div className="text-sm text-muted-foreground">No completed cases.</div>
@@ -137,6 +138,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                                 groupMembers={s.teamMembers}
                                 date={s.completed_at}
                                 feedback={s.feedback}
+                                statusLabel="Completed"
+                                dateLabel="Completed"
                               />
                             </li>
                           ))}
@@ -147,6 +150,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
                   <details className="bg-slate-50 p-2 rounded mt-2">
                     <summary className="cursor-pointer font-medium">Expired Cases</summary>
+                    <div className="mt-2 text-xs text-muted-foreground">Closed after the scheduled window without being completed.</div>
                     <div className="mt-2">
                       {course.expired.length === 0 ? (
                         <div className="text-sm text-muted-foreground">No expired cases.</div>
@@ -160,6 +164,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                                 groupMembers={s.teamMembers}
                                 date={s.expired_at}
                                 feedback={s.feedback ?? "Marked as expired."}
+                                statusLabel="Expired"
+                                dateLabel="Expired"
                               />
                             </li>
                           ))}
@@ -187,6 +193,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
                   <details className="bg-slate-50 p-2 rounded">
                     <summary className="cursor-pointer font-medium">Completed Cases</summary>
+                    <div className="mt-2 text-xs text-muted-foreground">Finished by faculty/admin.</div>
                     <div className="mt-2">
                       {course.completed.length === 0 ? (
                         <div className="text-sm text-muted-foreground">No completed cases.</div>
@@ -200,6 +207,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                                 groupMembers={s.teamMembers}
                                 date={s.completed_at}
                                 feedback={s.feedback}
+                                statusLabel="Completed"
+                                dateLabel="Completed"
                               />
                             </li>
                           ))}
@@ -210,6 +219,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
                   <details className="bg-slate-50 p-2 rounded mt-2">
                     <summary className="cursor-pointer font-medium">Expired Cases</summary>
+                    <div className="mt-2 text-xs text-muted-foreground">Closed after the scheduled window without being completed.</div>
                     <div className="mt-2">
                       {course.expired.length === 0 ? (
                         <div className="text-sm text-muted-foreground">No expired cases.</div>
@@ -223,6 +233,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                                 groupMembers={s.teamMembers}
                                 date={s.expired_at}
                                 feedback={s.feedback ?? "Marked as expired."}
+                                statusLabel="Expired"
+                                dateLabel="Expired"
                               />
                             </li>
                           ))}
