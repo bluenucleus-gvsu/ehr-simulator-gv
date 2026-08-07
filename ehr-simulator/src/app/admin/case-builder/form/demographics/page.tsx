@@ -7,7 +7,8 @@ import {
   Building2,
   Clock,
   ChevronDown,
-  Info
+  Info,
+  Image as ImageIcon
 } from "lucide-react";
 import {
   AlertDialog,
@@ -32,7 +33,7 @@ import { createBrowserSupabase } from "@/utils/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useFormContext } from "@/context/FormContext";
 import { relationshipStatuses, precautions, months, codeStatuses, days, insuranceOptions, DemographicFormData, intakeOutputBlocksFromCaseRow } from "@/utils/form";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { FormShell } from "../../components/formShell";
 import { CaseSection } from "@/lib/saveCase";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
@@ -378,22 +379,74 @@ export default function DemographicsForm() {
           <div className="max-w-6xl mx-auto space-y-6 pb-20">
 
             <Card className="border-slate-200 shadow-sm pt-4">
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-3 grid grid-cols-1 md:grid-cols-3 grid-rows-1 gap-6">
+                <div className="md:col-span-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-blue-600" />
+                    Case Overview
+                  </CardTitle>
+                  <CardDescription>Brief description of the patient scenario.</CardDescription>
+                </div>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-600" />
-                  Case Overview
+                  <ImageIcon className="w-5 h-5 text-blue-600" />
+                  Case Profile Photo
                 </CardTitle>
-                <CardDescription>Brief description of the patient scenario.</CardDescription>
               </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={demographicsData.summary}
-                  onChange={(e) => { setDemographicsData({ ...demographicsData, ["summary"]: e.target.value }) }}
-                  required
-                  name="summary"
-                  placeholder="e.g. 68-year-old male admitted with shortness of breath..."
-                  className="min-h-[100px] bg-white"
-                />
+              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-2 space-y-2">
+                  <Textarea
+                    value={demographicsData.summary}
+                    onChange={(e) => { setDemographicsData({ ...demographicsData, ["summary"]: e.target.value }) }}
+                    required
+                    name="summary"
+                    placeholder="e.g. 68-year-old male admitted with shortness of breath..."
+                    className="min-h-[100px] bg-white"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <input
+                    ref={casePhotoInputRef}
+                    id="case_photo"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    aria-label="Case Profile Photo"
+                    onChange={handleCasePhotoSelected}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => casePhotoInputRef.current?.click()}
+                    disabled={isUploadingPhoto}
+                    className="relative h-[100px] w-[100px] rounded-lg border border-dashed border-slate-300 bg-white overflow-hidden hover:border-slate-400 transition-colors flex items-center justify-center disabled:opacity-70"
+                  >
+                    {casePhotoUrl ? (
+                      <img
+                        src={casePhotoUrl}
+                        alt="Case profile"
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="flex flex-col items-center gap-1 text-slate-400">
+                        <ImageIcon className="w-6 h-6" />
+                        <span className="text-xs">{isUploadingPhoto ? "Uploading..." : "Click to upload"}</span>
+                      </span>
+                    )}
+                  </button>
+                  {casePhotoUrl && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveCasePhoto}
+                      disabled={isUploadingPhoto}
+                      className="text-xs text-slate-400 hover:text-slate-600 disabled:opacity-50"
+                    >
+                      Remove
+                    </button>
+                  )}
+                  {photoUploadError && (
+                    <p className="text-xs text-red-500">{photoUploadError}</p>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
@@ -432,7 +485,7 @@ export default function DemographicsForm() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2 col-span-2">
                       <Label>Date of Birth</Label>
                       <div className="flex gap-2">
@@ -481,47 +534,6 @@ export default function DemographicsForm() {
                         />
                         <span className="absolute right-3 top-2.5 text-xs text-slate-400">y.o.</span>
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="case_photo">Case Profile Photo</Label>
-                      <div className="flex items-center gap-3">
-                        <input
-                          ref={casePhotoInputRef}
-                          id="case_photo"
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleCasePhotoSelected}
-                        />
-                        <Button
-                          type="button"
-                          onClick={() => casePhotoInputRef.current?.click()}
-                          disabled={isUploadingPhoto}
-                        >
-                          {isUploadingPhoto ? "Uploading..." : "Upload Image"}
-                        </Button>
-                        {casePhotoUrl && (
-                          <div className="flex items-center gap-1">
-                            <img
-                              src={casePhotoUrl}
-                              alt="Case profile"
-                              className="h-10 w-10 rounded object-cover border"
-                            />
-                            <button
-                              type="button"
-                              onClick={handleRemoveCasePhoto}
-                              disabled={isUploadingPhoto}
-                              aria-label="Remove case photo"
-                              className="text-slate-400 hover:text-slate-600 text-sm leading-none disabled:opacity-50"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      {photoUploadError && (
-                        <p className="text-xs text-red-500">{photoUploadError}</p>
-                      )}
                     </div>
                   </div>
 
