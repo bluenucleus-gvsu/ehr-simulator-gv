@@ -30,7 +30,7 @@ export interface DemographicFormData {
   contact: string;
   contactRelationship: string;
   contactPhone: string;
-  case_photo_url: string;
+  case_photo_url: string | null;
 }
 
 export interface HistoryFormData {

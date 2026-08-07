@@ -276,7 +276,7 @@ export default function DemographicsForm() {
 
   const handleSubmit = async () => {
     const initialPayload = casePhotoRemoved && !casePhotoFile
-      ? { ...demographicsData, case_photo_url: "" }
+      ? { ...demographicsData, case_photo_url: null }
       : demographicsData;
     setDemographicsData(initialPayload);
     onDataChange("demographics", initialPayload)
