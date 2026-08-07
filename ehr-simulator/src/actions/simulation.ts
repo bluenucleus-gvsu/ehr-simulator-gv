@@ -681,7 +681,10 @@ export async function updateCurrentPhase(updatedPhase: number, sessionId: string
 
 export async function updateSessionPhoto(photoUrl: string | null, sessionId: string) {
   const startedAt = Date.now();
-  const supabase = createServiceRoleSupabase();
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   try {
     // case_sessions.case_photo_url isn't in the generated types yet (added via migration; types need regen)
