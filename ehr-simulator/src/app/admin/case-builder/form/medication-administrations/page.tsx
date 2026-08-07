@@ -166,7 +166,7 @@ export default function MedicationAdministrationsForm() {
       caseId: caseId,
     })
 
-    router.push('/admin/case-builder/form/review')
+    router.push('/admin/case-builder/form/media')
   }
   const handleColumnShift = (offset: number | string) => {
     if (typeof offset === 'number') {
