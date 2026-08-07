@@ -295,7 +295,8 @@ export default function DemographicsForm() {
       setIsUploadingPhoto(true);
       try {
         const supabase = createBrowserSupabase();
-        const path = `${resolvedCaseId ?? "unassigned"}/${crypto.randomUUID()}-${casePhotoFile.name}`;
+        const extMatch = /\.[^./\\]+$/.exec(casePhotoFile.name);
+        const path = `${resolvedCaseId ?? "unassigned"}/${crypto.randomUUID()}${extMatch ? extMatch[0] : ""}`;
         const { error: uploadError } = await supabase.storage
           .from("case-photos")
           .upload(path, casePhotoFile, { upsert: true });

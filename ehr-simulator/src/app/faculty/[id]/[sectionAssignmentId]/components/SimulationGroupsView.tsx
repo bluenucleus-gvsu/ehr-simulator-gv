@@ -87,7 +87,8 @@ export default function SimulationGroupsView({
     setUploadingPhotoFor(groupId);
     try {
       const supabase = createBrowserSupabase();
-      const path = `sessions/${sessionId}/${crypto.randomUUID()}-${file.name}`;
+      const extMatch = /\.[^./\\]+$/.exec(file.name);
+      const path = `sessions/${sessionId}/${crypto.randomUUID()}${extMatch ? extMatch[0] : ""}`;
       const { error: uploadError } = await supabase.storage
         .from("case-photos")
         .upload(path, file, { upsert: true });
