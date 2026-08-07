@@ -298,11 +298,11 @@ export default function DemographicsForm() {
         const extMatch = /\.[^./\\]+$/.exec(casePhotoFile.name);
         const path = `${resolvedCaseId ?? "unassigned"}/${crypto.randomUUID()}${extMatch ? extMatch[0] : ""}`;
         const { error: uploadError } = await supabase.storage
-          .from("case-photos")
+          .from("case-profile-photos")
           .upload(path, casePhotoFile, { upsert: true });
         if (uploadError) throw uploadError;
 
-        const { data } = supabase.storage.from("case-photos").getPublicUrl(path);
+        const { data } = supabase.storage.from("case-profile-photos").getPublicUrl(path);
         const updatedDemographics = { ...initialPayload, case_photo_url: data.publicUrl };
         setDemographicsData(updatedDemographics);
         onDataChange("demographics", updatedDemographics);

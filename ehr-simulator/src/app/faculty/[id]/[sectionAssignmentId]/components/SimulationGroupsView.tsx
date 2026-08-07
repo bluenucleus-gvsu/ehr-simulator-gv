@@ -90,11 +90,11 @@ export default function SimulationGroupsView({
       const extMatch = /\.[^./\\]+$/.exec(file.name);
       const path = `sessions/${sessionId}/${crypto.randomUUID()}${extMatch ? extMatch[0] : ""}`;
       const { error: uploadError } = await supabase.storage
-        .from("case-photos")
+        .from("case-profile-photos")
         .upload(path, file, { upsert: true });
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage.from("case-photos").getPublicUrl(path);
+      const { data } = supabase.storage.from("case-profile-photos").getPublicUrl(path);
       const response = await updateSessionPhoto(data.publicUrl, sessionId);
       if (!response?.success) {
         throw new Error(response?.message || "The photo could not be updated. Please try again.");
