@@ -284,7 +284,7 @@ export async function getMedicationAdministrations(caseId: string, sessionId: st
   }
 }
 
-export async function getMedia(caseId:string){
+export async function getMedia(caseId: string) {
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -296,7 +296,7 @@ export async function getMedia(caseId:string){
     .eq('case_id', caseId)
 
 
-  if (!error){
+  if (!error) {
     return {
       success: true,
       data: data ?? [],
@@ -679,34 +679,55 @@ export async function updateCurrentPhase(updatedPhase: number, sessionId: string
   }
 }
 
-<<<<<<< HEAD
-=======
 export async function updateSessionPhoto(photoUrl: string | null, sessionId: string) {
-  const supabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const startedAt = Date.now();
+  const supabase = createServiceRoleSupabase();
 
-  // case_sessions.case_photo_url isn't in the generated types yet (added via migration; types need regen)
-  const { error } = await supabase
-    .from("case_sessions")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .update({ case_photo_url: photoUrl } as any)
-    .eq("id", sessionId)
+  try {
+    // case_sessions.case_photo_url isn't in the generated types yet (added via migration; types need regen)
+    const { error } = await supabase
+      .from("case_sessions")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update({ case_photo_url: photoUrl } as any)
+      .eq("id", sessionId)
 
-  if (error) {
+    if (error) {
+      console.warn('[update-session-photo] Supabase rejected the update', {
+        sessionId,
+        durationMs: Date.now() - startedAt,
+        error: getErrorDetails(error),
+      });
+
+      return {
+        success: false,
+        message: "The photo could not be updated. Please try again.",
+        error,
+        data: null
+      };
+    }
+
+    return {
+      success: true,
+      message: `case_photo_url updated:${sessionId}`,
+      data: null,
+    };
+  } catch (error) {
+    const errorDetails = getErrorDetails(error);
+
+    console.error('[update-session-photo] Supabase request failed', {
+      sessionId,
+      durationMs: Date.now() - startedAt,
+      error: errorDetails,
+    });
+
     return {
       success: false,
-      message: "The photo could not be updated. Please try again.",
-      error,
-      data: null
+      message:
+        errorDetails.name === 'TimeoutError'
+          ? "The photo update timed out. Please try again."
+          : "The photo could not be updated. Please try again.",
+      error: errorDetails,
+      data: null,
     };
   }
-
-  return {
-    success: true,
-    message: `case_photo_url updated:${sessionId}`,
-    data: null,
-  };
 }
->>>>>>> d66ce43 (Added override case photo to sections)
