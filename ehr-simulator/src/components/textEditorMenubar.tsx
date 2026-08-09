@@ -2,7 +2,6 @@
 import type { Editor } from '@tiptap/react'
 import { useEditorState } from '@tiptap/react'
 import { Bold, Circle, Heading1, Heading2, Heading3, Highlighter, Italic, List, ListOrdered, Redo2, SeparatorHorizontal, Strikethrough, UnderlineIcon, Undo2 } from 'lucide-react'
-import React from 'react'
 import { Button } from './ui/button'
 import { Separator } from './ui/separator'
 

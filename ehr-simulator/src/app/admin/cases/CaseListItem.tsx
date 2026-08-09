@@ -1,4 +1,3 @@
-import * as React from "react";
 import { SimCase } from "@/actions/cases";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";

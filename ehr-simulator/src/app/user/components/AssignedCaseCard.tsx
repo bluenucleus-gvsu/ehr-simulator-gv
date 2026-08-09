@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation"; // Use Next.js router
 import { markSessionInProgress } from "@/actions/simulation"; // Adjust import path
@@ -123,4 +123,3 @@ export default function AssignedCaseCard({
     </div>
   );
 }
-
