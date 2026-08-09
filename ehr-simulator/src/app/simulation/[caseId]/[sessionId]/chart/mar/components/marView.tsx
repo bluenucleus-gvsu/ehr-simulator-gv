@@ -26,6 +26,7 @@ import { useStudentSimulationEditAccess } from '@/utils/studentSimulationEditAcc
 import { useParams } from 'next/navigation';
 import { isVisibleForSimulationPhase } from '@/lib/simulationPhaseVisibility';
 import { useSimulationScanner } from '@/hooks/useSimulationScanner';
+import ScanWristbandAlert from './scanWristbandAlert';
 
 
 export interface NewAdministrationData {
@@ -70,7 +71,8 @@ export default function MarView({
   const [isMultiOrderPopoverOpen, setIsMultiOrderPopoverOpen] = useState<boolean>(false)
   const [isWrongPtScan, setIsWrongPtScan] = useState<boolean>(false)
   const [isMedAdminPanelOpen, setIsMedAdminPanelOpen] = useState(false);
-  // temp time management
+  const [missedPtScan, setMissedPtScan] = useState(false);
+  // time management
   const [timeColumnOffset, setTimeColumnOffset] = useState(0)
   const [fallbackTime] = useState(() => new Date());
   const anchorDate = useMemo(() => {
@@ -105,9 +107,14 @@ export default function MarView({
       } else {
         if (!isWrongPtScan) {
           setIsWrongPtScan(true);
-          return;
         }
       }
+      return;
+    }
+
+    if (!isScanned) {
+      setMissedPtScan(true)
+      return
     }
 
     const associatedOrders = releasedMedicationOrders.filter(order => order.medicationId === symbol);
@@ -121,9 +128,8 @@ export default function MarView({
       associatedOrders.some(associated => associated.id === selected.id)
     );
 
-
+    // Resolve between multiple orders sharing the same medication
     if (!existingSelectedOrder && associatedOrders.length > 1) {
-      console.warn("More than one order shares this med")
       setAssociatedOrders(associatedOrders)
       setIsMultiOrderPopoverOpen(true)
       return
@@ -132,7 +138,9 @@ export default function MarView({
     if (!isMedAdminPanelOpen) {
       setIsMedAdminPanelOpen(true)
     }
+
     const targetOrder = existingSelectedOrder || associatedOrders[0];
+    const linkedMedication = medsById[targetOrder.medicationId]
 
     if (existingSelectedOrder) {
       setNewAdministrations(prev => {
@@ -147,7 +155,7 @@ export default function MarView({
           ...prev,
           [targetOrder.id]: {
             ...currentAdmin,
-            administered_dose: (currentAdmin.administered_dose || 0) + (targetOrder.dose || 0)
+            administered_dose: (currentAdmin.administered_dose || 0) + (linkedMedication.strength || 0)
 
           }
         };
@@ -171,7 +179,7 @@ export default function MarView({
           status: "Given",
           administrator: userName,
           time_offset: 0, // updated on submission
-          administered_dose: targetOrder.dose,
+          administered_dose: linkedMedication.strength,
           infusion_rate: targetOrder.infusionRate,
           is_in_presim: false,
           notes: '',
@@ -185,6 +193,7 @@ export default function MarView({
       toast.error("Missing user or group session data.");
       return;
     }
+    const linkedMedication = medsById[order.medicationId]
     setSelectedOrders(prev => [...prev, order])
     setNewAdministrations(prev => ({
       ...prev,
@@ -199,7 +208,7 @@ export default function MarView({
         administrator: userName,
         time_offset: 0,
         infusion_rate: order.infusionRate,
-        administered_dose: order.dose,
+        administered_dose: linkedMedication.strength,
         is_in_presim: false,
         notes: '',
       }
@@ -264,6 +273,7 @@ export default function MarView({
       };
     });
   };
+
   const handleClearAllSelections = () => {
     setSelectedOrders([]);
     setNewAdministrations({});
@@ -300,7 +310,6 @@ export default function MarView({
     setIsMedAdminPanelOpen(false);
     toast.success(result.message ?? "Medications successfully documented");
     handleClearAllSelections()
-    // Pull fresh server data so newly documented administrations appear in the MAR table immediately.
     router.refresh();
   }
 
@@ -411,6 +420,7 @@ export default function MarView({
         scanStatus={isWrongPtScan}
         onWrongScanChange={setIsWrongPtScan}
       />
+      <ScanWristbandAlert isOpen={missedPtScan} setIsOpen={setMissedPtScan} />
       <div className="mr-6 flex shrink-0 items-start justify-between gap-2 py-3">
         <div className="space-x-4">
           <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>

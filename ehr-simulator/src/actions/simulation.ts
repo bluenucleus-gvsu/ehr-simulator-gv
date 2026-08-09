@@ -284,6 +284,32 @@ export async function getMedicationAdministrations(caseId: string, sessionId: st
   }
 }
 
+export async function getMedia(caseId:string){
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  const { data, error } = await supabase
+    .from('case_images')
+    .select('id, preview_url')
+    .eq('case_id', caseId)
+
+
+  if (!error){
+    return {
+      success: true,
+      data: data ?? [],
+      message: 'Successfully retrieved media'
+    }
+  }
+
+  return {
+    success: false,
+    message: 'Failed to retrieve media',
+    error
+  }
+}
 
 type OrderAndMedicationType = ExtractData<typeof getMedicationOrders>;
 export type DatabaseMedication = OrderAndMedicationType[number]["medications"]
