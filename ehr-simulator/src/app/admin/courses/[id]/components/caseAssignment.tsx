@@ -132,19 +132,23 @@ const CaseAssignment = ({ sections, cases, isEditMode, existing_id, initialData 
                 <SelectGroup>
                   <SelectLabel>Sections</SelectLabel>
                   {
-                    sections.length > 0 ? (
+                    sections.length > 0 && (
                       sections.map((section, index) => {
                         if (!section.meeting_time) {
-                          return null
+                          return (
+                            <SelectItem key={`${index}`} value={section.id}>
+                              {section.name}
+                            </SelectItem>
+                          )
                         }
                         const displayTime = format(section.meeting_time, 'p')
                         return (
-                          <SelectItem key={`${index}`} value={section.id}>{section.name} - {displayTime}</SelectItem>
+                          <SelectItem key={`${index}`} value={section.id}>
+                            {section.name} - {displayTime}
+                          </SelectItem>
                         )
                       }
-                      )) : (
-                      <></>
-                    )
+                      ))
                   }
                 </SelectGroup>
               </SelectContent>
