@@ -3,7 +3,6 @@
 import { createClient, PostgrestError } from "@supabase/supabase-js";
 import { Database } from "../../database.types";
 import { revalidatePath } from "next/cache";
-import { runWriteForMode } from "@/utils/testerWriteGateway";
 
 export type SectionAssignment = Database['public']['Tables']['section_assignments']['Row'];
 export type SectionAssignmentInsert = Database['public']['Tables']['section_assignments']['Insert'];
@@ -185,78 +184,61 @@ export async function getSectionCaseAssignments(courseId: string) {
 }
 
 export async function createSectionCaseAssignment(payload: SectionAssignmentInsert): Promise<ActionResponse<SectionAssignment>> {
-  return runWriteForMode(
-    async () => {
-      const supabase = createClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-
-      const { data, error } = await supabase
-        .from('section_assignments')
-        .upsert(payload)
-        .select()
-        .single()
-
-      if (error) {
-        console.error("Upsert Error:", error);
-        return {
-          success: false,
-          message: "Failed to save the assignment. Please try again.",
-          error
-        };
-      }
-
-      revalidatePath('/courses');
-
-      return {
-        success: true,
-        message: "Assignment saved successfully.",
-        data
-      };
-    },
-    async () => ({
-      success: true,
-      message: "Assignment saved locally for tester mode.",
-      data: { ...(payload as SectionAssignment), id: payload.id ?? crypto.randomUUID() },
-    }),
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+
+  const { data, error } = await supabase
+    .from('section_assignments')
+    .upsert(payload)
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Upsert Error:", error);
+    return {
+      success: false,
+      message: "Failed to save the assignment. Please try again.",
+      error
+    };
+  }
+
+  revalidatePath('/courses');
+
+  return {
+    success: true,
+    message: "Assignment saved successfully.",
+    data
+  };
 }
 
 export async function deleteSectionCaseAssignment(id: string): Promise<ActionResponse> {
-  return runWriteForMode(
-    async () => {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-
-      const { error } = await supabase
-        .from('section_assignments')
-        .delete()
-        .eq('id', id)
-
-      if (error) {
-        console.error("Delete Error:", error);
-        return {
-          success: false,
-          message: "Failed to delete assignment. Please try again.",
-          error
-        };
-      }
-
-      revalidatePath('/courses');
-
-      return {
-        success: true,
-        message: "Assignment deleted successfully."
-      };
-    },
-    async () => ({
-      success: true,
-      message: "Assignment deleted locally for tester mode.",
-    }),
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+
+  const { error } = await supabase
+    .from('section_assignments')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error("Delete Error:", error);
+    return {
+      success: false,
+      message: "Failed to delete assignment. Please try again.",
+      error
+    };
+  }
+
+  revalidatePath('/courses');
+
+  return {
+    success: true,
+    message: "Assignment deleted successfully."
+  };
 }
 
 export async function getCourseCaseAssignments() {
@@ -334,38 +316,29 @@ export async function getCourseCaseAssignments() {
 }
 
 export async function updateCaseSession(session: CaseSessionUpsert) {
-  return runWriteForMode(
-    async () => {
-      const supabase = createClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-
-      const { error } = await supabase
-        .from('case_sessions')
-        .upsert(session);
-
-      if (error) {
-        return {
-          success: false,
-          message: 'Failed to update session data.',
-          error,
-          data: null
-        };
-      }
-
-      return {
-        success: true,
-        message: 'Session data updated.',
-        data: session,
-      };
-    },
-    async () => ({
-      success: true,
-      message: "Session update saved locally for tester mode.",
-      data: session,
-    }),
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+
+  const { error } = await supabase
+    .from('case_sessions')
+    .upsert(session);
+
+  if (error) {
+    return {
+      success: false,
+      message: 'Failed to update session data.',
+      error,
+      data: null
+    };
+  }
+
+  return {
+    success: true,
+    message: 'Session data updated.',
+    data: session,
+  };
 }
 
 // extracts type of data from ActionResponse for use in frontend
@@ -375,5 +348,3 @@ export type ExtractData<T extends (...args: any) => Promise<ActionResponse<any>>
 
 export type SectionSimulationsData = ExtractData<typeof getSectionCaseAssignments>;
 export type CasesData = ExtractData<typeof getCaseByCourseId>;
-export type CaseCourseAssignments = ExtractData<typeof getCourseCaseAssignments>;
-export type CaseCourseAssignment = CaseCourseAssignments[number]

@@ -1,6 +1,7 @@
 "use client";
 
 import { useSimSessionContext } from "@/context/SimSessionContext";
+import PhaseUpdateDialog from "./phaseUpdateDialog";
 
 const SimulationShell = ({ children }: { children: React.ReactNode }) => {
   const { isPresim } = useSimSessionContext();
@@ -8,6 +9,7 @@ const SimulationShell = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className={`${shellClasses} h-screen w-full overflow-hidden flex flex-col [--header-height:calc(--spacing(16))]`}>
+      <PhaseUpdateDialog />
       {children}
     </div>
   );

@@ -6,7 +6,8 @@ import {
   Briefcase,
   Building2,
   Clock,
-  ChevronDown
+  ChevronDown,
+  Info
 } from "lucide-react";
 import {
   AlertDialog,
@@ -24,7 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import InfoTooltip from "../../components/helpTooltip";
+import InfoTooltip from "../../../../../components/helpTooltip";
 import { differenceInYears } from "date-fns";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -40,8 +41,6 @@ import { buildLabRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/ch
 import { medOrderFormStateFromCaseBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marFromBundle";
 import { flexSheetTemplate } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
 import { buildChartingRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/chartingFromBundle";
-import { isTesterModeClient } from "@/utils/testerMode";
-import { getTesterCaseDraft, setTesterCaseDraft, upsertTesterCase } from "@/utils/testerLocalStore";
 
 export default function DemographicsForm() {
   const { onDataChange, demographicData: initialData, setCaseId, caseId, registerCaseBuilderLocalOverlay } = useFormContext();
@@ -60,77 +59,6 @@ export default function DemographicsForm() {
     if (!editCaseId || editCaseId === caseId) return;
 
     const loadCaseForEditing = async () => {
-      if (isTesterModeClient()) {
-        const ensureSet = <T,>(value: unknown, mapper?: (v: unknown) => T | null): Set<T> => {
-          if (value instanceof Set) return value as Set<T>;
-          if (!Array.isArray(value)) return new Set<T>();
-          const mapped = mapper
-            ? value.map(mapper).filter((v): v is T => v !== null)
-            : (value as T[]);
-          return new Set(mapped);
-        };
-
-        const localDraft = getTesterCaseDraft<{
-          demographics?: DemographicFormData;
-          history?: any;
-          notes?: any[];
-          orders?: any[];
-          labs?: { data?: any[]; timePoints?: number[]; timePointsInPreSim?: unknown; visibleItems?: unknown };
-          charting?: { data?: any[]; timePoints?: number[]; timePointsInPreSim?: unknown; visibleItems?: unknown };
-          intakeOutput?: any[];
-          medOrders?: any;
-          medAdministrationInstances?: any[];
-        }>(editCaseId);
-        if (localDraft) {
-          if (localDraft.demographics) {
-            onDataChange("demographics", localDraft.demographics);
-            setDemographicsData(localDraft.demographics);
-          }
-          if (localDraft.history) onDataChange("history", localDraft.history);
-          if (localDraft.notes) onDataChange("notes", localDraft.notes);
-          if (localDraft.orders) onDataChange("orders", localDraft.orders);
-          if (localDraft.labs) {
-            onDataChange("labs", {
-              ...localDraft.labs,
-              timePointsInPreSim: ensureSet<number>(
-                localDraft.labs.timePointsInPreSim,
-                (v) => {
-                  const num = Number(v);
-                  return Number.isFinite(num) ? num : null;
-                },
-              ),
-              visibleItems: ensureSet<string>(
-                localDraft.labs.visibleItems,
-                (v) => (typeof v === "string" ? v : null),
-              ),
-            } as any);
-          }
-          if (localDraft.charting) {
-            onDataChange("charting", {
-              ...localDraft.charting,
-              timePointsInPreSim: ensureSet<number>(
-                localDraft.charting.timePointsInPreSim,
-                (v) => {
-                  const num = Number(v);
-                  return Number.isFinite(num) ? num : null;
-                },
-              ),
-              visibleItems: ensureSet<string>(
-                localDraft.charting.visibleItems,
-                (v) => (typeof v === "string" ? v : null),
-              ),
-            } as any);
-          }
-          if (localDraft.intakeOutput) onDataChange("intakeOutput", localDraft.intakeOutput);
-          if (localDraft.medOrders) onDataChange("medOrders", localDraft.medOrders);
-          if (localDraft.medAdministrationInstances) {
-            onDataChange("medAdministrationInstances", localDraft.medAdministrationInstances);
-          }
-          setCaseId(editCaseId);
-          return;
-        }
-      }
-
       const bundle = await getCaseBundle(editCaseId);
       const caseRow = bundle.caseRow ?? {};
 
@@ -285,6 +213,14 @@ export default function DemographicsForm() {
         visibleInPresim: Boolean(m.is_in_presim),
       })));
 
+      onDataChange(
+        "media",
+        (bundle.caseImages ?? []).map((img: any) => ({
+          id: img.id,
+          previewUrl: img.preview_url ?? img.url ?? "",
+        })),
+      );
+
       setCaseId(editCaseId);
     };
 
@@ -314,17 +250,6 @@ export default function DemographicsForm() {
 
     if (result?.id) {
       setCaseId(result.id)
-      if (isTesterModeClient()) {
-        upsertTesterCase({
-          id: result.id,
-          name: `${demographicsData.firstName ?? ""} ${demographicsData.lastName ?? ""}`.trim(),
-          first_name: demographicsData.firstName ?? "",
-          last_name: demographicsData.lastName ?? "",
-          description: demographicsData.summary ?? "",
-          admitting_diagnosis: demographicsData.admittingDiagnosis ?? "",
-        })
-        setTesterCaseDraft(result.id, { demographics: demographicsData })
-      }
     }
     router.push("/admin/case-builder/form/history");
   }
@@ -744,7 +669,10 @@ export default function DemographicsForm() {
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     Inpatient Duration
-                    <InfoTooltip content="Number of days hospitalized BEFORE simulation start." />
+                    <InfoTooltip
+                      content="Number of days hospitalized BEFORE simulation start.">
+                      <Info size={16} color="var(--muted-foreground)" />
+                    </InfoTooltip>
                   </Label>
                   <div className="relative max-w-[180px]">
                     <Input

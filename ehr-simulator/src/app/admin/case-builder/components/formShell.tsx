@@ -12,7 +12,6 @@ import { CASE_BUILDER_STEPS } from "../caseBuilderSteps";
 import { saveAllCaseBuilderProgress } from "@/lib/caseBuilder/saveCaseBuilderProgress";
 import { extractErrorMessage } from "@/lib/caseBuilder/serializeFormBlob";
 import { useFormContext } from "@/context/FormContext";
-import { isTesterModeClient } from "@/utils/testerMode";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -77,7 +76,7 @@ function FormShellHeaderFallback({
                 variant="outline"
                 size="sm"
                 className="cursor-pointer gap-1.5 border-slate-300"
-                disabled={isSaving}
+                disabled
                 onClick={handleSaveProgress}
                 title="Save all sections to the database without leaving this page"
               >
@@ -154,7 +153,7 @@ function FormShellHeaderResolved({
                 variant="outline"
                 size="sm"
                 className="cursor-pointer gap-1.5 border-slate-300"
-                disabled={isSaving}
+                disabled
                 onClick={handleSaveProgress}
                 title="Save all sections to the database without leaving this page"
               >
@@ -224,12 +223,7 @@ export function FormShell({
 }: FormShellProps) {
   const { caseId, setCaseId, getCaseBuilderSaveBlob, applyCaseBuilderOverlayToContext } = useFormContext();
   const [isSaving, setIsSaving] = useState(false);
-  /** Tester suite uses local-only persistence; hide DB save after mount to avoid SSR/client cookie mismatch. */
-  const [showSaveButton, setShowSaveButton] = useState(true);
-
-  useEffect(() => {
-    setShowSaveButton(!isTesterModeClient());
-  }, []);
+  const showSaveButton = true;
 
   const handleSaveProgress = async () => {
     setIsSaving(true);

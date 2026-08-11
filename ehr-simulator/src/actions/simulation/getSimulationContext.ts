@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
-import { isTesterModeServer } from "@/utils/testerModeServer";
 
 export interface SimulationRouteContext {
   routeId: string;
@@ -12,7 +11,7 @@ export interface SimulationRouteContext {
 /**
  * Resolve the chart URL `[sessionId]` segment to a `cases.id`.
  * Production links have used different foreign keys for that segment over time
- * (`section_assignments`, `case_sessions`); tester/dev may also use `cases.id`.
+ * (`section_assignments`, `case_sessions`); some legacy/admin flows may also use `cases.id`.
  */
 export async function resolveSimulationRouteContext(routeId: string): Promise<SimulationRouteContext> {
   const supabase = createClient(
@@ -51,10 +50,6 @@ export async function resolveSimulationRouteContext(routeId: string): Promise<Si
   if (caseError) throw caseError;
   if (caseRow?.id) {
     return { routeId, caseId: caseRow.id, source: "case" };
-  }
-
-  if (await isTesterModeServer()) {
-    return { routeId, caseId: routeId, source: "case" };
   }
 
   throw new Error(`Unable to resolve simulation route id: ${routeId}`);

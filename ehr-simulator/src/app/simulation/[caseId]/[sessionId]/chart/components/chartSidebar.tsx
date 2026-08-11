@@ -102,7 +102,10 @@ export default function ChartSidebar() {
           <span className="pl-2 font-normal">{sidebarData.age.value}</span>
         </p>
 
-
+        <p className="text-purple-900 text-sm font-light tracking-tight">
+          {sidebarData.mrn.label}:
+          <span className="pl-2 font-normal">{sidebarData.mrn.value}</span>
+        </p>
 
         {/* <p className="text-purple-900 text-sm font-light tracking-tight">
           {sidebarData.dob.label}:
@@ -115,7 +118,7 @@ export default function ChartSidebar() {
         </p>
       </div>
 
-      <div className="flex flex-col h-fit max-h-full py-4 px-2 rounded-lg shadow-md mt-4 border gap-6 bg-white overflow-y-auto">
+      <div className="flex flex-col h-fit max-h-full w-full py-4 px-2 rounded-lg shadow-md mt-4 border gap-6 bg-white overflow-y-auto">
         {/* Current Admission Data */}
         <div className="relative flex flex-col border bg-white border-purple-900 w-full h-fit px-2 py-3 gap-1 rounded-lg shadow-md">
           <p className="font-medium text-purple-900 tracking-tight -top-3 absolute left-2 bg-white rounded-2xl  px-1">This Admission</p>

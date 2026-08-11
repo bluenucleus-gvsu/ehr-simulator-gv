@@ -2,6 +2,8 @@
 
 import OrdersTable from "./components/ordersTable"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
+import { useSimSessionContext } from "@/context/SimSessionContext"
+import { isVisibleForSimulationPhase } from "@/lib/simulationPhaseVisibility"
 
 type DbOrder = {
   category?: string | null;
@@ -10,6 +12,8 @@ type DbOrder = {
   status?: string | null;
   provider?: string | null;
   is_important?: boolean | null;
+  is_in_presim?: boolean | null;
+  phase?: number | null;
 }
 
 type OrderRow = {
@@ -29,6 +33,8 @@ type BundleMedOrder = {
   instructions?: string | null;
   ordering_provider?: string | null;
   infusion_rate?: number | null;
+  is_in_presim?: boolean | null;
+  phase?: number | null;
   medications?: {
     generic_name?: string | null;
     brand_name?: string | null;
@@ -49,7 +55,7 @@ function orderRowFromMedicationOrder(row: BundleMedOrder): OrderRow {
       : "";
   const parts: string[] = [];
   if (row.dose != null) {
-    parts.push(strength ? `Dose ${row.dose} (${strength} per unit)` : `Dose ${row.dose}`);
+    parts.push(strength ? `Dose: ${row.dose} (${strength} per unit)` : `Dose ${row.dose}`);
   }
   if (row.frequency) parts.push(`Frequency: ${row.frequency}`);
   if (row.indication?.trim()) parts.push(row.indication.trim());
@@ -80,6 +86,7 @@ const createHeaderNames = (title: string) => ({
 
 const OrdersPage = () => {
   const { caseBundle } = useSimulationCase();
+  const { isPresim, currentPhase } = useSimSessionContext();
   const dbOrders = (caseBundle?.orders ?? []) as DbOrder[];
 
   const normalizeOrder = (order: DbOrder): OrderRow => ({
@@ -93,6 +100,14 @@ const OrdersPage = () => {
   const filterByCategory = (categoryNames: string[]) => {
     const lookup = new Set(categoryNames.map((name) => name.toLowerCase()));
     return dbOrders
+      .filter((order) =>
+        isVisibleForSimulationPhase({
+          isPresim: Boolean(isPresim),
+          isVisibleInPresim: order.is_in_presim,
+          releasePhase: order.phase,
+          currentPhase,
+        }),
+      )
       .filter((order) => lookup.has((order.category ?? "").toLowerCase()))
       .map(normalizeOrder);
   };
@@ -103,9 +118,16 @@ const OrdersPage = () => {
   const laboratoryData = filterByCategory(["Laboratory", "Lab", "Labs"]);
   const consultData = filterByCategory(["Consult"]);
   const medicationDataFromClinicalOrders = filterByCategory(["Medication", "Medications"]);
-  const medicationDataFromMedOrders = ((caseBundle?.medicationOrders ?? []) as BundleMedOrder[]).map(
-    orderRowFromMedicationOrder,
-  );
+  const medicationDataFromMedOrders = ((caseBundle?.medicationOrders ?? []) as BundleMedOrder[])
+    .filter((order) =>
+      isVisibleForSimulationPhase({
+        isPresim: Boolean(isPresim),
+        isVisibleInPresim: order.is_in_presim,
+        releasePhase: order.phase,
+        currentPhase,
+      }),
+    )
+    .map(orderRowFromMedicationOrder);
   const medicationData = [...medicationDataFromClinicalOrders, ...medicationDataFromMedOrders];
 
   const orderColumns = ["details", "status", "orderingProvider"]

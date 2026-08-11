@@ -1,6 +1,5 @@
 import { getAllDocumentationData } from "@/actions/simulation"
 import FlexSheetView from "./chartingView";
-import { isTesterModeServer } from "@/utils/testerModeServer";
 
 interface PageProps {
   params: Promise<{
@@ -9,13 +8,12 @@ interface PageProps {
   }>;
 }
 
-export default async function Mar({ params }: PageProps) {
+export default async function FlexSheets({ params }: PageProps) {
   const awaitedParams = await params;
   const { caseId, sessionId } = awaitedParams;
 
   const documentationData = await getAllDocumentationData(caseId, sessionId);
-  const testerMode = await isTesterModeServer();
-  if (!documentationData?.success && !testerMode) {
+  if (!documentationData?.success) {
     return <div>Failed to retrieve documentation.</div>
   }
 

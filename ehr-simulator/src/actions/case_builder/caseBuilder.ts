@@ -9,8 +9,8 @@ import { updateOrders } from "@/actions/case_builder/updateOrders";
 import { updateLabs } from "@/actions/case_builder/updateLabs";
 import { updateDocumentationResults } from "@/actions/case_builder/updateDocumentationResults";
 import { updateMedications } from "@/actions/case_builder/updateMedications";
+import { updateMedia } from "@/actions/case_builder/updateMedia"
 import { updateCaseIntakeOutput } from "@/actions/case_builder/updateCaseIntakeOutput";
-import { runWriteForMode } from "@/utils/testerWriteGateway";
 
 import { MedAdministrationInstance, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
 import type { IntakeOutputFormData } from "@/utils/form";
@@ -25,20 +25,19 @@ type SaveCaseArgs =
   | { section: typeof CaseSection.DOCUMENTATION; payload: any; caseId?: string | null }
   | { section: typeof CaseSection.INTAKE_OUTPUT; payload: IntakeOutputFormData[]; caseId?: string | null }
   | { section: typeof CaseSection.MEDICATION_ORDERS; payload: { orders: MedicationOrder[]; administrations: MedAdministrationInstance[] }; caseId?: string | null }
+  | { section: typeof CaseSection.MEDIA; payload: any; caseId?: string | null}
 
 export async function saveCaseData({ payload, section, caseId }: SaveCaseArgs) {
-  return runWriteForMode(
-    async () => {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      );
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
 
-      if (section === CaseSection.DEMOGRAPHICS) {
-        return await upsertCaseDemographics(supabase, payload, caseId)
-      }
+  if (section === CaseSection.DEMOGRAPHICS) {
+    return await upsertCaseDemographics(supabase, payload, caseId)
+  }
 
-      if (!caseId) throw new Error("Case ID is required");
+  if (!caseId) throw new Error("Case ID is required");
 
       switch (section) {
         case CaseSection.HISTORY:
@@ -55,16 +54,10 @@ export async function saveCaseData({ payload, section, caseId }: SaveCaseArgs) {
           return await updateCaseIntakeOutput(supabase, payload, caseId);
         case CaseSection.MEDICATION_ORDERS:
           return await updateMedications(supabase, payload, caseId);
+        case CaseSection.MEDIA:
+          return await updateMedia(supabase, payload, caseId);
       }
-    },
-    async () => ({
-      success: true,
-      message: "Case section saved locally for tester mode.",
-      id: caseId ?? crypto.randomUUID(),
-      data: { caseId: caseId ?? crypto.randomUUID(), section, payload },
-    }),
-  );
-}
+    }
 
 
 
