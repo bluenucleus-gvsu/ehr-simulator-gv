@@ -7,6 +7,7 @@ import { SimSessionProvider } from "@/context/SimSessionContext";
 import { resolveSimulationRouteContext } from "@/actions/simulation/getSimulationContext";
 import { getCaseBundle } from "@/actions/case_builder/getCase";
 import type { CaseBundle } from "@/actions/case_builder/getCase";
+import { createClient } from "@supabase/supabase-js";
 import { ChartSimulationBootstrap } from "./chartSimulationBootstrap";
 import { SidebarProvider } from "@/components/ui/sidebar"
 import FlexSheetSidebar from "./charting/components/flexSheetSidebar"
@@ -20,12 +21,30 @@ type ChartLayoutProps = {
 };
 
 const ChartLayout = async ({ children, params }: ChartLayoutProps) => {
-  const { caseId } = await params;
+  const { caseId, sessionId } = await params;
   const routeContext = await resolveSimulationRouteContext(caseId);
   const serverCaseBundle: CaseBundle | null = await getCaseBundle(routeContext.caseId);
 
+  let initialPhotoOverride: string | null = null;
+  if (serverCaseBundle) {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    const { data: session } = await supabase
+      .from("case_sessions")
+      .select("case_photo_url" as never)
+      .eq("id", sessionId)
+      .maybeSingle();
+    initialPhotoOverride = (session as { case_photo_url?: string | null } | null)?.case_photo_url ?? null;
+  }
+
   return (
-    <ChartSimulationBootstrap routeContext={routeContext} serverCaseBundle={serverCaseBundle}>
+    <ChartSimulationBootstrap
+      routeContext={routeContext}
+      serverCaseBundle={serverCaseBundle}
+      initialPhotoOverride={initialPhotoOverride}
+    >
       <SidebarProvider defaultOpen={false}>
         <SimSessionProvider>
           <SimulationShell>

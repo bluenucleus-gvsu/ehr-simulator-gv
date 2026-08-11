@@ -33,7 +33,7 @@ export async function getFacultyCourses(): Promise<Course[]> {
         presim_time,
         case_id,
         cases (id, name, first_name, last_name, phase_count),
-        case_sessions (id, group_id, current_phase, status)
+        case_sessions (id, group_id, current_phase, status, case_photo_url)
       ),
       groups (
         id,
@@ -85,6 +85,7 @@ export async function getFacultyCourses(): Promise<Course[]> {
             name: group?.name ?? "Unknown Group",
             caseSessionId: session.id,
             currentPhase: session.current_phase ?? 1,
+            casePhotoUrl: session.case_photo_url ?? null,
             members: (group?.group_members ?? [])
               .map((member: any) => ({
                 id: member.student?.id ?? member.id,
@@ -152,6 +153,7 @@ export async function getSectionSimulationDetails(sectionAssignmentId: string) {
       case_sessions (
         id,
         current_phase,
+        case_photo_url,
         group: groups(
           id,
           name,
@@ -194,6 +196,7 @@ export async function getSectionSimulationDetails(sectionAssignmentId: string) {
         name: group.name,
         caseSessionId: session.id,
         currentPhase: session.current_phase ?? 1,
+        casePhotoUrl: session.case_photo_url ?? null,
         members: (group.group_members ?? [])
           .map((member: any) => ({
             id: member.student?.id ?? member.id,

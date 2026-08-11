@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import FeedbackModal from "@/app/faculty/components/FeedbackModal";
 import { FeedbackTarget, ActiveSimView } from "@/app/faculty/lib/types";
-import { updateCurrentPhase } from "@/actions/simulation";
+import { updateCurrentPhase, updateSessionPhoto } from "@/actions/simulation";
 import { useRouter } from "next/navigation";
 import AdvanceAlertDialog from "./AdvanceAlertDialog";
+import { toast } from "sonner";
+import { createBrowserSupabase } from "@/utils/supabase/client";
 
 function formatSimTime(dateStr: string) {
   return new Date(dateStr).toLocaleString(undefined, {
@@ -46,6 +48,92 @@ export default function SimulationGroupsView({
   const [groupPhase, setGroupPhase] = useState<Record<string, number>>(initialPhases);
   const [phaseDialog, setPhaseDialog] = useState(false);
   const [pendingPhaseGroup, setPendingPhaseGroup] = useState<{ id: string; name: string } | null>(null);
+
+  const initialPhotos = simulation.groups.reduce((acc, group) => {
+    acc[group.id] = group.casePhotoUrl;
+    return acc;
+  }, {} as Record<string, string | null>);
+
+  const [groupPhoto, setGroupPhoto] = useState<Record<string, string | null>>(initialPhotos);
+  const [uploadingPhotoFor, setUploadingPhotoFor] = useState<string | null>(null);
+  const [removingPhotoFor, setRemovingPhotoFor] = useState<string | null>(null);
+  const [pendingPhotoGroupId, setPendingPhotoGroupId] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoOverrideClick = (groupId: string) => {
+    setPendingPhotoGroupId(groupId);
+    photoInputRef.current?.click();
+  };
+
+  const handlePhotoFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    const groupId = pendingPhotoGroupId;
+    setPendingPhotoGroupId(null);
+    if (!file || !groupId) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file.");
+      return;
+    }
+
+    const group = simulation.groups.find((g) => g.id === groupId);
+    const sessionId = group?.caseSessionId;
+    if (!sessionId) {
+      toast.error("No valid case session was found for this group.");
+      return;
+    }
+
+    setUploadingPhotoFor(groupId);
+    try {
+      const supabase = createBrowserSupabase();
+      const extMatch = /\.[^./\\]+$/.exec(file.name);
+      const path = `sessions/${sessionId}/${crypto.randomUUID()}${extMatch ? extMatch[0] : ""}`;
+      const { error: uploadError } = await supabase.storage
+        .from("case-profile-photos")
+        .upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from("case-profile-photos").getPublicUrl(path);
+      const response = await updateSessionPhoto(data.publicUrl, sessionId);
+      if (!response?.success) {
+        throw new Error(response?.message || "The photo could not be updated. Please try again.");
+      }
+
+      setGroupPhoto((prev) => ({ ...prev, [groupId]: data.publicUrl }));
+      toast.success(`${group?.name ?? "Group"} photo overridden.`);
+    } catch (error) {
+      console.error("Failed to override session photo", error);
+      toast.error(error instanceof Error ? error.message : "The photo could not be updated. Please try again.");
+    } finally {
+      setUploadingPhotoFor(null);
+    }
+  };
+
+  const handleRemovePhotoOverride = async (groupId: string) => {
+    const group = simulation.groups.find((g) => g.id === groupId);
+    const sessionId = group?.caseSessionId;
+    if (!sessionId) {
+      toast.error("No valid case session was found for this group.");
+      return;
+    }
+
+    setRemovingPhotoFor(groupId);
+    try {
+      const response = await updateSessionPhoto(null, sessionId);
+      if (!response?.success) {
+        throw new Error(response?.message || "The photo override could not be removed. Please try again.");
+      }
+
+      setGroupPhoto((prev) => ({ ...prev, [groupId]: null }));
+      toast.success(`${group?.name ?? "Group"} photo override removed.`);
+    } catch (error) {
+      console.error("Failed to remove session photo override", error);
+      toast.error(error instanceof Error ? error.message : "The photo override could not be removed. Please try again.");
+    } finally {
+      setRemovingPhotoFor(null);
+    }
+  };
 
   const handleSubmit = (key: string, feedback: string) => {
     setSubmittedFeedback((prev) => ({ ...prev, [key]: feedback }));
@@ -143,6 +231,10 @@ export default function SimulationGroupsView({
             }
           );
 
+          const photoUrl = groupPhoto[group.id];
+          const isUploadingPhoto = uploadingPhotoFor === group.id;
+          const isRemovingPhoto = removingPhotoFor === group.id;
+
           return (
             <div key={group.id} className="bg-white rounded-lg shadow p-4 space-y-3">
               {/* Group header */}
@@ -164,6 +256,36 @@ export default function SimulationGroupsView({
                   disabled={true}
                 >
                   {hasGroupFeedback ? "✓ Group Feedback Given" : "Give Group Feedback"}
+                </button>
+              </div>
+
+              {/* Case photo override */}
+              <div className="flex items-center gap-3">
+                {photoUrl && (
+                  <div className="flex items-center gap-1">
+                    <img
+                      src={photoUrl}
+                      alt={`${group.name} case photo override`}
+                      className="h-10 w-10 rounded object-cover border"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemovePhotoOverride(group.id)}
+                      disabled={isRemovingPhoto}
+                      aria-label="Remove case photo override"
+                      className="text-black text-sm leading-none disabled:opacity-50"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handlePhotoOverrideClick(group.id)}
+                  disabled={isUploadingPhoto}
+                  className="px-3 py-1 text-xs rounded-md font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+                >
+                  {isUploadingPhoto ? "Uploading..." : photoUrl ? "Replace Case Photo" : "Override Case Photo"}
                 </button>
               </div>
 
@@ -253,6 +375,14 @@ export default function SimulationGroupsView({
           );
         })}
       </div>
+
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handlePhotoFileSelected}
+      />
 
       {/* Feedback modal */}
       {feedbackTarget && (

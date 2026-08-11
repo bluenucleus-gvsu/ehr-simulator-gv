@@ -1,11 +1,16 @@
 "use client";
 
 import { CircleUserRound } from "lucide-react";
-import { useMemo } from "react";
+import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import { buildChartDataFromCaseRow } from "./chartData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
 import { useSimSessionContext } from "@/context/SimSessionContext";
+import { createBrowserSupabase } from "@/utils/supabase/client";
+
+const supabase = createBrowserSupabase();
 
 // Define types for local state
 interface MarCounts {
@@ -32,8 +37,9 @@ function ChartSidebarSkeleton() {
 }
 
 export default function ChartSidebar() {
-  const { caseBundle } = useSimulationCase();
+  const { caseBundle, initialPhotoOverride } = useSimulationCase();
   const { simStartTime } = useSimSessionContext();
+  const basePhotoUrl = (caseBundle?.caseRow as { case_photo_url?: string | null } | null | undefined)?.case_photo_url ?? null;
 
   const referenceTime = useMemo(
     () => new Date(simStartTime ?? Date.now()),
@@ -46,6 +52,34 @@ export default function ChartSidebar() {
       }),
     [caseBundle?.caseRow, referenceTime],
   );
+  const params = useParams();
+  const sessionId = params?.sessionId as string;
+
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const channel = supabase
+      .channel(`case-session-photo-${sessionId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "case_sessions",
+          filter: `id=eq.${sessionId}`,
+        },
+        (payload) => {
+          const newUrl = (payload.new as { case_photo_url?: string | null }).case_photo_url;
+          setPhotoUrl(newUrl || basePhotoUrl);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [sessionId, basePhotoUrl]);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(initialPhotoOverride || basePhotoUrl);
   const marData = useMemo<MarCounts>(() => {
     const orders = (caseBundle?.medicationOrders ?? []) as Array<{ priority?: string | null; frequency?: string | null }>;
     return orders.reduce(
@@ -93,7 +127,19 @@ export default function ChartSidebar() {
   return (
     <div className="w-64 h-full min-h-0 flex flex-col justify-start items-center bg-gray-200 border-r border-gray-300 p-2 flex-shrink-0">
       <span className="rounded-full p-1 bg-gray-100 shadow-md">
-        <CircleUserRound size={100} strokeWidth={0.8} color="oklch(38% 0.189 293.745)" className="rounded-full bg-white" />
+        {photoUrl ? (
+          <Image
+            src={photoUrl}
+            alt={sidebarData.name.value}
+            width={100}
+            height={100}
+            className="rounded-full bg-white object-cover"
+            style={{ width: 100, height: 100 }}
+            unoptimized
+          />
+        ) : (
+          <CircleUserRound size={100} strokeWidth={0.8} color="oklch(38% 0.189 293.745)" className="rounded-full bg-white" />
+        )}
       </span>
       <div className="flex flex-col items-center">
         <h1 className="text-purple-900 text-lg font-medium tracking-tight">{sidebarData.name.value}</h1>
