@@ -55,7 +55,7 @@ function orderRowFromMedicationOrder(row: BundleMedOrder): OrderRow {
       : "";
   const parts: string[] = [];
   if (row.dose != null) {
-    parts.push(strength ? `Dose ${row.dose} (${strength} per unit)` : `Dose ${row.dose}`);
+    parts.push(strength ? `Dose: ${row.dose} (${strength} per unit)` : `Dose ${row.dose}`);
   }
   if (row.frequency) parts.push(`Frequency: ${row.frequency}`);
   if (row.indication?.trim()) parts.push(row.indication.trim());

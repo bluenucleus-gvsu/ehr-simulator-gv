@@ -20,7 +20,6 @@ import { isVisibleForSimulationPhase } from "@/lib/simulationPhaseVisibility";
 
 export interface NoteViewProps {
   isError: boolean;
-  isLoading: boolean;
   clinicalDocuments: ClinicalDocumentView[];
   caseId: string;
   sessionId: string;
@@ -28,13 +27,12 @@ export interface NoteViewProps {
 
 const NoteView = ({
   isError = false,
-  isLoading,
   clinicalDocuments,
   caseId,
   sessionId
 }: NoteViewProps) => {
   const { caseBundle } = useSimulationCase();
-  const { simStartTime, userName, userId, groupId, isPresim, currentPhase } = useSimSessionContext();
+  const { simStartTime, userName, userId, groupId, isPresim, currentPhase, loading } = useSimSessionContext();
   const { canEdit } = useStudentSimulationEditAccess();
   const [filteredSpecialties, setFilteredSpecialties] = useState<string[]>([]);
   const fallbackCaseNotes = (caseBundle?.clinicalDocuments ?? []) as ClinicalDocumentView[];
@@ -116,7 +114,7 @@ const NoteView = ({
     return false;
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex h-full min-h-0 w-full flex-col items-center justify-start gap-6 bg-gray-100 pt-16">
         <Skeleton className="w-5/6 h-16 rounded-xl bg-gray-200" />

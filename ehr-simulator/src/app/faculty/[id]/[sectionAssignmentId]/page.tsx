@@ -5,7 +5,7 @@ import { getSectionSimulationDetails } from "@/app/faculty/lib/facultyData";
 export default async function SimulationPage({
   params,
 }: {
-  params: { role: string; sectionAssignmentId: string };
+  params: Promise<{ id: string; sectionAssignmentId: string }>;
 }) {
 
     const { sectionAssignmentId } = await params;

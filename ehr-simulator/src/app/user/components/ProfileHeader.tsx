@@ -1,7 +1,6 @@
 "use client";
-import React from "react";
 import Image from "next/image";
-import { createBrowserSupabase } from "@/utils/supabase/client";
+import { createBrowserClient } from "@supabase/ssr";
 
 type Props = {
   name: string;
@@ -52,7 +51,10 @@ export default function ProfileHeader({ name, avatarUrl, classes = [] }: Props) 
           className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm"
           onClick={async () => {
             try {
-              const supabase = createBrowserSupabase();
+              const supabase = createBrowserClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+              );
 
               await supabase.auth.signOut();
             } catch {

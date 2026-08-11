@@ -1,11 +1,9 @@
-import React from "react";
 import { notFound, redirect } from "next/navigation";
 import ProfileHeader from "@/app/user/components/ProfileHeader";
 import CompletedCaseCard from "@/app/user/components/CompletedCaseCard";
 import AssignedCaseCard from "@/app/user/components/AssignedCaseCard";
 import { createServerSupabase } from "@/utils/supabase/server";
 import { getUserCourses } from "@/actions/getUserCourses";
-import ProfileSimulationEntryButtons from "@/app/user/components/ProfileSimulationEntryButtons";
 
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -61,20 +59,6 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     });
   const filteredActive = partitionCourses(activeCourses);
   const filteredInactive = partitionCourses(inactiveCourses);
-
-  const profileSimulationAssignments = filteredActive.flatMap((course) => {
-    const courseLabel = [course.code, course.name].filter(Boolean).join(" - ") || "Course";
-    return course.assigned.map((a) => ({
-      id: a.id,
-      caseId: a.case_id,
-      sessionId: a.session_id,
-      sessionStatus: a.session_status ?? null,
-      name: a.name,
-      simTime: a.sim_time,
-      presimTime: a.presim_time,
-      courseLabel,
-    }));
-  });
 
   return (
     <main className="p-6 max-w-6xl mx-auto space-y-6">
@@ -235,10 +219,6 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
               ))}
             </ul>
           )}
-        </div>
-        <div className="bg-white rounded-lg shadow mt-6 p-4 mb-6">
-          <h3 className="text-lg font-semibold mb-3">Simulations</h3>
-          <ProfileSimulationEntryButtons assignments={profileSimulationAssignments} />
         </div>
       </section>
     </main>

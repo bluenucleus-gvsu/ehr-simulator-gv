@@ -1,9 +1,8 @@
 "use server"
 
-import type { PostgrestError } from "@supabase/supabase-js";
-import type { Database } from "../../database.types";
+import { createClient, PostgrestError } from "@supabase/supabase-js";
+import { Database } from "../../database.types";
 import { revalidatePath } from "next/cache";
-import { createServiceRoleSupabase } from "@/utils/supabase/service";
 
 export type SectionAssignment = Database['public']['Tables']['section_assignments']['Row'];
 export type SectionAssignmentInsert = Database['public']['Tables']['section_assignments']['Insert'];
@@ -18,7 +17,10 @@ export type ActionResponse<T = null> = {
 };
 
 export async function getAllSimCases() {
-  const supabase = createServiceRoleSupabase();
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const { data, error } = await supabase
     .from("cases")
@@ -42,7 +44,10 @@ export async function getAllSimCases() {
 }
 
 export async function getSimCaseById(id: string) {
-  const supabase = createServiceRoleSupabase();
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const { data, error } = await supabase
     .from("cases")
@@ -67,7 +72,10 @@ export async function getSimCaseById(id: string) {
 
 
 export async function getCaseByCourseId() {
-  const supabase = createServiceRoleSupabase();
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const { data, error } = await supabase
     .from("cases")
@@ -92,7 +100,10 @@ export async function getCaseByCourseId() {
 }
 
 export async function getSectionCaseAssignments(courseId: string) {
-  const supabase = createServiceRoleSupabase();
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const { data, error } = await supabase
     .from('sections')
@@ -173,7 +184,10 @@ export async function getSectionCaseAssignments(courseId: string) {
 }
 
 export async function createSectionCaseAssignment(payload: SectionAssignmentInsert): Promise<ActionResponse<SectionAssignment>> {
-  const supabase = createServiceRoleSupabase();
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const { data, error } = await supabase
     .from('section_assignments')
@@ -200,7 +214,10 @@ export async function createSectionCaseAssignment(payload: SectionAssignmentInse
 }
 
 export async function deleteSectionCaseAssignment(id: string): Promise<ActionResponse> {
-  const supabase = createServiceRoleSupabase();
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const { error } = await supabase
     .from('section_assignments')
@@ -225,7 +242,10 @@ export async function deleteSectionCaseAssignment(id: string): Promise<ActionRes
 }
 
 export async function getCourseCaseAssignments() {
-  const supabase = createServiceRoleSupabase();
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const { data, error } = await supabase
     .from('cases')
@@ -296,7 +316,10 @@ export async function getCourseCaseAssignments() {
 }
 
 export async function updateCaseSession(session: CaseSessionUpsert) {
-  const supabase = createServiceRoleSupabase();
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const { error } = await supabase
     .from('case_sessions')
@@ -325,5 +348,3 @@ export type ExtractData<T extends (...args: any) => Promise<ActionResponse<any>>
 
 export type SectionSimulationsData = ExtractData<typeof getSectionCaseAssignments>;
 export type CasesData = ExtractData<typeof getCaseByCourseId>;
-export type CaseCourseAssignments = ExtractData<typeof getCourseCaseAssignments>;
-export type CaseCourseAssignment = CaseCourseAssignments[number]

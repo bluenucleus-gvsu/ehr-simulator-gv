@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
 import InfoTooltip from "@/components/helpTooltip";
+import AdminSimControl from "@/app/simulation/[caseId]/[sessionId]/chart/components/adminSimControl";
 
 interface HeaderProps {
   tabs?: ReactNode;
@@ -14,7 +15,7 @@ interface HeaderProps {
 
 const Header = ({ tabs }: HeaderProps) => {
   const [isFullscreen, setIsFullScreen] = useState(false)
-  const { userId, userRole, isPresim, loading } = useSimSessionContext();
+  const { userId, userRole, isPresim, loading, currentPhase, handlePhaseChange, handlePresimStatusChange } = useSimSessionContext();
   const router = useRouter()
   const isPreSimMode = isPresim ?? true;
   const modeLabel = isPreSimMode ? "PRE-SIM" : "ACTIVE SIM";
@@ -80,6 +81,15 @@ const Header = ({ tabs }: HeaderProps) => {
           {tabs}
         </div>
         <div className="flex pr-8 gap-4">
+          {userRole === "admin" &&
+            <AdminSimControl
+              currentPhase={currentPhase}
+              isPresim={isPreSimMode}
+              onPresimChange={handlePresimStatusChange}
+              onPhaseChange={handlePhaseChange}
+
+            />
+          }
           {medReferenceTool && (
             <InfoTooltip content="Lexidrug">
               <Button

@@ -1,6 +1,6 @@
 "use server"
 
-import { createServiceRoleSupabase } from "@/utils/supabase/service";
+import { createClient } from "@supabase/supabase-js";
 
 export interface CaseBundle {
   caseRow: any
@@ -13,6 +13,7 @@ export interface CaseBundle {
   microbiologyReports: any[]
   documentationResults: any[]
   medicationAdministrations: any[]
+  caseImages: any[]
   /** Structured med orders + joined medication rows (when present in DB). */
   medicationOrders: any[]
 }
@@ -21,7 +22,10 @@ export async function getCaseBundle(
   caseId: string,
 ): Promise<CaseBundle> {
 
-  const supabase = createServiceRoleSupabase();
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
 
   const [
     caseRes,
@@ -35,6 +39,7 @@ export async function getCaseBundle(
     documentationResultsRes,
     medicationAdministrationsRes,
     medicationOrdersRes,
+    caseImagesRes,
   ] = await Promise.all([
     supabase
       .from("cases")
@@ -111,6 +116,12 @@ export async function getCaseBundle(
       .from("medication_orders")
       .select("*")
       .eq("case_id", caseId),
+
+    supabase
+      .from("case_images")
+      .select("*")
+      .eq("case_id", caseId)
+      .order("created_at", { ascending: true }),
   ])
 
   if (caseRes.error) throw caseRes.error
@@ -127,6 +138,7 @@ export async function getCaseBundle(
     documentationResultsRes.error,
     medicationAdministrationsRes.error,
     medicationOrdersRes.error,
+    caseImagesRes.error,
   ].filter(Boolean)
 
   if (errors.length > 0) {
@@ -164,6 +176,7 @@ export async function getCaseBundle(
     microbiologyReports: microbiologyReportsRes.data ?? [],
     documentationResults: documentationResultsRes.data ?? [],
     medicationAdministrations: medicationAdministrationsRes.data ?? [],
+    caseImages: caseImagesRes.data ?? [],
     medicationOrders,
   }
 }
