@@ -1,7 +1,7 @@
 "use client"
 import React from "react"
 import { GripVertical } from "lucide-react"
-import { Student } from "./types"
+import { Student } from "../types"
 import { cn } from "@/lib/utils"
 
 interface StudentBlockProps {
