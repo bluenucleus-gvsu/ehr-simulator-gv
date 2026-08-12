@@ -16,7 +16,7 @@ export function AdminQuickActionsList() {
         View All Cases
       </Button>
       <Button
-        onClick={() => { router.push("/admin/courses") }}
+        onClick={() => { router.push("/admin/courses/new") }}
         className="cursor-pointer"
         variant="default">
         Create Course
