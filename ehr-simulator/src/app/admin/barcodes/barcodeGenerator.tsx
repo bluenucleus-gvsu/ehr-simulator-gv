@@ -153,6 +153,39 @@ const BardcodeGenerator = ({
           }),
         );
 
+        const medSkipCount =
+          (medStartRow - 1) * MED_LABEL_COLUMNS + (medStartColumn - 1);
+        const medLabelHtmls: string[] = Array.from(
+          { length: medSkipCount },
+          () => `<div class="label"></div>`,
+        );
+        medsWithBarcodes.forEach((med) => {
+          const count = medQuantities[med.id] || 1;
+          const name = `${med.genericName}${med.brandName ? " (" + med.brandName + ")" : ""}`;
+          const sub = `${med.strength}${med.strengthUnit} [${med.route}]`;
+          for (let i = 0; i < count; i++) {
+            medLabelHtmls.push(`
+            <div class="label">
+              <div class="barcode-container">${med.barcodeDataUrl}</div>
+              <div class="label-text">
+                <div class="med-name">${name}</div>
+                <div class="med-sub">${sub}</div>
+              </div>
+            </div>
+          `);
+          }
+        });
+
+        // Chunk labels into per-sheet groups so every physical Avery 5167
+        // sheet gets its own top/bottom margin (padding on a single box that
+        // spans multiple printed pages only applies at the very start/end,
+        // not once per page).
+        const medLabelsPerSheet = MED_LABEL_ROWS * MED_LABEL_COLUMNS;
+        const medSheets: string[][] = [];
+        for (let i = 0; i < medLabelHtmls.length; i += medLabelsPerSheet) {
+          medSheets.push(medLabelHtmls.slice(i, i + medLabelsPerSheet));
+        }
+
         printHTML = `
           <!DOCTYPE html>
           <html>
@@ -163,6 +196,7 @@ const BardcodeGenerator = ({
               @page { size: 8.5in 11in; margin: 0; }
               body { font-family: Arial, sans-serif; background: white; }
               .sheet { padding: 0.5in 0.33in 0.5in 0.45in; }
+              .sheet.page-break { page-break-after: always; break-after: page; }
               .label-grid { display: grid; grid-template-columns: repeat(4, 1.75in); column-gap: 0.25in; row-gap: 0; }
               .label { width: 1.75in; height: 0.5in; overflow: hidden; display: flex; flex-direction: row; align-items: center; padding: 1px 3px; gap: 3px; page-break-inside: avoid; }
               .label-text { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; padding-right: 3px; padding-left: 3px; }
@@ -173,37 +207,17 @@ const BardcodeGenerator = ({
             </style>
           </head>
           <body>
-          <div class="sheet">
+          ${medSheets
+            .map(
+              (sheetLabels, idx) => `
+          <div class="sheet${idx < medSheets.length - 1 ? " page-break" : ""}">
             <div class="label-grid">
-              ${Array.from(
-                {
-                  length:
-                    (medStartRow - 1) * MED_LABEL_COLUMNS +
-                    (medStartColumn - 1),
-                },
-                () => `<div class="label"></div>`,
-              ).join("")}
-              ${medsWithBarcodes
-                .map((med) => {
-                  const count = medQuantities[med.id] || 1;
-                  const name = `${med.genericName}${med.brandName ? " (" + med.brandName + ")" : ""}`;
-                  const sub = `${med.strength}${med.strengthUnit} [${med.route}]`;
-                  return Array.from(
-                    { length: count },
-                    () => `
-            <div class="label">
-              <div class="barcode-container">${med.barcodeDataUrl}</div>
-              <div class="label-text">
-                <div class="med-name">${name}</div>
-                <div class="med-sub">${sub}</div>
-              </div>
-            </div>
-          `,
-                  ).join("");
-                })
-                .join("")}
+              ${sheetLabels.join("")}
             </div>
           </div>
+          `,
+            )
+            .join("")}
           </body>
           </html>
         `;
