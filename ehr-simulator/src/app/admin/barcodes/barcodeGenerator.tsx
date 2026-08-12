@@ -14,14 +14,9 @@ interface BarcodeGeneratorProps {
 
 type TabType = "medications" | "wristbands";
 
-// Must match the column count in .label-grid's grid-template-columns for medication labels
 const MED_LABEL_COLUMNS = 4;
-// Must match the column count in .label-grid's grid-template-columns for patient wristbands
 const WRISTBAND_LABEL_COLUMNS = 3;
-// Avery 5167: 4 cols x 20 rows. Usable height = 11in - 0.5in top - 0.5in bottom = 10in,
-// 10in / 0.5in label height = 20 rows exactly.
 const MED_LABEL_ROWS = 20;
-// Rows that fit on one 8.5x11in sheet (10.5in usable height / 1in label height = 10)
 const WRISTBAND_LABEL_ROWS = 10;
 
 const BardcodeGenerator = ({
