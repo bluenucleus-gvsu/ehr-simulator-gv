@@ -171,10 +171,6 @@ const BardcodeGenerator = ({
           }
         });
 
-        // Chunk labels into per-sheet groups so every physical Avery 5167
-        // sheet gets its own top/bottom margin (padding on a single box that
-        // spans multiple printed pages only applies at the very start/end,
-        // not once per page).
         const medLabelsPerSheet = MED_LABEL_ROWS * MED_LABEL_COLUMNS;
         const medSheets: string[][] = [];
         for (let i = 0; i < medLabelHtmls.length; i += medLabelsPerSheet) {
