@@ -18,6 +18,11 @@ type TabType = "medications" | "wristbands";
 const MED_LABEL_COLUMNS = 4;
 // Must match the column count in .label-grid's grid-template-columns for patient wristbands
 const WRISTBAND_LABEL_COLUMNS = 3;
+// Avery 5167: 4 cols x 20 rows. Usable height = 11in - 0.5in top - 0.5in bottom = 10in,
+// 10in / 0.5in label height = 20 rows exactly.
+const MED_LABEL_ROWS = 20;
+// Rows that fit on one 8.5x11in sheet (10.5in usable height / 1in label height = 10)
+const WRISTBAND_LABEL_ROWS = 10;
 
 const BardcodeGenerator = ({
   medications,
@@ -57,7 +62,8 @@ const BardcodeGenerator = ({
   };
 
   const handleMedStartRowChange = (value: number) => {
-    const safeValue = value < 1 || isNaN(value) ? 1 : value;
+    const safeValue =
+      value < 1 || isNaN(value) ? 1 : Math.min(value, MED_LABEL_ROWS);
     setMedStartRow(safeValue);
   };
 
@@ -84,7 +90,8 @@ const BardcodeGenerator = ({
   };
 
   const handleWristbandStartRowChange = (value: number) => {
-    const safeValue = value < 1 || isNaN(value) ? 1 : value;
+    const safeValue =
+      value < 1 || isNaN(value) ? 1 : Math.min(value, WRISTBAND_LABEL_ROWS);
     setWristbandStartRow(safeValue);
   };
 
@@ -155,7 +162,7 @@ const BardcodeGenerator = ({
               * { box-sizing: border-box; margin: 0; padding: 0; }
               @page { size: 8.5in 11in; margin: 0; }
               body { font-family: Arial, sans-serif; background: white; }
-              .sheet { padding: 0.5in 0.33in 0 0.45in; }
+              .sheet { padding: 0.5in 0.33in 0.5in 0.45in; }
               .label-grid { display: grid; grid-template-columns: repeat(4, 1.75in); column-gap: 0.25in; row-gap: 0; }
               .label { width: 1.75in; height: 0.5in; overflow: hidden; display: flex; flex-direction: row; align-items: center; padding: 1px 3px; gap: 3px; page-break-inside: avoid; }
               .label-text { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; padding-right: 3px; padding-left: 3px; }
@@ -315,6 +322,7 @@ const BardcodeGenerator = ({
                     id="med-start-row"
                     type="number"
                     min="1"
+                    max={MED_LABEL_ROWS}
                     className="w-20 px-3 py-1.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                     value={medStartRow}
                     onChange={(e) =>
@@ -355,6 +363,7 @@ const BardcodeGenerator = ({
                     id="wristband-start-row"
                     type="number"
                     min="1"
+                    max={WRISTBAND_LABEL_ROWS}
                     className="w-20 px-3 py-1.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                     value={wristbandStartRow}
                     onChange={(e) =>
