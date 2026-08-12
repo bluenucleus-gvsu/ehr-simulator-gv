@@ -14,6 +14,11 @@ interface BarcodeGeneratorProps {
 
 type TabType = "medications" | "wristbands";
 
+// Must match the column count in .label-grid's grid-template-columns for medication labels
+const MED_LABEL_COLUMNS = 4;
+// Must match the column count in .label-grid's grid-template-columns for patient wristbands
+const WRISTBAND_LABEL_COLUMNS = 3;
+
 const BardcodeGenerator = ({
   medications,
   simCases,
@@ -24,11 +29,16 @@ const BardcodeGenerator = ({
   const [medQuantities, setMedQuantities] = useState<Record<string, number>>(
     {},
   );
+  const [medStartRow, setMedStartRow] = useState<number>(1);
+  const [medStartColumn, setMedStartColumn] = useState<number>(1);
 
   const [selectedCases, setSelectedCases] = useState<string[]>([]);
   const [caseQuantities, setCaseQuantities] = useState<Record<string, number>>(
     {},
   );
+  const [wristbandStartRow, setWristbandStartRow] = useState<number>(1);
+  const [wristbandStartColumn, setWristbandStartColumn] =
+    useState<number>(1);
 
   const [isPrinting, setIsPrinting] = useState<boolean>(false);
 
@@ -46,6 +56,19 @@ const BardcodeGenerator = ({
     setMedQuantities((prev) => ({ ...prev, [id]: safeValue }));
   };
 
+  const handleMedStartRowChange = (value: number) => {
+    const safeValue = value < 1 || isNaN(value) ? 1 : value;
+    setMedStartRow(safeValue);
+  };
+
+  const handleMedStartColumnChange = (value: number) => {
+    const safeValue =
+      value < 1 || isNaN(value)
+        ? 1
+        : Math.min(value, MED_LABEL_COLUMNS);
+    setMedStartColumn(safeValue);
+  };
+
   const handleCaseChange = (id: string, checked: boolean) => {
     if (checked) {
       setSelectedCases((prev) => [...prev, id]);
@@ -58,6 +81,19 @@ const BardcodeGenerator = ({
   const handleCaseQuantityChange = (id: string, value: number) => {
     const safeValue = value < 1 || isNaN(value) ? 1 : value;
     setCaseQuantities((prev) => ({ ...prev, [id]: safeValue }));
+  };
+
+  const handleWristbandStartRowChange = (value: number) => {
+    const safeValue = value < 1 || isNaN(value) ? 1 : value;
+    setWristbandStartRow(safeValue);
+  };
+
+  const handleWristbandStartColumnChange = (value: number) => {
+    const safeValue =
+      value < 1 || isNaN(value)
+        ? 1
+        : Math.min(value, WRISTBAND_LABEL_COLUMNS);
+    setWristbandStartColumn(safeValue);
   };
 
   const generateMedBarcodeSvg = (text: string): string => {
@@ -132,6 +168,14 @@ const BardcodeGenerator = ({
           <body>
           <div class="sheet">
             <div class="label-grid">
+              ${Array.from(
+                {
+                  length:
+                    (medStartRow - 1) * MED_LABEL_COLUMNS +
+                    (medStartColumn - 1),
+                },
+                () => `<div class="label"></div>`,
+              ).join("")}
               ${medsWithBarcodes
                 .map((med) => {
                   const count = medQuantities[med.id] || 1;
@@ -191,6 +235,14 @@ const BardcodeGenerator = ({
           <body>
             <div class="sheet">
               <div class="label-grid">
+                ${Array.from(
+                  {
+                    length:
+                      (wristbandStartRow - 1) * WRISTBAND_LABEL_COLUMNS +
+                      (wristbandStartColumn - 1),
+                  },
+                  () => `<div class="label"></div>`,
+                ).join("")}
                 ${casesWithBarcodes
                   .map((c) => {
                     const count = caseQuantities[c.id] || 1;
@@ -249,15 +301,102 @@ const BardcodeGenerator = ({
               Generate simulator barcodes and patient wristbands
             </p>
           </div>
-          <button
-            onClick={printItems}
-            className="bg-blue-600 text-white font-medium px-6 py-2.5 rounded-lg shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
-            disabled={isPrinting}
-          >
-            {isPrinting
-              ? "Generating..."
-              : `Print ${activeTab === "medications" ? "Labels" : "Wristbands"}`}
-          </button>
+          <div className="flex items-end gap-3">
+            {activeTab === "medications" ? (
+              <>
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor="med-start-row"
+                    className="text-sm font-medium text-gray-600"
+                  >
+                    Start row:
+                  </label>
+                  <input
+                    id="med-start-row"
+                    type="number"
+                    min="1"
+                    className="w-20 px-3 py-1.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    value={medStartRow}
+                    onChange={(e) =>
+                      handleMedStartRowChange(parseInt(e.target.value, 10))
+                    }
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor="med-start-column"
+                    className="text-sm font-medium text-gray-600"
+                  >
+                    Start column:
+                  </label>
+                  <input
+                    id="med-start-column"
+                    type="number"
+                    min="1"
+                    max={MED_LABEL_COLUMNS}
+                    className="w-20 px-3 py-1.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    value={medStartColumn}
+                    onChange={(e) =>
+                      handleMedStartColumnChange(parseInt(e.target.value, 10))
+                    }
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor="wristband-start-row"
+                    className="text-sm font-medium text-gray-600"
+                  >
+                    Start row:
+                  </label>
+                  <input
+                    id="wristband-start-row"
+                    type="number"
+                    min="1"
+                    className="w-20 px-3 py-1.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    value={wristbandStartRow}
+                    onChange={(e) =>
+                      handleWristbandStartRowChange(
+                        parseInt(e.target.value, 10),
+                      )
+                    }
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor="wristband-start-column"
+                    className="text-sm font-medium text-gray-600"
+                  >
+                    Start column:
+                  </label>
+                  <input
+                    id="wristband-start-column"
+                    type="number"
+                    min="1"
+                    max={WRISTBAND_LABEL_COLUMNS}
+                    className="w-20 px-3 py-1.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    value={wristbandStartColumn}
+                    onChange={(e) =>
+                      handleWristbandStartColumnChange(
+                        parseInt(e.target.value, 10),
+                      )
+                    }
+                  />
+                </div>
+              </>
+            )}
+            <button
+              onClick={printItems}
+              className="bg-blue-600 text-white font-medium px-6 py-2.5 rounded-lg shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+              disabled={isPrinting}
+            >
+              {isPrinting
+                ? "Generating..."
+                : `Print ${activeTab === "medications" ? "Labels" : "Wristbands"}`}
+            </button>
+          </div>
         </div>
 
         {/* Tab Navigation */}
