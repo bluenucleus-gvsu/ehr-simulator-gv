@@ -5,7 +5,11 @@ import AssignedCaseCard from "@/app/user/components/AssignedCaseCard";
 import { createServerSupabase } from "@/utils/supabase/server";
 import { getUserCourses } from "@/actions/getUserCourses";
 
-export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
+function compareSimTimesLatestFirst(a: string | null, b: string | null): number {
+  return new Date(b ?? 0).getTime() - new Date(a ?? 0).getTime()
+}
+
+export default async function ProfilePage({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
   const { id } = await params;
 
   const supabase = await createServerSupabase();
@@ -17,21 +21,24 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     notFound();
   }
 
-  let studentName = "Student";
-  let avatarUrl = "";
+  const isOwnProfile = user.id === id;
 
-  if (user.id === id) {
-    studentName = user.user_metadata?.full_name || user.user_metadata?.name || user.email || "Student";
-    avatarUrl = user.user_metadata?.avatar_url || "";
-  } else {
-    const { data: profile } = await supabase.from("users").select("full_name, email, role").eq("id", id).single();
-    studentName = profile?.full_name || profile?.email || "Student";
+  const studentName = isOwnProfile
+    ? user.user_metadata?.full_name || user.user_metadata?.name || user.email || "Student"
+    : (async () => {
+      const { data: profile } = await supabase
+        .from("users")
+        .select("full_name, email, role")
+        .eq("id", id)
+        .single();
 
-    const profileRole = profile?.role as string | undefined;
-    if (profileRole && profileRole !== "student") {
-      redirect("/admin");
-    }
-  }
+      if (profile?.role && profile.role !== "student") {
+        redirect("/admin");
+      }
+      return profile?.full_name || profile?.email || "Student";
+    })();
+
+  const avatarUrl = isOwnProfile ? user.user_metadata?.avatar_url || "" : "";
 
   const { activeCourses, inactiveCourses } = await getUserCourses(id);
   const allCourses = [...activeCourses, ...inactiveCourses];
@@ -48,12 +55,14 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       });
       return {
         ...c,
-        assigned: c.assigned,
-        completed: dedupedCompleted.sort(
-          (a, b) => new Date(b.completed_at ?? 0).getTime() - new Date(a.completed_at ?? 0).getTime()
+        assigned: c.assigned.toSorted(
+          (a, b) => compareSimTimesLatestFirst(a.sim_time, b.sim_time)
         ),
-        expired: (c.expired ?? []).sort(
-          (a, b) => new Date(b.expired_at ?? 0).getTime() - new Date(a.expired_at ?? 0).getTime()
+        completed: dedupedCompleted.toSorted(
+          (a, b) => compareSimTimesLatestFirst(a.completed_at, b.completed_at)
+        ),
+        expired: c.expired.toSorted(
+          (a, b) => compareSimTimesLatestFirst(a.expired_at, b.expired_at)
         ),
       };
     });
