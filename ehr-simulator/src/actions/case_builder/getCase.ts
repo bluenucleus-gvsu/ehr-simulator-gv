@@ -1,6 +1,7 @@
 "use server"
 
 import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient";
+import { CaseSpecialty } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetTemplateGenerator";
 import { assertUuid } from "@/lib/caseBuilder/validation";
 
 export interface CaseBundle {
@@ -30,6 +31,8 @@ export type CaseRow = Record<string, unknown> & {
   attending_provider?: string | null;
   isolation_precautions?: NamedLookup | null;
   relationship_status?: NamedLookup | null;
+  case_specialty: CaseSpecialty;
+  flexsheet_sections: string[] | null;
 };
 
 export type CaseBundleRow = Record<string, unknown> & {

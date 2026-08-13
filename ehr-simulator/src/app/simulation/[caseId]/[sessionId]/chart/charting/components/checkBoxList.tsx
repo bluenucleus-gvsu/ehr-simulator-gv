@@ -9,7 +9,7 @@ import type { chartingOptions } from "./flexSheetData";
 
 interface CheckBoxListProps {
   options: chartingOptions[];
-  selectedOptions: string[]; // These are now strictly IDs!
+  selectedOptions: string[];
   rowId: string;
   columnId: string;
   onSelectionChange: (rowId: string, columnId: string, selectedValues: string[]) => void;
@@ -70,10 +70,10 @@ const CheckBoxList: React.FC<CheckBoxListProps> = ({
 
   return (
     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-      <PopoverTrigger asChild className='justify-start w-full gap-0 !h-6'>
-        <Button className="h-full w-full rounded-none px-2 overflow-hidden bg-transparent shadow-none hover:bg-muted/30 font-normal text-xs text-black">
+      <PopoverTrigger asChild className='h-6'>
+        <button className="flex items-center text-center w-full pl-2 text-xs hover:bg-gray-50">
           {displayLabels || ""}
-        </Button>
+        </button>
       </PopoverTrigger>
       <PopoverContent className="w-full bg-white p-0 m-0 shadow-md shadow-black/30 border rounded-xl overflow-hidden">
         <div className="">

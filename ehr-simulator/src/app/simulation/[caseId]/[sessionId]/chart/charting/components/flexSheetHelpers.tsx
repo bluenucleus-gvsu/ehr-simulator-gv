@@ -84,7 +84,6 @@ export function calculateColTotal(toolName: string, grouped: FlexSheetData[], ti
     let hasEnteredValue = false;
 
     grouped.forEach(toolRow => {
-      // Safe check for existing value
       const val = toolRow[timeCol];
       if (val) {
         const score = parseInt(val.toString());

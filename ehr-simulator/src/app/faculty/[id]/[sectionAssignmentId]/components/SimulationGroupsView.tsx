@@ -34,8 +34,9 @@ export default function SimulationGroupsView({
   const [isAdvancing, setIsAdvancing] = useState(false);
   const [advanceError, setAdvanceError] = useState('');
 
-  const phases = simulation.phaseCount; 
-  const maxPhasesPerRow = 5; 
+  const phases = simulation.phaseCount;
+  const maxPhasesPerRow = 5;
+
 
   const sortedGroups = useMemo(() => {
     return [...simulation.groups].sort((a, b) =>
@@ -58,7 +59,6 @@ export default function SimulationGroupsView({
 
   const handleSubmit = (key: string, feedback: string) => {
     setSubmittedFeedback((prev) => ({ ...prev, [key]: feedback }));
-    console.log(`[DUMMY] Feedback submitted for "${key}":`, feedback);
   };
 
   const handlePhaseAdvancement = (
@@ -188,11 +188,10 @@ export default function SimulationGroupsView({
                       groupName: group.name,
                     })
                   }
-                  className={`px-3 py-1 text-xs rounded-md font-medium ${
-                    hasGroupFeedback
-                      ? "bg-green-50 text-green-700 border border-green-300"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
-                  }`}
+                  className={`px-3 py-1 text-xs rounded-md font-medium ${hasGroupFeedback
+                    ? "bg-green-50 text-green-700 border border-green-300"
+                    : "bg-blue-600 text-white hover:bg-blue-700"
+                    }`}
                   disabled={true}
                 >
                   {hasGroupFeedback ? "✓ Group Feedback Given" : "Give Group Feedback"}
@@ -226,11 +225,10 @@ export default function SimulationGroupsView({
                             groupName: group.name,
                           })
                         }
-                        className={`px-2 py-1 text-xs rounded-md font-medium ${
-                          hasMemberFeedback
-                            ? "bg-green-50 text-green-700 border border-green-300"
-                            : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                        }`}
+                        className={`px-2 py-1 text-xs rounded-md font-medium ${hasMemberFeedback
+                          ? "bg-green-50 text-green-700 border border-green-300"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                          }`}
                         disabled={true}
                       >
                         {hasMemberFeedback ? "✓ Feedback Given" : "Give Feedback"}
@@ -240,7 +238,7 @@ export default function SimulationGroupsView({
                 })}
               </ul>
               <hr />
-              
+
               {/* Group Footer for Phase Change */}
               <div className="flex flex-wrap items-center gap-4 py-2">
                 <Phases
@@ -249,6 +247,7 @@ export default function SimulationGroupsView({
                   handlePhaseAdvancement={handlePhaseAdvancement}
                   group={group}
                 />
+
 
                 <button
                   onClick={() => handlePhaseAdvancement(group.id, group.name, currentPhase + 1)}

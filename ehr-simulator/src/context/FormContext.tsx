@@ -5,8 +5,9 @@ import { CompleteFormType, defaultIoData, defaultOrders, DemographicFormData, Fo
 import { ClinicalNote } from '@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData';
 import { OrderType } from '@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData';
 import { LabTableData, labTemplate } from '@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData';
-import { FlexSheetData, flexSheetTemplate } from '@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData';
+import { FlexSheetData, tempSelectionSet } from '@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData';
 import { MedAdministrationInstance } from '@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData';
+import { buildFlexSheetTemplate, CaseSpecialty } from '@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetTemplateGenerator';
 
 interface FormContextType {
   demographicData: DemographicFormData;
@@ -92,7 +93,7 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
     visibleItems: new Set()
   });
   const [chartingData, setChartingData] = useState<TableFormData<FlexSheetData>>({
-    data: flexSheetTemplate,
+    data: buildFlexSheetTemplate(CaseSpecialty.MED_SURG, tempSelectionSet),
     timePoints: [0],
     timePointsInPreSim: new Set<number>(),
     visibleItems: new Set()
