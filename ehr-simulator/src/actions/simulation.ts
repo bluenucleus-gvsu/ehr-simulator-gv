@@ -698,11 +698,9 @@ export async function updateSessionPhoto(photoUrl: string | null, sessionId: str
   );
 
   try {
-    // case_sessions.case_photo_url isn't in the generated types yet (added via migration; types need regen)
     const { error } = await supabase
       .from("case_sessions")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .update({ case_photo_url: photoUrl } as any)
+      .update({ case_photo_url: photoUrl })
       .eq("id", sessionId)
 
     if (error) {

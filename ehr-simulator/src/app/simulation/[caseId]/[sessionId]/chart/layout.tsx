@@ -8,6 +8,7 @@ import { resolveSimulationRouteContext } from "@/actions/simulation/getSimulatio
 import { getCaseBundle } from "@/actions/case_builder/getCase";
 import type { CaseBundle } from "@/actions/case_builder/getCase";
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "../../../../../../database.types";
 import { ChartSimulationBootstrap } from "./chartSimulationBootstrap";
 import { SidebarProvider } from "@/components/ui/sidebar"
 import FlexSheetSidebar from "./charting/components/flexSheetSidebar"
@@ -27,16 +28,16 @@ const ChartLayout = async ({ children, params }: ChartLayoutProps) => {
 
   let initialPhotoOverride: string | null = null;
   if (serverCaseBundle) {
-    const supabase = createClient(
+    const supabase = createClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
     const { data: session } = await supabase
       .from("case_sessions")
-      .select("case_photo_url" as never)
+      .select("case_photo_url")
       .eq("id", sessionId)
       .maybeSingle();
-    initialPhotoOverride = (session as { case_photo_url?: string | null } | null)?.case_photo_url ?? null;
+    initialPhotoOverride = session?.case_photo_url ?? null;
   }
 
   return (
