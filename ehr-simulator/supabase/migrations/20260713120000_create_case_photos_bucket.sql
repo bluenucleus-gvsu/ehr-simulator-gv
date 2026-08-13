@@ -68,3 +68,12 @@ create policy "case-profile-photos: authenticated can read"
 on storage.objects for select
 to authenticated
 using (bucket_id = 'case-profile-photos');
+
+-- URL of the uploaded case profile photo (case-profile-photos bucket)
+ALTER TABLE public.cases
+  ADD COLUMN IF NOT EXISTS case_photo_url text;
+
+-- Per-session override of cases.case_photo_url (case-profile-photos bucket).
+-- Null means the session falls back to the case's default photo.
+ALTER TABLE public.case_sessions
+  ADD COLUMN IF NOT EXISTS case_photo_url text;
