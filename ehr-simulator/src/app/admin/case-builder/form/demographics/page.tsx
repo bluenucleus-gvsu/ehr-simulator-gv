@@ -28,13 +28,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import InfoTooltip from "../../../../../components/helpTooltip";
 import { differenceInYears } from "date-fns";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createBrowserSupabase } from "@/utils/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useFormContext } from "@/context/FormContext";
 import { relationshipStatuses, precautions, months, codeStatuses, days, insuranceOptions, DemographicFormData, intakeOutputBlocksFromCaseRow } from "@/utils/form";
 import { buttonVariants } from "@/components/ui/button";
 import { FormShell } from "../../components/formShell";
+import PhotoUpload from "@/components/photoUpload";
 import { CaseSection } from "@/lib/saveCase";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { getCaseBundle } from "@/actions/case_builder/getCase";
@@ -51,22 +52,12 @@ export default function DemographicsForm() {
   const searchParams = useSearchParams();
   const [showCancelAlert, setShowCancelAlert] = useState<boolean>(false);
   const [casePhotoFile, setCasePhotoFile] = useState<File | null>(null);
-  const [casePhotoUrl, setCasePhotoUrl] = useState<string | null>(null);
+  const [casePhotoUrl, setCasePhotoUrl] = useState<string | null>(initialData.case_photo_url || null);
   const [casePhotoRemoved, setCasePhotoRemoved] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [photoUploadError, setPhotoUploadError] = useState<string | null>(null);
-  const casePhotoInputRef = useRef<HTMLInputElement>(null);
 
-  const handleCasePhotoSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      setPhotoUploadError("Please select an image file.");
-      return;
-    }
-
+  const handleCasePhotoSelected = (file: File) => {
     setPhotoUploadError(null);
     setCasePhotoFile(file);
     setCasePhotoUrl(URL.createObjectURL(file));
@@ -296,11 +287,10 @@ export default function DemographicsForm() {
       setIsUploadingPhoto(true);
       try {
         const supabase = createBrowserSupabase();
-        const extMatch = /\.[^./\\]+$/.exec(casePhotoFile.name);
-        const path = `${resolvedCaseId ?? "unassigned"}/${crypto.randomUUID()}${extMatch ? extMatch[0] : ""}`;
+        const path = `${resolvedCaseId ?? "unassigned"}/${crypto.randomUUID()}`;
         const { error: uploadError } = await supabase.storage
           .from("case-profile-photos")
-          .upload(path, casePhotoFile, { upsert: true });
+          .upload(path, casePhotoFile, { upsert: true, contentType: casePhotoFile.type });
         if (uploadError) throw uploadError;
 
         const { data } = supabase.storage.from("case-profile-photos").getPublicUrl(path);
@@ -404,49 +394,17 @@ export default function DemographicsForm() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <input
-                    ref={casePhotoInputRef}
-                    id="case_photo"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    aria-label="Case Profile Photo"
-                    onChange={handleCasePhotoSelected}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => casePhotoInputRef.current?.click()}
-                    disabled={isUploadingPhoto}
-                    className="relative h-[100px] w-[100px] rounded-lg border border-dashed border-slate-300 bg-white overflow-hidden hover:border-slate-400 transition-colors flex items-center justify-center disabled:opacity-70"
-                  >
-                    {casePhotoUrl ? (
-                      <img
-                        src={casePhotoUrl}
-                        alt="Case profile"
-                        className="absolute inset-0 h-full w-full object-cover"
-                      />
-                    ) : (
-                      <span className="flex flex-col items-center gap-1 text-slate-400">
-                        <ImageIcon className="w-6 h-6" />
-                        <span className="text-xs">{isUploadingPhoto ? "Uploading..." : "Click to upload"}</span>
-                      </span>
-                    )}
-                  </button>
-                  {casePhotoUrl && (
-                    <button
-                      type="button"
-                      onClick={handleRemoveCasePhoto}
-                      disabled={isUploadingPhoto}
-                      className="text-xs text-slate-400 hover:text-slate-600 disabled:opacity-50"
-                    >
-                      Remove
-                    </button>
-                  )}
-                  {photoUploadError && (
-                    <p className="text-xs text-red-500">{photoUploadError}</p>
-                  )}
-                </div>
+                <PhotoUpload
+                  variant="square"
+                  alt="Case profile"
+                  value={casePhotoUrl}
+                  onFileSelected={handleCasePhotoSelected}
+                  onInvalidFile={setPhotoUploadError}
+                  onRemove={handleRemoveCasePhoto}
+                  disabled={isUploadingPhoto}
+                  uploading={isUploadingPhoto}
+                  error={photoUploadError}
+                />
               </CardContent>
             </Card>
 
