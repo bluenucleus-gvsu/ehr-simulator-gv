@@ -11,25 +11,19 @@ import { Button } from "@/components/ui/button";
 import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { toast } from "sonner";
 import FlexSheetColumnShifter from "./components/flexSheetColumnShifter";
-
-import {
-  type FlexSheetData,
-  assessmentTools,
-  flexSheetTemplate,
-} from "./components/flexSheetData";
+import { type FlexSheetData } from "./components/flexSheetData";
 import { ImagingData, LabCellValue } from "../labs/components/labsData";
 import { TableAssessmentSelectCell, TableInputCell } from "./components/tableInputCell";
 import { ChartingToolTip } from "./components/ChartingToolTip";
 import { DatabaseDocumentation, StudentDatabaseDocumentation, upsertDocumentationRows } from "@/actions/simulation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
-import {
-  buildChartingRowsFromBundle,
-  coerceDocumentationValueForPersist,
-  resolveDocumentationDbColumn,
-} from "./components/chartingFromBundle";
+import { buildChartingRowsFromBundle } from "./components/chartingFromBundle";
+import { coerceDocumentationValueForPersist } from "@/lib/documentationColumns";
 import { calculateColTotal, formatTimeFromOffset, getPinnedStyles } from "./components/flexSheetHelpers";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
 import { useStudentSimulationEditAccess } from "@/utils/studentSimulationEditAccess";
+import { buildFlexSheetTemplate } from "./components/flexSheetTemplateGenerator";
+import { buildAssessmentToolGuide } from "./components/assessmentToolGuides";
 
 interface FlexSheetViewProps {
   dbDocumentation: DatabaseDocumentation[];
@@ -53,27 +47,31 @@ declare module '@tanstack/react-table' {
 
 export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   const { caseBundle } = useSimulationCase();
-
-  const sourceDocumentation = useMemo(
-    () => (
-      dbDocumentation.length > 0
-        ? dbDocumentation
-        : ((caseBundle?.documentationResults ?? []) as DatabaseDocumentation[])
-    ),
-    [caseBundle?.documentationResults, dbDocumentation],
-  );
+  const sourceDocumentation = dbDocumentation;
   const { groupId, userId, simStartTime, handleUnsavedCharting, isPresim } = useSimSessionContext();
 
   const { canEdit } = useStudentSimulationEditAccess();
+  const { chartingSections, caseSpecialty } = useMemo(() => {
+    const sections = caseBundle?.caseRow.flexsheet_sections;
+
+    return {
+      chartingSections: new Set(sections ?? []),
+      caseSpecialty: caseBundle?.caseRow.case_specialty ?? null,
+    };
+  }, [caseBundle]);
+
+  const flexSheetTemplate = useMemo(
+    () => buildFlexSheetTemplate(caseSpecialty, chartingSections),
+    [chartingSections, caseSpecialty]
+  )
+
   const initialCharting = useMemo(
     () => buildChartingRowsFromBundle(sourceDocumentation, flexSheetTemplate),
-    [sourceDocumentation],
+    [sourceDocumentation, flexSheetTemplate],
   );
   const [timeOffsets, setTimeOffsets] = useState(isPresim ?
     Array.from(initialCharting.timePointsInPreSim).sort((a, b) => a - b)
     : initialCharting.timeOffsets)
-
-
 
   const [data, setData] = useState<FlexSheetData[]>(initialCharting.rows);
   const [fieldSelections, setFieldSelections] = useState<Record<string, string[]>>({});
@@ -87,6 +85,9 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   const remainder = timeOffsets.length % tableWidth;
   const [columnOffset, setColumnOffset] = useState(maxOffset);
   const slicedTimeOffsets = timeOffsets.slice(columnOffset, (columnOffset === 0 && remainder !== 0) ? remainder : columnOffset + tableWidth);
+  const assessmentToolGuides = useMemo(() => {
+    return buildAssessmentToolGuide(chartingSections)
+  }, [chartingSections]);
 
   useEffect(() => {
     const hydrated = buildChartingRowsFromBundle(sourceDocumentation, flexSheetTemplate);
@@ -94,11 +95,24 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
       ? Array.from(initialCharting.timePointsInPreSim).sort((a, b) => a - b)
       : hydrated.timeOffsets;
 
+    const newFieldSelections: Record<string, string[]> = {};
+    hydrated.rows.forEach((row) => {
+      if (row.componentType === "checkboxlist") {
+        targetOffsets.forEach((time) => {
+          const val = row[time];
+          if (typeof val === "string" && val.length > 0) {
+            newFieldSelections[`${row.id}-${time}`] = val.split(",");
+          }
+        });
+      }
+    });
+    setFieldSelections(newFieldSelections);
+
     setTimeOffsets(targetOffsets);
     setData(hydrated.rows);
     setDirtyColumns(new Set());
     setColumnOffset(Math.max(0, targetOffsets.length - tableWidth));
-  }, [sourceDocumentation, isPresim]);
+  }, [sourceDocumentation, isPresim, flexSheetTemplate, initialCharting.timePointsInPreSim]);
 
   useEffect(() => {
     setColumnOffset((prev) => Math.min(prev, maxOffset));
@@ -116,25 +130,25 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
     const groupedByTool: Record<string, FlexSheetData[]> = {};
 
     data.forEach((row) => {
-      if (row.toolName) {
-        groupedByTool[row.toolName] = groupedByTool[row.toolName] || [];
-        groupedByTool[row.toolName].push(row);
+      if (row.toolId && row.componentType !== "static") {
+        groupedByTool[row.toolId] = groupedByTool[row.toolId] || [];
+        groupedByTool[row.toolId].push(row);
       }
     });
 
     const newFilteredData: FlexSheetData[] = [];
 
     data.forEach((row) => {
-      const isVisible = !row.hideable || (row.hideableId && visibleSubsetIds.has(row.hideableId));
+      const isVisible = !row.hideable || visibleSubsetIds.has(row.id);
 
       if (isVisible) {
         newFilteredData.push(row);
       }
 
-      if (row.rowType === "titleRow" && row.hideableId && visibleSubsetIds.has(row.hideableId)) {
-        const toolName = row.hideableId;
-        if (groupedByTool[toolName]) {
-          const totalRow = calculateColTotal(toolName, groupedByTool[toolName], timeOffsets);
+      if (row.rowType === "titleRow" && row.toolId) {
+        const toolName = row.toolId
+        if (isVisible && groupedByTool[toolName]) {
+          const totalRow = calculateColTotal(row.field, groupedByTool[toolName], timeOffsets);
           newFilteredData.push(totalRow);
         }
       }
@@ -178,6 +192,12 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
         return row;
       }),
     );
+
+    setDirtyColumns((prev) => {
+      const newSet = new Set(prev);
+      newSet.add(columnId);
+      return newSet;
+    });
   }, [canEdit]);
 
   const handleColumnAdd = (newTime: number) => {
@@ -245,14 +265,13 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
         data.forEach((row) => {
           const isDataRow =
             row.componentType !== "static" &&
-            row.componentType !== "checkboxlist" &&
             row.componentType !== "totalScoreRow";
 
           if (isDataRow && row.id) {
             const cellValue = row[timeOffset];
-            const dbColumn = resolveDocumentationDbColumn(row.id);
+            const dbColumn = row.id;
+
             (dbRecord as Record<string, unknown>)[dbColumn] = coerceDocumentationValueForPersist(
-              dbColumn,
               cellValue,
             );
           }
@@ -293,10 +312,6 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
     };
   }, [dirtyColumns, handleUnsavedCharting]);
 
-  const hasActiveTools = useMemo(() => {
-    return assessmentTools.some((tool) => visibleSubsetIds.has(tool.name));
-  }, [visibleSubsetIds]);
-
   const columns = useMemo(
     () => [
       columnHelper.accessor("field", {
@@ -319,7 +334,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
           }
           if (rowType === "totalScoreRow") {
             const toolName = info.row.original.field.replace(" Total Score", "");
-            const toolInterpretation = assessmentTools.find((tool) => tool.name === toolName)?.interpretations;
+            const toolInterpretation = assessmentToolGuides.find((tool) => tool.name === toolName)?.interpretations;
             return (
               <div className="min-w-24 h-full text-xs text-left py-0 pl-4 font-semibold text-neutral-800">
                 {info.getValue() && toolInterpretation ? (
@@ -415,7 +430,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
         });
       }),
     ],
-    [slicedTimeOffsets, simStartTime, fieldSelections, handleSubsetSelection, canEdit],
+    [slicedTimeOffsets, simStartTime, fieldSelections, handleSubsetSelection, canEdit, assessmentToolGuides],
   );
 
   const ptTable = useReactTable({
@@ -458,7 +473,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
           </Button>
           <Button
             onClick={toggleSidebar}
-            className={`bg-white h-6 w-4 text-black hover:bg-gray-200 shadow shadow-black/20  ${hasActiveTools && !open ? 'text-blue-500' : ''}`}
+            className={`bg-white h-6 w-4 text-black hover:bg-gray-200 shadow shadow-black/20`}
           >
             {open ? <PanelLeftOpenIcon /> : <PanelLeftCloseIcon />}
           </Button>

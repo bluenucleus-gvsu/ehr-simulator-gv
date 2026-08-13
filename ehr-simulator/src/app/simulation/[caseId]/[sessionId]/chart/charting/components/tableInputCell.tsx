@@ -2,7 +2,7 @@ import AssessmentSelect from "@/app/simulation/[caseId]/[sessionId]/chart/charti
 import { chartingOptions, FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
 import { getAlertFlag } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetHelpers";
 import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Row,
   Column,
@@ -20,10 +20,6 @@ interface CellProps {
 export const TableInputCell = ({ getValue, row, column, table, readOnly = false }: CellProps) => {
   const initialValue = (getValue() as string) || "";
   const [value, setValue] = useState(initialValue);
-
-  useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
 
   const alertFlag = getAlertFlag(row.original, value, row.original.componentType);
 
@@ -67,10 +63,6 @@ export const TableAssessmentSelectCell = ({ getValue, row, column, table, readOn
   const initialValue = (getValue() as string) || "";
   const [selectedValue, setSelectedValue] = useState(initialValue);
   const chartingOptions = (row.original.chartingOptions || []) as chartingOptions[];
-
-  useEffect(() => {
-    setSelectedValue(initialValue);
-  }, [initialValue]);
 
   const handleComponentChange = (newValue: string) => {
     if (readOnly) return;

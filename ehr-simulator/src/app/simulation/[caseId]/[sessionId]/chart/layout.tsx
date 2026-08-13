@@ -39,9 +39,9 @@ const ChartLayout = async ({ children, params }: ChartLayoutProps) => {
                 </div>
               </div>
             </div>
+            <FlexSheetSidebar />
           </SimulationShell>
         </SimSessionProvider>
-        <FlexSheetSidebar />
       </SidebarProvider>
     </ChartSimulationBootstrap>
   )

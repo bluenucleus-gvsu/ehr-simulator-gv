@@ -2,7 +2,6 @@ import { DatabaseDocumentationInsert } from "@/actions/simulation";
 import { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
 import {
   coerceDocumentationValueForPersist,
-  resolveDocumentationDbColumn,
 } from "@/lib/documentationColumns";
 
 export type DocumentationFormPayload = {
@@ -34,9 +33,9 @@ export function transformDocumentationTableToSchema(
 
       if (isDataRow && row.id) {
         const cellValue = row[timePoint];
-        const dbColumn = resolveDocumentationDbColumn(row.id);
+        const dbColumn = row.id;
         (baseRow as Record<string, unknown>)[dbColumn] =
-          coerceDocumentationValueForPersist(dbColumn, cellValue);
+          coerceDocumentationValueForPersist(cellValue);
       }
     }
 

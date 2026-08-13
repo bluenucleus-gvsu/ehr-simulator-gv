@@ -1,12 +1,6 @@
 "use client";
 
 import type { FlexSheetData } from "./flexSheetData";
-import {
-  coerceDocumentationValueForPersist,
-  resolveDocumentationDbColumn,
-} from "@/lib/documentationColumns";
-
-export { coerceDocumentationValueForPersist, resolveDocumentationDbColumn };
 
 type DocumentationRow = {
   time_offset?: number | null;
@@ -30,6 +24,7 @@ export function buildChartingRowsFromBundle(
         .filter((offset): offset is number => typeof offset === "number"),
     ),
   ).sort((a, b) => a - b);
+
   const timePointsInPreSim = new Set(
     docs
       .filter((row) => Boolean(row?.is_in_presim))
@@ -37,6 +32,7 @@ export function buildChartingRowsFromBundle(
   )
 
   const fallbackOffsets = timeOffsets.length > 0 ? timeOffsets : [0];
+
   const docByOffset = new Map<number, DocumentationRow>();
   for (const row of docs) {
     if (typeof row.time_offset === "number") {
@@ -45,10 +41,11 @@ export function buildChartingRowsFromBundle(
   }
 
   const visibleItems = new Set<string>();
+
   const rows = template.map((templateRow) => {
     const nextRow: FlexSheetData = { ...templateRow };
     let hasValue = false;
-    const mappedColumn = resolveDocumentationDbColumn(templateRow.id);
+    const mappedColumn = templateRow.id;
 
     for (const offset of fallbackOffsets) {
       const docRow = docByOffset.get(offset);

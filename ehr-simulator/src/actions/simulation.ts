@@ -284,7 +284,7 @@ export async function getMedicationAdministrations(caseId: string, sessionId: st
   }
 }
 
-export async function getMedia(caseId:string){
+export async function getMedia(caseId: string) {
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -296,7 +296,7 @@ export async function getMedia(caseId:string){
     .eq('case_id', caseId)
 
 
-  if (!error){
+  if (!error) {
     return {
       success: true,
       data: data ?? [],
