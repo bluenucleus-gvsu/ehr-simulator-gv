@@ -679,6 +679,17 @@ export async function updateCurrentPhase(updatedPhase: number, sessionId: string
   }
 }
 
+function getErrorDetails(error: unknown): { name: string; message: string } {
+  if (error instanceof Error) {
+    return { name: error.name, message: error.message };
+  }
+  const message =
+    typeof error === 'object' && error !== null && 'message' in error
+      ? String((error as { message: unknown }).message)
+      : String(error);
+  return { name: 'UnknownError', message };
+}
+
 export async function updateSessionPhoto(photoUrl: string | null, sessionId: string) {
   const startedAt = Date.now();
   const supabase = createClient<Database>(
