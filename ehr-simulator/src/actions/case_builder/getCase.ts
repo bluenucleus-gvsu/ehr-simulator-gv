@@ -13,6 +13,7 @@ export interface CaseBundle {
   microbiologyReports: any[]
   documentationResults: any[]
   medicationAdministrations: any[]
+  caseImages: any[]
   /** Structured med orders + joined medication rows (when present in DB). */
   medicationOrders: any[]
 }
@@ -38,6 +39,7 @@ export async function getCaseBundle(
     documentationResultsRes,
     medicationAdministrationsRes,
     medicationOrdersRes,
+    caseImagesRes,
   ] = await Promise.all([
     supabase
       .from("cases")
@@ -114,6 +116,12 @@ export async function getCaseBundle(
       .from("medication_orders")
       .select("*")
       .eq("case_id", caseId),
+
+    supabase
+      .from("case_images")
+      .select("*")
+      .eq("case_id", caseId)
+      .order("created_at", { ascending: true }),
   ])
 
   if (caseRes.error) throw caseRes.error
@@ -130,6 +138,7 @@ export async function getCaseBundle(
     documentationResultsRes.error,
     medicationAdministrationsRes.error,
     medicationOrdersRes.error,
+    caseImagesRes.error,
   ].filter(Boolean)
 
   if (errors.length > 0) {
@@ -167,6 +176,7 @@ export async function getCaseBundle(
     microbiologyReports: microbiologyReportsRes.data ?? [],
     documentationResults: documentationResultsRes.data ?? [],
     medicationAdministrations: medicationAdministrationsRes.data ?? [],
+    caseImages: caseImagesRes.data ?? [],
     medicationOrders,
   }
 }

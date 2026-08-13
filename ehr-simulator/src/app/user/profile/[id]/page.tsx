@@ -1,13 +1,15 @@
-import React from "react";
 import { notFound, redirect } from "next/navigation";
 import ProfileHeader from "@/app/user/components/ProfileHeader";
 import CompletedCaseCard from "@/app/user/components/CompletedCaseCard";
 import AssignedCaseCard from "@/app/user/components/AssignedCaseCard";
 import { createServerSupabase } from "@/utils/supabase/server";
 import { getUserCourses } from "@/actions/getUserCourses";
-import ProfileSimulationEntryButtons from "@/app/user/components/ProfileSimulationEntryButtons";
 
-export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
+function compareSimTimesLatestFirst(a: string | null, b: string | null): number {
+  return new Date(b ?? 0).getTime() - new Date(a ?? 0).getTime()
+}
+
+export default async function ProfilePage({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
   const { id } = await params;
 
   const supabase = await createServerSupabase();
@@ -19,21 +21,24 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     notFound();
   }
 
-  let studentName = "Student";
-  let avatarUrl = "";
+  const isOwnProfile = user.id === id;
 
-  if (user.id === id) {
-    studentName = user.user_metadata?.full_name || user.user_metadata?.name || user.email || "Student";
-    avatarUrl = user.user_metadata?.avatar_url || "";
-  } else {
-    const { data: profile } = await supabase.from("users").select("full_name, email, role").eq("id", id).single();
-    studentName = profile?.full_name || profile?.email || "Student";
+  const studentName = isOwnProfile
+    ? user.user_metadata?.full_name || user.user_metadata?.name || user.email || "Student"
+    : (async () => {
+      const { data: profile } = await supabase
+        .from("users")
+        .select("full_name, email, role")
+        .eq("id", id)
+        .single();
 
-    const profileRole = profile?.role as string | undefined;
-    if (profileRole && profileRole !== "student") {
-      redirect("/admin");
-    }
-  }
+      if (profile?.role && profile.role !== "student") {
+        redirect("/admin");
+      }
+      return profile?.full_name || profile?.email || "Student";
+    })();
+
+  const avatarUrl = isOwnProfile ? user.user_metadata?.avatar_url || "" : "";
 
   const { activeCourses, inactiveCourses } = await getUserCourses(id);
   const allCourses = [...activeCourses, ...inactiveCourses];
@@ -50,31 +55,19 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       });
       return {
         ...c,
-        assigned: c.assigned,
-        completed: dedupedCompleted.sort(
-          (a, b) => new Date(b.completed_at ?? 0).getTime() - new Date(a.completed_at ?? 0).getTime()
+        assigned: c.assigned.toSorted(
+          (a, b) => compareSimTimesLatestFirst(a.sim_time, b.sim_time)
         ),
-        expired: (c.expired ?? []).sort(
-          (a, b) => new Date(b.expired_at ?? 0).getTime() - new Date(a.expired_at ?? 0).getTime()
+        completed: dedupedCompleted.toSorted(
+          (a, b) => compareSimTimesLatestFirst(a.completed_at, b.completed_at)
+        ),
+        expired: c.expired.toSorted(
+          (a, b) => compareSimTimesLatestFirst(a.expired_at, b.expired_at)
         ),
       };
     });
   const filteredActive = partitionCourses(activeCourses);
   const filteredInactive = partitionCourses(inactiveCourses);
-
-  const profileSimulationAssignments = filteredActive.flatMap((course) => {
-    const courseLabel = [course.code, course.name].filter(Boolean).join(" - ") || "Course";
-    return course.assigned.map((a) => ({
-      id: a.id,
-      caseId: a.case_id,
-      sessionId: a.session_id,
-      sessionStatus: a.session_status ?? null,
-      name: a.name,
-      simTime: a.sim_time,
-      presimTime: a.presim_time,
-      courseLabel,
-    }));
-  });
 
   return (
     <main className="p-6 max-w-6xl mx-auto space-y-6">
@@ -235,10 +228,6 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
               ))}
             </ul>
           )}
-        </div>
-        <div className="bg-white rounded-lg shadow mt-6 p-4 mb-6">
-          <h3 className="text-lg font-semibold mb-3">Simulations</h3>
-          <ProfileSimulationEntryButtons assignments={profileSimulationAssignments} />
         </div>
       </section>
     </main>

@@ -2,7 +2,7 @@
 import { useState } from "react"
 import { format, parseISO } from "date-fns"
 import {
-  CalendarIcon, ChevronDown, ChevronUp, Plus, Shuffle, Users2, UserX
+  CalendarIcon, ChevronDown, ChevronUp, Plus, UserX
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -16,10 +16,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { Student, FacultyMember, SectionData } from "./types"
+import { Student, FacultyMember, SectionData } from "../types"
 import { GroupCard } from "./GroupCard"
-import { StudentBlock } from "./StudentBlock"
-
+import UnassignDialog from "./UnassignDialog"
 export type { FacultyMember, SectionData }
 
 export type SectionGroups = Record<string, Student[]>
@@ -31,19 +30,6 @@ export function generateGroupNames(count: number): string[] {
     else names.push("Group " + String.fromCharCode(65 + Math.floor(i / 26) - 1) + String.fromCharCode(65 + (i % 26)))
   }
   return names
-}
-
-export function randomlyAssignGroups(students: Student[], groupSize: number): SectionGroups {
-  const shuffled = [...students].sort(() => Math.random() - 0.5)
-  const count = Math.round(shuffled.length / groupSize)
-  const numGroups = Math.max(1, count)
-  const names = generateGroupNames(numGroups)
-  const groups: SectionGroups = {}
-  names.forEach(n => { groups[n] = [] })
-  shuffled.forEach((student, i) => {
-    groups[names[i % numGroups]].push(student)
-  })
-  return groups
 }
 
 // ─── Date+time picker helpers ────────────────────────────────────────────────
@@ -145,15 +131,12 @@ interface SectionCardProps {
   index: number
   groups: SectionGroups
   unassigned: Student[]
-  groupSize: number
   facultyMembers: FacultyMember[]
   groupFacultyLeads: Record<string, string>
   onGroupFacultyLeadChange: (sectionClientId: string, groupName: string, facultyId: string) => void
   draggedStudent: { student: Student; fromGroup: string; fromSection: string } | null
   dragOverGroup: string | null
   onSectionChange: (field: keyof SectionData, value: string | null) => void
-  onGroupSizeChange: (size: number) => void
-  onRandomAssign: () => void
   onUnassignAll: () => void
   onAddGroup: () => void
   onRenameGroup: (sectionClientId: string, oldName: string, newName: string) => void
@@ -179,15 +162,12 @@ export const SectionCard = ({
   index,
   groups,
   unassigned,
-  groupSize,
   facultyMembers,
   groupFacultyLeads,
   onGroupFacultyLeadChange,
   draggedStudent,
   dragOverGroup,
   onSectionChange,
-  onGroupSizeChange,
-  onRandomAssign,
   onUnassignAll,
   onAddGroup,
   onRenameGroup,
@@ -204,11 +184,6 @@ export const SectionCard = ({
 
   const label = sectionLabel(index)
   const totalAssigned = Object.values(groups).reduce((s, g) => s + g.length, 0)
-  const unassignedDropKey = `${section.name}::__unassigned__`
-  const isOverUnassigned =
-    dragOverGroup === unassignedDropKey &&
-    draggedStudent?.fromSection === section.name &&
-    draggedStudent?.fromGroup !== "__unassigned__"
 
   return (
     <Card className="border-2 border-slate-200 overflow-hidden">
@@ -236,9 +211,6 @@ export const SectionCard = ({
           )}
           <Badge variant="secondary" className="text-xs">
             {totalAssigned} assigned
-          </Badge>
-          <Badge variant="secondary" className="text-xs">
-            {unassigned.length} unassigned
           </Badge>
         </div>
         {expanded
@@ -272,40 +244,22 @@ export const SectionCard = ({
 
           {/* Group controls */}
           <div className="flex items-center flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              <Label className="text-xs font-medium text-slate-500 whitespace-nowrap">Group size</Label>
-              <div className="flex items-center gap-1 border border-slate-200 rounded-lg overflow-hidden">
-                <button
+            {/* Unassign Dialog with Button Trigger */}
+            <UnassignDialog
+              title={`Unassign all students in ${label}?`}
+              confirmText="Unassign All"
+              onConfirm={onUnassignAll}
+              trigger={
+                <Button
                   type="button"
-                  onClick={() => onGroupSizeChange(Math.max(1, groupSize - 1))}
-                  className="h-8 w-8 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer font-medium text-sm"
-                >-</button>
-                <span className="w-8 text-center text-sm font-semibold text-slate-800">{groupSize}</span>
-                <button
-                  type="button"
-                  onClick={() => onGroupSizeChange(Math.min(20, groupSize + 1))}
-                  className="h-8 w-8 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer font-medium text-sm"
-                >+</button>
-              </div>
-            </div>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={onRandomAssign}
-              className="cursor-pointer gap-1.5 h-8 text-xs"
-            >
-              <Shuffle className="w-3.5 h-3.5" /> Randomly Assign
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={onUnassignAll}
-              className="cursor-pointer gap-1.5 h-8 text-xs"
-            >
-              <UserX className="w-3.5 h-3.5" /> Unassign All
-            </Button>
+                  size="sm"
+                  variant="outline"
+                  className="cursor-pointer gap-1.5 h-8 text-xs"
+                >
+                  <UserX className="w-3.5 h-3.5" /> Unassign All
+                </Button>
+              }
+            />
             <Button
               type="button"
               size="sm"
@@ -318,14 +272,14 @@ export const SectionCard = ({
           </div>
 
           {(Object.keys(groups).length > 0 || unassigned.length > 0) && (
-            <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex flex-col gap-4">
               <div className="flex-1 min-w-0">
                 {Object.keys(groups).length === 0 ? (
-                  <div className="flex items-center justify-center h-24 border-2 border-dashed border-slate-200 rounded-lg">
+                  <div className="flex items-center justify-center h-24 w-full border-2 border-dashed border-slate-200 rounded-lg">
                     <p className="text-sm text-slate-400 text-center px-4">No groups yet — click "Randomly Assign" or "Add Group"</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-3">
                     {Object.entries(groups)
                       .sort(([a], [b]) => a.localeCompare(b))
                       .map(([groupName, students]) => (
@@ -352,40 +306,6 @@ export const SectionCard = ({
                       ))}
                   </div>
                 )}
-              </div>
-
-              <div
-                onDragOver={(e) => onDragOver(e, section.name, "__unassigned__")}
-                onDragLeave={onDragLeave}
-                onDrop={(e) => onDrop(e, "__unassigned__", section.name)}
-                className={`w-full lg:w-52 xl:w-56 flex-shrink-0 border-2 border-dashed rounded-lg p-3 transition-all ${isOverUnassigned
-                  ? "border-blue-400 bg-blue-50"
-                  : "border-slate-200 bg-slate-50/50"
-                  }`}
-              >
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Users2 className="w-3.5 h-3.5 text-slate-400" />
-                  <p className="text-xs font-semibold text-slate-500">Unassigned</p>
-                  <Badge variant="secondary" className="text-xs ml-auto">{unassigned.length}</Badge>
-                </div>
-                <div className="space-y-1.5">
-                  {unassigned.length === 0 && (
-                    <p className="text-xs text-slate-400 italic text-center py-4">All assigned!</p>
-                  )}
-                  {[...unassigned]
-                    .sort((a, b) => (a.full_name ?? "").localeCompare(b.full_name ?? ""))
-                    .map(student => (
-                      <StudentBlock
-                        key={student.email}
-                        student={student}
-                        onDragStart={onDragStart}
-                        onDragEnd={onDragEnd}
-                        isDimmed={draggedStudent?.student.email === student.email}
-                        fromGroup="__unassigned__"
-                        fromSection={section.name}
-                      />
-                    ))}
-                </div>
               </div>
             </div>
           )}

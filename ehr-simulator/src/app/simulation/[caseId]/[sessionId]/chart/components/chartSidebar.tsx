@@ -102,7 +102,10 @@ export default function ChartSidebar() {
           <span className="pl-2 font-normal">{sidebarData.age.value}</span>
         </p>
 
-
+        <p className="text-purple-900 text-sm font-light tracking-tight">
+          {sidebarData.mrn.label}:
+          <span className="pl-2 font-normal">{sidebarData.mrn.value}</span>
+        </p>
 
         {/* <p className="text-purple-900 text-sm font-light tracking-tight">
           {sidebarData.dob.label}:

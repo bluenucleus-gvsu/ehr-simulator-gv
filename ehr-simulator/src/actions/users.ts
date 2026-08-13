@@ -128,7 +128,7 @@ export async function getUsersGroupId(userId: string) {
     .select(`id,
       full_name,
       role,
-      group_members!inner(group_id)
+      group_members(group_id)
       `)
     .eq('id', userId)
     .single();
@@ -142,6 +142,13 @@ export async function getUsersGroupId(userId: string) {
     return response;
   }
   const extractedGroupId = data.group_members[0]?.group_id
+
+  if (!extractedGroupId && data.role !== 'admin') {
+    return {
+      success: false,
+      message: 'Failed to retrieve user data'
+    };
+  }
 
   const cleanData = {
     id: data.id,

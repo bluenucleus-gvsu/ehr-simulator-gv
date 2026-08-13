@@ -1,10 +1,13 @@
 "use client";
-import React, { useState } from "react";
+
+import { useState, useMemo } from "react";
 import FeedbackModal from "@/app/faculty/components/FeedbackModal";
 import { FeedbackTarget, ActiveSimView } from "@/app/faculty/lib/types";
 import { updateCurrentPhase } from "@/actions/simulation";
 import { useRouter } from "next/navigation";
 import AdvanceAlertDialog from "./AdvanceAlertDialog";
+import Phases from "./Phases";
+import { toast } from "sonner";
 
 function formatSimTime(dateStr: string) {
   return new Date(dateStr).toLocaleString(undefined, {
@@ -28,10 +31,18 @@ export default function SimulationGroupsView({
   const [feedbackTarget, setFeedbackTarget] = useState<FeedbackTarget | null>(null);
   const [submittedFeedback, setSubmittedFeedback] = useState<Record<string, string>>({});
 
+  const [isAdvancing, setIsAdvancing] = useState(false);
+  const [advanceError, setAdvanceError] = useState('');
+
   const phases = simulation.phaseCount; 
   const maxPhasesPerRow = 5; 
 
-  // 1. Initialize state directly from the clean backend data!
+  const sortedGroups = useMemo(() => {
+    return [...simulation.groups].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" })
+    );
+  }, [simulation.groups]);
+
   const initialPhases = simulation.groups.reduce((acc, group) => {
     acc[group.id] = group.currentPhase;
     return acc;
@@ -39,47 +50,74 @@ export default function SimulationGroupsView({
 
   const [groupPhase, setGroupPhase] = useState<Record<string, number>>(initialPhases);
   const [phaseDialog, setPhaseDialog] = useState(false);
-  const [pendingPhaseGroup, setPendingPhaseGroup] = useState<{ id: string; name: string } | null>(null);
+  const [pendingPhaseGroup, setPendingPhaseGroup] = useState<{
+    id: string;
+    name: string;
+    selectedPhase: number;
+  } | null>(null);
 
   const handleSubmit = (key: string, feedback: string) => {
     setSubmittedFeedback((prev) => ({ ...prev, [key]: feedback }));
     console.log(`[DUMMY] Feedback submitted for "${key}":`, feedback);
   };
 
-  const handlePhaseAdvancement = (id: string, name: string, currentPhase: number) => {
-    if (currentPhase < phases) {
-      setPendingPhaseGroup({ id, name });
+  const handlePhaseAdvancement = (
+    id: string,
+    name: string,
+    selectedPhase: number
+  ) => {
+    if (selectedPhase <= phases) {
+      setAdvanceError('');
+      setPendingPhaseGroup({ id, name, selectedPhase });
       setPhaseDialog(true);
     }
   };
 
   const confirmPhaseAdvancement = async () => {
-    if (!pendingPhaseGroup) return;
+    if (!pendingPhaseGroup || isAdvancing) return;
 
     // 2. Safely grab the specific group's unique caseSessionId
     const group = simulation.groups.find((g) => g.id === pendingPhaseGroup.id);
     const sessionId = group?.caseSessionId;
-    const currentPhaseNumber = groupPhase[pendingPhaseGroup.id] || 1;
-    const updatedPhase = currentPhaseNumber + 1;
+    const updatedPhase = pendingPhaseGroup.selectedPhase;
+    const groupId = pendingPhaseGroup.id
 
-    if (sessionId) {
-      const response = await updateCurrentPhase(updatedPhase, sessionId);
-
-      if (response?.error) {
-        console.error("Failed to advance phase", response);
-      } else {
-        // 3. Update the local state seamlessly on success
-        setGroupPhase((prev) => ({
-          ...prev,
-          [pendingPhaseGroup.id]: updatedPhase,
-        }));
-      }
-    } else {
-      console.error("No valid case session ID found for this group.");
+    if (!sessionId) {
+      const message = "No valid case session was found for this group.";
+      setAdvanceError(message);
+      toast.error(message);
+      return;
     }
 
-    setPhaseDialog(false);
-    setPendingPhaseGroup(null);
+    setIsAdvancing(true);
+    setAdvanceError('');
+
+    try {
+      const response = await updateCurrentPhase(updatedPhase, sessionId);
+
+      if (!response?.success) {
+        const message = response?.message || "The phase could not be advanced. Please try again.";
+        console.error("Failed to advance phase", response);
+        setAdvanceError(message);
+        toast.error(message);
+        return;
+      }
+
+      setGroupPhase((prev) => ({
+        ...prev,
+        [groupId]: updatedPhase,
+      }));
+      setPhaseDialog(false);
+      setPendingPhaseGroup(null);
+      toast.success(`${group.name} advanced to phase ${updatedPhase}.`);
+    } catch (error) {
+      const message = "The phase could not be advanced. Please try again.";
+      console.error("Failed to advance phase", error);
+      setAdvanceError(message);
+      toast.error(message);
+    } finally {
+      setIsAdvancing(false);
+    }
   };
 
   const cancelPhaseAdvancement = () => {
@@ -121,7 +159,7 @@ export default function SimulationGroupsView({
       {/* Groups */}
       <h3 className="text-base font-semibold px-1">Assigned Groups</h3>
       <div className="grid gap-4 md:grid-cols-2">
-        {simulation.groups.map((group) => {
+        {sortedGroups.map((group) => {
           const groupFeedbackKey = `group:${group.id}`;
           const hasGroupFeedback = !!submittedFeedback[groupFeedbackKey];
 
@@ -205,39 +243,16 @@ export default function SimulationGroupsView({
               
               {/* Group Footer for Phase Change */}
               <div className="flex flex-wrap items-center gap-4 py-2">
-                <div className="flex-1 min-w-[18rem] space-y-1">
-                  {phaseRows.map((row, rowIndex) => (
-                    <div key={rowIndex} className="flex flex-wrap items-center">
-                      {row.map((phaseIndex, idx) => (
-                        <button
-                          key={phaseIndex}
-                          onClick={() => phaseIndex === currentPhase + 1 ? handlePhaseAdvancement(group.id, group.name, currentPhase) : null}
-                          style={{
-                            clipPath:
-                              idx === 0
-                                ? "polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%)"
-                                : "polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%)",
-                            marginLeft: idx === 0 ? "0" : "-10px",
-                            zIndex: phaseIndex,
-                          }}
-                          className={`relative px-4 py-1.5 text-sm font-medium text-white ${
-                            phaseIndex < currentPhase
-                              ? "bg-green-500"
-                              : phaseIndex === currentPhase
-                              ? "bg-blue-500"
-                              : "bg-slate-300"
-                          }`}
-                        >
-                          P{phaseIndex}
-                        </button>
-                      ))}
-                    </div>
-                  ))}
-                </div>
+                <Phases
+                  phaseRows={phaseRows}
+                  currentPhase={currentPhase}
+                  handlePhaseAdvancement={handlePhaseAdvancement}
+                  group={group}
+                />
 
                 <button
-                  onClick={() => handlePhaseAdvancement(group.id, group.name, currentPhase)}
-                  disabled={currentPhase >= phases}
+                  onClick={() => handlePhaseAdvancement(group.id, group.name, currentPhase + 1)}
+                  disabled={isAdvancing || currentPhase >= phases}
                   className="shrink-0 rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
                 >
                   Next Phase
@@ -273,6 +288,8 @@ export default function SimulationGroupsView({
         pendingPhaseGroup={pendingPhaseGroup}
         cancelPhaseAdvancement={cancelPhaseAdvancement}
         confirmPhaseAdvancement={confirmPhaseAdvancement}
+        isAdvancing={isAdvancing}
+        errorMessage={advanceError}
       />
 
     </div>
