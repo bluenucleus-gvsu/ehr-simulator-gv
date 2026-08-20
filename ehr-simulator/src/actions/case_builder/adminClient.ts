@@ -2,10 +2,6 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { emailIsDevAdminAllowlist } from "@/lib/devAdminEmails";
 import { createServerSupabase } from "@/utils/supabase/server";
 
-/**
- * Authenticate every privileged case-builder action at the mutation boundary.
- * The admin layout is only a UI guard and must not be treated as authorization.
- */
 export async function createCaseBuilderAdminClient(): Promise<SupabaseClient> {
   const sessionClient = await createServerSupabase();
   const { data: { user }, error: userError } = await sessionClient.auth.getUser();
