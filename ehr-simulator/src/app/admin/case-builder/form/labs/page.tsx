@@ -2,7 +2,7 @@
 
 import { type LabTableData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData"
 import { useReactTable, getCoreRowModel, createColumnHelper } from "@tanstack/react-table";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { TooltipContent } from "@radix-ui/react-tooltip";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
@@ -20,6 +20,7 @@ import { TableFormHeader } from "../../components/tableFormHeader";
 import { FormTable } from "../../components/FormTable";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/saveCase";
+import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 
 const columnHelper = createColumnHelper<LabTableData>();
 
@@ -42,7 +43,7 @@ function ensureNumberSet(input: unknown): Set<number> {
 }
 
 function LabForm() {
-  const { onDataChange, labData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
+  const { onDataChange, labData, caseId } = useFormContext()
   const [labTableData, setLabTableData] = useState<LabTableData[]>(labData.data);
   const [visibleItems, setVisibleItems] = useState<Set<string>>(ensureStringSet(labData.visibleItems));
   const [comboboxValue, setComboboxValue] = useState<string>('');
@@ -55,24 +56,6 @@ function LabForm() {
   } = useTimePoints(labData.timePoints, ensureNumberSet(labData.timePointsInPreSim))
 
   const router = useRouter()
-
-  useEffect(() => {
-    registerCaseBuilderLocalOverlay(() => ({
-      labs: {
-        data: labTableData,
-        timePoints,
-        timePointsInPreSim: timePointsInPresim,
-        visibleItems,
-      },
-    }));
-    return () => registerCaseBuilderLocalOverlay(null);
-  }, [
-    labTableData,
-    timePoints,
-    timePointsInPresim,
-    visibleItems,
-    registerCaseBuilderLocalOverlay,
-  ]);
 
   // Get all hideable options for Combobox selector
   const hideableOptions = useMemo(() => {
@@ -109,10 +92,10 @@ function LabForm() {
       timePointsInPreSim: timePointsInPresim,
       visibleItems: visibleItems
     });
-    router.push("/admin/case-builder/form/orders");
+    router.push(caseBuilderPath("/admin/case-builder/form/orders", caseId));
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     onDataChange('labs', {
       data: labTableData,
       timePoints: timePoints,
@@ -120,7 +103,7 @@ function LabForm() {
       visibleItems: visibleItems
     });
 
-    saveCaseData({
+    await saveCaseData({
       payload: {
         data: labTableData,
         timePoints,
@@ -131,7 +114,7 @@ function LabForm() {
       caseId: caseId
     })
 
-    router.push('/admin/case-builder/form/charting')
+    router.push(caseBuilderPath('/admin/case-builder/form/charting', caseId))
   }
   const columns = useMemo(
     () => [
@@ -327,4 +310,3 @@ function LabForm() {
 }
 
 export default LabForm
-

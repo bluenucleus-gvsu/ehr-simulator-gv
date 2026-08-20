@@ -1,8 +1,9 @@
 import { SupabaseClient } from "@supabase/supabase-js"
+import type { DemographicFormData } from "@/utils/form"
 
 export async function upsertCaseDemographics(
   supabase: SupabaseClient,
-  payload: any,
+  payload: DemographicFormData,
   caseId?: string | null
 ) {
   const d = payload
@@ -11,6 +12,12 @@ export async function upsertCaseDemographics(
     supabase,
     d.relationshipStatus,
   )
+  const isolation_precautions_id = await resolveLookupId(
+    supabase,
+    "isolation_precautions",
+    d.precautions,
+  )
+  const now = new Date().toISOString()
   const row = {
     ...(caseId ? { id: caseId } : {}),
     name: "Case " + d.firstName + " " + d.lastName,
@@ -26,17 +33,23 @@ export async function upsertCaseDemographics(
     insurance: d.insurance ?? null,
     employment: d.employment ?? null,
     religion: d.religion ?? null,
+    isolation_precautions_id,
     relationship_status_id,
     requires_interpreter: Boolean(d.needsInterpreter),
     admitting_diagnosis: d.admittingDiagnosis ?? null,
-    attending_provider: [d.attendingProviderName, d.attendingProviderTitle].filter(Boolean).join(", ") || null,
+    attending_provider: [d.attendingProviderTitle, d.attendingProviderName]
+      .map((part: unknown) => String(part ?? "").replace(/,+$/g, "").trim())
+      .filter(Boolean)
+      .join(" ") || null,
+    phase_count: Number(d.phaseCount ?? 1),
     inpatient_duration_days: toNumeric(d.admissionDateOffest),
     time_of_admission: d.admissionTime,
     emergency_contact_name: d.contact ?? null,
     emergency_contact_relationship: d.contactRelationship ?? null,
     emergency_contact_phone: (d.contactPhone ?? "").trim() || null,
-    updated_at: new Date().toISOString(),
-    created_at: new Date().toISOString(), // Fix: check if exists before setting created_at
+    case_creation_complete: false,
+    updated_at: now,
+    ...(!caseId ? { created_at: now } : {}),
   };
 
   const { data, error } = await supabase
@@ -56,18 +69,26 @@ async function resolveRelationshipStatusId(
   supabase: SupabaseClient,
   name: string | null | undefined,
 ): Promise<string | null> {
+  return resolveLookupId(supabase, "relationship_statuses", name)
+}
+
+async function resolveLookupId(
+  supabase: SupabaseClient,
+  table: "relationship_statuses" | "isolation_precautions",
+  name: string | null | undefined,
+): Promise<string | null> {
   const n = (name ?? "").trim()
   if (!n) return null
   const { data, error } = await supabase
-    .from("relationship_statuses")
+    .from(table)
     .select("id")
     .eq("name", n)
     .maybeSingle()
   if (error) {
-    console.error("relationship_statuses lookup failed", error)
-    return null
+    throw new Error(`Failed to resolve ${table}: ${error.message}`)
   }
-  return data?.id ?? null
+  if (!data?.id) throw new Error(`Unknown ${table.replaceAll("_", " ")} value: ${n}`)
+  return data.id
 }
 
 /**
@@ -76,7 +97,7 @@ async function resolveRelationshipStatusId(
  * "birthday not yet this year" — avoids year = currentYear - age alone, which
  * produced wrong DOBs like 2000-10-14 when the patient should read as `age` now).
  */
-function computeDob(d: any) {
+function computeDob(d: DemographicFormData) {
   const day = Number(d?.DOBDay);
   if (!Number.isFinite(day) || day <= 0) return null;
 
@@ -91,13 +112,23 @@ function computeDob(d: any) {
     birthYear -= 1;
   }
 
+  const parsedDob = new Date(birthYear, month - 1, day);
+  if (
+    parsedDob.getFullYear() !== birthYear ||
+    parsedDob.getMonth() !== month - 1 ||
+    parsedDob.getDate() !== day
+  ) {
+    throw new Error("Invalid date of birth.");
+  }
+
   const mm = String(month).padStart(2, "0");
   const dd = String(day).padStart(2, "0");
   return `${birthYear}-${mm}-${dd}`;
 }
 
-function toNumeric(v: any): number | null {
+function toNumeric(v: string | number | null | undefined): number | null {
   if (v === null || v === undefined) return null;
+  if (typeof v === "string" && v.trim() === "") return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 }
@@ -109,5 +140,6 @@ function monthToNumber(monthName?: string) {
     "july", "august", "september", "october", "november", "december"
   ];
   const idx = months.indexOf(m);
-  return idx >= 0 ? idx + 1 : 1;
+  if (idx < 0) throw new Error("Invalid birth month.");
+  return idx + 1;
 }

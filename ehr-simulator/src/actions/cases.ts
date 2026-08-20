@@ -16,15 +16,17 @@ export type ActionResponse<T = null> = {
   error?: PostgrestError;
 };
 
-export async function getAllSimCases() {
+export async function getAllSimCases(options?: { publishedOnly?: boolean }) {
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("cases")
     .select("*")
+  if (options?.publishedOnly) query = query.eq("case_creation_complete", true)
+  const { data, error } = await query
 
   if (error) {
     const result: ActionResponse = {
@@ -52,6 +54,7 @@ export async function getSimCaseById(id: string) {
   const { data, error } = await supabase
     .from("cases")
     .select("*")
+    .eq("case_creation_complete", true)
     .eq("id", id)
 
   if (error) {
@@ -80,6 +83,7 @@ export async function getCaseByCourseId() {
   const { data, error } = await supabase
     .from("cases")
     .select("*")
+    .eq("case_creation_complete", true)
   // .eq("course_id", id) // Commented out to retrieve all cases for assignment. 
 
   if (error) {
@@ -263,7 +267,8 @@ export async function getCourseCaseAssignments() {
           code
         )
       )
-    `);
+    `)
+    .eq("case_creation_complete", true);
 
   if (error) {
     return {

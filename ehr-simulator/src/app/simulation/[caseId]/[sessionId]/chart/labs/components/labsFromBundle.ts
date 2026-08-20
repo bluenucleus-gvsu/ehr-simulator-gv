@@ -151,7 +151,12 @@ export function buildLabRowsFromBundle(
         const mappedColumn = LAB_FIELD_TO_COLUMN[templateRow.field] as keyof LabResultInsert | undefined;
         for (const offset of timePoints) {
           const source = labByOffset.get(offset);
-          const value = mappedColumn ? source?.[mappedColumn as string] : undefined;
+          const unstructured = source?.data && typeof source.data === "object"
+            ? (source.data as { unstructured?: Record<string, unknown> }).unstructured
+            : undefined;
+          const value = mappedColumn
+            ? source?.[mappedColumn as string]
+            : unstructured?.[templateRow.field];
           nextRow[offset] = toDisplayValue(value);
         }
       }

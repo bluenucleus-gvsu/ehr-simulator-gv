@@ -1,31 +1,81 @@
 "use server"
 
-import { createClient } from "@supabase/supabase-js";
+import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient";
+import { assertUuid } from "@/lib/caseBuilder/validation";
 
 export interface CaseBundle {
-  caseRow: any
-  safetyAlerts: any[]
-  familyHistory: any[]
-  clinicalDocuments: any[]
-  orders: any[]
-  labResults: any[]
-  imagingReports: any[]
-  microbiologyReports: any[]
-  documentationResults: any[]
-  medicationAdministrations: any[]
-  caseImages: any[]
+  caseRow: CaseRow
+  safetyAlerts: CaseBundleRow[]
+  familyHistory: CaseBundleRow[]
+  clinicalDocuments: CaseBundleRow[]
+  orders: CaseBundleRow[]
+  labResults: CaseBundleRow[]
+  imagingReports: ImagingReportRow[]
+  microbiologyReports: MicrobiologyReportRow[]
+  documentationResults: CaseBundleRow[]
+  medicationAdministrations: CaseBundleRow[]
+  caseImages: CaseBundleRow[]
   /** Structured med orders + joined medication rows (when present in DB). */
-  medicationOrders: any[]
+  medicationOrders: CaseBundleRow[]
+}
+
+type NamedLookup = { id?: string | null; name?: string | null };
+
+export type CaseRow = Record<string, unknown> & {
+  id?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  date_of_birth?: string | null;
+  code_status?: string | null;
+  attending_provider?: string | null;
+  isolation_precautions?: NamedLookup | null;
+  relationship_status?: NamedLookup | null;
+};
+
+export type CaseBundleRow = Record<string, unknown> & {
+  id?: string | null;
+  created_at?: string | null;
+  time_offset?: number | null;
+  is_in_presim?: boolean | null;
+  phase?: number | null;
+  condition?: string | null;
+  relationship?: NamedLookup | null;
+  safety_alert?: NamedLookup | null;
+  lab_id?: string | null;
+  name?: string | null;
+  technique?: string | null;
+  findings?: unknown;
+  impressions?: string[] | null;
+  sample_type?: string | null;
+  appearance?: string | null;
+  microscopy?: string | null;
+  location?: string | null;
+  culture_results?: string | null;
+  sensitivity?: string | null;
+  comments?: string | null;
+  reporter?: string | null;
+};
+
+export type ImagingReportRow = CaseBundleRow & { is_critical?: boolean | null };
+export type MicrobiologyReportRow = CaseBundleRow & { is_critical?: boolean | string | null };
+
+export async function getCaseBuilderMedications() {
+  const supabase = await createCaseBuilderAdminClient();
+  const { data, error } = await supabase
+    .from("medications")
+    .select("*, dispense_units(name)")
+    .order("generic_name");
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
 }
 
 export async function getCaseBundle(
   caseId: string,
 ): Promise<CaseBundle> {
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
+  assertUuid(caseId, "Case ID");
+  const supabase = await createCaseBuilderAdminClient();
 
   const [
     caseRes,
@@ -156,7 +206,10 @@ export async function getCaseBundle(
 
   let medicationOrders = rawOrders
   if (medicationIds.length > 0) {
-    const medsRes = await supabase.from("medications").select("*").in("id", medicationIds)
+    const medsRes = await supabase
+      .from("medications")
+      .select("*, dispense_units(name)")
+      .in("id", medicationIds)
     if (medsRes.error) throw medsRes.error
     const byId = new Map((medsRes.data ?? []).map((m: { id: string }) => [m.id, m]))
     medicationOrders = rawOrders.map((row: { medication_id?: string | null }) => ({
@@ -166,17 +219,17 @@ export async function getCaseBundle(
   }
 
   return {
-    caseRow: caseRes.data,
-    safetyAlerts: safetyAlertsRes.data ?? [],
-    familyHistory: familyHistoryRes.data ?? [],
-    clinicalDocuments: clinicalDocumentsRes.data ?? [],
-    orders: ordersRes.data ?? [],
-    labResults: labResultsRes.data ?? [],
-    imagingReports: imagingReportsRes.data ?? [],
-    microbiologyReports: microbiologyReportsRes.data ?? [],
-    documentationResults: documentationResultsRes.data ?? [],
-    medicationAdministrations: medicationAdministrationsRes.data ?? [],
-    caseImages: caseImagesRes.data ?? [],
-    medicationOrders,
+    caseRow: caseRes.data as CaseRow,
+    safetyAlerts: (safetyAlertsRes.data ?? []) as CaseBundleRow[],
+    familyHistory: (familyHistoryRes.data ?? []) as CaseBundleRow[],
+    clinicalDocuments: (clinicalDocumentsRes.data ?? []) as CaseBundleRow[],
+    orders: (ordersRes.data ?? []) as CaseBundleRow[],
+    labResults: (labResultsRes.data ?? []) as CaseBundleRow[],
+    imagingReports: (imagingReportsRes.data ?? []) as ImagingReportRow[],
+    microbiologyReports: (microbiologyReportsRes.data ?? []) as MicrobiologyReportRow[],
+    documentationResults: (documentationResultsRes.data ?? []) as CaseBundleRow[],
+    medicationAdministrations: (medicationAdministrationsRes.data ?? []) as CaseBundleRow[],
+    caseImages: (caseImagesRes.data ?? []) as CaseBundleRow[],
+    medicationOrders: medicationOrders as CaseBundleRow[],
   }
 }

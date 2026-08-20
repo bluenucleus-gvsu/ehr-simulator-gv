@@ -1,7 +1,7 @@
 'use client'
 
 import { useReactTable, getCoreRowModel, createColumnHelper } from "@tanstack/react-table";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { AddTableColumn } from "../labs/components/addTimeCol";
 import { useRouter } from "next/navigation";
 import { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
@@ -16,6 +16,7 @@ import { FormTable } from "../../components/FormTable";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/saveCase";
 import CheckBoxList from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/checkBoxList";
+import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 
 
 const columnHelper = createColumnHelper<FlexSheetData>();
@@ -33,7 +34,7 @@ function ensureNumberSet(input: unknown): Set<number> {
 }
 
 function ChartingForm() {
-  const { onDataChange, chartingData: initialChartingData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
+  const { onDataChange, chartingData: initialChartingData, caseId } = useFormContext()
   const [chartingData, setChartingData] = useState<FlexSheetData[]>(initialChartingData.data)
   const {
     timePoints,
@@ -45,31 +46,13 @@ function ChartingForm() {
 
   const router = useRouter()
 
-  useEffect(() => {
-    registerCaseBuilderLocalOverlay(() => ({
-      charting: {
-        data: chartingData,
-        timePoints,
-        timePointsInPreSim: timePointsInPresim,
-        visibleItems: initialChartingData.visibleItems,
-      },
-    }));
-    return () => registerCaseBuilderLocalOverlay(null);
-  }, [
-    chartingData,
-    timePoints,
-    timePointsInPresim,
-    initialChartingData.visibleItems,
-    registerCaseBuilderLocalOverlay,
-  ]);
-
   const goBack = () => {
     onDataChange('charting', {
       data: chartingData,
       timePoints: timePoints,
       timePointsInPreSim: timePointsInPresim
     })
-    router.push("/admin/case-builder/form/labs");
+    router.push(caseBuilderPath("/admin/case-builder/form/labs", caseId));
   }
 
   const handleSubmit = async () => {
@@ -89,7 +72,7 @@ function ChartingForm() {
       caseId: caseId
     })
 
-    router.push('/admin/case-builder/form/intake-output')
+    router.push(caseBuilderPath('/admin/case-builder/form/intake-output', caseId))
   }
   const handleSubsetSelection = (rowId: string, columnId: string, selectedIdsForField: string[]) => {
     setChartingData(prevData => prevData.map(row => {

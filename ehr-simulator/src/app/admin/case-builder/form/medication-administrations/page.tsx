@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import {
   Pill,
   Clock,
@@ -34,6 +34,7 @@ import { FormShell } from "../../components/formShell"
 import ColumnShiftControl from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/columnShiftControl"
 import { CaseSection } from "@/lib/saveCase"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
+import { caseBuilderPath } from "@/lib/caseBuilder/routes"
 
 function getComboboxData(orders: MedicationOrder[], medications: AllMedicationTypes[]) {
   return orders.map(order => {
@@ -54,7 +55,7 @@ function getComboboxData(orders: MedicationOrder[], medications: AllMedicationTy
 }
 
 export default function MedicationAdministrationsForm() {
-  const { onDataChange, medAdministrationData, medOrderData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
+  const { onDataChange, medAdministrationData, medOrderData, demographicData, caseId } = useFormContext()
 
   const [medAdministrations, setMedAdministrations] = useState<MedAdministrationInstance[]>(medAdministrationData.filter(admin => {
     return medOrderData.createdOrders.find(order => order.id === admin.medicationOrderId) !== undefined;
@@ -67,6 +68,7 @@ export default function MedicationAdministrationsForm() {
   const isInPast = status === 'Due' ? false : true
   const [dose, setDose] = useState('')
   const [visibleInPresim, setVisibleInPresim] = useState<boolean>(true)
+  const [phase, setPhase] = useState(1)
 
   const [days, setDays] = useState<number | ''>(0);
   const [hours, setHours] = useState<number | ''>(0);
@@ -79,13 +81,6 @@ export default function MedicationAdministrationsForm() {
 
   const router = useRouter()
 
-  useEffect(() => {
-    registerCaseBuilderLocalOverlay(() => ({
-      medAdministrationInstances: medAdministrations,
-    }));
-    return () => registerCaseBuilderLocalOverlay(null);
-  }, [medAdministrations, registerCaseBuilderLocalOverlay]);
-
   const comboboxData = getComboboxData(medOrderData.createdOrders, medOrderData.selectedMeds)
   const linkedMed = selectedOrder ? medOrderData.selectedMeds.find(med => med.id === selectedOrder.medicationId) : undefined
 
@@ -93,6 +88,7 @@ export default function MedicationAdministrationsForm() {
     const order = medOrderData.createdOrders.find(order => order.id === id);
     if (order) {
       setSelectedOrder(order);
+      setPhase(order.phase ?? 1);
       const dose = order.dose ? String(order.dose) : '0'
       setDose(dose);
     }
@@ -110,7 +106,8 @@ export default function MedicationAdministrationsForm() {
       adminTimeMinuteOffset: isInPast ? -1 * timeOffset : timeOffset,
       status: status,
       administeredDose: dose ? parseFloat(dose) : 0,
-      visibleInPresim: visibleInPresim
+      visibleInPresim: visibleInPresim,
+      phase,
     }
 
     setMedAdministrations(prev => [...prev, newMedAdministration])
@@ -151,7 +148,7 @@ export default function MedicationAdministrationsForm() {
 
   const goBack = () => {
     onDataChange('medAdministrationInstances', medAdministrations)
-    router.push("/admin/case-builder/form/medications");
+    router.push(caseBuilderPath("/admin/case-builder/form/medications", caseId));
   }
 
   const handleSubmit = async () => {
@@ -166,7 +163,7 @@ export default function MedicationAdministrationsForm() {
       caseId: caseId,
     })
 
-    router.push('/admin/case-builder/form/media')
+    router.push(caseBuilderPath('/admin/case-builder/form/media', caseId))
   }
   const handleColumnShift = (offset: number | string) => {
     if (typeof offset === 'number') {
@@ -291,6 +288,20 @@ export default function MedicationAdministrationsForm() {
                         />
                       </div>
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="administration-phase">Release phase</Label>
+                      <Input
+                        id="administration-phase"
+                        type="number"
+                        min={1}
+                        max={demographicData.phaseCount}
+                        value={phase}
+                        onChange={(event) => setPhase(Math.min(
+                          demographicData.phaseCount,
+                          Math.max(1, Number(event.target.value) || 1),
+                        ))}
+                      />
+                    </div>
                     <div className="flex items-center space-x-2 border bg-white rounded-md w-fit p-2">
                       <Checkbox
                         id='presim'
@@ -363,5 +374,3 @@ export default function MedicationAdministrationsForm() {
     </FormShell>
   )
 }
-
-

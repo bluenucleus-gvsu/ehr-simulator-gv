@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useState } from 'react';
 import { CompleteFormType, defaultIoData, defaultOrders, DemographicFormData, FormBlob, HistoryFormData, IntakeOutputFormData, MedOrderFormData, MediaImageData, TableFormData } from '@/utils/form';
 import { ClinicalNote } from '@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData';
 import { OrderType } from '@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData';
@@ -22,13 +22,10 @@ interface FormContextType {
   caseId?: string;
   setCaseId: (id: string) => void;
   onDataChange: (key: keyof FormBlob, data: CompleteFormType) => void;
-  /** Unsaved local row on the active case-builder page (merged on Save). */
-  registerCaseBuilderLocalOverlay: (fn: (() => Partial<FormBlob>) | null) => void;
-  getCaseBuilderSaveBlob: () => FormBlob;
-  applyCaseBuilderOverlayToContext: () => void;
+  replaceFormData: (data: FormBlob, caseId: string) => void;
 }
 
-const defaultDemographicData: DemographicFormData = {
+export const defaultDemographicData: DemographicFormData = {
   DOBDay: '',
   DOBMonth: '',
   admissionDateOffest: '',
@@ -54,8 +51,9 @@ const defaultDemographicData: DemographicFormData = {
   contact: '',
   contactRelationship: '',
   contactPhone: '',
+  phaseCount: 1,
 }
-const defaultHistoryData = {
+export const defaultHistoryData: HistoryFormData = {
   medicalHistory: [],
   surgicalHistory: [],
   allergies: [],
@@ -64,19 +62,6 @@ const defaultHistoryData = {
   alerts: [],
   familyHistory: []
 }
-const emptyFormBlob = (): FormBlob => ({
-  demographics: defaultDemographicData,
-  history: defaultHistoryData,
-  notes: [],
-  orders: [],
-  labs: { data: [], timePoints: [0], timePointsInPreSim: new Set(), visibleItems: new Set() },
-  charting: { data: [], timePoints: [0], timePointsInPreSim: new Set(), visibleItems: new Set() },
-  intakeOutput: defaultIoData,
-  medOrders: { createdOrders: [], selectedMeds: [] },
-  medAdministrationInstances: [],
-  media: [],
-});
-
 const FormContext = createContext<FormContextType>({
   onDataChange: () => { },
   setCaseId: () => { },
@@ -91,14 +76,10 @@ const FormContext = createContext<FormContextType>({
   medOrderData: { createdOrders: [], selectedMeds: [] },
   medAdministrationData: [],
   mediaData: [],
-  registerCaseBuilderLocalOverlay: () => { },
-  getCaseBuilderSaveBlob: emptyFormBlob,
-  applyCaseBuilderOverlayToContext: () => { },
+  replaceFormData: () => { },
 });
 
 export function FormContextProvider({ children }: { children: React.ReactNode }) {
-  const caseBuilderLocalOverlayRef = useRef<(() => Partial<FormBlob>) | null>(null);
-
   const [caseId, setCaseId] = useState<string | undefined>(undefined);
   const [demographicData, setDemographicData] = useState<DemographicFormData>(defaultDemographicData);
   const [historyData, setHistoryData] = useState<HistoryFormData>(defaultHistoryData);
@@ -121,7 +102,7 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
   const [medAdministrationData, setMedAdministrationData] = useState<MedAdministrationInstance[]>([])
   const [mediaData, setMediaData] = useState<MediaImageData[]>([]);
 
-  const onDataChange = (key: keyof FormBlob, value: CompleteFormType) => {
+  const onDataChange = useCallback((key: keyof FormBlob, value: CompleteFormType) => {
     switch (key) {
       case 'demographics':
         setDemographicData(value as DemographicFormData);
@@ -154,48 +135,21 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
         setMediaData(value as MediaImageData[]);
         break;
     }
-  }
-
-  const registerCaseBuilderLocalOverlay = useCallback((fn: (() => Partial<FormBlob>) | null) => {
-    caseBuilderLocalOverlayRef.current = fn;
   }, []);
 
-  const getCaseBuilderSaveBlob = useCallback((): FormBlob => {
-    const overlay = caseBuilderLocalOverlayRef.current?.() ?? {};
-    return {
-      demographics: overlay.demographics ?? demographicData,
-      history: overlay.history ?? historyData,
-      notes: overlay.notes ?? noteData,
-      orders: overlay.orders ?? orderData,
-      labs: overlay.labs ?? labData,
-      charting: overlay.charting ?? chartingData,
-      intakeOutput: overlay.intakeOutput ?? ioData,
-      medOrders: overlay.medOrders ?? medOrderData,
-      medAdministrationInstances: overlay.medAdministrationInstances ?? medAdministrationData,
-      media: overlay.media ?? mediaData,
-    };
-  }, [
-    demographicData,
-    historyData,
-    noteData,
-    orderData,
-    labData,
-    chartingData,
-    ioData,
-    medOrderData,
-    medAdministrationData,
-    mediaData,
-  ]);
-
-  const applyCaseBuilderOverlayToContext = useCallback(() => {
-    const overlay = caseBuilderLocalOverlayRef.current?.() ?? {};
-    (Object.keys(overlay) as (keyof FormBlob)[]).forEach((key) => {
-      const val = overlay[key];
-      if (val !== undefined) {
-        onDataChange(key, val as CompleteFormType);
-      }
-    });
-  }, [onDataChange]);
+  const replaceFormData = useCallback((data: FormBlob, id: string) => {
+    setDemographicData(data.demographics);
+    setHistoryData(data.history);
+    setNoteData(data.notes);
+    setOrderData(data.orders);
+    setLabData(data.labs);
+    setChartingData(data.charting);
+    setIoData(data.intakeOutput);
+    setMedOrderData(data.medOrders);
+    setMedAdministrationData(data.medAdministrationInstances);
+    setMediaData(data.media);
+    setCaseId(id);
+  }, []);
 
   return (
     <FormContext.Provider value={{
@@ -212,9 +166,7 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
       medAdministrationData,
       mediaData,
       onDataChange,
-      registerCaseBuilderLocalOverlay,
-      getCaseBuilderSaveBlob,
-      applyCaseBuilderOverlayToContext,
+      replaceFormData,
     }}>
       {children}
     </FormContext.Provider>

@@ -15,6 +15,7 @@ import { useFormContext } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
 import { CaseSection } from "@/lib/saveCase"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
+import { caseBuilderPath } from "@/lib/caseBuilder/routes"
 
 function getComboboxData(medications: AllMedicationTypes[]) {
   return medications.map(med => {
@@ -36,7 +37,7 @@ interface MedicationOrderFormProps {
 
 export default function MedicationOrderForm({ medications }: MedicationOrderFormProps) {
   const router = useRouter()
-  const { onDataChange, medOrderData, caseId, medAdministrationData } = useFormContext()
+  const { onDataChange, medOrderData, demographicData, caseId, medAdministrationData } = useFormContext()
   const [selectedMed, setSelectedMed] = useState('')
   const [selectedMeds, setSelectedMeds] = useState<AllMedicationTypes[]>(medOrderData.selectedMeds)
   const [medOrders, setMedOrders] = useState<MedicationOrder[]>(medOrderData.createdOrders)
@@ -58,6 +59,7 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
             orderingProvider: '',
             dose: medication.isVariableDose ? null : 0,
             visibleInPresim: true,
+            phase: 1,
             status: "active"
 
           } as MedicationOrder
@@ -74,7 +76,7 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
     setMedOrders(prev => prev.filter((_, i) => i !== index))
   }
 
-  const handleOrderChange = (index: number, field: keyof MedicationOrder, value: string | boolean) => {
+  const handleOrderChange = (index: number, field: keyof MedicationOrder, value: string | boolean | number) => {
     setMedOrders(currentOrders =>
       currentOrders.map((order, i) => {
         if (i === index) {
@@ -101,7 +103,7 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
       createdOrders: medOrders,
       selectedMeds: selectedMeds
     });
-    router.push("/admin/case-builder/form/intake-output");
+    router.push(caseBuilderPath("/admin/case-builder/form/intake-output", caseId));
   }
 
   const handleSubmit = async () => {
@@ -116,7 +118,7 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
         caseId,
       })
     }
-    router.push('/admin/case-builder/form/medication-administrations');
+    router.push(caseBuilderPath('/admin/case-builder/form/medication-administrations', caseId));
   }
   return (
     <FormShell
@@ -171,6 +173,7 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
                         index={index}
                         order={medOrders[index]}
                         onOrderChange={handleOrderChange}
+                        phaseCount={demographicData.phaseCount}
                       />
                     </div>
                   ))}
