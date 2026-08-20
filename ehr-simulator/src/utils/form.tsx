@@ -30,6 +30,7 @@ export interface DemographicFormData {
   contact: string;
   contactRelationship: string;
   contactPhone: string;
+  phaseCount: number;
 }
 
 export interface HistoryFormData {
@@ -191,7 +192,7 @@ export const relationshipStatuses = [
 export const precautions = [
   "Contact",
   "Contact-Enteric",
-  "Airbourne",
+  "Airborne",
   "Droplet",
   "Neutropenic",
   "None"

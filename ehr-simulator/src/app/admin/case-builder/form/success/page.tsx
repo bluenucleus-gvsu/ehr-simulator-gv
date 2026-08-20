@@ -10,7 +10,7 @@ export default function SuccessPage() {
   const router = useRouter();
 
 
-  const { demographicData } = useFormContext();
+  const { demographicData, caseId } = useFormContext();
   const firstName = demographicData.firstName;
   const lastName = demographicData.lastName;
 
@@ -40,7 +40,8 @@ export default function SuccessPage() {
           <div className="flex flex-col gap-6">
             <Button
               className="cursor-pointer text-xl p-6"
-              onClick={() => { router.push("/simulation/123/chart/overview") }}
+              disabled={!caseId}
+              onClick={() => { if (caseId) router.push(`/simulation/${caseId}/preview/chart/overview`) }}
               variant={"outline"}>
               Open Case in EHR
             </Button>

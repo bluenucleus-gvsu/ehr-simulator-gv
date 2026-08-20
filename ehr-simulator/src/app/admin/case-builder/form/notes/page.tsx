@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import {
   FilePlus,
   Stethoscope,
@@ -29,9 +29,10 @@ import { soapTemplateNote } from "@/utils/form";
 import { FormShell } from "../../components/formShell";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/saveCase";
+import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 
 export default function NotesForm() {
-  const { onDataChange, noteData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
+  const { onDataChange, noteData, demographicData, caseId } = useFormContext()
   const [notes, setNotes] = useState<ClinicalNote[]>(noteData);
 
   // individual note data
@@ -41,13 +42,14 @@ export default function NotesForm() {
   const [isSoap, setIsSoap] = useState<boolean>(true);
   const [excludeFromPresim, setExcludeFromPresim] = useState<boolean>(false)
   const [noteContent, setNoteContent] = useState<string>(soapTemplateNote);
+  const [phase, setPhase] = useState(1);
 
   // Time Offset
   const [days, setDays] = useState<number | ''>('');
   const [hours, setHours] = useState<number | ''>('');
   const [minutes, setMinutes] = useState<number | ''>('');
 
-  const [canAddNote, setCanAddNote] = useState(false);
+  const canAddNote = Boolean(specialty && author && category && noteContent);
 
   const handleCheckedChange = (value: boolean) => {
     setExcludeFromPresim(value)
@@ -69,12 +71,8 @@ export default function NotesForm() {
     setDays('');
     setHours('');
     setMinutes('');
+    setPhase(1);
   };
-
-  useEffect(() => {
-    const canSubmit = (specialty && author && category.length > 0 && noteContent.length > 0)
-    setCanAddNote(!!canSubmit);
-  }, [specialty, author, noteContent, category]);
 
   const createNote = () => {
     const timeOffset = -1 * (((Number(days) || 0) * 1440) + ((Number(hours) || 0) * 60) + (Number(minutes) || 0));
@@ -85,7 +83,8 @@ export default function NotesForm() {
       specialty,
       timeOffset,
       content: noteContent,
-      excludedFromPresim: excludeFromPresim
+      excludedFromPresim: excludeFromPresim,
+      phase,
     };
     setNotes(prev => [newNote, ...prev]);
     clearForm();
@@ -95,7 +94,7 @@ export default function NotesForm() {
 
   const goBack = () => {
     onDataChange("notes", notes);
-    router.push("/admin/case-builder/form/history");
+    router.push(caseBuilderPath("/admin/case-builder/form/history", caseId));
   }
 
   const handleSubmit = async () => {
@@ -107,15 +106,10 @@ export default function NotesForm() {
       caseId: caseId
     })
 
-    router.push("/admin/case-builder/form/orders");
+    router.push(caseBuilderPath("/admin/case-builder/form/orders", caseId));
   }
 
-  useEffect(() => {
-    registerCaseBuilderLocalOverlay(() => ({ notes }));
-    return () => registerCaseBuilderLocalOverlay(null);
-  }, [notes, registerCaseBuilderLocalOverlay]);
-
-  const sortedNotes = notes.sort((a, b) => b.timeOffset - a.timeOffset)
+  const sortedNotes = [...notes].sort((a, b) => b.timeOffset - a.timeOffset)
 
   return (
     <FormShell
@@ -215,6 +209,21 @@ export default function NotesForm() {
                   <div className="flex items-center gap-2 text-sm font-normal">
                     <Switch id="soap-mode" checked={isSoap} onCheckedChange={handleSoapToggle} className="border border-slate-300" />
                     <Label htmlFor="soap-mode">SOAP Format</Label>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="note-phase">Release phase</Label>
+                    <Input
+                      id="note-phase"
+                      type="number"
+                      min={1}
+                      max={demographicData.phaseCount}
+                      value={phase}
+                      onChange={(event) => setPhase(Math.min(
+                        demographicData.phaseCount,
+                        Math.max(1, Number(event.target.value) || 1),
+                      ))}
+                      className="bg-white"
+                    />
                   </div>
                 </div>
 

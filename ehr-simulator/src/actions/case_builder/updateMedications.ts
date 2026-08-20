@@ -1,91 +1,44 @@
 "use server"
 
-import { SupabaseClient } from "@supabase/supabase-js";
-import { MedAdministrationInstance, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
-import { FrequencyEnum, MedicationAdministrationInsert, MedicationOrderInsert } from "@/lib/medicationTypes";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type {
+  MedAdministrationInstance,
+  MedicationOrder,
+} from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
 
 export async function updateMedications(
   supabase: SupabaseClient,
   payload: { orders: MedicationOrder[]; administrations: MedAdministrationInstance[] },
-  caseId: string
-) {
-  await deleteMedications(supabase, caseId)
-  await insertMedicationOrders(supabase, transformMedicationOrdersToSchema(caseId, payload.orders))
-  await insertMedicationAdministrations(
-    supabase,
-    transformMedicationAdministrationsToSchema(caseId, payload.administrations),
-  )
-}
-
-async function deleteMedications(supabase: SupabaseClient, caseId: string) {
-  const { error: deleteAdminErr } = await supabase
-    .from("medication_administrations")
-    .delete()
-    .eq("case_id", caseId)
-  if (deleteAdminErr) throw new Error(deleteAdminErr.message)
-
-  const { error: deleteOrderErr } = await supabase
-    .from("medication_orders")
-    .delete()
-    .eq("case_id", caseId)
-  if (deleteOrderErr) throw new Error(deleteOrderErr.message)
-}
-
-
-function transformMedicationOrdersToSchema(
   caseId: string,
-  orders: MedicationOrder[],
-): MedicationOrderInsert[] {
-  return orders
-    .filter((order) => order.id && order.frequency && order.priority)
-    .map((order) => ({
-      id: order.id,
-      case_id: caseId,
-      medication_id: order.medicationId,
-      dose: Number(order.dose) || 0,
-      frequency: order.frequency as FrequencyEnum,
-      priority: order.priority as MedicationOrderInsert['priority'],
-      instructions: order.instructions?.trim() || null,
-      indication: order.indication?.trim() || null,
-      ordering_provider: order.orderingProvider?.trim() || null,
-      infusion_rate: order.infusionRate || null,
-      is_in_presim: Boolean(order.visibleInPresim),
-    }))
-}
-
-function transformMedicationAdministrationsToSchema(
-  caseId: string,
-  medAdministrations: MedAdministrationInstance[],
-): MedicationAdministrationInsert[] {
-
-  return medAdministrations
-    .filter((medAdmin) => medAdmin.medicationOrderId)
-    .map((medAdmin) => ({
-      case_id: caseId,
-      medication_order_id: medAdmin.medicationOrderId,
-      administrator: medAdmin.administratorId ?? "",
-      time_offset: medAdmin.adminTimeMinuteOffset,
-      status: medAdmin.status,
-      notes: medAdmin.notes ?? "",
-      administered_dose: medAdmin.administeredDose,
-      is_in_presim: medAdmin.visibleInPresim,
-    }))
-}
-
-async function insertMedicationOrders(
-  supabase: SupabaseClient,
-  medicationOrders: MedicationOrderInsert[],
 ) {
-  if (medicationOrders.length === 0) return
-  const { error: insertErr } = await supabase.from("medication_orders").insert(medicationOrders)
-  if (insertErr) throw new Error(insertErr.message)
-}
+  const orders = payload.orders.map((order) => ({
+    id: order.id,
+    medication_id: order.medicationId,
+    dose: Number(order.dose) || 0,
+    frequency: order.frequency,
+    priority: order.priority,
+    instructions: order.instructions?.trim() || null,
+    indication: order.indication?.trim() || null,
+    ordering_provider: order.orderingProvider?.trim() || null,
+    infusion_rate: order.infusionRate ?? null,
+    is_in_presim: Boolean(order.visibleInPresim),
+    phase: Number(order.phase ?? 1),
+  }));
+  const administrations = payload.administrations.map((administration) => ({
+    medication_order_id: administration.medicationOrderId,
+    administrator: administration.administratorId?.trim() || "System",
+    time_offset: Number(administration.adminTimeMinuteOffset),
+    status: administration.status,
+    notes: administration.notes?.trim() || "",
+    administered_dose: Number(administration.administeredDose),
+    is_in_presim: Boolean(administration.visibleInPresim),
+    phase: Number(administration.phase ?? 1),
+  }));
 
-async function insertMedicationAdministrations(
-  supabase: SupabaseClient,
-  medAdministrations: MedicationAdministrationInsert[],
-) {
-  if (medAdministrations.length === 0) return
-  const { error: insertErr } = await supabase.from("medication_administrations").insert(medAdministrations)
-  if (insertErr) throw new Error(insertErr.message)
+  const { error } = await supabase.rpc("case_builder_replace_medications", {
+    p_case_id: caseId,
+    p_orders: orders,
+    p_administrations: administrations,
+  });
+  if (error) throw new Error(error.message);
 }

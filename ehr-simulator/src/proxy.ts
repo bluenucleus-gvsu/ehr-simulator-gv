@@ -2,13 +2,13 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
 
 const CASE_BUILDER_MAINTENANCE_PATH = '/admin/case-builder-maintenance'
-const DEBUG_CASE_BUILDER_UNDER_MAINTENANCE = true;
+const CASE_BUILDER_UNDER_MAINTENANCE = process.env.CASE_BUILDER_MAINTENANCE === 'true';
 
 export async function proxy(request: NextRequest) {
   if (
     request.nextUrl.pathname.startsWith('/admin/case-builder') &&
     request.nextUrl.pathname !== CASE_BUILDER_MAINTENANCE_PATH
-    && DEBUG_CASE_BUILDER_UNDER_MAINTENANCE
+    && CASE_BUILDER_UNDER_MAINTENANCE
   ) {
     return NextResponse.redirect(new URL(CASE_BUILDER_MAINTENANCE_PATH, request.url))
   }

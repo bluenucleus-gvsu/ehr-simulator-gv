@@ -4,7 +4,7 @@ import { Image as ImageIcon, Upload, X } from "lucide-react";
 import { FormShell } from "../../components/formShell";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useFormContext } from "@/context/FormContext";
@@ -12,21 +12,13 @@ import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/saveCase";
 import type { MediaImageData } from "@/utils/form";
 import { toast } from "sonner";
+import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 
 const MediaForm = () => {
   const router = useRouter();
-  const { caseId, mediaData, onDataChange, registerCaseBuilderLocalOverlay } = useFormContext();
+  const { caseId, mediaData, onDataChange } = useFormContext();
   const [images, setImages] = useState<MediaImageData[]>(mediaData);
   const MAX_SIZE_MB = 10
-
-  useEffect(() => {
-    setImages(mediaData);
-  }, [mediaData]);
-
-  useEffect(() => {
-    registerCaseBuilderLocalOverlay(() => ({ media: images }));
-    return () => registerCaseBuilderLocalOverlay(null);
-  }, [registerCaseBuilderLocalOverlay, images]);
 
   const updateImages = (nextImages: MediaImageData[]) => {
     setImages(nextImages);
@@ -34,14 +26,18 @@ const MediaForm = () => {
   };
 
   const handleSubmit = async () => {
-    if (!caseId) return toast.error("Please complete earlier steps.");
+    if (!caseId) {
+      toast.error("Please complete earlier steps.");
+      return;
+    }
     try{
-      await saveCaseData({
+      const result = await saveCaseData({
         payload: images,
         section: CaseSection.MEDIA,
         caseId,
       });
-    router.push("/admin/case-builder/form/review");
+      if (result?.data) updateImages(result.data);
+      router.push(caseBuilderPath("/admin/case-builder/form/review", caseId));
     } catch(err){
       console.error(err);
       toast.error("Failed to save Media.");
@@ -50,7 +46,7 @@ const MediaForm = () => {
 
   const goBack = () => {
     onDataChange("media", images);
-    router.push("/admin/case-builder/form/medication-administrations");
+    router.push(caseBuilderPath("/admin/case-builder/form/medication-administrations", caseId));
   };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
