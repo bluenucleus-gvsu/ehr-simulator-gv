@@ -3,7 +3,6 @@
 import { ClipboardCheck, Image as ImageIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { publishCase } from "@/actions/case_builder/caseBuilder";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useFormContext } from "@/context/FormContext";
 import { caseBuilderPath } from "@/lib/caseBuilder/routes";
@@ -45,21 +44,20 @@ export default function FormReview() {
   const router = useRouter();
 
   const handleSubmit = async () => {
-    if (!caseId) throw new Error("Complete demographics before publishing the case.");
-    await publishCase(caseId);
+    if (!caseId) throw new Error("Complete demographics before finishing the case.");
     router.push(caseBuilderPath("/admin/case-builder/form/success", caseId));
   };
 
   return (
     <FormShell
-      title="Review & Publish Case"
-      stepDescription="Confirm all persisted case content, then make the case available for use."
+      title="Review Case"
+      stepDescription="Confirm the saved case content before finishing the builder."
       icon={<ClipboardCheck className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={() => router.push(caseBuilderPath("/admin/case-builder/form/media", caseId))}
-      continueButtonText="Publish Case"
+      continueButtonText="Finish Case"
       backButtonText="Back"
-      continueButtonTooltip="Validate and publish this case"
+      continueButtonTooltip="Finish editing this case"
       backButtonTooltip="Return to media"
     >
       <main className="flex-1 overflow-y-auto bg-slate-50/50 p-6 md:px-8 lg:px-12">

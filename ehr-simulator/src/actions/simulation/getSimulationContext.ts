@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
+import { caseMeetsMinimumRequirements } from "@/lib/caseMinimumRequirements";
 
 export interface SimulationRouteContext {
   routeId: string;
@@ -26,31 +27,37 @@ export async function resolveSimulationRouteContext(routeId: string): Promise<Si
     .maybeSingle();
 
   if (assignmentError) throw assignmentError;
-  if (assignment?.case_id) {
-    return { routeId, caseId: assignment.case_id, source: "section_assignment" };
+  let resolved: SimulationRouteContext | null = assignment?.case_id
+    ? { routeId, caseId: assignment.case_id, source: "section_assignment" }
+    : null;
+
+  if (!resolved) {
+    const { data: session, error: sessionError } = await supabase
+      .from("case_sessions")
+      .select("id, case_id")
+      .eq("id", routeId)
+      .maybeSingle();
+
+    if (sessionError) throw sessionError;
+    if (session?.case_id) {
+      resolved = { routeId, caseId: session.case_id, source: "case_session" };
+    }
   }
 
-  const { data: session, error: sessionError } = await supabase
-    .from("case_sessions")
-    .select("id, case_id")
-    .eq("id", routeId)
-    .maybeSingle();
-
-  if (sessionError) throw sessionError;
-  if (session?.case_id) {
-    return { routeId, caseId: session.case_id, source: "case_session" };
-  }
-
+  const caseId = resolved?.caseId ?? routeId;
   const { data: caseRow, error: caseError } = await supabase
     .from("cases")
-    .select("id")
-    .eq("id", routeId)
+    .select("id, first_name, last_name, description, date_of_birth")
+    .eq("id", caseId)
     .maybeSingle();
 
   if (caseError) throw caseError;
-  if (caseRow?.id) {
-    return { routeId, caseId: caseRow.id, source: "case" };
+  if (!caseRow?.id) {
+    throw new Error(`Unable to resolve simulation route id: ${routeId}`);
+  }
+  if (!caseMeetsMinimumRequirements(caseRow)) {
+    throw new Error("This case does not meet the minimum requirements for use.");
   }
 
-  throw new Error(`Unable to resolve simulation route id: ${routeId}`);
+  return resolved ?? { routeId, caseId: caseRow.id, source: "case" };
 }

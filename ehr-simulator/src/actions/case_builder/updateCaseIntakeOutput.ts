@@ -21,7 +21,6 @@ export async function updateCaseIntakeOutput(
     .from("cases")
     .update({
       intake_output_blocks: blocks,
-      case_creation_complete: false,
       updated_at: new Date().toISOString(),
     })
     .eq("id", caseId)

@@ -13,6 +13,7 @@ import {
   normalizeOptionalNumericInput,
 } from "@/lib/caseBuilder/medicationPayload";
 import type { MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
+import { caseMeetsMinimumRequirements } from "@/lib/caseMinimumRequirements";
 
 const caseId = "11111111-1111-4111-8111-111111111111";
 const orderId = "22222222-2222-4222-8222-222222222222";
@@ -30,6 +31,26 @@ describe("case-builder routes", () => {
       "/admin/case-builder/form/demographics",
     );
   });
+});
+
+describe("case minimum requirements", () => {
+  const usableCase = {
+    first_name: "Avery",
+    last_name: "Jones",
+    description: "Post-operative patient",
+    date_of_birth: "1984-05-12",
+  };
+
+  it("makes a case usable as soon as its minimum fields are present", () => {
+    expect(caseMeetsMinimumRequirements(usableCase)).toBe(true);
+  });
+
+  it.each(["first_name", "last_name", "description", "date_of_birth"] as const)(
+    "rejects a case with no %s",
+    (field) => {
+      expect(caseMeetsMinimumRequirements({ ...usableCase, [field]: " " })).toBe(false);
+    },
+  );
 });
 
 describe("case-builder runtime validation", () => {

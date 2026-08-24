@@ -6,7 +6,7 @@ import { mapDatabaseMedToFrontend } from "@/app/simulation/[caseId]/[sessionId]/
 const Formulary = async () => {
   const [medResponse, caseReponse] = await Promise.all([
     getAllMedications(),
-    getAllSimCases({ publishedOnly: true }),
+    getAllSimCases({ usableOnly: true }),
   ]);
 
   if (medResponse.error || !medResponse.success || !caseReponse.success) {

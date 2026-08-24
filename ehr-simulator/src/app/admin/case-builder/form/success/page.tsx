@@ -21,7 +21,7 @@ export default function SuccessPage() {
         <div>
           <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
             <FileCheck className="text-slate-400" />
-            Case Submitted
+            Case Builder Complete
           </h1>
         </div>
       </header>
@@ -32,8 +32,8 @@ export default function SuccessPage() {
             <CardContent className="flex text-xl items-center">
               <CircleCheck color="green" size={80} />
               {firstName && lastName ?
-                <p className="px-4">Case of <span className="font-bold">{firstName} {lastName}</span> submitted successfully!</p> :
-                <p className="px-4">Case submitted successfully!</p>}
+                <p className="px-4">Case of <span className="font-bold">{firstName} {lastName}</span> saved successfully!</p> :
+                <p className="px-4">Case saved successfully!</p>}
             </CardContent>
           </Card>
 
