@@ -24,7 +24,6 @@ import type { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/
 import type { LabTableData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
 import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient";
 import { assertValidSaveRequest } from "@/lib/caseBuilder/validation";
-import { assertUuid } from "@/lib/caseBuilder/validation";
 
 type SaveCaseArgs =
   | { section: typeof CaseSection.DEMOGRAPHICS; payload: DemographicFormData; caseId?: string | null }
@@ -73,13 +72,3 @@ export async function saveCaseData({ payload, section, caseId }: SaveCaseArgs) {
           return await updateMedia(supabase, payload, caseId);
       }
     }
-
-export async function publishCase(caseId: string) {
-  assertUuid(caseId, "Case ID");
-  const supabase = await createCaseBuilderAdminClient();
-  const { data, error } = await supabase.rpc("case_builder_publish", {
-    p_case_id: caseId,
-  });
-  if (error) throw new Error(error.message);
-  return data;
-}
