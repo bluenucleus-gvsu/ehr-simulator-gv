@@ -8,7 +8,10 @@ import type { CaseBundle } from "@/actions/case_builder/getCase";
 import { medOrderFormStateFromCaseBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marFromBundle";
 import { buildLabRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsFromBundle";
 import type { LabTableData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
-import { normalizeOptionalNumericInput } from "@/lib/caseBuilder/medicationPayload";
+import {
+  filterAdministrationsForOrders,
+  normalizeOptionalNumericInput,
+} from "@/lib/caseBuilder/medicationPayload";
 import type { MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
 
 const caseId = "11111111-1111-4111-8111-111111111111";
@@ -91,6 +94,21 @@ describe("case-builder runtime validation", () => {
 });
 
 describe("medication save payloads", () => {
+  it("removes administrations whose medication order is no longer being saved", () => {
+    const administrations = [
+      { medicationOrderId: orderId, status: "Due" },
+      {
+        medicationOrderId: "44444444-4444-4444-8444-444444444444",
+        status: "Given",
+      },
+    ];
+
+    expect(filterAdministrationsForOrders([{ id: orderId }], administrations)).toEqual([
+      administrations[0],
+    ]);
+    expect(administrations).toHaveLength(2);
+  });
+
   it("normalizes blank optional numeric inputs to null", () => {
     expect(normalizeOptionalNumericInput("")).toBeNull();
     expect(normalizeOptionalNumericInput("   ")).toBeNull();

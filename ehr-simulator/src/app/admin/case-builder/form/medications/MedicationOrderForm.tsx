@@ -16,6 +16,7 @@ import { FormShell } from "../../components/formShell"
 import { CaseSection } from "@/lib/saveCase"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
 import { caseBuilderPath } from "@/lib/caseBuilder/routes"
+import { filterAdministrationsForOrders } from "@/lib/caseBuilder/medicationPayload"
 
 function getComboboxData(medications: AllMedicationTypes[]) {
   return medications.map(med => {
@@ -72,8 +73,15 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
   }
 
   const handleRemoveMedication = (index: number) => {
+    const remainingOrders = medOrders.filter((_, i) => i !== index)
+    const remainingAdministrations = filterAdministrationsForOrders(
+      remainingOrders,
+      medAdministrationData,
+    )
+
     setSelectedMeds(prev => prev.filter((_, i) => i !== index))
-    setMedOrders(prev => prev.filter((_, i) => i !== index))
+    setMedOrders(remainingOrders)
+    onDataChange('medAdministrationInstances', remainingAdministrations)
   }
 
   const handleOrderChange = (index: number, field: keyof MedicationOrder, value: string | boolean | number) => {
@@ -107,13 +115,19 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
   }
 
   const handleSubmit = async () => {
+    const validAdministrations = filterAdministrationsForOrders(
+      medOrders,
+      medAdministrationData,
+    )
+
     onDataChange('medOrders', {
       createdOrders: medOrders,
       selectedMeds: selectedMeds
     });
+    onDataChange('medAdministrationInstances', validAdministrations)
     if (caseId) {
       await saveCaseData({
-        payload: { orders: medOrders, administrations: medAdministrationData },
+        payload: { orders: medOrders, administrations: validAdministrations },
         section: CaseSection.MEDICATION_ORDERS,
         caseId,
       })
