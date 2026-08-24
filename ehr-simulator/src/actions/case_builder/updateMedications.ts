@@ -5,6 +5,7 @@ import type {
   MedAdministrationInstance,
   MedicationOrder,
 } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
+import { normalizeOptionalNumericInput } from "@/lib/caseBuilder/medicationPayload";
 
 export async function updateMedications(
   supabase: SupabaseClient,
@@ -20,7 +21,7 @@ export async function updateMedications(
     instructions: order.instructions?.trim() || null,
     indication: order.indication?.trim() || null,
     ordering_provider: order.orderingProvider?.trim() || null,
-    infusion_rate: order.infusionRate ?? null,
+    infusion_rate: normalizeOptionalNumericInput(order.infusionRate),
     is_in_presim: Boolean(order.visibleInPresim),
     phase: Number(order.phase ?? 1),
   }));
