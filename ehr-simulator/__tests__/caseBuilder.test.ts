@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
+import { updateMedications } from "@/actions/case_builder/updateMedications";
 import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 import { assertValidSaveRequest } from "@/lib/caseBuilder/validation";
 import { CaseSection } from "@/lib/saveCase";
@@ -7,6 +8,8 @@ import type { CaseBundle } from "@/actions/case_builder/getCase";
 import { medOrderFormStateFromCaseBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marFromBundle";
 import { buildLabRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsFromBundle";
 import type { LabTableData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
+import { normalizeOptionalNumericInput } from "@/lib/caseBuilder/medicationPayload";
+import type { MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
 
 const caseId = "11111111-1111-4111-8111-111111111111";
 const orderId = "22222222-2222-4222-8222-222222222222";
@@ -84,6 +87,48 @@ describe("case-builder runtime validation", () => {
 
   it("allows an empty media array so all media can be removed", () => {
     expect(() => assertValidSaveRequest(CaseSection.MEDIA, [], caseId)).not.toThrow();
+  });
+});
+
+describe("medication save payloads", () => {
+  it("normalizes blank optional numeric inputs to null", () => {
+    expect(normalizeOptionalNumericInput("")).toBeNull();
+    expect(normalizeOptionalNumericInput("   ")).toBeNull();
+    expect(normalizeOptionalNumericInput(undefined)).toBeNull();
+  });
+
+  it("preserves valid optional numeric inputs", () => {
+    expect(normalizeOptionalNumericInput(0)).toBe(0);
+    expect(normalizeOptionalNumericInput(12.5)).toBe(12.5);
+    expect(normalizeOptionalNumericInput("12.5")).toBe(12.5);
+  });
+
+  it("sends a blank infusion rate to the database as null", async () => {
+    const rpc = vi.fn().mockResolvedValue({ error: null });
+    const order = {
+      id: orderId,
+      medicationId,
+      dose: 10,
+      frequency: "BID",
+      priority: "Routine",
+      indication: "Hypertension",
+      orderingProvider: "Dr. Test",
+      infusionRate: "",
+      visibleInPresim: true,
+      phase: 1,
+    } as unknown as MedicationOrder;
+
+    await updateMedications(
+      { rpc } as never,
+      { orders: [order], administrations: [] },
+      caseId,
+    );
+
+    expect(rpc).toHaveBeenCalledWith("case_builder_replace_medications", {
+      p_case_id: caseId,
+      p_orders: [expect.objectContaining({ infusion_rate: null })],
+      p_administrations: [],
+    });
   });
 });
 
