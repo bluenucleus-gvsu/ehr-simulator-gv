@@ -5,10 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { chartingOptions } from "./flexSheetData";
+import { ChartingOptions } from '@/lib/flexSheet/flexSheetTypes';
 
 interface CheckBoxListProps {
-  options: chartingOptions[];
+  options: ChartingOptions[];
   selectedOptions: string[];
   rowId: string;
   columnId: string;

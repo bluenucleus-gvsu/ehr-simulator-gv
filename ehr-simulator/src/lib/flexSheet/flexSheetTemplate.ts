@@ -1,6 +1,6 @@
-import { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
-import { addRows, FlexSheetSection } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetSections";
+import { addRows, FlexSheetSection } from "@/lib/flexSheet/flexSheetSections";
 import { Database } from "@/../database.types";
+import { FlexSheetData } from "./flexSheetTypes";
 
 export const CaseSpecialty = {
   MED_SURG: "med_surg",

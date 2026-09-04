@@ -1,10 +1,10 @@
 import { Select, SelectContent, SelectTrigger, SelectItem, SelectGroup, SelectValue } from "@/components/ui/select"
-import { type chartingOptions } from "./flexSheetData"
+import { ChartingOptions } from "@/lib/flexSheet/flexSheetTypes";
 import { cn, } from "@/lib/utils"
 
 
 interface AssessmentSelectProps {
-    options: chartingOptions[];
+    options: ChartingOptions[];
     value: string;
     onValueChange: (newValue: string) => void;
     rowId: string;

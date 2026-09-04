@@ -1,4 +1,4 @@
-import { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
+import { FlexSheetData } from "@/lib/flexSheet/flexSheetTypes";
 import { Database } from "@/../database.types";
 
 export type FlexSheetSection = Database['public']['Enums']['flexsheet_section_type'];
@@ -1356,3 +1356,29 @@ export const flexSheetSections: FlexSheetSections = {
 export function addRows(section: FlexSheetSection): FlexSheetData[] {
   return [...flexSheetSections[section]];
 }
+
+// This set represents the FlexSheet template selections made by an admin in the Case Builder.
+// In the future, these values would be fetched from Supabase, but this requires new forms
+// in the case builder to allow admin to make FlexSheet template selections.
+export const tempSelectionSet = new Set<FlexSheetSection>([
+  FlexSheetSection.VITALS,
+  FlexSheetSection.INPUT,
+  FlexSheetSection.OUTPUT,
+  FlexSheetSection.BASE_PAIN,
+  FlexSheetSection.FACES_PAIN,
+  FlexSheetSection.GENERAL_APPEARANCE,
+  FlexSheetSection.PSYCHOSOCIAL,
+  FlexSheetSection.HEENT,
+  FlexSheetSection.NEURO,
+  FlexSheetSection.INTEGUMENT,
+  FlexSheetSection.CARDIAC,
+  FlexSheetSection.RESPIRATORY,
+  FlexSheetSection.WOUND,
+  FlexSheetSection.GI,
+  FlexSheetSection.MUSCULOSKELETAL,
+  FlexSheetSection.GENTIOURINARY,
+  FlexSheetSection.IV_1,
+  FlexSheetSection.IV_2,
+  FlexSheetSection.NURSING_CARE,
+  FlexSheetSection.CIWA,
+]);

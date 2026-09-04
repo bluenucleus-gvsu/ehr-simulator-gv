@@ -1,8 +1,9 @@
 "use server"
 
 import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient";
-import { CaseSpecialty } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetTemplateGenerator";
+import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
 import { assertUuid } from "@/lib/caseBuilder/validation";
+import { DatabaseDocumentation } from "../simulation";
 
 export interface CaseBundle {
   caseRow: CaseRow
@@ -13,7 +14,7 @@ export interface CaseBundle {
   labResults: CaseBundleRow[]
   imagingReports: ImagingReportRow[]
   microbiologyReports: MicrobiologyReportRow[]
-  documentationResults: CaseBundleRow[]
+  documentationResults: DatabaseDocumentation[]
   medicationAdministrations: CaseBundleRow[]
   caseImages: CaseBundleRow[]
   /** Structured med orders + joined medication rows (when present in DB). */
@@ -230,7 +231,7 @@ export async function getCaseBundle(
     labResults: (labResultsRes.data ?? []) as CaseBundleRow[],
     imagingReports: (imagingReportsRes.data ?? []) as ImagingReportRow[],
     microbiologyReports: (microbiologyReportsRes.data ?? []) as MicrobiologyReportRow[],
-    documentationResults: (documentationResultsRes.data ?? []) as CaseBundleRow[],
+    documentationResults: (documentationResultsRes.data ?? []) as DatabaseDocumentation[],
     medicationAdministrations: (medicationAdministrationsRes.data ?? []) as CaseBundleRow[],
     caseImages: (caseImagesRes.data ?? []) as CaseBundleRow[],
     medicationOrders: medicationOrders as CaseBundleRow[],

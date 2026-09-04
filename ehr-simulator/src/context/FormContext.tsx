@@ -5,9 +5,10 @@ import { CompleteFormType, defaultIoData, defaultOrders, DemographicFormData, Fo
 import { ClinicalNote } from '@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData';
 import { OrderType } from '@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData';
 import { LabTableData, labTemplate } from '@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData';
-import { FlexSheetData, tempSelectionSet } from '@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData';
 import { MedAdministrationInstance } from '@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData';
-import { buildFlexSheetTemplate, CaseSpecialty } from '@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetTemplateGenerator';
+import { buildFlexSheetTemplate, CaseSpecialty } from '@/lib/flexSheet/flexSheetTemplate';
+import { FlexSheetData } from '@/lib/flexSheet/flexSheetTypes';
+import { tempSelectionSet } from '@/lib/flexSheet/flexSheetSections';
 
 interface FormContextType {
   demographicData: DemographicFormData;

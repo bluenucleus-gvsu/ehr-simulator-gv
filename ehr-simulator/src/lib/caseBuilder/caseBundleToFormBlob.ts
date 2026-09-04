@@ -1,15 +1,15 @@
 import { differenceInYears } from "date-fns";
 
 import type { CaseBundle, CaseBundleRow } from "@/actions/case_builder/getCase";
-import { buildChartingRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/chartingFromBundle";
-import { tempSelectionSet } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
+import { buildChartingRowsFromBundle } from "@/lib/flexSheet/flexSheetRowGenerator";
 import { buildLabRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsFromBundle";
 import { labTemplate } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
 import { medOrderFormStateFromCaseBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marFromBundle";
 import { defaultDemographicData, defaultHistoryData } from "@/context/FormContext";
 import type { DemographicFormData, FormBlob } from "@/utils/form";
 import { intakeOutputBlocksFromCaseRow, months } from "@/utils/form";
-import { buildFlexSheetTemplate, CaseSpecialty } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetTemplateGenerator";
+import { buildFlexSheetTemplate, CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
+import { tempSelectionSet } from "@/lib/flexSheet/flexSheetSections";
 
 function text(row: CaseBundleRow, key: string): string {
   const value = row[key];

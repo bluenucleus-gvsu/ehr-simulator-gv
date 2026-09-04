@@ -13,8 +13,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { tempSelectionSet, type AssessmentToolGuide } from "./flexSheetData"
-import { buildAssessmentToolGuide } from "./assessmentToolGuides"
+import { buildAssessmentToolGuide } from "@/lib/flexSheet/assessmentToolGuides"
+import { AssessmentToolGuide } from "@/lib/flexSheet/flexSheetTypes"
+import { tempSelectionSet } from "@/lib/flexSheet/flexSheetSections"
 
 
 const FlexSheetSidebar = () => {
