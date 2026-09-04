@@ -31,6 +31,7 @@ export default function FacultyHeader({ name, avatarUrl, courses = [] }: Props) 
             height={64}
             className="rounded-full object-cover"
             unoptimized
+            loading="eager"
           />
         ) : (
           <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-lg font-semibold text-blue-700">
