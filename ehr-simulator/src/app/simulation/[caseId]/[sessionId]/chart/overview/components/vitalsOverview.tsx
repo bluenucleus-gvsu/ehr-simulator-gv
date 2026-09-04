@@ -17,18 +17,17 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Card } from "@/components/ui/card"
-import type { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData"
+import { FlexSheetData } from "@/lib/flexSheet/flexSheetTypes";
 import { useMemo } from "react"
 import StyledTitle from "./styledTitle"
-import { formatTimeFromOffset } from "../../charting/components/flexSheetHelpers"
-import { useSimulationCase } from "@/context/SimulationCaseContext"
-import { buildChartingRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/chartingFromBundle"
+import { formatTimeFromOffset } from "@/lib/flexSheet/flexSheetHelpers"
+import { buildChartingRowsFromBundle } from "@/lib/flexSheet/flexSheetRowGenerator"
 import { useSimSessionContext } from "@/context/SimSessionContext"
-import { buildOverviewTemplate } from "../../charting/components/flexSheetTemplateGenerator"
+import { buildOverviewTemplate } from "@/lib/flexSheet/flexSheetTemplate"
+import { DatabaseDocumentation } from "@/actions/simulation"
 
-export type vitalsOverviewTable = {
-  field: string
-  [key: string]: string
+interface VitalsOverviewProps {
+  dbDocumentation: DatabaseDocumentation[];
 }
 
 function mostRecentVitals(
@@ -48,8 +47,8 @@ function mostRecentVitals(
   return activeOffsets.slice(-1 * limit);
 }
 
-export function VitalsOverview() {
-  const { caseBundle } = useSimulationCase();
+export function VitalsOverview({ dbDocumentation }: VitalsOverviewProps) {
+  // const { caseBundle } = useSimulationCase();
   const { simStartTime, isPresim } = useSimSessionContext();
 
   const flexSheetTemplate = useMemo(() => {
@@ -58,10 +57,7 @@ export function VitalsOverview() {
 
 
   const { allTimeOffsets, chartingData } = useMemo(() => {
-    const mapped = buildChartingRowsFromBundle(
-      caseBundle?.documentationResults ?? [],
-      flexSheetTemplate,
-    );
+    const mapped = buildChartingRowsFromBundle(dbDocumentation, flexSheetTemplate);
 
     const selectedOffsets = isPresim ?
       Array.from(mapped.timePointsInPreSim)
@@ -71,7 +67,7 @@ export function VitalsOverview() {
       allTimeOffsets: selectedOffsets,
       chartingData: mapped.rows
     };
-  }, [caseBundle, isPresim, flexSheetTemplate]);
+  }, [isPresim, flexSheetTemplate, dbDocumentation]);
 
   const displayTimeOffsets = useMemo(() => {
     return mostRecentVitals(chartingData, allTimeOffsets)

@@ -1,6 +1,5 @@
 import AssessmentSelect from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/assessmentSelector";
-import { chartingOptions, FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
-import { getAlertFlag } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetHelpers";
+import { getAlertFlag } from "@/lib/flexSheet/flexSheetHelpers";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 import {
@@ -10,6 +9,7 @@ import {
 } from "@tanstack/react-table";
 
 import { getCellColor } from "../../labs/components/labTableInputCell";
+import { ChartingOptions, FlexSheetData } from "@/lib/flexSheet/flexSheetTypes";
 
 interface CellProps {
   getValue: () => string | number | boolean | string[] | { subsetId: string; label: string; }[] | { low: number; high: number; } | { assessment: string; description: string; }[] | undefined;
@@ -57,7 +57,7 @@ export const TableInputFormCell = ({ getValue, row, column, table, visibleInPres
 export const TableAssessmentSelectFormCell = ({ getValue, row, column, table, visibleInPresim }: CellProps) => {
   const initialData = (getValue() as string) ?? "";
   const [selectedValue, setSelectedValue] = useState(initialData);
-  const chartingOptions = (row.original.chartingOptions || []) as chartingOptions[];
+  const chartingOptions = (row.original.chartingOptions || []) as ChartingOptions[];
 
 
   useEffect(() => {

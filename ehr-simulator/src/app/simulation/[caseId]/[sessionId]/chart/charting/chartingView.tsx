@@ -1,40 +1,26 @@
 'use client'
 
-import { useReactTable, getCoreRowModel, flexRender, createColumnHelper, type RowData } from "@tanstack/react-table";
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useReactTable, getCoreRowModel, flexRender, type RowData } from "@tanstack/react-table";
+import { useState } from "react";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import CheckBoxList from "./components/checkBoxList";
 import { AddTimeColumnButton } from "./components/addTimeColButton";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { toast } from "sonner";
 import FlexSheetColumnShifter from "./components/flexSheetColumnShifter";
-import { type FlexSheetData } from "./components/flexSheetData";
 import { ImagingData, LabCellValue } from "../labs/components/labsData";
-import { TableAssessmentSelectCell, TableInputCell } from "./components/tableInputCell";
-import { ChartingToolTip } from "./components/ChartingToolTip";
-import { DatabaseDocumentation, StudentDatabaseDocumentation, upsertDocumentationRows } from "@/actions/simulation";
+import { DatabaseDocumentation } from "@/actions/simulation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
-import { buildChartingRowsFromBundle } from "./components/chartingFromBundle";
-import { coerceDocumentationValueForPersist } from "@/lib/documentationColumns";
-import { calculateColTotal, formatTimeFromOffset, getPinnedStyles } from "./components/flexSheetHelpers";
+import { getPinnedStyles } from "@/lib/flexSheet/flexSheetHelpers";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
 import { useStudentSimulationEditAccess } from "@/utils/studentSimulationEditAccess";
-import { buildFlexSheetTemplate } from "./components/flexSheetTemplateGenerator";
-import { buildAssessmentToolGuide } from "./components/assessmentToolGuides";
-
-interface FlexSheetViewProps {
-  dbDocumentation: DatabaseDocumentation[];
-  params: {
-    caseId: string;
-    sessionId: string;
-  };
-}
-const columnHelper = createColumnHelper<FlexSheetData>();
-
-const tableWidth = 6;
+import { useFlexSheetInitialization } from "@/hooks/useFlexSheetInitialization";
+import { useFlexSheetState } from "@/hooks/useFlexSheetState";
+import { useFlexSheetPagination } from "@/hooks/useFlexSheetPagination";
+import { useFlexSheetDerivedData } from "@/hooks/useFlexSheetDerivedData";
+import { saveFlexSheetData } from "@/lib/flexSheet/flexSheetSave";
+import { useFlexSheetColumns } from "@/hooks/useFlexSheetColumns";
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
@@ -45,393 +31,65 @@ declare module '@tanstack/react-table' {
   }
 }
 
-export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
+interface FlexSheetViewProps {
+  documentation: DatabaseDocumentation[];
+  caseId: string;
+  sessionId: string;
+}
+
+const TABLE_WIDTH = 6;
+
+export function FlexSheetView({ documentation, caseId, sessionId }: FlexSheetViewProps) {
   const { caseBundle } = useSimulationCase();
-  const sourceDocumentation = dbDocumentation;
-  const { groupId, userId, simStartTime, handleUnsavedCharting, isPresim } = useSimSessionContext();
-
   const { canEdit } = useStudentSimulationEditAccess();
-  const { chartingSections, caseSpecialty } = useMemo(() => {
-    const sections = caseBundle?.caseRow.flexsheet_sections;
-
-    return {
-      chartingSections: new Set(sections ?? []),
-      caseSpecialty: caseBundle?.caseRow.case_specialty ?? null,
-    };
-  }, [caseBundle]);
-
-  const flexSheetTemplate = useMemo(
-    () => buildFlexSheetTemplate(caseSpecialty, chartingSections),
-    [chartingSections, caseSpecialty]
-  )
-
-  const initialCharting = useMemo(
-    () => buildChartingRowsFromBundle(sourceDocumentation, flexSheetTemplate),
-    [sourceDocumentation, flexSheetTemplate],
-  );
-  const [timeOffsets, setTimeOffsets] = useState(isPresim ?
-    Array.from(initialCharting.timePointsInPreSim).sort((a, b) => a - b)
-    : initialCharting.timeOffsets)
-
-  const [data, setData] = useState<FlexSheetData[]>(initialCharting.rows);
-  const [fieldSelections, setFieldSelections] = useState<Record<string, string[]>>({});
+  const { groupId, userId, simStartTime, handleUnsavedCharting, isPresim } = useSimSessionContext();
   const [isSaving, setIsSaving] = useState(false);
-  const [dirtyColumns, setDirtyColumns] = useState<Set<string>>(new Set());
-  const { caseId, sessionId } = params;
-  const canSubmit = dirtyColumns.size > 0;
   const { open, toggleSidebar } = useSidebar()
 
-  const maxOffset = Math.max(0, timeOffsets.length - tableWidth);
-  const remainder = timeOffsets.length % tableWidth;
-  const [columnOffset, setColumnOffset] = useState(maxOffset);
-  const slicedTimeOffsets = timeOffsets.slice(columnOffset, (columnOffset === 0 && remainder !== 0) ? remainder : columnOffset + tableWidth);
-  const assessmentToolGuides = useMemo(() => {
-    return buildAssessmentToolGuide(chartingSections)
-  }, [chartingSections]);
+  const { initialCharting, assessmentToolGuides } = useFlexSheetInitialization(caseBundle, documentation);
 
-  useEffect(() => {
-    const hydrated = buildChartingRowsFromBundle(sourceDocumentation, flexSheetTemplate);
-    const targetOffsets = isPresim
-      ? Array.from(initialCharting.timePointsInPreSim).sort((a, b) => a - b)
-      : hydrated.timeOffsets;
+  const {
+    data,
+    timeOffsets,
+    fieldSelections,
+    dirtyColumns,
+    handleCellUpdate,
+    handleSubsetSelection,
+    handleColumnAdd,
+    resetDirtyColumns
+  } = useFlexSheetState({ initialCharting, isPresim, canEdit, handleUnsavedCharting });
 
-    const newFieldSelections: Record<string, string[]> = {};
-    hydrated.rows.forEach((row) => {
-      if (row.componentType === "checkboxlist") {
-        targetOffsets.forEach((time) => {
-          const val = row[time];
-          if (typeof val === "string" && val.length > 0) {
-            newFieldSelections[`${row.id}-${time}`] = val.split(",");
-          }
-        });
-      }
-    });
-    setFieldSelections(newFieldSelections);
+  const { slicedTimeOffsets, columnOffset, handleColOffsetChange } = useFlexSheetPagination(timeOffsets, TABLE_WIDTH);
 
-    setTimeOffsets(targetOffsets);
-    setData(hydrated.rows);
-    setDirtyColumns(new Set());
-    setColumnOffset(Math.max(0, targetOffsets.length - tableWidth));
-  }, [sourceDocumentation, isPresim, flexSheetTemplate, initialCharting.timePointsInPreSim]);
+  const filteredData = useFlexSheetDerivedData(data, fieldSelections, timeOffsets);
 
-  useEffect(() => {
-    setColumnOffset((prev) => Math.min(prev, maxOffset));
-  }, [maxOffset]);
-
-  const visibleSubsetIds = useMemo(() => {
-    const combinedSet = new Set<string>();
-    Object.values(fieldSelections).forEach((selectedIdsArray) => {
-      selectedIdsArray.forEach((id) => id !== "WDL" && combinedSet.add(id));
-    });
-    return combinedSet;
-  }, [fieldSelections]);
-
-  const filteredData = useMemo(() => {
-    const groupedByTool: Record<string, FlexSheetData[]> = {};
-
-    data.forEach((row) => {
-      if (row.toolId && row.componentType !== "static") {
-        groupedByTool[row.toolId] = groupedByTool[row.toolId] || [];
-        groupedByTool[row.toolId].push(row);
-      }
-    });
-
-    const newFilteredData: FlexSheetData[] = [];
-
-    data.forEach((row) => {
-      const isVisible = !row.hideable || visibleSubsetIds.has(row.id);
-
-      if (isVisible) {
-        newFilteredData.push(row);
-      }
-
-      if (row.rowType === "titleRow" && row.toolId) {
-        const toolName = row.toolId
-        if (isVisible && groupedByTool[toolName]) {
-          const totalRow = calculateColTotal(row.field, groupedByTool[toolName], timeOffsets);
-          newFilteredData.push(totalRow);
-        }
-      }
-    });
-
-    return newFilteredData;
-  }, [data, visibleSubsetIds, timeOffsets]);
-
-  const handleCellUpdate = useCallback((rowIndex: number, columnId: string, value: string | string[]) => {
-    if (!canEdit) return;
-    setData((prevData) =>
-      prevData.map((row, index) => {
-        if (index === rowIndex) {
-          return { ...row, [columnId]: value };
-        }
-        return row;
-      }),
-    );
-
-    setDirtyColumns((prev) => {
-      const newSet = new Set(prev);
-      newSet.add(columnId);
-      return newSet;
-    });
-  }, [canEdit]);
-
-  const handleSubsetSelection = useCallback((rowId: string, columnId: string, selectedIdsForField: string[]) => {
-    if (!canEdit) return;
-    const selectionKey = `${rowId}-${columnId}`;
-
-    setFieldSelections((prev) => ({
-      ...prev,
-      [selectionKey]: selectedIdsForField,
-    }));
-
-    setData((prevData) =>
-      prevData.map((row) => {
-        if (row.id === rowId) {
-          return { ...row, [columnId]: selectedIdsForField };
-        }
-        return row;
-      }),
-    );
-
-    setDirtyColumns((prev) => {
-      const newSet = new Set(prev);
-      newSet.add(columnId);
-      return newSet;
-    });
-  }, [canEdit]);
-
-  const handleColumnAdd = (newTime: number) => {
-    if (!canEdit) {
-      toast.error("FlexSheets are view-only in pre-simulation.");
-      return;
-    }
-    if (timeOffsets.includes(newTime)) {
-      toast.error(`A column for time ${newTime} already exists.`);
-      return;
-    }
-    setTimeOffsets((prev) => [...prev, newTime].sort((a, b) => a - b));
-    setData((prevData) => prevData.map((row) => ({ ...row, [newTime]: "" })));
-    setColumnOffset(Math.max(0, timeOffsets.length + 1 - tableWidth));
-  };
-
-  const handleColOffsetChange = (shift: number | string) => {
-    if (typeof shift === "number") {
-      setColumnOffset((prev) => {
-        if (prev === 0 && shift > 0 && remainder !== 0) {
-          return remainder;
-        }
-
-        const next = prev + shift;
-        if (next <= 0) return 0;
-        if (next >= maxOffset) return maxOffset;
-        return next;
-      });
-    } else if (shift === "reset") {
-      setColumnOffset(maxOffset);
-    }
-  };
+  const canSubmit = dirtyColumns.size > 0;
 
   const handleSave = async () => {
     if (!canEdit) {
       toast.error("FlexSheets are view-only in pre-simulation.");
       return;
     }
-    if (dirtyColumns.size === 0) {
-      toast.info("No changes to save.");
+    if (!canSubmit) return;
+    if (!userId || !groupId || !sessionId || !caseId) {
+      toast.error("Case data still loading.");
       return;
     }
 
     setIsSaving(true);
     try {
-      if (!userId || !groupId || !sessionId || !caseId) {
-        toast.error("Case data still loading. Please try again.");
-        return;
-      }
-      const dirtyTimeOffsets = Array.from(dirtyColumns)
-      if (dirtyTimeOffsets.length === 0) {
-        toast.info("No valid time columns to save.");
-        return;
-      }
-      const payload = dirtyTimeOffsets.map((timeOffset) => {
-        const dbRecord: StudentDatabaseDocumentation = {
-          case_id: caseId,
-          case_session_id: sessionId,
-          user_id: userId,
-          group_id: groupId,
-          time_offset: Number(timeOffset),
-          is_in_presim: false,
-        };
-
-        data.forEach((row) => {
-          const isDataRow =
-            row.componentType !== "static" &&
-            row.componentType !== "totalScoreRow";
-
-          if (isDataRow && row.id) {
-            const cellValue = row[timeOffset];
-            const dbColumn = row.id;
-
-            (dbRecord as Record<string, unknown>)[dbColumn] = coerceDocumentationValueForPersist(
-              cellValue,
-            );
-          }
-        });
-
-        return dbRecord;
-      });
-
-      const { error } = await upsertDocumentationRows(payload);
-
-      if (error) throw error;
-
+      await saveFlexSheetData({ caseId, sessionId, userId, groupId, data, dirtyColumns });
       toast.success("FlexSheet data saved successfully!");
-
-      setDirtyColumns(new Set());
+      resetDirtyColumns();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error";
-      toast.error(`Failed to save data (${errorMessage})`);
-      console.error(err);
+      toast.error(`Failed to save data (${err instanceof Error ? err.message : "Unknown error"})`);
     } finally {
       setIsSaving(false);
     }
   };
-
-  useEffect(() => {
-    handleUnsavedCharting(dirtyColumns.size > 0);
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (dirtyColumns.size > 0) {
-        event.preventDefault();
-        return "You have unsaved charting data.";
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [dirtyColumns, handleUnsavedCharting]);
-
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor("field", {
-        id: "pinned",
-        header: () => <h1 className="w-full h-full bg-gray-50"></h1>,
-        cell: (info) => {
-          const rowType = info.row.original.rowType;
-          if (rowType === "titleRow") {
-            const wdlDescription = info.row.original?.wdlDescription;
-            if (wdlDescription && wdlDescription.length > 0) {
-              return (
-                <ChartingToolTip field={info.row.original.field} descriptions={wdlDescription} />
-              );
-            }
-            return (
-              <p className="min-w-24 h-full text-xs text-left py-0 pl-2 px-2 font-medium text-lime-900">
-                {info.row.original.field}
-              </p>
-            );
-          }
-          if (rowType === "totalScoreRow") {
-            const toolName = info.row.original.field.replace(" Total Score", "");
-            const toolInterpretation = assessmentToolGuides.find((tool) => tool.name === toolName)?.interpretations;
-            return (
-              <div className="min-w-24 h-full text-xs text-left py-0 pl-4 font-semibold text-neutral-800">
-                {info.getValue() && toolInterpretation ? (
-                  <Tooltip>
-                    <TooltipTrigger className="cursor-help">{info.getValue()} Total</TooltipTrigger>
-                    <TooltipContent className="bg-white shadow shadow-black/30 rounded-xl ml-4 p-4 z-51 max-w-sm">
-                      <h1 className="text-sm font-bold">{toolName} Interpretation</h1>
-                      <div className="pl-2 space-y-2">
-                        {toolInterpretation.map((interp, i) => (
-                          <div key={i}>
-                            <p className="text-xs font-semibold text-gray-800">
-                              {interp.result} ({interp.range}):
-                            </p>
-                            <p className="pl-2 text-xs text-gray-600 italic">{interp.description}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                ) : (
-                  `${info.getValue()} Total`
-                )}
-              </div>
-            );
-          }
-          return (
-            <p className="min-w-24 h-full text-left text-xs py-0 pl-4 text-neutral-600 shadow-none rounded-none focus-visible:ring-0 focus-visible:ring-offset-0">
-              {info.getValue()}
-            </p>
-          );
-        },
-      }),
-      ...slicedTimeOffsets.map((offsetKey) => {
-        const displayData = formatTimeFromOffset(offsetKey, simStartTime);
-        const displayDate = displayData?.date ?? "";
-        const displayTime = displayData?.time ?? "";
-
-        return columnHelper.accessor((row) => row[offsetKey], {
-          id: String(offsetKey),
-          header: () => (
-            <div className="flex flex-col justify-center items-center">
-              <h2 className="my-1 text-neutral-500 text-xs font-light">{displayDate}</h2>
-              <p className="mb-1">{displayTime}</p>
-            </div>
-          ),
-          cell: ({ row, column, getValue, table }) => {
-            const initialValue = (getValue() as string) || "";
-            const componentType = row.original.componentType;
-
-            switch (componentType) {
-              case "static":
-                return <p></p>;
-              case "input":
-                return (
-                  <TableInputCell
-                    row={row}
-                    column={column}
-                    getValue={getValue}
-                    table={table}
-                    readOnly={!canEdit}
-                  />
-                );
-              case "totalScoreRow":
-                return <p className="text-right pr-2 py-0 text-xs font-semibold">{initialValue}</p>;
-              case "assessmentselect":
-                return (
-                  <TableAssessmentSelectCell
-                    row={row}
-                    column={column}
-                    getValue={getValue}
-                    table={table}
-                    readOnly={!canEdit}
-                  />
-                );
-              case "checkboxlist": {
-                const selectionKey = `${row.original.id}-${column.id}`;
-                const currentSelectedSubsets = fieldSelections[selectionKey] || [];
-                return (
-                  <CheckBoxList
-                    options={row.original.assessmentSubsets || []}
-                    selectedOptions={currentSelectedSubsets}
-                    rowId={row.original.id}
-                    columnId={column.id}
-                    onSelectionChange={handleSubsetSelection}
-                    disabled={!canEdit}
-                  />
-                );
-              }
-              default:
-                return null;
-            }
-          },
-        });
-      }),
-    ],
-    [slicedTimeOffsets, simStartTime, fieldSelections, handleSubsetSelection, canEdit, assessmentToolGuides],
-  );
+  const columns = useFlexSheetColumns({
+    slicedTimeOffsets, simStartTime, fieldSelections, handleSubsetSelection, canEdit, assessmentToolGuides
+  });
 
   const ptTable = useReactTable({
     data: filteredData,
@@ -461,7 +119,6 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
             onColumnAdd={handleColumnAdd}
             existingTimeColumns={timeOffsets}
             sessionStartTime={simStartTime}
-            disabled={!canEdit}
           />
           <Button
             onClick={handleSave}
@@ -481,7 +138,7 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
             columnOffset={columnOffset}
             onColumnShift={handleColOffsetChange}
             columns={timeOffsets}
-            tableWidth={tableWidth}
+            tableWidth={TABLE_WIDTH}
             simStartTime={simStartTime}
           />
         </div>

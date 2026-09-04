@@ -1,8 +1,10 @@
 import { Column } from "@tanstack/react-table";
-import { FlexSheetData } from "./flexSheetData";
 import { addMinutes, format } from "date-fns";
+import { FlexSheetData, FlexSheetPayload } from "@/lib/flexSheet/flexSheetTypes";
+import { DatabaseDocumentationInsert } from "@/actions/simulation";
+import { coerceValueForSave } from "./flexSheetSave";
 
-const bpThresholds = {
+const BP_THRESHOLDS = {
   diastolic: { low: 60, high: 120 },
   systolic: { low: 90, high: 180 }
 }
@@ -16,7 +18,7 @@ export function getAlertFlag(
     return false
   }
 
-  if (rowOriginal.id === 'bpInput') {
+  if (rowOriginal.id === 'bp') {
     const [systolicStr, diastolicStr] = value.split('/');
     const systolic = parseFloat(systolicStr)
     const diastolic = parseFloat(diastolicStr)
@@ -25,13 +27,15 @@ export function getAlertFlag(
     let sysAlert = false;
 
     if (!isNaN(systolic)) {
-      sysAlert = systolic < bpThresholds.systolic.low || systolic > bpThresholds.systolic.high;
-      diaAlert = diastolic < bpThresholds.diastolic.low || diastolic > bpThresholds.diastolic.high;
+      sysAlert = systolic < BP_THRESHOLDS.systolic.low || systolic > BP_THRESHOLDS.systolic.high;
+      diaAlert = diastolic < BP_THRESHOLDS.diastolic.low || diastolic > BP_THRESHOLDS.diastolic.high;
 
       return sysAlert || diaAlert
     }
   }
+
   const normalRange = rowOriginal?.normalRange;
+
   if (normalRange) {
     const numericValue = parseFloat(value);
     if (!isNaN(numericValue)) {
@@ -71,19 +75,24 @@ export const formatTimeFromOffset = (offsetMinutes: number, nowTimestamp: number
   return { time, date };
 };
 
-export function calculateColTotal(toolName: string, grouped: FlexSheetData[], timeOffsets: number[]) {
+export function calculateColTotal(
+  toolName: string,
+  toolId: string,
+  groupedToolRows: FlexSheetData[],
+  timeOffsets: number[]) {
   const totalRow: FlexSheetData = {
     id: `${toolName}TotalScore`,
-    field: `${toolName} Total Score`,
+    field: toolName,
     componentType: "totalScoreRow",
     rowType: "totalScoreRow",
+    toolId: toolId,
   };
 
   timeOffsets.forEach(timeCol => {
     let totalScore = 0;
     let hasEnteredValue = false;
 
-    grouped.forEach(toolRow => {
+    groupedToolRows.forEach(toolRow => {
       const val = toolRow[timeCol];
       if (val) {
         const score = parseInt(val.toString());
@@ -101,3 +110,32 @@ export function calculateColTotal(toolName: string, grouped: FlexSheetData[], ti
 export const getLastPageOffset = (totalItems: number, width: number) => {
   return Math.max(0, Math.ceil(totalItems / width) - 1) * width;
 };
+
+export function transformFlexSheetPayloadToSchema(
+  caseId: string,
+  payload: FlexSheetPayload,
+): DatabaseDocumentationInsert[] {
+  const { data, timePoints, timePointsInPreSim } = payload;
+
+  return timePoints.map((timePoint) => {
+    const baseRow: DatabaseDocumentationInsert = {
+      case_id: caseId,
+      is_in_presim: timePointsInPreSim.has(timePoint),
+      time_offset: timePoint,
+    };
+
+    for (const row of data) {
+      const isDataRow =
+        row.componentType !== "static" && row.componentType !== "totalScoreRow";
+
+      if (isDataRow && row.id) {
+        const cellValue = row[timePoint];
+        const dbColumn = row.id;
+        (baseRow as Record<string, unknown>)[dbColumn] =
+          coerceValueForSave(cellValue);
+      }
+    }
+
+    return baseRow;
+  });
+}

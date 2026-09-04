@@ -13,7 +13,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage --coverage.reporter=text --coverage.clean=false",
-    "test:coverage:html": "vitest run --coverage --coverage.reporter=html"
+    "test:coverage:html": "vitest run --coverage --coverage.reporter=html",
+    "type-check": "tsc"
   },
   "dependencies": {
     "@bwip-js/browser": "^4.10.1",
