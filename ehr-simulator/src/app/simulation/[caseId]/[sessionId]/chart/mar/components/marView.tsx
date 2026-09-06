@@ -12,7 +12,6 @@ import { ClipboardClock, Filter, PillBottle } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Toggle } from '@/components/ui/toggle';
-import { useSymbologyScanner } from '@use-symbology-scanner/react';
 import { MultiMedPopover } from './multiMedPopover';
 import { toast } from 'sonner';
 import WrongPatientAlert from './wrongPatientAlert';
@@ -23,10 +22,11 @@ import { DatabaseMedAdministration, StudentMedicationAdministration, submitMedic
 import { useSimSessionContext } from '@/context/SimSessionContext';
 import { useSimulationCase } from '@/context/SimulationCaseContext';
 import { Skeleton } from '@/components/ui/skeleton';
-import { appendTesterMedicationAdministrations, getTesterMedicationAdministrations } from '@/utils/testerLocalStore';
-import { isTesterModeClient } from '@/utils/testerMode';
 import { useStudentSimulationEditAccess } from '@/utils/studentSimulationEditAccess';
 import { useParams } from 'next/navigation';
+import { isVisibleForSimulationPhase } from '@/lib/simulationPhaseVisibility';
+import { useSimulationScanner } from '@/hooks/useSimulationScanner';
+import ScanWristbandAlert from './scanWristbandAlert';
 
 
 export interface NewAdministrationData {
@@ -53,9 +53,8 @@ export default function MarView({
   const router = useRouter();
   const { routeContext } = useSimulationCase();
   const resolvedCaseId = routeContext?.caseId ?? params.caseId;
-  const sessionKey = `${resolvedCaseId}:${params.sessionId}`;
   // context
-  const { userId, groupId, isPresim, userName, simStartTime, loading } = useSimSessionContext();
+  const { userId, groupId, isPresim, userName, simStartTime, loading, currentPhase } = useSimSessionContext();
   const { canEdit } = useStudentSimulationEditAccess();
   const { caseId } = useParams()
   const patientWristband = String(caseId)
@@ -72,34 +71,31 @@ export default function MarView({
   const [isMultiOrderPopoverOpen, setIsMultiOrderPopoverOpen] = useState<boolean>(false)
   const [isWrongPtScan, setIsWrongPtScan] = useState<boolean>(false)
   const [isMedAdminPanelOpen, setIsMedAdminPanelOpen] = useState(false);
-  const [testerAdministrations, setTesterAdministrations] = useState<DatabaseMedAdministration[]>([]);
-  // temp time management
+  const [missedPtScan, setMissedPtScan] = useState(false);
+  // time management
   const [timeColumnOffset, setTimeColumnOffset] = useState(0)
-  const [localTimelineAnchor] = useState(() => new Date());
+  const [fallbackTime] = useState(() => new Date());
   const anchorDate = useMemo(() => {
     if (!simStartTime) {
-      return localTimelineAnchor;
+      return fallbackTime;
     }
 
     const sessionAnchor = new Date(simStartTime);
-    const minutesSinceSessionStart = Math.abs(differenceInMinutes(new Date(), sessionAnchor));
-
-    // Some sessions remain "in progress" for days. Using that old started_at
-    // makes MAR times diverge from case baseline timelines.
-    // For stale sessions, use a stable local anchor for this page load.
-    if (minutesSinceSessionStart > 12 * 60) {
-      return localTimelineAnchor;
-    }
 
     return sessionAnchor;
-  }, [simStartTime, localTimelineAnchor]);
+  }, [simStartTime, fallbackTime]);
 
   const [elapsedMinutes, setElapsedMinutes] = useState(() => {
     return differenceInMinutes(new Date(), anchorDate);
   });
-  // Scanner debugging
-  // const [scannedSymbol, setScannedSymbol] = useState('')
+
   const handleScan = (symbol: string) => {
+    // Patient wristband scan is 39 chars, if scans are failing due to excessive length 
+    // check the scanner's prefix settings.
+    if (symbol.length > 39) {
+      toast.warning('Your scanner might be configured incorrectly. Please report this to your Sim instructor.')
+      return
+    }
 
     symbol = symbol.trim()
 
@@ -111,12 +107,17 @@ export default function MarView({
       } else {
         if (!isWrongPtScan) {
           setIsWrongPtScan(true);
-          return;
         }
       }
+      return;
     }
 
-    const associatedOrders = medicationOrders.filter(order => order.medicationId === symbol);
+    if (!isScanned) {
+      setMissedPtScan(true)
+      return
+    }
+
+    const associatedOrders = releasedMedicationOrders.filter(order => order.medicationId === symbol);
 
     if (associatedOrders.length === 0) {
       toast.info(`No orders found with medication ID: ${symbol}`)
@@ -127,18 +128,19 @@ export default function MarView({
       associatedOrders.some(associated => associated.id === selected.id)
     );
 
-
+    // Resolve between multiple orders sharing the same medication
     if (!existingSelectedOrder && associatedOrders.length > 1) {
-      console.warn("More than one order shares this med")
       setAssociatedOrders(associatedOrders)
       setIsMultiOrderPopoverOpen(true)
       return
     }
 
-    if (!isPopoverOpen) {
+    if (!isMedAdminPanelOpen) {
       setIsMedAdminPanelOpen(true)
     }
+
     const targetOrder = existingSelectedOrder || associatedOrders[0];
+    const linkedMedication = medsById[targetOrder.medicationId]
 
     if (existingSelectedOrder) {
       setNewAdministrations(prev => {
@@ -153,7 +155,7 @@ export default function MarView({
           ...prev,
           [targetOrder.id]: {
             ...currentAdmin,
-            administered_dose: (currentAdmin.administered_dose || 0) + (targetOrder.dose || 0)
+            administered_dose: (currentAdmin.administered_dose || 0) + (linkedMedication.strength || 0)
 
           }
         };
@@ -177,7 +179,7 @@ export default function MarView({
           status: "Given",
           administrator: userName,
           time_offset: 0, // updated on submission
-          administered_dose: targetOrder.dose,
+          administered_dose: linkedMedication.strength,
           infusion_rate: targetOrder.infusionRate,
           is_in_presim: false,
           notes: '',
@@ -191,6 +193,7 @@ export default function MarView({
       toast.error("Missing user or group session data.");
       return;
     }
+    const linkedMedication = medsById[order.medicationId]
     setSelectedOrders(prev => [...prev, order])
     setNewAdministrations(prev => ({
       ...prev,
@@ -205,7 +208,7 @@ export default function MarView({
         administrator: userName,
         time_offset: 0,
         infusion_rate: order.infusionRate,
-        administered_dose: order.dose,
+        administered_dose: linkedMedication.strength,
         is_in_presim: false,
         notes: '',
       }
@@ -236,17 +239,7 @@ export default function MarView({
     })
   }
 
-  useSymbologyScanner(handleScan,
-    {
-      scannerOptions: { prefix: '', suffix: '', maxDelay: 40 },
-      symbologies: ["Data Matrix"]
-    },
-  )
-
-  useEffect(() => {
-    if (!isTesterModeClient()) return;
-    setTesterAdministrations(getTesterMedicationAdministrations(sessionKey) as DatabaseMedAdministration[]);
-  }, [sessionKey]);
+  useSimulationScanner(handleScan)
 
   const handleTimeColChange = (offset: number | string) => {
     if (typeof offset === "number") {
@@ -280,6 +273,7 @@ export default function MarView({
       };
     });
   };
+
   const handleClearAllSelections = () => {
     setSelectedOrders([]);
     setNewAdministrations({});
@@ -307,15 +301,6 @@ export default function MarView({
       };
     });
 
-    if (isTesterModeClient()) {
-      appendTesterMedicationAdministrations(sessionKey, payload);
-      setTesterAdministrations(payload as unknown as DatabaseMedAdministration[]);
-      setIsMedAdminPanelOpen(false);
-      toast.success("Medications saved locally (tester mode).");
-      handleClearAllSelections();
-      return;
-    }
-
     const result = await submitMedicationAdministrations(payload, resolvedCaseId, params.sessionId)
 
     if (!result.success) {
@@ -325,25 +310,28 @@ export default function MarView({
     setIsMedAdminPanelOpen(false);
     toast.success(result.message ?? "Medications successfully documented");
     handleClearAllSelections()
-    // Pull fresh server data so newly documented administrations appear in the MAR table immediately.
     router.refresh();
   }
 
 
-  const mergedAdministrations = useMemo(
-    () => [...medicationAdministrations, ...testerAdministrations],
-    [medicationAdministrations, testerAdministrations],
-  );
-
   const groupedAdministrationsByOrder = useMemo(() => {
-    return mergedAdministrations.reduce((acc, admin) => {
+    const visibleAdministrations = medicationAdministrations.filter((admin) =>
+      isVisibleForSimulationPhase({
+        isPresim: Boolean(isPresim),
+        isVisibleInPresim: admin.is_in_presim,
+        releasePhase: admin.phase,
+        currentPhase,
+      }),
+    );
+
+    return visibleAdministrations.reduce((acc, admin) => {
       if (!acc[admin.medication_order_id || 'no_associated_order']) {
         acc[admin.medication_order_id || 'no_associated_order'] = [];
       }
       acc[admin.medication_order_id || 'no_associated_order'].push(admin)
       return acc
     }, {} as { [orderId: string]: DatabaseMedAdministration[] })
-  }, [mergedAdministrations]);
+  }, [medicationAdministrations, isPresim, currentPhase]);
 
   const medsById = useMemo(() => {
     return medications.reduce((acc, med) => {
@@ -352,12 +340,19 @@ export default function MarView({
     }, {} as { [id: string]: AllMedicationTypes });
   }, [medications]);
 
-  const filteredMedOrders = useMemo(() => {
-    return medicationOrders.filter((order) => {
-      if (isPresim && !order.visibleInPresim) {
-        return false
-      }
+  const releasedMedicationOrders = useMemo(() => {
+    return medicationOrders.filter((order) =>
+      isVisibleForSimulationPhase({
+        isPresim: Boolean(isPresim),
+        isVisibleInPresim: order.visibleInPresim,
+        releasePhase: order.phase,
+        currentPhase,
+      }),
+    );
+  }, [medicationOrders, isPresim, currentPhase]);
 
+  const filteredMedOrders = useMemo(() => {
+    return releasedMedicationOrders.filter((order) => {
       if (!orderFilter && !isDue) {
         return true
       }
@@ -380,7 +375,7 @@ export default function MarView({
           return true;
       }
     });
-  }, [orderFilter, isDue, medicationOrders, groupedAdministrationsByOrder, isPresim]);
+  }, [orderFilter, isDue, releasedMedicationOrders, groupedAdministrationsByOrder]);
 
 
   useEffect(() => {
@@ -425,6 +420,7 @@ export default function MarView({
         scanStatus={isWrongPtScan}
         onWrongScanChange={setIsWrongPtScan}
       />
+      <ScanWristbandAlert isOpen={missedPtScan} setIsOpen={setMissedPtScan} />
       <div className="mr-6 flex shrink-0 items-start justify-between gap-2 py-3">
         <div className="space-x-4">
           <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
@@ -475,10 +471,10 @@ export default function MarView({
             Due
           </Toggle>
 
+
           <PatientStatusBadge isScanned={isScanned} />
         </div>
-
-        <div className='flex gap-4 lg:gap-10 xl:gap-30 2xl:gap-45'>
+        <div className='flex gap-4 xl:gap-20 2xl:gap-45'>
           <ColumnShiftControl
             columns={displayColumns}
             onColumnShift={handleTimeColChange}
@@ -514,7 +510,6 @@ export default function MarView({
           </div>
         )}
         {filteredMedOrders.map((order) => {
-          // const isSelected = selectedOrders.includes(order);
           const associatedMedication = medsById[order.medicationId]
           const orderSpecifcAdministrations = groupedAdministrationsByOrder[order.id] || [];
 
@@ -534,6 +529,7 @@ export default function MarView({
               isHighlightableColumn={timeColumnOffset === 0}
               elapsedSimMinutes={elapsedMinutes}
               isPresim={isPresim ?? false}
+              currentPhase={currentPhase}
             />
           )
         })}

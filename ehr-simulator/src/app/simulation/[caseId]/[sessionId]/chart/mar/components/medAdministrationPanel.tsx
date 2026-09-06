@@ -74,6 +74,8 @@ const MedAdministrationPanel = ({
     }
     return order.dose < administeredDose
   })
+  const medReferenceTool = 'https://online-lexi-com.ezproxy.gvsu.edu/lco/action/home';
+
 
   const mustConfirmPatient = isPresim === false;
   const canSign =
@@ -174,15 +176,21 @@ const MedAdministrationPanel = ({
         </div>
 
         <DialogFooter className=" w-full px-6 py-4 bg-gray-100 border-t border-gray-200  flex-shrink-0 sm:justify-between gap-4 shadow-[0_-2px_15px_-6px_rgba(0,0,0,0.1)]">
-          <a
-            href="https://online-lexi-com.ezproxy.gvsu.edu/lco/action/ivcompatibility/trissels"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 text-xs font-medium bg-white text-gray-700 hover:text-blue-600 transition-colors hover:bg-bue-50 px-3 py-2 rounded-md border border-gray-300 hover:border-blue-600"
-          >
-            <ExternalLink size={14} />
-            Check IV Compatibility (Trissel&apos;s)
-          </a>
+          {medReferenceTool ? (
+            <a
+              href={medReferenceTool}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2 text-sm bg-white text-gray-700 transition-colors hover:bg-gray-100 px-3 py-2 rounded-md border border-gray-200 shadow-xs"
+            >
+              <ExternalLink size={14} />
+              Lexidrug™
+            </a>
+          ) : (
+            <p></p>
+          )
+
+          }
 
           <div className="flex gap-3 justify-between">
             <DialogClose asChild>

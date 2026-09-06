@@ -2,7 +2,6 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { emailIsDevAdminAllowlist } from "@/lib/devAdminEmails";
 import { createServerSupabase } from "@/utils/supabase/server";
-import { isTesterModeServer } from "@/utils/testerModeServer";
 
 export default async function AdminLayout({
   children,
@@ -38,8 +37,7 @@ export default async function AdminLayout({
     const role = profile?.role as string | undefined;
     const devBypass = emailIsDevAdminAllowlist(user.email ?? undefined);
 
-    const testerMode = await isTesterModeServer();
-    if ((profileError || !profile || role !== "admin") && !devBypass && !testerMode) {
+    if ((profileError || !profile || role !== "admin") && !devBypass) {
       return (
         <main className="p-8 min-h-screen flex items-center justify-center">
           <div className="max-w-xl w-full text-center bg-white rounded-lg shadow p-6">

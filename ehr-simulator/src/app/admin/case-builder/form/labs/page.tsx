@@ -2,7 +2,7 @@
 
 import { type LabTableData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData"
 import { useReactTable, getCoreRowModel, createColumnHelper } from "@tanstack/react-table";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { TooltipContent } from "@radix-ui/react-tooltip";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
@@ -18,6 +18,7 @@ import { TableFormHeader } from "../../components/tableFormHeader";
 import { FormTable } from "../../components/FormTable";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/saveCase";
+import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 
 const columnHelper = createColumnHelper<LabTableData>();
 
@@ -35,7 +36,7 @@ function ensureNumberSet(input: unknown): Set<number> {
 }
 
 function LabForm() {
-  const { onDataChange, labData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
+  const { onDataChange, labData, caseId } = useFormContext()
   const [labTableData, setLabTableData] = useState<LabTableData[]>(labData.data);
   const {
     timePoints,
@@ -47,21 +48,34 @@ function LabForm() {
 
   const router = useRouter()
 
-  useEffect(() => {
-    registerCaseBuilderLocalOverlay(() => ({
-      labs: {
-        data: labTableData,
-        timePoints,
-        timePointsInPreSim: timePointsInPresim,
-      },
-    }));
-    return () => registerCaseBuilderLocalOverlay(null);
-  }, [
-    labTableData,
-    timePoints,
-    timePointsInPresim,
-    registerCaseBuilderLocalOverlay,
-  ]);
+
+  // // Get all hideable options for Combobox selector
+  // const hideableOptions = useMemo(() => {
+  //   return labTableData
+  //     .filter(row => row.hideable === true)
+  //     .filter(row => !visibleItems.has(row.field))
+  //     .map(row => ({
+  //       value: row.field,
+  //       label: row.field
+  //     }));
+  // }, [labTableData, visibleItems]);
+
+  // // Filter data to only show visible rows
+  // const filteredLabTableData = useMemo(() => {
+  //   return labTableData.filter(row => {
+  //     // Always show non-hideable rows
+  //     if (!row.hideable) return true;
+  //     return visibleItems.has(row.field);
+  //   });
+  // }, [labTableData, visibleItems]);
+
+  // // Handler to add an item to visible list
+  // const handleAddVisibleItem = (fieldName: string) => {
+  //   if (fieldName) {
+  //     setVisibleItems(prev => new Set([...prev, fieldName]));
+  //     setComboboxValue("");
+  //   }
+  // };
 
   const goBack = () => {
     onDataChange('labs', {
@@ -69,17 +83,17 @@ function LabForm() {
       timePoints: timePoints,
       timePointsInPreSim: timePointsInPresim,
     });
-    router.push("/admin/case-builder/form/orders");
+    router.push(caseBuilderPath("/admin/case-builder/form/orders", caseId));
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     onDataChange('labs', {
       data: labTableData,
       timePoints: timePoints,
       timePointsInPreSim: timePointsInPresim,
     });
 
-    saveCaseData({
+    await saveCaseData({
       payload: {
         data: labTableData,
         timePoints,
@@ -89,7 +103,7 @@ function LabForm() {
       caseId: caseId
     })
 
-    router.push('/admin/case-builder/form/charting')
+    router.push(caseBuilderPath('/admin/case-builder/form/charting', caseId))
   }
   const columns = useMemo(
     () => [
@@ -281,4 +295,3 @@ function LabForm() {
 }
 
 export default LabForm
-

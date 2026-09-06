@@ -7,6 +7,8 @@ import { Info } from "lucide-react"
 import { TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import StyledTitle from "./styledTitle"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
+import { useSimSessionContext } from "@/context/SimSessionContext"
+import { isVisibleForSimulationPhase } from "@/lib/simulationPhaseVisibility"
 
 type DbOrder = {
   id?: string
@@ -14,6 +16,8 @@ type DbOrder = {
   title?: string | null
   details?: string | null
   is_important?: boolean | null
+  is_in_presim?: boolean | null
+  phase?: number | null
 }
 
 /** Match categories the same way as `chart/orders/page.tsx` */
@@ -42,8 +46,17 @@ const SECTIONS: { key: "nursing" | "respiratory" | "diet" | "laboratory" | "cons
 
 const RecurringOrders = () => {
   const { caseBundle } = useSimulationCase()
+  const { isPresim, currentPhase } = useSimSessionContext()
   const orders = (caseBundle?.orders ?? []) as DbOrder[]
-  const important = orders.filter((o) => o.is_important)
+  const important = orders.filter((order) =>
+    order.is_important &&
+    isVisibleForSimulationPhase({
+      isPresim: Boolean(isPresim),
+      isVisibleInPresim: order.is_in_presim,
+      releasePhase: order.phase,
+      currentPhase,
+    }),
+  )
 
   return (
     <Card className="relative col-span-1 pt-2 overflow-hidden h-fit gap-3">

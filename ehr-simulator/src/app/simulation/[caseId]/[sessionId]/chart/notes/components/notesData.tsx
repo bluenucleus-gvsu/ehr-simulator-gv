@@ -5,4 +5,5 @@ export interface ClinicalNote {
   timeOffset: number;
   excludedFromPresim: boolean;
   content: string;
+  phase?: number;
 }

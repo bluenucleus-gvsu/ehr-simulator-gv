@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
   X,
   Plus,
@@ -34,6 +34,7 @@ import { FormShell } from "../../components/formShell"
 import { Checkbox } from "@/components/ui/checkbox"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
 import { CaseSection } from "@/lib/saveCase"
+import { caseBuilderPath } from "@/lib/caseBuilder/routes"
 
 const categories: OrderType["category"][] = ["Nursing", "Respiratory", "Laboratory", "Consult", "Diet", "Medication"]
 
@@ -63,7 +64,7 @@ const getCategoryColor = (cat: string | undefined) => {
 
 export default function OrdersForm() {
   const router = useRouter();
-  const { onDataChange, orderData, caseId, registerCaseBuilderLocalOverlay } = useFormContext();
+  const { onDataChange, orderData, demographicData, caseId } = useFormContext();
 
   const [orders, setOrders] = useState<OrderType[]>(orderData);
 
@@ -74,19 +75,16 @@ export default function OrdersForm() {
   const [provider, setProvider] = useState("");
   const [important, setImportant] = useState(false)
   const [excludeFromPresim, setExcludeFromPresim] = useState<boolean>(false)
+  const [phase, setPhase] = useState(1)
 
-  const [canAddOrder, setCanAddOrder] = useState<boolean>(false);
-
-
-  useEffect(() => {
-    setCanAddOrder([category, title, provider].every(s => s.trim() !== ""));
-  }, [category, title, details, status, provider]);
+  const canAddOrder = [category, title, provider].every((value) => value.trim() !== "");
 
   const clearForm = () => {
     setTitle("")
     setDetails("")
     setStatus("Active")
     setImportant(false)
+    setPhase(1)
   }
 
   const createOrder = () => {
@@ -97,7 +95,8 @@ export default function OrdersForm() {
       status: status as OrderType["status"],
       orderingProvider: provider,
       important,
-      visibleInPresim: !excludeFromPresim
+      visibleInPresim: !excludeFromPresim,
+      phase,
     }])
     clearForm();
   }
@@ -106,14 +105,9 @@ export default function OrdersForm() {
     setOrders(orders.filter((_, i) => i !== index))
   }
 
-  useEffect(() => {
-    registerCaseBuilderLocalOverlay(() => ({ orders }));
-    return () => registerCaseBuilderLocalOverlay(null);
-  }, [orders, registerCaseBuilderLocalOverlay]);
-
   const goBack = () => {
     onDataChange('orders', orders)
-    router.push("/admin/case-builder/form/notes");
+    router.push(caseBuilderPath("/admin/case-builder/form/notes", caseId));
   }
 
   const handleSubmit = async () => {
@@ -125,7 +119,7 @@ export default function OrdersForm() {
       caseId: caseId
     })
 
-    router.push('/admin/case-builder/form/labs')
+    router.push(caseBuilderPath('/admin/case-builder/form/labs', caseId))
   }
 
   const handlePresimCheckbox = (check: boolean) => {
@@ -227,6 +221,22 @@ export default function OrdersForm() {
                         <SelectItem value="Held">Held</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="order-phase">Release phase</Label>
+                    <Input
+                      id="order-phase"
+                      type="number"
+                      min={1}
+                      max={demographicData.phaseCount}
+                      value={phase}
+                      onChange={(event) => setPhase(Math.min(
+                        demographicData.phaseCount,
+                        Math.max(1, Number(event.target.value) || 1),
+                      ))}
+                      className="bg-white"
+                    />
                   </div>
 
                   <div className="border rounded-lg" >

@@ -15,8 +15,7 @@ const NotePage = async ({ params }: PageProps) => {
 
   return (
     <NoteView
-      isError={false}
-      isLoading={false}
+      isError={!documentData.success}
       clinicalDocuments={documentData.data || []}
       caseId={caseId}
       sessionId={sessionId}

@@ -3,7 +3,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "../../../database.types";
 import { createServerSupabase } from "@/utils/supabase/server";
-import { isTesterModeServer } from "@/utils/testerModeServer";
 
 const PRESIM_WRITE_MESSAGE =
   "Documentation is view-only in pre-simulation. Enter the active simulation from your profile to make changes.";
@@ -19,15 +18,11 @@ function sessionHasStarted(status: string | null, startedAt: string | null): boo
 
 /**
  * Blocks student writes while the case session is still in pre-sim (not started).
- * Faculty/admin and tester mode are not restricted here.
+ * Faculty/admin are not restricted here.
  */
 export async function assertStudentActiveSessionWrite(
   caseSessionId: string,
 ): Promise<{ allowed: true } | { allowed: false; message: string }> {
-  if (await isTesterModeServer()) {
-    return { allowed: true };
-  }
-
   const authSupabase = await createServerSupabase();
   const {
     data: { user },

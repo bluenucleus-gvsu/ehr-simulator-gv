@@ -1,7 +1,7 @@
 # Run the EHR Simulator (macOS and Windows)
 **Project Mission**: Develop a software to aid in medical simulation, mimicking medical standards, such as EPIC.
 
-**Technical Description**: This app is a **Next.js 15** frontend in the `ehr-simulator` folder. It talks to **Supabase** (Postgres, Auth, and server actions that use the service role key). You can point it at a **hosted Supabase project** or run **Supabase locally** with Docker all found at [Supabase Setup](#5-supabase-choose-one-path).
+**Technical Description**: This app is a **Next.js 16** frontend in the `ehr-simulator` folder. It talks to **Supabase** (Postgres, Auth, and server actions that use the service role key). You can point it at a **hosted Supabase project** or run **Supabase locally** with Docker all found at [Supabase Setup](#5-supabase-choose-one-path).
 
 ---
 ## Table of Contents
@@ -66,21 +66,21 @@ npm install
     npx supabase start
     ```
     
-3. After it starts, the CLI prints **API URL**, **anon key**, and **service_role key**. Put them in `.env.local` as in Path A. For a default local stack, the URL is often `http://127.0.0.1:54321` (see `supabase/config.toml` → `[api]` → `port`).
+3. After it starts, the CLI prints **Project URL**, **Publishable**(sb_publishable...), **Anon Key**(_Secrect Key_), and **Service Role Key**(sb_secret...). Put them in `.env.local` as in Path A. For a default local stack, the URL is often `http://127.0.0.1:54321` (see `supabase/config.toml` → `[api]` → `port`).
     
-4. Migrations under `supabase/migrations/` are applied when the local DB starts/ resets according to your Supabase CLI version and project config. If you need a clean slate:
+4. **Google OAuth on localhost** still requires configuring the provider in the **local** Supabase instance (or you rely on seeded users / bypass flows your team documents). If it is not stopped it will give a callback error.
+    
+    Stop local Supabase:
+    ```bash
+    npx supabase stop
+    ```
+Note: Migrations under `supabase/migrations/` are applied when the local DB starts/ resets according to your Supabase CLI version and project config. If you need a clean slate:
     
     ```bash
     # This reapplies migrations and seed data per `supabase/config.toml`.
     npx supabase db reset
     ```
-    
-5. **Google OAuth on localhost** still requires configuring the provider in the **local** Supabase instance (or you rely on seeded users / bypass flows your team documents).
-    
-To stop local Supabase:
-```bash
-npx supabase stop
-```
+
 ---
 ## 6. Google Cloud OAuth setup (required for Google sign-in)
 Both hosted and local Supabase paths require a Google OAuth client.
@@ -88,28 +88,36 @@ Both hosted and local Supabase paths require a Google OAuth client.
     
 2. Open the side navigation and select **APIs & Services → Credentials**.
     
-3. Click **+ Create Credentials** and choose **OAuth client ID**. Select **Web application** as the application type, then follow the prompts (you will need to configure the OAuth consent screen first if you haven't already).
+3. Click **+ Create Credentials** and choose **OAuth client ID**. Select **Web application** as the application type (you will need to configure the OAuth consent screen first if you haven't already).
+
+4. Scroll to **Authorized redirect URIs** and add a new URI: 
+    ```
+    http://127.0.0.1:54321/auth/v1/callback
+    ```
     
-4. Once created, copy your **Client ID** and **Client Secret**.
+5. Once created, copy your **Client ID** and **Client Secret**.
 > **Note:** For hosted Supabase ([Path A](#path-a--hosted-supabase-typical-for-shared-devstaging)) skip steps 5 and 6, then enter the Client ID and Client Secret directly in the Supabase dashboard under **Authentication → Providers → Google** instead of `config.toml`.
     
-5. Add the **Client Secret** to `.env.local` (local development only):
+6. Add the **Client Secret** to `.env.local` (local development only):
     
     ```
     SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET=your-client-secret-here
     ```
     
-6. Add the **Client ID** to `supabase/config.toml` under the `[auth.external.google]` section:
+7. Add the **Client ID** to `supabase/config.toml` under the `[auth.external.google]` section:
     
     ```toml
     [auth.external.google]
     enabled = true
     client_id = "your-client-id-here"
     secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET)"
-    ```
+    ```  
 ---
 ## 7. Run the development server
 ```bash
+# Run to start Supabase again
+npx supabase start
+
 # Run this command (displayed on: localhost:3000)
 npm run dev
 ```

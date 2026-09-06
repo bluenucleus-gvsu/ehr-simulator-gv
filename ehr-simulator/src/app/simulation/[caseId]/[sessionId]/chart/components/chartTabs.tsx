@@ -2,7 +2,7 @@
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSimSessionContext } from "@/context/SimSessionContext";
-import { Clipboard, NotebookText, Pill, TestTubeDiagonal } from "lucide-react";
+import { Clipboard, ImageIcon, NotebookText, Pill, TestTubeDiagonal } from "lucide-react";
 // import MultiPtSelector from "./multiPtSelector";
 import { useParams, usePathname } from "next/navigation"
 import { useRouter } from "next/navigation";
@@ -70,6 +70,12 @@ export default function ChartTabs() {
       icon: <NotebookText className="size-4" />,
       path: `/simulation/${caseId}/${sessionId}/chart/notes`,
 
+    },
+    {
+      name: "Media",
+      value: "media",
+      icon: <ImageIcon className="size-4"/>,
+      path: `/simulation/${caseId}/${sessionId}/chart/media`,
     },
     {
       name: "FlexSheets",

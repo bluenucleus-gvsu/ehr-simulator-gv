@@ -47,6 +47,7 @@
 }
 
 :root {
+  --font-roboto-mono: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --radius: 0.625rem;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.147 0.004 49.25);

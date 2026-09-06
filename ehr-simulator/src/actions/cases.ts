@@ -3,7 +3,7 @@
 import { createClient, PostgrestError } from "@supabase/supabase-js";
 import { Database } from "../../database.types";
 import { revalidatePath } from "next/cache";
-import { runWriteForMode } from "@/utils/testerWriteGateway";
+import { caseMeetsMinimumRequirements } from "@/lib/caseMinimumRequirements";
 
 export type SectionAssignment = Database['public']['Tables']['section_assignments']['Row'];
 export type SectionAssignmentInsert = Database['public']['Tables']['section_assignments']['Insert'];
@@ -17,7 +17,7 @@ export type ActionResponse<T = null> = {
   error?: PostgrestError;
 };
 
-export async function getAllSimCases() {
+export async function getAllSimCases(options?: { usableOnly?: boolean }) {
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -39,7 +39,7 @@ export async function getAllSimCases() {
 
   return {
     success: true,
-    data,
+    data: options?.usableOnly ? (data ?? []).filter(caseMeetsMinimumRequirements) : data,
     message: 'Successfully retrieved Sim Cases'
   };
 }
@@ -66,7 +66,7 @@ export async function getSimCaseById(id: string) {
   }
   return {
     success: true,
-    data,
+    data: data?.filter(caseMeetsMinimumRequirements) ?? [],
     message: 'Successfully retrieved Sim Cases'
   };
 }
@@ -95,7 +95,7 @@ export async function getCaseByCourseId() {
 
   return {
     success: true,
-    data: data,
+    data: data?.filter(caseMeetsMinimumRequirements) ?? [],
     message: 'Successfully retrieved Sim Cases paired with this course',
   };
 }
@@ -185,78 +185,82 @@ export async function getSectionCaseAssignments(courseId: string) {
 }
 
 export async function createSectionCaseAssignment(payload: SectionAssignmentInsert): Promise<ActionResponse<SectionAssignment>> {
-  return runWriteForMode(
-    async () => {
-      const supabase = createClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-
-      const { data, error } = await supabase
-        .from('section_assignments')
-        .upsert(payload)
-        .select()
-        .single()
-
-      if (error) {
-        console.error("Upsert Error:", error);
-        return {
-          success: false,
-          message: "Failed to save the assignment. Please try again.",
-          error
-        };
-      }
-
-      revalidatePath('/courses');
-
-      return {
-        success: true,
-        message: "Assignment saved successfully.",
-        data
-      };
-    },
-    async () => ({
-      success: true,
-      message: "Assignment saved locally for tester mode.",
-      data: { ...(payload as SectionAssignment), id: payload.id ?? crypto.randomUUID() },
-    }),
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+
+  if (!payload.case_id) {
+    return {
+      success: false,
+      message: "A case is required for this assignment.",
+    };
+  }
+
+  const { data: simCase, error: caseError } = await supabase
+    .from("cases")
+    .select("first_name, last_name, description, date_of_birth")
+    .eq("id", payload.case_id)
+    .maybeSingle();
+
+  if (caseError || !simCase || !caseMeetsMinimumRequirements(simCase)) {
+    return {
+      success: false,
+      message: "This case does not meet the minimum requirements for use.",
+      error: caseError ?? undefined,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from('section_assignments')
+    .upsert(payload)
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Upsert Error:", error);
+    return {
+      success: false,
+      message: "Failed to save the assignment. Please try again.",
+      error
+    };
+  }
+
+  revalidatePath('/courses');
+
+  return {
+    success: true,
+    message: "Assignment saved successfully.",
+    data
+  };
 }
 
 export async function deleteSectionCaseAssignment(id: string): Promise<ActionResponse> {
-  return runWriteForMode(
-    async () => {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-
-      const { error } = await supabase
-        .from('section_assignments')
-        .delete()
-        .eq('id', id)
-
-      if (error) {
-        console.error("Delete Error:", error);
-        return {
-          success: false,
-          message: "Failed to delete assignment. Please try again.",
-          error
-        };
-      }
-
-      revalidatePath('/courses');
-
-      return {
-        success: true,
-        message: "Assignment deleted successfully."
-      };
-    },
-    async () => ({
-      success: true,
-      message: "Assignment deleted locally for tester mode.",
-    }),
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+
+  const { error } = await supabase
+    .from('section_assignments')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error("Delete Error:", error);
+    return {
+      success: false,
+      message: "Failed to delete assignment. Please try again.",
+      error
+    };
+  }
+
+  revalidatePath('/courses');
+
+  return {
+    success: true,
+    message: "Assignment deleted successfully."
+  };
 }
 
 export async function getCourseCaseAssignments() {
@@ -272,6 +276,9 @@ export async function getCourseCaseAssignments() {
       name,
       description, 
       admitting_diagnosis,
+      first_name,
+      last_name,
+      date_of_birth,
       course_cases (
         id,
         course_id,
@@ -292,7 +299,7 @@ export async function getCourseCaseAssignments() {
     };
   }
 
-  const assignments = data?.flatMap((caseItem) => {
+  const assignments = data?.filter(caseMeetsMinimumRequirements).flatMap((caseItem) => {
     // Handle unassigned cases (Left Join equivalent)
     if (!caseItem.course_cases || caseItem.course_cases.length === 0) {
       return [{
@@ -334,38 +341,29 @@ export async function getCourseCaseAssignments() {
 }
 
 export async function updateCaseSession(session: CaseSessionUpsert) {
-  return runWriteForMode(
-    async () => {
-      const supabase = createClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
-
-      const { error } = await supabase
-        .from('case_sessions')
-        .upsert(session);
-
-      if (error) {
-        return {
-          success: false,
-          message: 'Failed to update session data.',
-          error,
-          data: null
-        };
-      }
-
-      return {
-        success: true,
-        message: 'Session data updated.',
-        data: session,
-      };
-    },
-    async () => ({
-      success: true,
-      message: "Session update saved locally for tester mode.",
-      data: session,
-    }),
+  const supabase = createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+
+  const { error } = await supabase
+    .from('case_sessions')
+    .upsert(session);
+
+  if (error) {
+    return {
+      success: false,
+      message: 'Failed to update session data.',
+      error,
+      data: null
+    };
+  }
+
+  return {
+    success: true,
+    message: 'Session data updated.',
+    data: session,
+  };
 }
 
 // extracts type of data from ActionResponse for use in frontend
@@ -375,5 +373,3 @@ export type ExtractData<T extends (...args: any) => Promise<ActionResponse<any>>
 
 export type SectionSimulationsData = ExtractData<typeof getSectionCaseAssignments>;
 export type CasesData = ExtractData<typeof getCaseByCourseId>;
-export type CaseCourseAssignments = ExtractData<typeof getCourseCaseAssignments>;
-export type CaseCourseAssignment = CaseCourseAssignments[number]

@@ -45,7 +45,7 @@ export interface ChartData {
   age: NumericValueItem;
   /** Formatted date of birth from `cases.date_of_birth` */
   dob: StringValueItem;
-  /** Internal case UUID — there is no separate MRN column in the DB; label shown as “Case ID”. */
+  /** Medical record number from `cases.mrn` */
   mrn: StringValueItem;
   code: StringValueItem;
   /** Admission date/time from inpatient day offset + `time_of_admission` */
@@ -164,8 +164,6 @@ export function buildChartDataFromCaseRow(
   );
   const admissionDisplay = format(admissionWithTime, "P p");
 
-  const caseIdStr = String(caseRow?.id ?? "").trim();
-
   const supportPersons = String(caseRow?.emergency_contact_name ?? "").trim()
     ? [{
       name: String(caseRow?.emergency_contact_name ?? "").trim(),
@@ -180,9 +178,9 @@ export function buildChartDataFromCaseRow(
     age: { id: "age", label: "Age", value: ageYears },
     dob: { id: "dob", label: "DOB", value: dobDisplay },
     mrn: {
-      id: "caseId",
-      label: "Case ID",
-      value: caseIdStr || "—",
+      id: "mrn",
+      label: "MRN",
+      value: caseRow?.mrn != null ? String(caseRow.mrn) : "—",
     },
     code: { id: "code", label: "Code Status", value: String(caseRow?.code_status ?? "").trim() || "N/A" },
     admissionDate: { id: "admission", label: "Admission Date", value: admissionDisplay },
@@ -224,7 +222,7 @@ export const jamesAllen: ChartData = {
   gender: { id: 'gender', label: "Gender", value: "Male" },
   age: { id: "age", label: "Age", value: 72 },
   dob: { id: "dob", label: "DOB", value: "04/04/1954" },
-  mrn: { id: "caseId", label: "Case ID", value: "00000000-0000-0000-0000-000000056743" },
+  mrn: { id: "mrn", label: "MRN", value: "10042" },
   code: { id: "code", label: "Code", value: "Full" },
   admissionDate: { id: "admission", label: "Admission Date", value: "04/02/2026, 7:15 AM" },
   pronouns: { id: "pronouns", label: "Pronouns", value: "He/Him" },

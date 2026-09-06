@@ -10,3 +10,4 @@ INNER JOIN
     pg_catalog.pg_namespace nsp ON nsp.oid = con.connamespace
 WHERE 
     rel.relname = 'lab_results';
+

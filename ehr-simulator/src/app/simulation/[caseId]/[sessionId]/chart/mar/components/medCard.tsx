@@ -4,6 +4,7 @@ import type { AllMedicationTypes, MedicationOrder } from "./marData.jsx"
 // import { Checkbox } from "@/components/ui/checkbox";
 import { findLastAdminTime, renderMedCardDetails, renderMedTitleRow } from "./marHelpers";
 import { DatabaseMedAdministration } from "@/actions/simulation";
+import { isVisibleForSimulationPhase } from "@/lib/simulationPhaseVisibility";
 
 interface MedCardProps {
   medication: AllMedicationTypes;
@@ -15,6 +16,7 @@ interface MedCardProps {
   /** Minutes since `sessionStart` for the live simulation clock (wall-clock “now” in sim). */
   elapsedSimMinutes: number;
   isPresim: boolean;
+  currentPhase: number;
 }
 
 const MedCard = ({
@@ -26,13 +28,19 @@ const MedCard = ({
   isHighlightableColumn,
   elapsedSimMinutes,
   isPresim,
+  currentPhase,
 }: MedCardProps) => {
 
   const simNow = addMinutes(sessionStart, elapsedSimMinutes);
 
 
   const visibleAdministrations = administrations.filter(currentAdmin => {
-    if (isPresim && currentAdmin.is_in_presim === false) {
+    if (!isVisibleForSimulationPhase({
+      isPresim,
+      isVisibleInPresim: currentAdmin.is_in_presim,
+      releasePhase: currentAdmin.phase,
+      currentPhase,
+    })) {
       return false;
     }
     if (currentAdmin.status !== "Due") return true;

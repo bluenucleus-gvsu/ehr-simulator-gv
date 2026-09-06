@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Droplets, GlassWater } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +23,7 @@ import { IntakeOutputFormData } from "@/utils/form";
 import { FormShell } from "../../components/formShell";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/saveCase";
+import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 
 const chartConfig = {
   intake: { label: "Intake", color: "hsl(var(--chart-6))" },
@@ -76,7 +77,7 @@ function getBlocks() {
 }
 
 export default function IntakeOutputForm() {
-  const { onDataChange, ioData, caseId, registerCaseBuilderLocalOverlay } = useFormContext();
+  const { onDataChange, ioData, caseId } = useFormContext();
 
   const blocks = useMemo(() => getBlocks(), []);
 
@@ -118,11 +119,6 @@ export default function IntakeOutputForm() {
 
   const router = useRouter();
 
-  useEffect(() => {
-    registerCaseBuilderLocalOverlay(() => ({ intakeOutput }));
-    return () => registerCaseBuilderLocalOverlay(null);
-  }, [intakeOutput, registerCaseBuilderLocalOverlay]);
-
   const persistIo = async () => {
     onDataChange("intakeOutput", intakeOutput);
     if (caseId) {
@@ -136,12 +132,12 @@ export default function IntakeOutputForm() {
 
   const goBack = async () => {
     await persistIo();
-    router.push("/admin/case-builder/form/charting");
+    router.push(caseBuilderPath("/admin/case-builder/form/charting", caseId));
   };
 
   const handleSubmit = async () => {
     await persistIo();
-    router.push("/admin/case-builder/form/medications");
+    router.push(caseBuilderPath("/admin/case-builder/form/medications", caseId));
   };
 
   return (
