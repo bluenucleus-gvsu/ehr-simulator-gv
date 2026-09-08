@@ -33,6 +33,7 @@ import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 
 import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 import { toast } from "sonner";
+import { hasText } from "@/lib/caseMinimumRequirements";
 
 export default function DemographicsForm() {
   const { onDataChange, demographicData: initialData, setCaseId, caseId } = useFormContext();
@@ -57,18 +58,18 @@ export default function DemographicsForm() {
   const validateDemographics = () => {
     const newMissingFields = new Set<string>();
 
-    if (!demographicsData.summary) newMissingFields.add('summary');
-    if (!demographicsData.firstName) newMissingFields.add('firstName');
-    if (!demographicsData.lastName) newMissingFields.add('lastName');
-    if (!demographicsData.age) newMissingFields.add('age');
-    if (!demographicsData.codeStatus) newMissingFields.add('codeStatus');
-    if (!demographicsData.heightInches) newMissingFields.add('heightInches');
-    if (!demographicsData.heightFeet) newMissingFields.add('heightFeet');
-    if (!demographicsData.dosingWeight) newMissingFields.add('dosingWeight');
-    if (!demographicsData.precautions) newMissingFields.add('precautions');
-    if (!demographicsData.admittingDiagnosis) newMissingFields.add('admittingDiagnosis');
-    if (!demographicsData.attendingProviderName) newMissingFields.add('attendingProviderName');
-    if (!demographicsData.attendingProviderTitle) newMissingFields.add('attendingProviderTitle');
+    if (!hasText(demographicsData.summary)) newMissingFields.add('summary');
+    if (!hasText(demographicsData.firstName)) newMissingFields.add('firstName');
+    if (!hasText(demographicsData.lastName)) newMissingFields.add('lastName');
+    if (!hasText(demographicsData.age)) newMissingFields.add('age');
+    if (!hasText(demographicsData.codeStatus)) newMissingFields.add('codeStatus');
+    if (!hasText(demographicsData.heightInches)) newMissingFields.add('heightInches');
+    if (!hasText(demographicsData.heightFeet)) newMissingFields.add('heightFeet');
+    if (!hasText(demographicsData.dosingWeight)) newMissingFields.add('dosingWeight');
+    if (!hasText(demographicsData.precautions)) newMissingFields.add('precautions');
+    if (!hasText(demographicsData.admittingDiagnosis)) newMissingFields.add('admittingDiagnosis');
+    if (!hasText(demographicsData.attendingProviderName)) newMissingFields.add('attendingProviderName');
+    if (!hasText(demographicsData.attendingProviderTitle)) newMissingFields.add('attendingProviderTitle');
 
     setMissingFields(newMissingFields);
 

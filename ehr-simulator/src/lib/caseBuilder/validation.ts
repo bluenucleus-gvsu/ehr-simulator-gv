@@ -67,9 +67,6 @@ export function assertValidSaveRequest(
       requiredString(payload.summary, "Case summary");
       const codeStatus = requiredString(payload.codeStatus, "Code status");
       if (!["Full", "DNR", "Partial"].includes(codeStatus)) fail("Code status is not recognized.");
-      requiredString(payload.DOBMonth, "Birth month");
-      const day = finiteNumber(payload.DOBDay, "Birth day");
-      if (!Number.isInteger(day) || day < 1 || day > 31) fail("Birth day must be from 1 to 31.");
       const age = finiteNumber(payload.age, "Age");
       if (!Number.isInteger(age) || age < 0 || age > 120) fail("Age must be from 0 to 120.");
       assertPhase(payload.phaseCount ?? 1, "Phase count");

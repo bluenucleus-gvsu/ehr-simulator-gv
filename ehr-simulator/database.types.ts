@@ -177,7 +177,7 @@ export type Database = {
       cases: {
         Row: {
           admitting_diagnosis: string | null
-          age: string | null
+          age: number | null
           allergies: string[] | null
           attending_provider: string | null
           code_status: Database["public"]["Enums"]["code_status_type"]
@@ -211,7 +211,7 @@ export type Database = {
         }
         Insert: {
           admitting_diagnosis?: string | null
-          age?: string | null
+          age?: number | null
           allergies?: string[] | null
           attending_provider?: string | null
           code_status: Database["public"]["Enums"]["code_status_type"]
@@ -245,7 +245,7 @@ export type Database = {
         }
         Update: {
           admitting_diagnosis?: string | null
-          age?: string | null
+          age?: number | null
           allergies?: string[] | null
           attending_provider?: string | null
           code_status?: Database["public"]["Enums"]["code_status_type"]
