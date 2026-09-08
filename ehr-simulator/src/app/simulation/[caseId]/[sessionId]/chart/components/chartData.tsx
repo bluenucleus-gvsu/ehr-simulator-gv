@@ -36,6 +36,7 @@ export interface Contact {
 export interface ChartData {
   name: StringValueItem;
   age: StringValueItem;
+  mrn: StringValueItem;
   code: StringValueItem;
   location: StringValueItem;
 
@@ -111,6 +112,11 @@ export function buildChartDataFromCaseRow(
   return {
     name: { id: "name", label: "Name", value: fullName },
     age: { id: "age", label: "Age", value: String(caseRow?.age) },
+    mrn: {
+      id: "mrn",
+      label: "MRN",
+      value: caseRow?.mrn != null ? String(caseRow.mrn) : "—",
+    },
     code: { id: "code", label: "Code Status", value: String(caseRow?.code_status ?? "").trim() || "N/A" },
     location: { id: "location", label: "Location", value: "Simulation Suite" },
     isolation: {
@@ -138,4 +144,3 @@ export function buildChartDataFromCaseRow(
     supportPersons: { id: "supportPersons", label: "Support Persons", value: supportPersons },
   };
 }
-

@@ -6,7 +6,8 @@ export interface OrderType {
   orderingProvider: string
   important?: boolean,
   visibleInPresim: boolean
-  [key: string]: string | boolean | undefined;
+  phase?: number
+  [key: string]: string | boolean | number | undefined;
 
 }
 
@@ -206,5 +207,4 @@ export const consultOrders: OrderType[] = [
     visibleInPresim: true
   }
 ]
-
 

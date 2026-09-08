@@ -15,5 +15,6 @@ export const CASE_BUILDER_STEPS: CaseBuilderStep[] = [
   { path: `${CASE_BUILDER_BASE}/intake-output`, label: "I/O" },
   { path: `${CASE_BUILDER_BASE}/medications`, label: "Med orders" },
   { path: `${CASE_BUILDER_BASE}/medication-administrations`, label: "MAR" },
+  { path: `${CASE_BUILDER_BASE}/media`, label: "Media"},
   { path: `${CASE_BUILDER_BASE}/review`, label: "Review" },
 ];

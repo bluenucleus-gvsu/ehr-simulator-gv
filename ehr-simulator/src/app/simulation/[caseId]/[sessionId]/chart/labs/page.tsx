@@ -26,11 +26,13 @@ import {
 } from "./components/labsData"
 import { buildLabRowsFromBundle } from "./components/labsFromBundle";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
+import { useSimSessionContext } from "@/context/SimSessionContext";
 
 const columnHelper = createColumnHelper<LabTableData>();
 
 function LabPage() {
   const { caseBundle } = useSimulationCase();
+  const { isPresim } = useSimSessionContext();
   const [simStartTime] = useState(new Date().getTime());
   const [labTableData, setLabTableData] = useState<LabTableData[]>([]);
   const [timePoints, setTimePoints] = useState<number[]>([]);
@@ -38,11 +40,19 @@ function LabPage() {
 
   useEffect(() => {
     setIsLoading(true);
-    const { rows, timePoints: dbTimePoints } = buildLabRowsFromBundle(caseBundle, labTemplate);
+    const {
+      rows,
+      timePoints: dbTimePoints,
+      timePointsInPresim
+    } = buildLabRowsFromBundle(caseBundle, labTemplate);
+
     setLabTableData(rows);
-    setTimePoints(dbTimePoints);
+
+    const targetTimePoints = isPresim ? timePointsInPresim : dbTimePoints;
+    setTimePoints(targetTimePoints);
+
     setIsLoading(false);
-  }, [caseBundle]);
+  }, [caseBundle, isPresim]);
 
 
   const columns = useMemo(() => [

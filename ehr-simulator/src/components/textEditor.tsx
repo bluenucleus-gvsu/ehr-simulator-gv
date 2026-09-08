@@ -2,7 +2,7 @@
 'use client'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import Underline from '@tiptap/extension-underline'
 import Highlight from "@tiptap/extension-highlight";
 import TextEditorMenuBar from './textEditorMenubar'

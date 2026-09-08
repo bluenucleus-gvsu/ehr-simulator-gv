@@ -26,6 +26,7 @@ export interface DemographicFormData {
   contact: string;
   contactRelationship: string;
   contactPhone: string;
+  phaseCount: number;
 }
 
 export interface HistoryFormData {
@@ -62,6 +63,13 @@ export interface MedOrderFormData {
   selectedMeds: AllMedicationTypes[];
 }
 
+export interface MediaImageData {
+  id: string;
+  previewUrl: string;
+  file?: File;
+  storagePath?: string;
+}
+
 export interface FormBlob {
   demographics: DemographicFormData;
   history: HistoryFormData;
@@ -71,10 +79,11 @@ export interface FormBlob {
   charting: TableFormData<FlexSheetData>;
   intakeOutput: IntakeOutputFormData[];
   medOrders: MedOrderFormData;
-  medAdministrationInstances: MedAdministrationInstance[]
+  medAdministrationInstances: MedAdministrationInstance[];
+  media: MediaImageData[];
 }
 
-export type CompleteFormType = DemographicFormData | HistoryFormData | ClinicalNote[] | OrderType[] | TableFormData<FlexSheetData | LabTableData> | IntakeOutputFormData[] | MedOrderFormData | MedAdministrationInstance[]
+export type CompleteFormType = DemographicFormData | HistoryFormData | ClinicalNote[] | OrderType[] | TableFormData<FlexSheetData | LabTableData> | IntakeOutputFormData[] | MedOrderFormData | MedAdministrationInstance[] | MediaImageData[]
 
 export const formatTimeOffset = (minuteOffset: number) => {
   const minutesInDay = 1440;
@@ -179,7 +188,7 @@ export const relationshipStatuses = [
 export const precautions = [
   "Contact",
   "Contact-Enteric",
-  "Airbourne",
+  "Airborne",
   "Droplet",
   "Neutropenic",
   "None"

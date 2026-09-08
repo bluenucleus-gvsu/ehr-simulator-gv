@@ -17,10 +17,16 @@ export async function updateCaseIntakeOutput(
     }
   })
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("cases")
-    .update({ intake_output_blocks: blocks })
+    .update({
+      intake_output_blocks: blocks,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", caseId)
+    .select("id")
+    .single()
 
   if (error) throw new Error(error.message)
+  if (!data) throw new Error(`Case not found for id ${caseId}`)
 }

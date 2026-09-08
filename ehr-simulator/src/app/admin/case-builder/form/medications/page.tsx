@@ -1,18 +1,9 @@
-import { getAllMedications } from "@/actions/simulation"
+import { getCaseBuilderMedications } from "@/actions/case_builder/getCase"
 import MedicationOrderForm from "./MedicationOrderForm";
 import { mapDatabaseMedToFrontend } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers";
 
 const MedicationOrders = async () => {
-  const medResponse = await getAllMedications();
-
-
-  if (!medResponse.success || medResponse.error) {
-    return (
-      <div>{medResponse.message}</div>
-    )
-  }
-
-  const dbMeds = medResponse.data;
+  const dbMeds = await getCaseBuilderMedications();
   const medications = dbMeds.map(dbMed => mapDatabaseMedToFrontend(dbMed))
 
 

@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation";
 import CreateCaseButton from "./CreateCaseButton";
@@ -17,7 +16,7 @@ export function AdminQuickActionsList() {
         View All Cases
       </Button>
       <Button
-        onClick={() => { router.push("/admin/courses") }}
+        onClick={() => { router.push("/admin/courses/new") }}
         className="cursor-pointer"
         variant="default">
         Create Course

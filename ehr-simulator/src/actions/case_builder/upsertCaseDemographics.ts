@@ -1,8 +1,9 @@
 import { SupabaseClient } from "@supabase/supabase-js"
+import type { DemographicFormData } from "@/utils/form"
 
 export async function upsertCaseDemographics(
   supabase: SupabaseClient,
-  payload: any,
+  payload: DemographicFormData,
   caseId?: string | null
 ) {
   const d = payload
@@ -11,6 +12,12 @@ export async function upsertCaseDemographics(
     supabase,
     d.relationshipStatus,
   )
+  const isolation_precautions_id = await resolveLookupId(
+    supabase,
+    "isolation_precautions",
+    d.precautions,
+  )
+  const now = new Date().toISOString()
   const row = {
     ...(caseId ? { id: caseId } : {}),
     name: "Case " + d.firstName + " " + d.lastName,
@@ -26,14 +33,20 @@ export async function upsertCaseDemographics(
     insurance: d.insurance || null,
     employment: d.employment ?? null,
     religion: d.religion ?? null,
+    isolation_precautions_id,
     relationship_status_id,
     requires_interpreter: Boolean(d.needsInterpreter),
     admitting_diagnosis: d.admittingDiagnosis ?? null,
-    attending_provider: [d.attendingProviderName, d.attendingProviderTitle].filter(Boolean).join(", ") || null,
+    attending_provider: [d.attendingProviderTitle, d.attendingProviderName]
+      .map((part: unknown) => String(part ?? "").replace(/,+$/g, "").trim())
+      .filter(Boolean)
+      .join(" ") || null,
+    phase_count: Number(d.phaseCount ?? 1),
     emergency_contact_name: d.contact ?? null,
     emergency_contact_relationship: d.contactRelationship ?? null,
     emergency_contact_phone: (d.contactPhone ?? "").trim() || null,
-    updated_at: new Date().toISOString(),
+    updated_at: now,
+    ...(!caseId ? { created_at: now } : {}),
   };
 
   const { data, error } = await supabase
@@ -53,23 +66,31 @@ async function resolveRelationshipStatusId(
   supabase: SupabaseClient,
   name: string | null | undefined,
 ): Promise<string | null> {
+  return resolveLookupId(supabase, "relationship_statuses", name)
+}
+
+async function resolveLookupId(
+  supabase: SupabaseClient,
+  table: "relationship_statuses" | "isolation_precautions",
+  name: string | null | undefined,
+): Promise<string | null> {
   const n = (name ?? "").trim()
   if (!n) return null
   const { data, error } = await supabase
-    .from("relationship_statuses")
+    .from(table)
     .select("id")
     .eq("name", n)
     .maybeSingle()
   if (error) {
-    console.error("relationship_statuses lookup failed", error)
-    return null
+    throw new Error(`Failed to resolve ${table}: ${error.message}`)
   }
-  return data?.id ?? null
+  if (!data?.id) throw new Error(`Unknown ${table.replaceAll("_", " ")} value: ${n}`)
+  return data.id
 }
 
-function toNumeric(v: any): number | null {
+function toNumeric(v: unknown): number | null {
   if (v === null || v === undefined) return null;
+  if (typeof v === "string" && v.trim() === "") return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 }
-

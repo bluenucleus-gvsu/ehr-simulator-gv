@@ -78,6 +78,7 @@ export interface MedicationOrder {
   infusionRate?: number
   dose: number | null,
   visibleInPresim: boolean
+  phase?: number
 }
 
 export type AdministrationStatus = 'Given' | 'Held' | 'Missed' | 'Refused' | 'Due'
@@ -91,6 +92,7 @@ export interface MedAdministrationInstance {
   notes?: string;
   administeredDose: number;
   visibleInPresim: boolean;
+  phase?: number;
 }
 
 
@@ -480,4 +482,3 @@ export const allMedications: AllMedicationTypes[] = [
 
 export const medRouteSelections: string[] = ["PO", "IV", "SC", "Topical", "Inhalation", "IM", "SL", "Otic", "Ophthalmic"]
 export const medActionSelections: string[] = ["Given", "Held", "Refused", "Patient Administered", "Override"]
-

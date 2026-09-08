@@ -2,15 +2,6 @@ import type { Metadata } from "next";
 import { UserProvider } from "@/context/UserContext";
 import "./globals.css";
 import { Toaster } from "sonner";
-import { Roboto_Mono } from "next/font/google";
-import "./globals.css";
-import TesterSessionBanner from "@/components/TesterSessionBanner";
-
-
-const robotoMono = Roboto_Mono({
-  subsets: ["latin"],
-  variable: "--font-roboto-mono",
-});
 
 export const metadata: Metadata = {
   title: "GVSU EHR Simulator",
@@ -23,11 +14,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={robotoMono.variable}>
+    <html lang="en">
       <body>
         <UserProvider>
           <Toaster position="top-right" />
-          <TesterSessionBanner />
           <main className="w-full">
             {children}
           </main>

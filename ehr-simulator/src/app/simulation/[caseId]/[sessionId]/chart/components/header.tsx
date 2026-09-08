@@ -1,11 +1,13 @@
 'use client'
 
-import { Expand, Home, Minimize, Stethoscope } from "lucide-react"
+import { Expand, Home, Minimize, PillBottle, Stethoscope } from "lucide-react"
 import { useEffect, useState, type ReactNode } from "react"
 import Link from 'next/link'
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
+import InfoTooltip from "@/components/helpTooltip";
+import AdminSimControl from "@/app/simulation/[caseId]/[sessionId]/chart/components/adminSimControl";
 
 interface HeaderProps {
   tabs?: ReactNode;
@@ -13,7 +15,7 @@ interface HeaderProps {
 
 const Header = ({ tabs }: HeaderProps) => {
   const [isFullscreen, setIsFullScreen] = useState(false)
-  const { userId, userRole, isPresim, loading } = useSimSessionContext();
+  const { userId, userRole, isPresim, loading, currentPhase, handlePhaseChange, handlePresimStatusChange } = useSimSessionContext();
   const router = useRouter()
   const isPreSimMode = isPresim ?? true;
   const modeLabel = isPreSimMode ? "PRE-SIM" : "ACTIVE SIM";
@@ -21,6 +23,7 @@ const Header = ({ tabs }: HeaderProps) => {
   const modeClasses = isPreSimMode
     ? "border-violet-200/80 bg-violet-500 text-white shadow-violet-900/30"
     : "border-emerald-200/80 bg-emerald-500 text-white shadow-emerald-900/30";
+  const medReferenceTool = 'https://online-lexi-com.ezproxy.gvsu.edu/lco/action/home';
 
   useEffect(() => {
     const onFullscreenChange = () => {
@@ -78,6 +81,28 @@ const Header = ({ tabs }: HeaderProps) => {
           {tabs}
         </div>
         <div className="flex pr-8 gap-4">
+          {userRole === "admin" &&
+            <AdminSimControl
+              currentPhase={currentPhase}
+              isPresim={isPreSimMode}
+              onPresimChange={handlePresimStatusChange}
+              onPhaseChange={handlePhaseChange}
+
+            />
+          }
+          {medReferenceTool && (
+            <InfoTooltip content="Lexidrug">
+              <Button
+                variant='secondary'
+                className="p-0 size-7 hover:text-blue-600 hover:ring-2"
+                asChild
+              >
+                <a href={medReferenceTool} target="_blank" rel="noopener noreferrer">
+                  <PillBottle />
+                </a>
+              </Button>
+            </InfoTooltip>
+          )}
           <Button
             variant='secondary'
             className="p-0 size-7 hover:text-blue-600 hover:ring-2"
