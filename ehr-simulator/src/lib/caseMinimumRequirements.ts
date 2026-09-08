@@ -15,5 +15,5 @@ export function caseMeetsMinimumRequirements(
   return hasText(simCase.first_name)
     && hasText(simCase.last_name)
     && hasText(simCase.description)
-    && hasText(simCase.date_of_birth);
+  // && hasText(simCase.date_of_birth);
 }

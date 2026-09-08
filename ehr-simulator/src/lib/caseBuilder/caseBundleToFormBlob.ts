@@ -79,11 +79,7 @@ function demographicsFromCaseRow(caseRow: CaseBundleRow): DemographicFormData {
 export function caseBundleToFormBlob(bundle: CaseBundle): FormBlob {
   const caseRow = bundle.caseRow ?? {};
   const hydratedLabs = buildLabRowsFromBundle(
-    {
-      labResults: bundle.labResults ?? [],
-      imagingReports: bundle.imagingReports ?? [],
-      microbiologyReports: bundle.microbiologyReports ?? [],
-    },
+    bundle.labResults ?? [],
     labTemplate,
   );
   const hydratedCharting = buildChartingRowsFromBundle(
