@@ -24,8 +24,6 @@ export async function updateLabs(
   const { error } = await supabase.rpc("case_builder_replace_labs", {
     p_case_id: caseId,
     p_lab_rows: transformed.labResults,
-    p_imaging_rows: transformed.imagingReports,
-    p_microbiology_rows: transformed.microbiologyReports,
   });
   if (error) throw new Error(error.message);
   return transformed;

@@ -6,11 +6,9 @@ import { useMemo, useState } from "react";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { TooltipContent } from "@radix-ui/react-tooltip";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
-
 import { TestTube2 } from "lucide-react";
 import { AddTableColumn } from "./components/addTimeCol";
 import { useRouter } from "next/navigation";
-import { LabTableImagingReport, LabTableInputCell, LabTableMicrobioReport } from "./components/labTableInputCell";
 import { useFormContext } from "@/context/FormContext";
 import { useTimePoints } from "../../components/useFormTableOffsets";
 import { FormShell } from "../../components/formShell";
@@ -19,9 +17,9 @@ import { FormTable } from "../../components/FormTable";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/saveCase";
 import { caseBuilderPath } from "@/lib/caseBuilder/routes";
+import { LabTableInputCell } from "./components/labTableInputCell";
 
 const columnHelper = createColumnHelper<LabTableData>();
-
 
 function ensureNumberSet(input: unknown): Set<number> {
   if (input instanceof Set) return input;
@@ -47,35 +45,7 @@ function LabForm() {
   } = useTimePoints(labData.timePoints, ensureNumberSet(labData.timePointsInPreSim))
 
   const router = useRouter()
-
-
-  // // Get all hideable options for Combobox selector
-  // const hideableOptions = useMemo(() => {
-  //   return labTableData
-  //     .filter(row => row.hideable === true)
-  //     .filter(row => !visibleItems.has(row.field))
-  //     .map(row => ({
-  //       value: row.field,
-  //       label: row.field
-  //     }));
-  // }, [labTableData, visibleItems]);
-
-  // // Filter data to only show visible rows
-  // const filteredLabTableData = useMemo(() => {
-  //   return labTableData.filter(row => {
-  //     // Always show non-hideable rows
-  //     if (!row.hideable) return true;
-  //     return visibleItems.has(row.field);
-  //   });
-  // }, [labTableData, visibleItems]);
-
-  // // Handler to add an item to visible list
-  // const handleAddVisibleItem = (fieldName: string) => {
-  //   if (fieldName) {
-  //     setVisibleItems(prev => new Set([...prev, fieldName]));
-  //     setComboboxValue("");
-  //   }
-  // };
+  console.log(labTableData)
 
   const goBack = () => {
     onDataChange('labs', {
@@ -192,26 +162,6 @@ function LabForm() {
                       visibleInPresim={timePointsInPresim.has(timePoint)}
                     />
                   );
-                case 'imaging':
-                  return (
-                    <LabTableImagingReport
-                      column={column}
-                      row={row}
-                      table={table}
-                      getValue={getValue}
-                      visibleInPresim={timePointsInPresim.has(timePoint)}
-                    />
-                  )
-                case 'microbiology':
-                  return (
-                    <LabTableMicrobioReport
-                      column={column}
-                      row={row}
-                      table={table}
-                      getValue={getValue}
-                      visibleInPresim={timePointsInPresim.has(timePoint)}
-                    />
-                  )
               }
             }
           }))
@@ -233,15 +183,14 @@ function LabForm() {
     },
     meta: {
       updateData: (rowIndex, columnId, value) => {
-        const filteredRow = labTableData[rowIndex];
-        const actualIndex = labTableData.findIndex(row => row.field === filteredRow?.field);
+        if (typeof value !== 'string') return;
         setLabTableData(old =>
           old.map((row, index) => {
-            if (index === actualIndex) {
+            if (index === rowIndex) {
               return {
-                ...old[actualIndex]!,
+                ...old[rowIndex]!,
                 [columnId]: value,
-              }
+              };
             }
             return row
           })

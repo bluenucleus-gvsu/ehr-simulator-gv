@@ -7,7 +7,6 @@ export interface ImagingData {
   }[];
   impressions: string[];
   isCritical: boolean | 'indeterminate';
-
 }
 
 export interface MicrobiologyReportData {
@@ -22,38 +21,47 @@ export interface MicrobiologyReportData {
   isCritical: boolean | 'indeterminate';
 }
 
-export type LabCellValue = string | ImagingData | MicrobiologyReportData;
+export const LabSeverityLevel = {
+  NORMAL: 'normal',
+  ABNORMAL: 'abnormal',
+  CRITICAL: 'critical'
+} as const;
+
+export type LabSeverityLevel = typeof LabSeverityLevel[keyof typeof LabSeverityLevel] | null;
+
+export type LabCellValue = string;
+type LabThreshold = { low: number, high: number }
 
 // dataset to be used by tanstack table
 export interface LabTableData {
   field: string;
   rowType: "divider" | "results" | "imaging" | "microbiology";
   unit?: string;
-  normalRange?: { low: number, high: number };
-  criticalRange?: { low: number, high: number };
+  normalRange?: LabThreshold;
+  criticalRange?: LabThreshold;
   hideable?: boolean;
   visibleInPresim?: boolean;
-  dbColumn?: string;
-  [key: string | number]: string | number | boolean | undefined | object | ImagingData | MicrobiologyReportData | LabCellValue;
+  id?: string;
+  [key: string | number]: string | number | boolean | undefined | LabThreshold;
 }
 
 export function getResultStatus(
   initialValue: string,
   normalRange: { low: number; high: number } | undefined,
   criticalRange: { low: number; high: number } | undefined,
-) {
+): LabSeverityLevel {
   const numericValue = parseFloat(initialValue);
 
   if (isNaN(numericValue)) {
-    return "invalid";
+    return null;
   }
   if (criticalRange && (numericValue < criticalRange.low || numericValue > criticalRange.high)) {
-    return "critical";
+    return LabSeverityLevel.CRITICAL;
   }
   if (normalRange && (numericValue < normalRange.low || numericValue > normalRange.high)) {
-    return "abnormal";
+    return LabSeverityLevel.ABNORMAL;
   }
-  return "normal";
+  return LabSeverityLevel.NORMAL;
 }
 
 export const labTemplate: LabTableData[] = [
@@ -64,14 +72,14 @@ export const labTemplate: LabTableData[] = [
   },
   {
     field: "Sodium",
-    dbColumn: "sodium",
+    id: "sodium",
     unit: "(mEq/L)",
     rowType: "results",
     normalRange: { low: 135, high: 145 },
   },
   {
     field: "Potassium",
-    dbColumn: "potassium",
+    id: "potassium",
     unit: "(mEq/L)",
     rowType: "results",
     normalRange: { low: 3.5, high: 5.0 },
@@ -79,49 +87,49 @@ export const labTemplate: LabTableData[] = [
   },
   {
     field: "Chloride",
-    dbColumn: "chloride",
+    id: "chloride",
     unit: "(mEq/L)",
     rowType: "results",
     normalRange: { low: 95, high: 105 },
   },
   {
     field: "BUN",
-    dbColumn: "bun",
+    id: "bun",
     unit: "(mg/dL)",
     rowType: "results",
     normalRange: { low: 7, high: 20 },
   },
   {
     field: "Creatinine",
-    dbColumn: "creatinine",
+    id: "creatinine",
     unit: "(mg/dL)",
     rowType: "results",
     normalRange: { low: 0.6, high: 1.2 },
   },
   {
     field: "Glucose",
-    dbColumn: "glucose",
+    id: "glucose",
     unit: "(mg/dL)",
     rowType: "results",
     normalRange: { low: 70, high: 100 },
   },
   {
     field: "CO2",
-    dbColumn: "total_co2",
+    id: "total_co2",
     unit: "(mEq/L)",
     rowType: "results",
     normalRange: { low: 23, high: 30 },
   },
   {
     field: "Calcium",
-    dbColumn: "calcium",
+    id: "calcium",
     unit: "(mg/dL)",
     rowType: "results",
     normalRange: { low: 8.5, high: 10.5 },
   },
   {
     field: "Lactate",
-    dbColumn: "lactate",
+    id: "lactate",
     unit: "(mmol/L)",
     rowType: "results",
     normalRange: { low: 0.5, high: 1.0 },
@@ -130,7 +138,7 @@ export const labTemplate: LabTableData[] = [
   },
   {
     field: "HbA1c",
-    dbColumn: "hba1c",
+    id: "hba1c",
     unit: "%",
     rowType: "results",
     normalRange: { low: 4.0, high: 5.6 },
@@ -143,113 +151,106 @@ export const labTemplate: LabTableData[] = [
   },
   {
     field: "RBC",
-    dbColumn: "rbc",
+    id: "rbc",
     unit: "(10⁶/µL)",
     rowType: "results",
     normalRange: { low: 4.0, high: 6.0 },
   },
   {
     field: "Hemoglobin",
-    dbColumn: "hemoglobin",
+    id: "hemoglobin",
     unit: "(g/dL)",
     rowType: "results",
     normalRange: { low: 12.0, high: 17.5 },
   },
   {
     field: "Hematocrit",
-    dbColumn: "hematocrit",
+    id: "hematocrit",
     unit: "(%)",
     rowType: "results",
     normalRange: { low: 36, high: 54 },
   },
   {
     field: "MCV",
-    dbColumn: "mcv",
+    id: "mcv",
     unit: "(fL)",
     rowType: "results",
     normalRange: { low: 80, high: 100 },
   },
   {
     field: "MCH",
-    dbColumn: "mch",
+    id: "mch",
     unit: "(pg)",
     rowType: "results",
     normalRange: { low: 27, high: 33 },
   },
   {
     field: "MCHC",
-    dbColumn: "mchc",
+    id: "mchc",
     unit: "(g/dL)",
     rowType: "results",
     normalRange: { low: 32, high: 36 },
   },
   {
     field: "WBC",
-    dbColumn: "wbc",
+    id: "wbc",
     unit: "(10³/µL)",
     rowType: "results",
     normalRange: { low: 4.5, high: 11.0 },
   },
   {
     field: 'Neutrophils',
-    dbColumn: 'neutrophils',
+    id: 'neutrophils',
     unit: '(%)',
     rowType: 'results',
     normalRange: { low: 55, high: 70 },
-    hideable: true
   },
   {
     field: 'Lymphocytes',
-    dbColumn: 'lymphocytes',
+    id: 'lymphocytes',
     unit: '(%)',
     rowType: 'results',
     normalRange: { low: 20, high: 40 },
-    hideable: true
   },
   {
     field: 'Monocytes',
-    dbColumn: 'monocytes',
+    id: 'monocytes',
     unit: '(%)',
     rowType: 'results',
     normalRange: { low: 2, high: 8 },
-    hideable: true
   },
   {
     field: 'Eosinophils',
-    dbColumn: 'eosinophils',
+    id: 'eosinophils',
     unit: '(%)',
     rowType: 'results',
     normalRange: { low: 1, high: 4 },
-    hideable: true
   },
   {
     field: 'Basophils',
-    dbColumn: 'basophils',
+    id: 'basophils',
     unit: '(%)',
     rowType: 'results',
     normalRange: { low: 0, high: 1 },
-    hideable: true
   },
   {
     field: "Platelets",
-    dbColumn: "platelets",
+    id: "platelets",
     unit: "(10³/µL)",
     rowType: "results",
     normalRange: { low: 150, high: 450 },
   },
   {
     field: "Blood Type",
-    dbColumn: "blood_type",
+    id: "blood_type",
     unit: "",
     rowType: "results",
-    hideable: true
   },
   {
     field: "Rh Factor",
-    dbColumn: "rh_factor",
+    id: "rh_factor",
     unit: "",
     rowType: "results",
-    hideable: true
   },
   {
     field: "Cardiac",
@@ -258,50 +259,47 @@ export const labTemplate: LabTableData[] = [
   },
   {
     field: "Troponin",
-    dbColumn: "troponin",
+    id: "troponin",
     unit: "(ng/mL)",
     rowType: "results",
     normalRange: { low: 0, high: 0.04 },
   },
   {
     field: "CKMB",
-    dbColumn: "ckmb",
+    id: "ckmb",
     unit: "(ng/mL)",
     rowType: "results",
     normalRange: { low: 0, high: 3 },
-    hideable: true
 
   },
   {
     field: "Myoglobin",
-    dbColumn: "myoglobin",
+    id: "myoglobin",
     unit: "(ng/mL)",
     rowType: "results",
     normalRange: { low: 0, high: 85 },
-    hideable: true
 
   },
   {
     field: "BNP",
-    dbColumn: "bnp",
+    id: "bnp",
     unit: "(pg/mL)",
     rowType: "results",
     normalRange: { low: 0, high: 100 },
   },
   {
     field: "D-Dimer",
-    dbColumn: "d_dimer",
+    id: "d_dimer",
     unit: "(ng/mL)",
     rowType: "results",
     normalRange: { low: 0, high: 500 },
   },
   {
     field: "Procalcitonin",
-    dbColumn: "procal",
+    id: "procal",
     unit: "(ng/mL)",
     rowType: "results",
     normalRange: { low: 0.0, high: 0.15 },
-    hideable: true
 
   },
   {
@@ -311,42 +309,42 @@ export const labTemplate: LabTableData[] = [
   },
   {
     field: "AST",
-    dbColumn: "ast",
+    id: "ast",
     unit: "(IU/L)",
     rowType: "results",
     normalRange: { low: 10, high: 40 },
   },
   {
     field: "ALT",
-    dbColumn: "alt",
+    id: "alt",
     unit: "(IU/L)",
     rowType: "results",
     normalRange: { low: 7, high: 56 },
   },
   {
     field: "ALP",
-    dbColumn: "alp",
+    id: "alp",
     unit: "(IU/L)",
     rowType: "results",
     normalRange: { low: 40, high: 120 },
   },
   {
     field: "Total Bilirubin",
-    dbColumn: "total_bilirubin",
+    id: "total_bilirubin",
     unit: "(mg/dL)",
     rowType: "results",
     normalRange: { low: 0.1, high: 1.2 },
   },
   {
     field: "Albumin",
-    dbColumn: "albumin",
+    id: "albumin",
     unit: "(g/dL)",
     rowType: "results",
     normalRange: { low: 3.5, high: 5.0 },
   },
   {
     field: "Ammonia",
-    dbColumn: "ammonia",
+    id: "ammonia",
     unit: "(mcg/dL)",
     rowType: "results",
     normalRange: { low: 15, high: 45 }
@@ -358,83 +356,74 @@ export const labTemplate: LabTableData[] = [
   },
   {
     field: "pH (Arterial)",
-    dbColumn: "art_ph",
+    id: "art_ph",
     unit: "",
     rowType: "results",
     normalRange: { low: 7.35, high: 7.45 },
-    hideable: true
 
   },
   {
     field: "O2 Sat. (Arterial)",
-    dbColumn: "art_so2",
+    id: "art_so2",
     unit: "(%)",
     rowType: "results",
     normalRange: { low: 95, high: 100 },
-    hideable: true
 
   },
   {
     field: "pCO2 (Arterial)",
-    dbColumn: "art_pco2",
+    id: "art_pco2",
     unit: "mmHg",
     rowType: "results",
     normalRange: { low: 35, high: 45 },
-    hideable: true
 
   },
   {
     field: "pO2 (Arterial)",
-    dbColumn: "art_po2",
+    id: "art_po2",
     unit: "(mmHg)",
     rowType: "results",
     normalRange: { low: 75, high: 100 },
-    hideable: true
 
   },
   {
     field: "pH (Venous)",
-    dbColumn: "ven_ph",
+    id: "ven_ph",
     unit: "",
     rowType: "results",
     normalRange: { low: 7.31, high: 7.41 },
-    hideable: true
 
   },
   {
     field: "O2 Sat. (Venous)",
-    dbColumn: "ven_so2",
+    id: "ven_so2",
     unit: "(%)",
     rowType: "results",
     normalRange: { low: 60, high: 80 },
-    hideable: true
 
   },
   {
     field: "pCO2 (Venous)",
-    dbColumn: "ven_pco2",
+    id: "ven_pco2",
     unit: "(mmHg)",
     rowType: "results",
     normalRange: { low: 41, high: 51 },
-    hideable: true
 
   },
   {
     field: "pO2 (Venous)",
-    dbColumn: "ven_po2",
+    id: "ven_po2",
     unit: "(mmHg)",
     rowType: "results",
     normalRange: { low: 30, high: 40 },
-    hideable: true
 
   },
   {
     field: "HCO3",
-    dbColumn: "hco3",
+    id: "hco3",
     unit: "mEq/L",
     rowType: "results",
     normalRange: { low: 22, high: 29 },
-    hideable: true
 
   },
   {
@@ -444,51 +433,51 @@ export const labTemplate: LabTableData[] = [
   },
   {
     field: "Specific Gravity",
-    dbColumn: "specific_gravity",
+    id: "specific_gravity",
     unit: "",
     rowType: "results",
     normalRange: { low: 1.005, high: 1.030 },
   },
   {
     field: "Urine pH",
-    dbColumn: "urine_ph",
+    id: "urine_ph",
     unit: "",
     rowType: "results",
     normalRange: { low: 4.5, high: 8.0 },
   },
   {
     field: "Protein",
-    dbColumn: "urine_protein",
+    id: "urine_protein",
     unit: "",
     rowType: "results",
   },
   {
     field: "Urine Glucose",
-    dbColumn: "urine_glucose",
+    id: "urine_glucose",
     unit: "",
     rowType: "results",
   },
   {
     field: "Ketones",
-    dbColumn: "ketones",
+    id: "ketones",
     unit: "",
     rowType: "results",
   },
   {
     field: "Leukocyte Esterase",
-    dbColumn: "leukocyte_esterase",
+    id: "leukocyte_esterase",
     unit: "",
     rowType: "results",
   },
   {
     field: "Nitrites",
-    dbColumn: "nitrites",
+    id: "nitrites",
     unit: "",
     rowType: "results",
   },
   {
     field: "Blood",
-    dbColumn: "urine_blood",
+    id: "urine_blood",
     unit: "",
     rowType: "results",
   },
@@ -499,21 +488,21 @@ export const labTemplate: LabTableData[] = [
   },
   {
     field: "PT",
-    dbColumn: "pt",
+    id: "pt",
     unit: "(sec)",
     rowType: "results",
     normalRange: { low: 11.0, high: 13.5 },
   },
   {
     field: "PTT",
-    dbColumn: "ptt",
+    id: "ptt",
     unit: "(sec)",
     rowType: "results",
     normalRange: { low: 25, high: 35 },
   },
   {
     field: "INR",
-    dbColumn: "inr",
+    id: "inr",
     unit: "",
     rowType: "results",
     normalRange: { low: 0.8, high: 1.1 },
@@ -525,14 +514,14 @@ export const labTemplate: LabTableData[] = [
   },
   {
     field: "CRP",
-    dbColumn: "crp",
+    id: "crp",
     unit: "(mg/L)",
     rowType: "results",
     normalRange: { low: 0, high: 10 },
   },
   {
     field: "ESR",
-    dbColumn: "esr",
+    id: "esr",
     unit: "(mm/hr)",
     rowType: "results",
     normalRange: { low: 0, high: 20 },
@@ -544,21 +533,21 @@ export const labTemplate: LabTableData[] = [
   },
   {
     field: "TSH",
-    dbColumn: "tsh",
+    id: "tsh",
     unit: "(mIU/L)",
     rowType: "results",
     normalRange: { low: 0.4, high: 4.0 },
   },
   {
     field: "Free T3",
-    dbColumn: "free_t3",
+    id: "free_t3",
     unit: "(pg/mL)",
     rowType: "results",
     normalRange: { low: 2.3, high: 4.2 },
   },
   {
     field: "Free T4",
-    dbColumn: "free_t4",
+    id: "free_t4",
     unit: "(ng/dL)",
     rowType: "results",
     normalRange: { low: 0.8, high: 1.8 },
@@ -570,28 +559,28 @@ export const labTemplate: LabTableData[] = [
   },
   {
     field: "Total Cholesterol",
-    dbColumn: "total_cholesterol",
+    id: "total_cholesterol",
     unit: "(mg/dL)",
     rowType: "results",
     normalRange: { low: 125, high: 200 },
   },
   {
     field: "HDL Cholesterol",
-    dbColumn: "hdl_cholesterol",
+    id: "hdl_cholesterol",
     unit: "(mg/dL)",
     rowType: "results",
     normalRange: { low: 40, high: 60 },
   },
   {
     field: "LDL Cholesterol",
-    dbColumn: "ldl_cholesterol",
+    id: "ldl_cholesterol",
     unit: "(mg/dL)",
     rowType: "results",
     normalRange: { low: 0, high: 100 },
   },
   {
     field: "Triglycerides",
-    dbColumn: "triglycerides",
+    id: "triglycerides",
     unit: "(mg/dL)",
     rowType: "results",
     normalRange: { low: 0, high: 150 },
@@ -603,14 +592,14 @@ export const labTemplate: LabTableData[] = [
   },
   {
     field: "Magnesium",
-    dbColumn: "magnesium",
+    id: "magnesium",
     unit: "(mg/dL)",
     rowType: "results",
     normalRange: { low: 1.7, high: 2.2 },
   },
   {
     field: "Phosphate",
-    dbColumn: "phosphate",
+    id: "phosphate",
     unit: "(mg/dL)",
     rowType: "results",
     normalRange: { low: 2.5, high: 4.5 },
@@ -622,14 +611,14 @@ export const labTemplate: LabTableData[] = [
   },
   {
     field: "Amylase",
-    dbColumn: "amylase",
+    id: "amylase",
     unit: "(U/L)",
     rowType: "results",
     normalRange: { low: 25, high: 125 },
   },
   {
     field: "Lipase",
-    dbColumn: "lipase",
+    id: "lipase",
     unit: "(U/L)",
     rowType: "results",
     normalRange: { low: 0, high: 160 },

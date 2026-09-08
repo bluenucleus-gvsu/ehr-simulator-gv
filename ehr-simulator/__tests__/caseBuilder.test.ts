@@ -201,13 +201,12 @@ describe("case-builder edit hydration", () => {
     const template: LabTableData[] = [{
       field: "Custom Biomarker",
       rowType: "results",
-      hideable: true,
+      hideable: true
     }];
-    const hydrated = buildLabRowsFromBundle({
-      labResults: [{ id: "lab-1", time_offset: 0, data: { unstructured: { "Custom Biomarker": "positive" } } }],
-      imagingReports: [],
-      microbiologyReports: [],
-    }, template);
+
+    const hydrated = buildLabRowsFromBundle(
+      [{ id: "lab-1", time_offset: 0, data: { unstructured: { "Custom Biomarker": "positive" } } }],
+      template);
 
     expect(hydrated.rows[0][0]).toBe("positive");
   });
