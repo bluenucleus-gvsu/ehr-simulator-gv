@@ -1,5 +1,3 @@
-import { differenceInYears } from "date-fns";
-
 import type { CaseBundle, CaseBundleRow } from "@/actions/case_builder/getCase";
 import { buildChartingRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/chartingFromBundle";
 import { flexSheetTemplate } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
@@ -8,7 +6,7 @@ import { labTemplate } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/co
 import { medOrderFormStateFromCaseBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marFromBundle";
 import { defaultDemographicData, defaultHistoryData } from "@/context/FormContext";
 import type { DemographicFormData, FormBlob } from "@/utils/form";
-import { intakeOutputBlocksFromCaseRow, months } from "@/utils/form";
+import { intakeOutputBlocksFromCaseRow } from "@/utils/form";
 
 function text(row: CaseBundleRow, key: string): string {
   const value = row[key];
@@ -26,16 +24,6 @@ function stringArray(value: unknown): string[] {
 }
 
 function demographicsFromCaseRow(caseRow: CaseBundleRow): DemographicFormData {
-  const dob = text(caseRow, "date_of_birth");
-  const [, month = "", day = ""] = dob.split("-");
-  const monthIndex = Number(month);
-
-  let age = "";
-  const dateMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(dob.trim());
-  if (dateMatch) {
-    const parsed = new Date(Number(dateMatch[1]), Number(dateMatch[2]) - 1, Number(dateMatch[3]));
-    if (!Number.isNaN(parsed.getTime())) age = String(differenceInYears(new Date(), parsed));
-  }
 
   const providerRaw = text(caseRow, "attending_provider").trim();
   const titleMatch = /^(MD|DO|NP|PA)\s+(.+)$/i.exec(providerRaw);
@@ -47,14 +35,10 @@ function demographicsFromCaseRow(caseRow: CaseBundleRow): DemographicFormData {
 
   return {
     ...defaultDemographicData,
-    DOBDay: day ? String(Number(day)) : "",
-    DOBMonth: monthIndex >= 1 && monthIndex <= 12 ? months[monthIndex - 1] : "",
-    admissionDateOffest: text(caseRow, "inpatient_duration_days"),
-    admissionTime: text(caseRow, "time_of_admission").slice(0, 5),
     admittingDiagnosis: text(caseRow, "admitting_diagnosis"),
-    age,
     attendingProviderName,
     attendingProviderTitle,
+    age: text(caseRow, "age"),
     codeStatus: text(caseRow, "code_status"),
     dosingWeight: text(caseRow, "weight_kg"),
     employment: text(caseRow, "employment"),

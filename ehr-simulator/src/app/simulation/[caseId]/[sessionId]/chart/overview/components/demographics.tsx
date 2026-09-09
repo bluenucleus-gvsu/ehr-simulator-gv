@@ -11,12 +11,7 @@ const Demographics = () => {
   const chartData = buildChartDataFromCaseRow((caseBundle?.caseRow as Record<string, unknown> | null | undefined) ?? null)
 
   if (!chartData || Object.keys(chartData).length === 0) {
-    return (
-      <Card className="relative col-span-1 pt-2 overflow-hidden h-fit gap-3">
-        <StyledTitle color="bg-lime-200" firstLetter="D" secondLetter="emograhics" />
-        <p>No data exists</p>
-      </Card>
-    )
+    return null
   }
 
   return (

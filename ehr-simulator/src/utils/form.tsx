@@ -5,10 +5,6 @@ import { ClinicalNote } from "@/app/simulation/[caseId]/[sessionId]/chart/notes/
 import { OrderType } from "@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData";
 
 export interface DemographicFormData {
-  DOBDay: string;
-  DOBMonth: string;
-  admissionDateOffest: string;
-  admissionTime: string;
   admittingDiagnosis: string;
   age: string;
   attendingProviderName: string;

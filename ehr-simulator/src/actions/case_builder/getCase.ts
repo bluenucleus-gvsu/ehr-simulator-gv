@@ -26,7 +26,7 @@ export type CaseRow = Record<string, unknown> & {
   id?: string | null;
   first_name?: string | null;
   last_name?: string | null;
-  date_of_birth?: string | null;
+  age?: number | null;
   code_status?: string | null;
   attending_provider?: string | null;
   isolation_precautions?: NamedLookup | null;
