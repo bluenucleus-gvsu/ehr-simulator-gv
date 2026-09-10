@@ -3,6 +3,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient";
 import { assertUuid } from "@/lib/caseBuilder/validation";
+import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
+import { DatabaseDocumentation } from "../simulation";
 
 export interface CaseBundle {
   caseRow: CaseRow
@@ -13,7 +15,7 @@ export interface CaseBundle {
   labResults: CaseBundleRow[]
   imagingReports: ImagingReportRow[]
   microbiologyReports: MicrobiologyReportRow[]
-  documentationResults: CaseBundleRow[]
+  documentationResults: DatabaseDocumentation[]
   medicationAdministrations: CaseBundleRow[]
   caseImages: CaseBundleRow[]
   /** Structured med orders + joined medication rows (when present in DB). */
@@ -31,6 +33,8 @@ export type CaseRow = Record<string, unknown> & {
   attending_provider?: string | null;
   isolation_precautions?: NamedLookup | null;
   relationship_status?: NamedLookup | null;
+  case_specialty: CaseSpecialty;
+  flexsheet_sections: string[] | null;
 };
 
 export type CaseBundleRow = Record<string, unknown> & {
@@ -234,7 +238,7 @@ export async function getCaseBundle(
     labResults: (labResultsRes.data ?? []) as CaseBundleRow[],
     imagingReports: (imagingReportsRes.data ?? []) as ImagingReportRow[],
     microbiologyReports: (microbiologyReportsRes.data ?? []) as MicrobiologyReportRow[],
-    documentationResults: (documentationResultsRes.data ?? []) as CaseBundleRow[],
+    documentationResults: (documentationResultsRes.data ?? []) as DatabaseDocumentation[],
     medicationAdministrations: (medicationAdministrationsRes.data ?? []) as CaseBundleRow[],
     caseImages: (caseImagesRes.data ?? []) as CaseBundleRow[],
     medicationOrders: medicationOrders as CaseBundleRow[],

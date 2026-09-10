@@ -1,24 +1,29 @@
 import { getAllDocumentationData } from "@/actions/simulation"
-import FlexSheetView from "./chartingView";
+import FlexSheetView from "./components/chartingView";
 
-interface PageProps {
+interface FlexSheetProps {
   params: Promise<{
     caseId: string;
     sessionId: string;
   }>;
 }
 
-export default async function FlexSheets({ params }: PageProps) {
+export default async function FlexSheets({ params }: FlexSheetProps) {
   const awaitedParams = await params;
   const { caseId, sessionId } = awaitedParams;
 
   const documentationData = await getAllDocumentationData(caseId, sessionId);
+
   if (!documentationData?.success) {
     return <div>Failed to retrieve documentation.</div>
   }
 
   const dbDocumentation = documentationData?.data ?? [];
   return (
-    <FlexSheetView params={awaitedParams} dbDocumentation={dbDocumentation} />
+    <FlexSheetView
+      caseId={caseId}
+      sessionId={sessionId}
+      documentation={dbDocumentation}
+    />
   )
 }

@@ -7,17 +7,19 @@ import {
   SidebarMenu,
   SidebarRail,
 } from "@/components/ui/sidebar"
-
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-import { type AssessmentTool, assessmentTools as tempData } from "./flexSheetData"
+import { buildAssessmentToolGuide } from "@/lib/flexSheet/assessmentToolGuides"
+import { AssessmentToolGuide } from "@/lib/flexSheet/flexSheetTypes"
+import { tempSelectionSet } from "@/lib/flexSheet/flexSheetSections"
+
 
 const FlexSheetSidebar = () => {
-  const assessmentTools: AssessmentTool[] = tempData
+  const assessmentTools: AssessmentToolGuide[] = buildAssessmentToolGuide(tempSelectionSet)
   return (
     <Sidebar
       side="right"

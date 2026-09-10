@@ -284,7 +284,7 @@ export async function getMedicationAdministrations(caseId: string, sessionId: st
   }
 }
 
-export async function getMedia(caseId:string){
+export async function getMedia(caseId: string) {
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -296,7 +296,7 @@ export async function getMedia(caseId:string){
     .eq('case_id', caseId)
 
 
-  if (!error){
+  if (!error) {
     return {
       success: true,
       data: data ?? [],
@@ -375,57 +375,7 @@ export async function getAllDocumentationData(caseId: string, sessionId: string)
     .eq('case_id', caseId)
     .or(`case_session_id.eq.${sessionId},case_session_id.is.null`);
 
-  if (!error) {
-    return {
-      success: true,
-      data,
-      message: 'Successfully retrieved documentation results.'
-    }
-  }
 
-  if ((error as { code?: string }).code === 'PGRST205') {
-    const [caseDocsRes, studentDocsRes] = await Promise.all([
-      supabase
-        .from('documentation_results')
-        .select('*')
-        .eq('case_id', caseId),
-      supabase
-        .from('editable_documentation_results')
-        .select('*')
-        .eq('case_id', caseId)
-        .eq('case_session_id', sessionId),
-    ])
-
-    const studentDocsMissing = (studentDocsRes.error as { code?: string } | null)?.code === 'PGRST205'
-
-    if (caseDocsRes.error || (studentDocsRes.error && !studentDocsMissing)) {
-      return {
-        success: false,
-        message: 'Failed to retrieve documentation results.',
-        error: caseDocsRes.error ?? studentDocsRes.error ?? error
-      }
-    }
-
-    const merged = [
-      ...((caseDocsRes.data ?? []).map((row) => ({
-        ...row,
-        case_session_id: null,
-        user_id: null,
-        group_id: null,
-        source_type: 'case_documentation',
-      }))),
-      ...(((studentDocsMissing ? [] : (studentDocsRes.data ?? []))).map((row) => ({
-        ...row,
-        source_type: 'student_documentation',
-      }))),
-    ]
-
-    return {
-      success: true,
-      data: merged,
-      message: 'Successfully retrieved documentation results.'
-    }
-  }
 
   if (error) {
     return {
@@ -434,6 +384,12 @@ export async function getAllDocumentationData(caseId: string, sessionId: string)
       error
     }
   }
+  return {
+    success: true,
+    data,
+    message: 'Successfully retrieved documentation results.'
+  }
+
 }
 
 

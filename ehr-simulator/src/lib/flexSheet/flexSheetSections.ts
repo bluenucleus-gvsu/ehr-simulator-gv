@@ -1,25 +1,80 @@
-export interface chartingOptions {
-  subsetId: string;
-  label: string;
-};
+import { FlexSheetData } from "@/lib/flexSheet/flexSheetTypes";
+import { Database } from "@/../database.types";
 
+export type FlexSheetSection = Database['public']['Enums']['flexsheet_section_type'];
 
-export interface FlexSheetData {
-  id: string;
-  field: string;
-  componentType: 'input' | 'assessmentselect' | 'static' | 'checkboxlist' | 'totalScoreRow' | 'static';
-  rowType?: string;
-  chartingOptions?: chartingOptions[];
-  wdlDescription?: { assessment: string, description: string }[];
-  normalRange?: { low: number, high: number },
-  hideable?: boolean,
-  hideableId?: string,
-  assessmentSubsets?: { subsetId: string, label: string }[];
-  toolName?: string;
-  [key: string]: string | string[] | number | boolean | undefined | { subsetId: string, label: string }[] | { low: number, high: number } | { assessment: string, description: string }[];
-};
+export const FlexSheetSection = {
+  VITALS: "vitals",
+  VITALS_OVERVIEW: 'vitals_overview',
+  INPUT: "input",
+  OUTPUT: "output",
+  BASE_PAIN: "base_pain",
+  FACES_PAIN: "faces_pain",
+  GENERAL_APPEARANCE: 'general_appearance',
+  PSYCHOSOCIAL: 'psychosocial',
+  HEENT: 'heent',
+  NEURO: 'neuro',
+  INTEGUMENT: 'integument',
+  CARDIAC: 'cardiac',
+  RESPIRATORY: 'respiratory',
+  WOUND: "wound",
+  GI: 'gi',
+  MUSCULOSKELETAL: "musculoskeletal",
+  GENTIOURINARY: "genitourinary",
+  IV_1: "iv_1",
+  IV_2: "iv_2",
+  NURSING_CARE: "nursing_care",
+  BRADEN: "braden",
+  CIWA: "ciwa",
+  MORSE: "morse",
+  PAINAD: "painad",
+} as const;
 
-export const flexSheetTemplate: FlexSheetData[] = [
+export type FlexSheetSections = Record<FlexSheetSection, readonly FlexSheetData[]>;
+
+export const vitalSignOverviewRows: readonly FlexSheetData[] = [
+  {
+    id: "hr",
+    field: "HR",
+    componentType: "input",
+    normalRange: { low: 60, high: 100 }
+  },
+  {
+    id: "bp",
+    field: "BP",
+    componentType: "input"
+  },
+  {
+    id: "mean_arterial_pressure",
+    field: "MAP",
+    componentType: "input"
+  },
+  {
+    id: "rr",
+    field: "RR",
+    componentType: "input",
+    normalRange: { low: 12, high: 20 }
+  },
+  {
+    id: "temp",
+    field: "Temp (°C)",
+    componentType: "input",
+    normalRange: { low: 36.6, high: 38 }
+  },
+  {
+    id: "spo2",
+    field: "SpO2 (%)",
+    componentType: "input",
+    normalRange: { low: 95, high: 100 }
+  },
+  {
+    id: "weight_kg",
+    field: "Weight (kg)",
+    componentType: "input",
+  }
+];
+
+export const vitalSignRows: readonly FlexSheetData[] = [
   {
     id: "vitalSignsTitle",
     field: "Vital Signs",
@@ -67,6 +122,23 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "Arterial line", label: "Arterial line" },
       { subsetId: "Other", label: "Other" },
     ],
+  },
+  {
+    id: "bp_position",
+    field: "BP Position",
+    componentType: "assessmentselect",
+    chartingOptions: [
+      { subsetId: "Sitting", label: "Sitting" },
+      { subsetId: "Semifowler's", label: "Semifowler's" },
+      { subsetId: "Standing", label: "Standing" },
+      { subsetId: "Supine", label: "Supine" },
+      { subsetId: "Prone", label: "Prone" },
+    ],
+  },
+  {
+    id: "mean_arterial_pressure",
+    field: "MAP",
+    componentType: "input"
   },
   {
     id: "rr",
@@ -123,7 +195,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
     id: "weight_kg",
     field: "Weight (kg)",
     componentType: "input",
-  },
+  }
+];
+
+export const inputRows: readonly FlexSheetData[] = [
   {
     id: "intakeTitle",
     field: "Intake",
@@ -135,41 +210,39 @@ export const flexSheetTemplate: FlexSheetData[] = [
     field: "Intake Fields",
     componentType: "checkboxlist",
     assessmentSubsets: [
-      { subsetId: "Oral", label: "Oral" },
-      { subsetId: "Intravenous", label: "Intravenous" },
-      { subsetId: "Parenteral Nutrition", label: "Parenteral Nutrition" },
-      { subsetId: "Enteral Nutrition", label: "Enteral Nutrition" },
+      { subsetId: "oral_intake_ml", label: "Oral" },
+      { subsetId: "iv_intake_ml", label: "Intravenous" },
+      { subsetId: "enteral_intake_ml", label: "Parenteral Nutrition" },
+      { subsetId: "parenteral_intake_ml", label: "Enteral Nutrition" },
     ]
   },
   {
-    id: "oral",
-    field: "Oral",
+    id: "oral_intake_ml",
+    field: "Oral (mL)",
     componentType: "input",
     hideable: true,
-    hideableId: "Oral",
   },
   {
-    id: "intravenous",
-    field: "Intravenous",
+    id: "iv_intake_ml",
+    field: "Intravenous (mL)",
     componentType: "input",
     hideable: true,
-    hideableId: "Intravenous",
+  },
+  {
+    id: "enteral_intake_ml",
+    field: "Enteral Nutrition (mL)",
+    componentType: "input",
+    hideable: true,
+  },
+  {
+    id: "parenteral_intake_ml",
+    field: "Parenteral Nutrition (mL)",
+    componentType: "input",
+    hideable: true,
+  }
+]
 
-  },
-  {
-    id: "enteral_nutrition",
-    field: "Enteral Nutrition",
-    componentType: "input",
-    hideable: true,
-    hideableId: "Enteral Nutrition",
-  },
-  {
-    id: "parenteral_nutrition",
-    field: "Parenteral Nutrition",
-    componentType: "input",
-    hideable: true,
-    hideableId: "Parenteral Nutrition",
-  },
+const outputRows: readonly FlexSheetData[] = [
   {
     id: "outputTitle",
     field: "Output",
@@ -181,48 +254,67 @@ export const flexSheetTemplate: FlexSheetData[] = [
     field: "Output Fields",
     componentType: "checkboxlist",
     assessmentSubsets: [
-      { subsetId: "ioUrine", label: "Urine" },
-      { subsetId: "ioEmesis", label: "Emesis" },
-      { subsetId: "ioStool", label: "Stool" },
-      { subsetId: "Wound Drainage", label: "Wound Drainage" },
-      { subsetId: "Enteral Output", label: "Enteral Output" },
+      { subsetId: "urine_output_ml", label: "Urine" },
+      { subsetId: "urine_occurrence", label: "Urine Occurrence" },
+      { subsetId: "emesis_output_ml", label: "Emesis" },
+      { subsetId: "emesis_occurrence", label: "Emesis Occurrence" },
+      { subsetId: "stool_output_ml", label: "Stool" },
+      { subsetId: "stool_occurrence", label: "Stool Occurrence" },
+      { subsetId: "wound_output_ml", label: "Wound Drainage" },
+      { subsetId: "enteral_output_ml", label: "Enteral Output" },
     ]
   },
   {
-    id: "urine",
+    id: "urine_output_ml",
     field: "Urine (mL)",
     componentType: "input",
     hideable: true,
-    hideableId: "ioUrine"
   },
   {
-    id: "emesis",
+    id: "urine_occurrence",
+    field: "Urine Occurrence",
+    componentType: "input",
+    hideable: true,
+  },
+  {
+    id: "emesis_output_ml",
     field: "Emesis (mL)",
     componentType: "input",
     hideable: true,
-    hideableId: "ioEmesis"
   },
   {
-    id: "stool",
+    id: "emesis_occurrence",
+    field: "Emesis Occurrence",
+    componentType: "input",
+    hideable: true,
+  },
+  {
+    id: "stool_output_ml",
     field: "Stool (mL)",
     componentType: "input",
     hideable: true,
-    hideableId: "ioStool"
   },
   {
-    id: "wound_drainage",
+    id: "stool_occurrence",
+    field: "Stool Occurrence",
+    componentType: "input",
+    hideable: true,
+  },
+  {
+    id: "wound_output_ml",
     field: "Wound Drainage (mL)",
     componentType: "input",
     hideable: true,
-    hideableId: "Wound Drainage"
   },
   {
-    id: "enteral_output",
+    id: "enteral_output_ml",
     field: "Enteral Output",
     componentType: "input",
     hideable: true,
-    hideableId: "Enteral Output"
-  },
+  }
+];
+
+const basePainRows: readonly FlexSheetData[] = [
   {
     id: "painTitle",
     field: "Pain",
@@ -230,7 +322,7 @@ export const flexSheetTemplate: FlexSheetData[] = [
     rowType: "titleRow",
   },
   {
-    id: "pain",
+    id: "pain_numeric_scale",
     field: "Numeric Rating",
     componentType: "input",
   },
@@ -258,7 +350,26 @@ export const flexSheetTemplate: FlexSheetData[] = [
     id: "pain_interventions",
     field: "Interventions",
     componentType: "input",
-  },
+  }
+]
+
+const facesPainRows: readonly FlexSheetData[] = [
+  {
+    id: "faces_pain_scale",
+    field: "Faces Pain Scale",
+    componentType: "assessmentselect",
+    chartingOptions: [
+      { subsetId: "0", label: "0" },
+      { subsetId: "2", label: "2" },
+      { subsetId: "4", label: "4" },
+      { subsetId: "6", label: "6" },
+      { subsetId: "8", label: "8" },
+      { subsetId: "10", label: "10" },
+    ]
+  }
+]
+
+const generalAppearanceRows: readonly FlexSheetData[] = [
   {
     id: "generalAppearanceTitle",
     field: "General Appearance",
@@ -275,9 +386,9 @@ export const flexSheetTemplate: FlexSheetData[] = [
     componentType: "checkboxlist",
     assessmentSubsets: [
       { subsetId: "WDL", label: "WDL" },
-      { subsetId: "WDL, except:", label: "WDL, except:" },
-      { subsetId: "Appearance", label: "Appearance" },
-      { subsetId: "Safety Checks", label: "Safety Checks" },
+      { subsetId: "WDL_except:", label: "WDL, except:" },
+      { subsetId: "appearance", label: "Appearance" },
+      { subsetId: "safety_check", label: "Safety Checks" },
     ]
   },
   {
@@ -285,15 +396,16 @@ export const flexSheetTemplate: FlexSheetData[] = [
     field: "Appearance",
     componentType: "input",
     hideable: true,
-    hideableId: "Appearance"
   },
   {
     id: "safety_check",
     field: "Safety Check",
     componentType: "input",
     hideable: true,
-    hideableId: "Safety Checks"
-  },
+  }
+];
+
+const psychosocialRows: readonly FlexSheetData[] = [
   {
     id: "psychosocialAssessmentTitle",
     field: "Psychosocial Assessment",
@@ -301,9 +413,13 @@ export const flexSheetTemplate: FlexSheetData[] = [
     rowType: "titleRow",
     wdlDescription: [
       {
+        assessment: "Mental Status",
+        description: "Patient is awake, responsive, communicative, and socially appropriate, functioning within normal cognitive and emotional parameters."
+      },
+      {
         assessment: "Mood & Affect",
         description: "Appropriate, consistent with situation. Speech coherent, hygiene appropriate, denies suicidal/homicidal ideation."
-      },
+      }
     ]
 
   },
@@ -313,17 +429,27 @@ export const flexSheetTemplate: FlexSheetData[] = [
     componentType: "checkboxlist",
     assessmentSubsets: [
       { subsetId: "WDL", label: "WDL" },
-      { subsetId: "WDL, except:", label: "WDL, except:" },
-      { subsetId: "Mood & Affect", label: "Mood & Affect" },
+      { subsetId: "WDL_except:", label: "WDL, except:" },
+      { subsetId: "mood_and_affect", label: "Mood & Affect" },
+      { subsetId: "mental_status", label: "Mental Status" },
+
     ]
+  },
+  {
+    id: "mental_status",
+    field: "Mental Status",
+    componentType: "input",
+    hideable: true,
   },
   {
     id: "mood_and_affect",
     field: "Mood & Affect",
     componentType: "input",
     hideable: true,
-    hideableId: "Mood & Affect"
   },
+];
+
+const heentRows: readonly FlexSheetData[] = [
   {
     id: "heentAssessmentTitle",
     field: "HEENT Assessment",
@@ -343,12 +469,12 @@ export const flexSheetTemplate: FlexSheetData[] = [
     componentType: "checkboxlist",
     assessmentSubsets: [
       { subsetId: "WDL", label: "WDL" },
-      { subsetId: "WDL, except:", label: "WDL, except:" },
-      { subsetId: "Head & Scalp", label: "Head & Scalp" },
-      { subsetId: "Eyes", label: "Eyes" },
-      { subsetId: "Ears", label: "Ears" },
-      { subsetId: "Nose", label: "Nose" },
-      { subsetId: "Mouth & Throat", label: "Mouth & Throat" },
+      { subsetId: "WDL_except:", label: "WDL, except:" },
+      { subsetId: "head_and_scalp", label: "Head & Scalp" },
+      { subsetId: "eyes", label: "Eyes" },
+      { subsetId: "ears", label: "Ears" },
+      { subsetId: "nose", label: "Nose" },
+      { subsetId: "mouth_and_throat", label: "Mouth & Throat" },
     ]
   },
   {
@@ -356,80 +482,109 @@ export const flexSheetTemplate: FlexSheetData[] = [
     field: "Head & Scalp",
     componentType: "input",
     hideable: true,
-    hideableId: "Head & Scalp"
   },
   {
     id: "eyes",
     field: "Eyes",
     componentType: "input",
     hideable: true,
-    hideableId: "Eyes"
   },
   {
     id: "ears",
     field: "Ears",
     componentType: "input",
     hideable: true,
-    hideableId: "Ears"
   },
   {
     id: "nose",
     field: "Nose",
     componentType: "input",
     hideable: true,
-    hideableId: "Nose"
   },
   {
     id: "mouth_and_throat",
     field: "Mouth & Throat",
     componentType: "input",
     hideable: true,
-    hideableId: "Mouth & Throat"
-  },
+  }
+];
+
+const neuroRows: readonly FlexSheetData[] = [
   {
     id: "neurologicalAssessmentTitle",
     field: "Neurological Assessment",
     componentType: "static",
     rowType: "titleRow",
     wdlDescription: [
+      { assessment: "Level of Consciousness", description: "Patient is fully conscious and attentive. Exhibits purposeful interaction and follows complex commands without delay." },
       { assessment: "Orientation", description: "Alert and oriented × 4, follows commands." },
+      { assessment: "Pupils", description: "Pupils are Equal, Round, and Reactive to Light and Accommodation (PERRLA)." },
       { assessment: "Speech", description: "Speech clear and coherent." },
+      { assessment: "Sensation", description: "Sensation is intact and symmetrical to light touch, pain, and temperature across all extremitites." },
       { assessment: "Motor Function", description: "Gross motor functioning intact." }
     ]
   },
   {
     id: "neuro_selections",
-    field: "Neurological Status", // Corrected field name
+    field: "Neurological Status",
     componentType: "checkboxlist",
     assessmentSubsets: [
       { subsetId: "WDL", label: "WDL" },
-      { subsetId: "WDL, except:", label: "WDL, except:" },
-      { subsetId: "Orientation", label: "Orientation" },
-      { subsetId: "Speech", label: "Speech" },
-      { subsetId: "Motor Function", label: "Motor Function" }
+      { subsetId: "WDL_except:", label: "WDL, except:" },
+      { subsetId: "level_of_consciousness", label: "Level of Consciousness" },
+      { subsetId: "orientation", label: "Orientation" },
+      { subsetId: "pupils", label: "Pupils" },
+      { subsetId: "speech", label: "Speech" },
+      { subsetId: "neuro_sensation", label: "Sensation" },
+      { subsetId: "motor_function", label: "Motor Function" }
     ]
+  },
+  {
+    id: "level_of_consciousness",
+    field: "Level of Consciousness",
+    componentType: "assessmentselect",
+    hideable: true,
+    chartingOptions: [
+      { subsetId: "Alert", label: "Alert" },
+      { subsetId: "Lethargic", label: "Lethargic" },
+      { subsetId: "Obtunded", label: "Obtunded" },
+      { subsetId: "Stuporous", label: "Stuporous" },
+      { subsetId: "Comatose", label: "Comatose" },
+    ],
   },
   {
     id: "orientation",
     field: "Orientation",
     componentType: "input",
     hideable: true,
-    hideableId: "Orientation"
+  },
+  {
+    id: "pupils",
+    field: "Pupils",
+    componentType: "input",
+    hideable: true,
   },
   {
     id: "speech",
     field: "Speech",
     componentType: "input",
     hideable: true,
-    hideableId: "Speech"
+  },
+  {
+    id: "neuro_sensation",
+    field: "Sensation",
+    componentType: "input",
+    hideable: true,
   },
   {
     id: "motor_function",
     field: "Motor Function",
     componentType: "input",
     hideable: true,
-    hideableId: "Motor Function"
-  },
+  }
+];
+
+const integumentRows: readonly FlexSheetData[] = [
   {
     id: "integumentaryAssessmentTitle",
     field: "Integumentary Assessment",
@@ -447,11 +602,11 @@ export const flexSheetTemplate: FlexSheetData[] = [
     componentType: "checkboxlist",
     assessmentSubsets: [
       { subsetId: "WDL", label: "WDL" },
-      { subsetId: "WDL, except:", label: "WDL, except:" },
-      { subsetId: "Skin", label: "Skin" },
-      { subsetId: "Hair & Nails", label: "Hair & Nails" },
-      { subsetId: "Turgor", label: "Turgor" },
-      { subsetId: "Wound", label: "Wound" }
+      { subsetId: "WDL_except:", label: "WDL, except:" },
+      { subsetId: "skin", label: "Skin" },
+      { subsetId: "hair_and_nails", label: "Hair & Nails" },
+      { subsetId: "turgor", label: "Turgor" },
+      { subsetId: "wound", label: "Wound" }
     ]
   },
   {
@@ -459,29 +614,28 @@ export const flexSheetTemplate: FlexSheetData[] = [
     field: "Skin",
     componentType: "input",
     hideable: true,
-    hideableId: "Skin"
   },
   {
     id: "hair_and_nails",
     field: "Hair & Nails",
     componentType: "input",
     hideable: true,
-    hideableId: "Hair & Nails"
   },
   {
     id: "turgor",
     field: "Turgor",
     componentType: "input",
     hideable: true,
-    hideableId: "Turgor"
   },
   {
     id: "wound",
     field: "Wound",
     componentType: "input",
     hideable: true,
-    hideableId: "Wound"
-  },
+  }
+];
+
+const cardiacRows: readonly FlexSheetData[] = [
   {
     id: "cardiovascularAssessmentTitle",
     field: "Cardiovascular Assessment",
@@ -499,10 +653,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
     componentType: "checkboxlist",
     assessmentSubsets: [
       { subsetId: "WDL", label: "WDL" },
-      { subsetId: "WDL, except:", label: "WDL, except:" },
-      { subsetId: "Heart Sounds", label: "Heart Sounds" },
-      { subsetId: "Extremities", label: "Extremities" },
-      { subsetId: "Jugular Distention", label: "Jugular Distention" },
+      { subsetId: "WDL_except", label: "WDL, except:" },
+      { subsetId: "heart_sounds", label: "Heart Sounds" },
+      { subsetId: "cardiac_extremities", label: "Extremities" },
+      { subsetId: "jugular_distention", label: "Jugular Distention" },
     ]
   },
   {
@@ -510,22 +664,76 @@ export const flexSheetTemplate: FlexSheetData[] = [
     field: "Heart Sounds",
     componentType: "input",
     hideable: true,
-    hideableId: "Heart Sounds"
   },
   {
-    id: "extremities",
+    id: "cardiac_extremities",
     field: "Extremities",
     componentType: "input",
     hideable: true,
-    hideableId: "Extremities"
   },
   {
     id: "jugular_distention",
     field: "Jugular Distention",
     componentType: "input",
     hideable: true,
-    hideableId: "Jugular Distention"
+  }
+];
+
+const woundRows: readonly FlexSheetData[] = [
+  {
+    id: "woundAssessmentTitle",
+    field: "Wound Assessment",
+    componentType: "static",
+    rowType: "titleRow",
   },
+  {
+    id: "wound_location",
+    field: "Wound Location",
+    componentType: "input",
+  },
+  {
+    id: "wound_type",
+    field: "Wound Type",
+    componentType: "input",
+  },
+  {
+    id: "wound_dimensions",
+    field: "Wound Dimensions (cm)",
+    componentType: "input",
+  },
+  {
+    id: "wound_bed",
+    field: "Wound Bed",
+    componentType: "input",
+  },
+  {
+    id: "wound_exudate",
+    field: "Wound Exudate",
+    componentType: "input",
+  },
+  {
+    id: "periwound_skin",
+    field: "Periwound Skin",
+    componentType: "input",
+  },
+  {
+    id: "primary_wound_dressing",
+    field: "Primary Dressing",
+    componentType: "input",
+  },
+  {
+    id: "secondary_wound_dressing",
+    field: "Secondary Dressing",
+    componentType: "input",
+  },
+  {
+    id: "wound_stage",
+    field: "Wound Stage",
+    componentType: "input",
+  }
+];
+
+const respiratoryRows: FlexSheetData[] = [
   {
     id: "respiratoryAssessmentTitle",
     field: "Respiratory Assessment",
@@ -542,9 +750,9 @@ export const flexSheetTemplate: FlexSheetData[] = [
     componentType: "checkboxlist",
     assessmentSubsets: [
       { subsetId: "WDL", label: "WDL" },
-      { subsetId: "WDL, except:", label: "WDL, except:" },
-      { subsetId: "Chest Appearance", label: "Chest Appearance" },
-      { subsetId: "Lung Sounds", label: "Lung Sounds" },
+      { subsetId: "WDL_except:", label: "WDL, except:" },
+      { subsetId: "chest_appearance", label: "Chest Appearance" },
+      { subsetId: "lung_sounds", label: "Lung Sounds" },
     ]
   },
   {
@@ -552,15 +760,16 @@ export const flexSheetTemplate: FlexSheetData[] = [
     field: "Chest Appearance",
     componentType: "input",
     hideable: true,
-    hideableId: "Chest Appearance"
   },
   {
     id: "lung_sounds",
     field: "Lung Sounds",
     componentType: "input",
     hideable: true,
-    hideableId: "Lung Sounds"
   },
+];
+
+const giRows: readonly FlexSheetData[] = [
   {
     id: "giAssessmentTitle",
     field: "GI Assessment",
@@ -578,10 +787,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
     componentType: "checkboxlist",
     assessmentSubsets: [
       { subsetId: "WDL", label: "WDL" },
-      { subsetId: "WDL, except:", label: "WDL, except:" },
-      { subsetId: "Abdomen", label: "Abdomen" },
-      { subsetId: "Bowel Sounds", label: "Bowel Sounds" },
-      { subsetId: "Nausea", label: "Bowel Sounds" }
+      { subsetId: "WDL_except:", label: "WDL, except:" },
+      { subsetId: "abdomen", label: "Abdomen" },
+      { subsetId: "bowel_sounds", label: "Bowel Sounds" },
+      { subsetId: "gi_symptoms", label: "GI Symptoms" }
     ]
   },
   {
@@ -589,28 +798,29 @@ export const flexSheetTemplate: FlexSheetData[] = [
     field: "Abdomen",
     componentType: "input",
     hideable: true,
-    hideableId: "Abdomen"
   },
   {
     id: "bowel_sounds",
     field: "Bowel Sounds",
     componentType: "input",
     hideable: true,
-    hideableId: "Bowel Sounds"
   },
   {
-    id: "nausea",
-    field: "Nausea",
+    id: "gi_symptoms",
+    field: "GI Symptoms",
     componentType: "input",
     hideable: true,
-    hideableId: "Nausea"
-  },
+  }
+];
+
+const musculoskeletalRows: readonly FlexSheetData[] = [
   {
     id: "musculoskeletalAssessmentTitle",
     field: "Musculoskeletal Assessment",
     componentType: "static",
     rowType: "titleRow",
     wdlDescription: [
+      { assessment: "Muscle Strength", description: "Patient demonstrates 5/5 strength in all major muscle groups. Muscle tone is firm and symmetrical." },
       { assessment: "ROM", description: "Full active and passive in all joints, strength 5/5 bilaterally." },
       { assessment: "Gait", description: "Gait steady, ambulates independently" }
     ]
@@ -621,25 +831,33 @@ export const flexSheetTemplate: FlexSheetData[] = [
     componentType: "checkboxlist",
     assessmentSubsets: [
       { subsetId: "WDL", label: "WDL" },
-      { subsetId: "WDL, except:", label: "WDL, except:" },
-      { subsetId: "Extremity ROM", label: "Extremity ROM" },
-      { subsetId: "Gait", label: "Gait" },
+      { subsetId: "WDL_except:", label: "WDL, except:" },
+      { subsetId: "muscle_strength", label: "Muscle Strength" },
+      { subsetId: "extremity_rom", label: "Extremity ROM" },
+      { subsetId: "gait", label: "Gait" },
     ]
+  },
+  {
+    id: "muscle_strength",
+    field: "Muscle Strength",
+    componentType: "input",
+    hideable: true,
   },
   {
     id: "extremity_rom",
     field: "Extremity ROM",
     componentType: "input",
     hideable: true,
-    hideableId: "Extremity ROM"
   },
   {
     id: "gait",
     field: "Gait",
     componentType: "input",
     hideable: true,
-    hideableId: "Gait"
-  },
+  }
+];
+
+const genitourinaryRows: readonly FlexSheetData[] = [
   {
     id: "genitourinaryAssessmentTitle",
     field: "Genitourinary Assessment",
@@ -656,9 +874,9 @@ export const flexSheetTemplate: FlexSheetData[] = [
     componentType: "checkboxlist",
     assessmentSubsets: [
       { subsetId: "WDL", label: "WDL" },
-      { subsetId: "WDL, except:", label: "WDL, except:" },
-      { subsetId: "Voiding", label: "Voiding" },
-      { subsetId: "Urine", label: "Urine" },
+      { subsetId: "WDL_except:", label: "WDL, except:" },
+      { subsetId: "voiding", label: "Voiding" },
+      { subsetId: "urine_description", label: "Urine" },
     ]
   },
   {
@@ -666,36 +884,64 @@ export const flexSheetTemplate: FlexSheetData[] = [
     field: "Voiding",
     componentType: "input",
     hideable: true,
-    hideableId: "Voiding"
   },
   {
     id: "urine_description",
     field: "Urine",
     componentType: "input",
     hideable: true,
-    hideableId: "Urine"
-  },
+  }
+];
+
+const ivRows1: readonly FlexSheetData[] = [
   {
     id: "ivAssessmentTitle",
-    field: "IV Assessment",     // TODO: add IV sites to schem
+    field: "IV Assessment #1",
     componentType: "static",
     rowType: "titleRow"
   },
   {
-    id: "iv_site",
+    id: "iv_site_1",
     field: "IV Site",
     componentType: "input"
   },
   {
-    id: "iv_type",
+    id: "iv_type_1",
     field: "IV Type",
     componentType: "input"
   },
   {
-    id: "iv_location",
+    id: "iv_location_1",
     field: "IV Location",
     componentType: 'input'
+  }
+];
+
+const ivRows2: readonly FlexSheetData[] = [
+  {
+    id: "ivAssessmentTitle",
+    field: "IV Assessment #2",
+    componentType: "static",
+    rowType: "titleRow"
   },
+  {
+    id: "iv_site_2",
+    field: "IV Site",
+    componentType: "input"
+  },
+  {
+    id: "iv_type_2",
+    field: "IV Type",
+    componentType: "input"
+  },
+  {
+    id: "iv_location_2",
+    field: "IV Location",
+    componentType: 'input'
+  }
+];
+
+const nursingCareRows: readonly FlexSheetData[] = [
   {
     id: "nursingCareTitle",
     field: "Nursing Care",
@@ -706,35 +952,19 @@ export const flexSheetTemplate: FlexSheetData[] = [
     id: "nursing_care_provided",
     field: "Nursing Care Provided",
     componentType: "input"
-  },
+  }
+];
 
-  {
-    id: "assessmentToolsTitle",
-    field: "Assessment Tools",
-    componentType: "static",
-    rowType: "titleRow"
-  },
-  {
-    id: "assessment_tool_selections",
-    field: "Additional Tools",
-    componentType: "checkboxlist",
-    assessmentSubsets: [
-      { subsetId: "CIWA-Ar", label: "CIWA-Ar" },
-      { subsetId: "Morse Fall Risk", label: "Morse Fall Risk" },
-      { subsetId: "Braden Scale", label: "Braden Scale" },
-      { subsetId: "PAINAD", label: "PAINAD" }
-    ]
-  },
+export const ciwaAssessmentTool: FlexSheetData[] = [
   {
     id: "ciwaArSectionTitle",
     field: "CIWA-Ar",
     componentType: "static",
     rowType: "titleRow",
-    hideable: true,
-    hideableId: "CIWA-Ar"
+    toolId: FlexSheetSection.CIWA
   },
   {
-    id: "nausea_vomiting",
+    id: "ciwa_nausea_vomiting",
     field: "Nausea & Vomiting",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -747,12 +977,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "6", label: "6" },
       { subsetId: "7", label: "7 - Constant nausea, frequent dry heaves and vomiting" }
     ],
-    hideable: true,
-    hideableId: "CIWA-Ar",
-    toolName: "CIWA-Ar"
+    toolId: FlexSheetSection.CIWA
   },
   {
-    id: "tremor",
+    id: "ciwa_tremor",
     field: "Tremor",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -765,12 +993,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "6", label: "6" },
       { subsetId: "7", label: "7 - Severe, even with arms not extended" }
     ],
-    hideable: true,
-    hideableId: "CIWA-Ar",
-    toolName: "CIWA-Ar"
+    toolId: FlexSheetSection.CIWA
   },
   {
-    id: "paroxysmal_sweats",
+    id: "ciwa_sweats",
     field: "Paroxysmal Sweats",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -783,12 +1009,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "6", label: "6" },
       { subsetId: "7", label: "7 - Drenching sweats" }
     ],
-    hideable: true,
-    hideableId: "CIWA-Ar",
-    toolName: "CIWA-Ar"
+    toolId: FlexSheetSection.CIWA
   },
   {
-    id: "anxiety",
+    id: "ciwa_anxiety",
     field: "Anxiety",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -801,12 +1025,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "6", label: "6" },
       { subsetId: "7", label: "7 - Equivalent to acute panic states" }
     ],
-    hideable: true,
-    hideableId: "CIWA-Ar",
-    toolName: "CIWA-Ar"
+    toolId: FlexSheetSection.CIWA
   },
   {
-    id: "agitation",
+    id: "ciwa_agitation",
     field: "Agitation",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -819,12 +1041,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "6", label: "6" },
       { subsetId: "7", label: "7 - Paces back and forth during most of the interview, or constantly thrashes about" }
     ],
-    hideable: true,
-    hideableId: "CIWA-Ar",
-    toolName: "CIWA-Ar"
+    toolId: FlexSheetSection.CIWA
   },
   {
-    id: "tactile_disturbances",
+    id: "ciwa_tactile",
     field: "Tactile Disturbances",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -837,12 +1057,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "6", label: "6 - Extremely severe hallucinations" },
       { subsetId: "7", label: "7 - Continuous hallucinations" }
     ],
-    hideable: true,
-    hideableId: "CIWA-Ar",
-    toolName: "CIWA-Ar"
+    toolId: FlexSheetSection.CIWA
   },
   {
-    id: "visual_disturbances",
+    id: "ciwa_visual",
     field: "Visual Disturbances",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -855,12 +1073,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "6", label: "6" },
       { subsetId: "7", label: "7 - Continuous hallucinations" }
     ],
-    hideable: true,
-    hideableId: "CIWA-Ar",
-    toolName: "CIWA-Ar"
+    toolId: FlexSheetSection.CIWA
   },
   {
-    id: "headache",
+    id: "ciwa_headache",
     field: "Headache",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -873,12 +1089,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "6", "label": "6" },
       { subsetId: "7", label: "7 - Extremely severe" }
     ],
-    hideable: true,
-    hideableId: "CIWA-Ar",
-    toolName: "CIWA-Ar"
+    toolId: FlexSheetSection.CIWA
   },
   {
-    id: "orientation2",
+    id: "ciwa_orientation",
     field: "Orientation",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -888,46 +1102,40 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "3", label: "3 - Disoriented for date by more than 2 calendar days" },
       { subsetId: "4", label: "4 - Disoriented to place or person" },
     ],
-    hideable: true,
-    hideableId: "CIWA-Ar",
-    toolName: "CIWA-Ar"
-  },
+    toolId: FlexSheetSection.CIWA
+  }
+];
+
+export const morseAssessmentTool: FlexSheetData[] = [
   {
     id: "morseFallRiskTitle",
     field: "Morse Fall Risk",
     componentType: "static",
     rowType: "titleRow",
-    hideable: true,
-    hideableId: "Morse Fall Risk"
+    toolId: FlexSheetSection.MORSE,
   },
   {
-    id: "history_of_falling",
+    id: "morse_fall_history",
     field: "History of Falling",
     componentType: "assessmentselect",
     chartingOptions: [
       { subsetId: "0", label: "0 - No falls" },
       { subsetId: "25", label: "25 - Has fallen within 3 months" },
     ],
-    hideable: true,
-    hideableId: "Morse Fall Risk",
-    toolName: "Morse Fall Risk"
-
+    toolId: FlexSheetSection.MORSE
   },
   {
-    id: "secondary_diagnosis",
+    id: "morse_secondary_diagnosis",
     field: "Secondary Diagnosis",
     componentType: "assessmentselect",
     chartingOptions: [
       { subsetId: "0", label: "0 - No" },
       { subsetId: "15", label: "15 - Yes" },
     ],
-    hideable: true,
-    hideableId: "Morse Fall Risk",
-    toolName: "Morse Fall Risk"
-
+    toolId: FlexSheetSection.MORSE
   },
   {
-    id: "ambulatory_aid",
+    id: "morse_ambulatory_aid",
     field: "Ambulatory Aid",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -935,25 +1143,20 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "15", label: "15 - Crutches/cane/walker" },
       { subsetId: "25", label: "25 - Clutches furniture or support" }
     ],
-    hideable: true,
-    hideableId: "Morse Fall Risk",
-    toolName: "Morse Fall Risk"
+    toolId: FlexSheetSection.MORSE
   },
   {
-    id: "iv_therapy_heparin_lock",
+    id: "morse_iv",
     field: "IV Therapy/Heparin Lock",
     componentType: "assessmentselect",
     chartingOptions: [
       { subsetId: "0", label: "0 - No" },
       { subsetId: "20", label: "20 - Yes" },
     ],
-    hideable: true,
-    hideableId: "Morse Fall Risk",
-    toolName: "Morse Fall Risk"
-
+    toolId: FlexSheetSection.MORSE
   },
   {
-    id: "fall_risk_gait",
+    id: "morse_gait",
     field: "Gait",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -961,34 +1164,31 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "10", label: "10 - Weak" },
       { subsetId: "20", label: "20 - Impaired" }
     ],
-    hideable: true,
-    hideableId: "Morse Fall Risk",
-    toolName: "Morse Fall Risk"
+    toolId: FlexSheetSection.MORSE
 
   },
   {
-    id: "mental_status",
+    id: "morse_mental_status",
     field: "Mental Status",
     componentType: "assessmentselect",
     chartingOptions: [
       { subsetId: "0", label: "0 - Oriented to own abilities" },
       { subsetId: "15", label: "15 - Overestimates or forgets limitations" },
     ],
-    hideable: true,
-    hideableId: "Morse Fall Risk",
-    toolName: "Morse Fall Risk"
-  },
+    toolId: FlexSheetSection.MORSE
+  }
+];
+
+export const bradenAssessmentTool: FlexSheetData[] = [
   {
     id: "bradenSkinScale",
     field: "Braden Scale",
     componentType: "static",
     rowType: "titleRow",
-    hideable: true,
-    hideableId: "Braden Scale",
-
+    toolId: FlexSheetSection.BRADEN
   },
   {
-    id: "sensory_perception",
+    id: "braden_sensory_perception",
     field: "Sensory Perception",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -997,13 +1197,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "3", label: "3 - Slightly Limited" },
       { subsetId: "4", label: "4 - No Impairment" },
     ],
-    hideable: true,
-    hideableId: "Braden Scale",
-    toolName: "Braden Scale"
-
+    toolId: FlexSheetSection.BRADEN
   },
   {
-    id: "moisture",
+    id: "braden_moisture",
     field: "Moisture",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1012,13 +1209,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "3", label: "3 - Occasionally Moist" },
       { subsetId: "4", label: "4 - Rarely Moist" },
     ],
-    hideable: true,
-    hideableId: "Braden Scale",
-    toolName: "Braden Scale"
-
+    toolId: FlexSheetSection.BRADEN
   },
   {
-    id: "activity",
+    id: "braden_activity",
     field: "Activity",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1027,13 +1221,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "3", label: "3 - Walks Occasionally." },
       { subsetId: "4", label: "4 - Walks Frequently" },
     ],
-    hideable: true,
-    hideableId: "Braden Scale",
-    toolName: "Braden Scale"
-
+    toolId: FlexSheetSection.BRADEN
   },
   {
-    id: "mobility",
+    id: "braden_mobility",
     field: "Mobility",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1042,13 +1233,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "3", label: "3 - Slightly Limited" },
       { subsetId: "4", label: "4 - No Limitations" },
     ],
-    hideable: true,
-    hideableId: "Braden Scale",
-    toolName: "Braden Scale"
-
+    toolId: FlexSheetSection.BRADEN
   },
   {
-    id: "nutrition",
+    id: "braden_nutrition",
     field: "Nutrition",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1057,13 +1245,11 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "3", label: "3 - Adequate" },
       { subsetId: "4", label: "4 - Excellent" },
     ],
-    hideable: true,
-    hideableId: "Braden Scale",
-    toolName: "Braden Scale"
+    toolId: FlexSheetSection.BRADEN
 
   },
   {
-    id: "friction_and_shear",
+    id: "braden_friction_and_shear",
     field: "Friction and Shear",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1071,20 +1257,20 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "2", label: "2 - Potential Problem" },
       { subsetId: "3", label: "3 - No Apparent Problem" },
     ],
-    hideable: true,
-    hideableId: "Braden Scale",
-    toolName: "Braden Scale"
-  },
+    toolId: FlexSheetSection.BRADEN
+  }
+];
+
+export const painadAssessmentTool: FlexSheetData[] = [
   {
     id: "painadTitle",
     field: "PAINAD",
     componentType: "static",
     rowType: "titleRow",
-    hideable: true,
-    hideableId: "PAINAD",
+    toolId: FlexSheetSection.PAINAD
   },
   {
-    id: "breathing_independent_of_vocalization",
+    id: "painad_breathing",
     field: "Breathing",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1092,12 +1278,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "1", label: "1 - Occasional labored breathing, short periods of hyperventilation" },
       { subsetId: "2", label: "2 - Noisy labored breathing, long periods of hyperventilation, Cheyne-Stokes" },
     ],
-    hideable: true,
-    hideableId: "PAINAD",
-    toolName: "PAINAD"
+    toolId: FlexSheetSection.PAINAD
   },
   {
-    id: "negative_vocalization",
+    id: "painad_negative_vocalization",
     field: "Negative Vocalization",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1105,12 +1289,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "1", label: "1 - Occasional moan or groan, low-level speech with a negative or disapproving quality" },
       { subsetId: "2", label: "2 - Repeated troubled calling out, loud moaning or groaning, crying" },
     ],
-    hideable: true,
-    hideableId: "PAINAD",
-    toolName: "PAINAD"
+    toolId: FlexSheetSection.PAINAD
   },
   {
-    id: "facial_expression",
+    id: "painad_facial_expression",
     field: "Facial Expression",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1118,12 +1300,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "1", label: "1 - Sad, frightened, frown" },
       { subsetId: "2", label: "2 - Facial grimacing" },
     ],
-    hideable: true,
-    hideableId: "PAINAD",
-    toolName: "PAINAD"
+    toolId: FlexSheetSection.PAINAD
   },
   {
-    id: "body_language",
+    id: "painad_body_language",
     field: "Body Language",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1131,12 +1311,10 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "1", label: "1 - Tense, distressed pacing, fidgeting" },
       { subsetId: "2", label: "2 - Rigid, fists clenched, knees pulled up or pushing away, striking out" },
     ],
-    hideable: true,
-    hideableId: "PAINAD",
-    toolName: "PAINAD"
+    toolId: FlexSheetSection.PAINAD
   },
   {
-    id: "consolability",
+    id: "painad_consolability",
     field: "Consolability",
     componentType: "assessmentselect",
     chartingOptions: [
@@ -1144,323 +1322,63 @@ export const flexSheetTemplate: FlexSheetData[] = [
       { subsetId: "1", label: "1 - Distracted or reassured by voice or touch" },
       { subsetId: "2", label: "2 - Unable to console, distract, or reassure" },
     ],
-    hideable: true,
-    hideableId: "PAINAD",
-    toolName: "PAINAD"
-  },
-];
-
-
-
-interface AssessmentToolCategories {
-  name: string,
-  scoringOptions: { rating: string, description: string }[]
-}
-
-interface ScoreInterpretation {
-  result: string
-  range: string,
-  description: string,
-  action?: string
-}
-
-export interface AssessmentTool {
-  name: string,
-  categories: AssessmentToolCategories[],
-  maxScore?: string,
-  interpretations?: ScoreInterpretation[]
-}
-
-
-export const assessmentTools: AssessmentTool[] = [
-  {
-    name: "CIWA-Ar",
-    categories: [
-      {
-        name: "Nausea & Vomitting",
-        scoringOptions: [
-          { rating: "0", description: "No nausea or vomitting" },
-          { rating: "1", description: "Mild nausea with no vomiting" },
-          { rating: "4", description: "Intermittent nausea with no vomiting" },
-          { rating: "7", description: "Constant nausea, frequent dry heaves and vomiting" }
-        ]
-      },
-      {
-        name: "Tremor",
-        scoringOptions: [
-          { rating: "0", description: "No tremor" },
-          { rating: "1", description: "Not visible, but can be felt fingertip to fingertip" },
-          { rating: "4", description: "Moderate, with patient's arms extended" },
-          { rating: "7", description: "Severe, even with arms not extended" }
-        ]
-      },
-      {
-        name: "Paroxysmal Sweats",
-        scoringOptions: [
-          { rating: "0", description: "No sweat visible" },
-          { rating: "1", description: "Barely perceptible sweating, palms moist" },
-          { rating: "4", description: "Beads of sweat obvious on forehead" }, // Scores 2, 3, 5, 6 are often implied intermediate steps
-          { rating: "7", description: "Drenching sweats" },
-        ],
-      },
-      {
-        name: "Anxiety",
-        scoringOptions: [
-          { rating: "0", description: "No anxiety, at ease" },
-          { rating: "1", description: "Mildly anxious" },
-          { rating: "4", description: "Moderately anxious, or guarded, so anxiety is inferred" }, // Scores 2, 3, 5, 6 are often implied intermediate steps
-          { rating: "7", description: "Equivalent to acute panic states as seen in severe delirium or acute schizophrenic reactions" },
-        ],
-      },
-      {
-        name: "Agitation",
-        scoringOptions: [
-          { rating: "0", description: "Normal activity" },
-          { rating: "1", description: "Somewhat more than normal activity" },
-          { rating: "4", description: "Moderately fidgety and restless" }, // Scores 2, 3, 5, 6 are often implied intermediate steps
-          { rating: "7", description: "Paces back and forth during most of the interview, or constantly thrashes about" },
-        ],
-      },
-      {
-        name: "Tactile Disturbances",
-        scoringOptions: [
-          { rating: "0", description: "None" },
-          { rating: "1", description: "Very mild itching, pins and needles, burning, or numbness" },
-          { rating: "2", description: "Mild itching, pins and needles, burning, or numbness" },
-          { rating: "3", description: "Moderate itching, pins and needles, burning, or numbness" },
-          { rating: "4", description: "Moderately severe hallucinations" },
-          { rating: "5", description: "Severe hallucinations" },
-          { rating: "6", description: "Extremely severe hallucinations" },
-          { rating: "7", description: "Continuous hallucinations" },
-        ],
-      },
-      {
-        name: "Auditory Disturbances",
-        scoringOptions: [
-          { rating: "0", description: "Not present" },
-          { rating: "1", description: "Very mild harshness or ability to frighten" },
-          { rating: "2", description: "Mild harshness or ability to frighten" },
-          { rating: "3", description: "Moderate harshness or ability to frighten" },
-          { rating: "4", description: "Moderately severe hallucinations" },
-          { rating: "5", description: "Severe hallucinations" },
-          { rating: "6", description: "Extremely severe hallucinations" },
-          { rating: "7", description: "Continuous hallucinations" },
-        ],
-      },
-      {
-        name: "Visual Disturbances",
-        scoringOptions: [
-          { rating: "0", description: "Not present" },
-          { rating: "1", description: "Very mild sensitivity" },
-          { rating: "2", description: "Mild sensitivity" },
-          { rating: "3", description: "Moderate sensitivity" },
-          { rating: "4", description: "Moderately severe hallucinations" },
-          { rating: "5", description: "Severe hallucinations" },
-          { rating: "6", description: "Extremely severe hallucinations" },
-          { rating: "7", description: "Continuous hallucinations" },
-        ],
-      },
-      {
-        name: "Headache, Fullness in Head",
-        scoringOptions: [
-          { rating: "0", description: "Not Present" },
-          { rating: "1", description: "Very mild" },
-          { rating: "2", description: "Mild" },
-          { rating: "3", description: "Moderate" },
-          { rating: "4", description: "Moderately severe" },
-          { rating: "5", description: "Severe" },
-          { rating: "6", description: "Very severe" },
-          { rating: "7", description: "Extremely severe" },
-        ],
-      },
-      {
-        name: "Orientation and Clouding of Sensorium",
-        scoringOptions: [
-          { rating: "0", description: "Oriented, can do serial additions" },
-          { rating: "1", description: "Cannot do serial additions or is uncertain about date" },
-          { rating: "2", description: "Disoriented for date by no more than 2 calendar days" },
-          { rating: "3", description: "Disoriented for date by more than 2 calendar days" },
-          { rating: "4", description: "Disoriented to place or person" },
-        ],
-      },
-    ],
-    maxScore: "67",
-    interpretations: [
-      { result: "Mild", range: "0-9", description: "Minimal symptoms" },
-      { result: "Moderate", range: "10-15", description: "Moderate symptoms" },
-      { result: "Severe", range: "16+", description: "Severe symptoms requiring medical attention" }
-    ]
-  },
-  {
-    name: "Morse Fall Risk",
-    categories: [
-      {
-        name: "History of Falling",
-        scoringOptions: [
-          { rating: "0", description: "No falls" },
-          { rating: "25", description: "Has fallen in past 3 months." }
-        ]
-      },
-      {
-        name: "Secondary Diagnosis",
-        scoringOptions: [
-          { rating: "0", description: "Yes" },
-          { rating: "15", description: "No" }
-        ]
-      },
-      {
-        name: "Ambulatory Aid",
-        scoringOptions: [
-          { rating: "0", description: "Bed rest/nurse assist" },
-          { rating: "15", description: "Crutches/cane/walker" },
-          { rating: "25", description: "Clutches furniture or support" }
-        ]
-      },
-      {
-        name: "IV Inserted",
-        scoringOptions: [
-          { rating: "0", description: "Yes" },
-          { rating: "20", description: "No" }
-        ]
-      },
-      {
-        name: "Gait/Transferring",
-        scoringOptions: [
-          { rating: "0", description: "Normal/bedrest/immobile" },
-          { rating: "10", description: "Weak" },
-          { rating: "20", description: "Impaired" }
-        ]
-      },
-      {
-        name: "Mental Status",
-        scoringOptions: [
-          { rating: "0", description: "Oriented to own ability" },
-          { rating: "15", description: "Forgets limitations" }
-        ]
-      }
-    ],
-    interpretations: [
-      { result: "No Risk", range: "0-24", description: "Minimal symptoms" },
-      { result: "Low Risk", range: "25-50", description: "Moderate symptoms" },
-      { result: "High Risk", range: "≥51", description: "Severe symptoms requiring medical attention" }
-    ]
-  },
-  {
-    name: "Braden Scale",
-    categories: [
-      {
-        name: "Sensory Perception",
-        scoringOptions: [
-          { rating: "1", description: "Completely Limited: Unresponsive to painful stimuli; limited ability to feel pain over most of body." },
-          { rating: "2", description: "Very Limited: Responds only to painful stimuli; cannot communicate discomfort except by moaning/restlessness; sensory impairment over half of body." },
-          { rating: "3", description: "Slightly Limited: Responds to verbal commands but cannot always communicate discomfort or need to be turned; sensory impairment in 1 or 2 extremities." },
-          { rating: "4", description: "No Impairment: Responds to verbal commands; no sensory deficit limiting ability to feel or voice pain/discomfort." },
-        ],
-      },
-      {
-        name: "Moisture",
-        scoringOptions: [
-          { rating: "1", description: "Constantly Moist: Skin kept moist almost constantly by perspiration, urine, etc.; dampness detected every time patient is moved or turned." },
-          { rating: "2", description: "Very Moist: Skin is often, but not always, moist; linen must be changed at least once a shift." },
-          { rating: "3", description: "Occasionally Moist: Skin is occasionally moist, requiring an extra linen change approximately once a day." },
-          { rating: "4", description: "Rarely Moist: Skin is usually dry; linen only requires changing at routine intervals." },
-        ],
-      },
-      {
-        name: "Activity",
-        scoringOptions: [
-          { rating: "1", description: "Bedfast: Confined to bed." },
-          { rating: "2", description: "Chairfast: Ability to walk severely limited or non-existent; cannot bear own weight and/or must be assisted into chair/wheelchair." },
-          { rating: "3", description: "Walks Occasionally: Walks occasionally during day, but for very short distances, with or without assistance; spends majority of each shift in bed or chair." },
-          { rating: "4", description: "Walks Frequently: Walks outside the room at least twice a day and inside room at least once every 2 hours during waking hours." },
-        ],
-      },
-      {
-        name: "Mobility",
-        scoringOptions: [
-          { rating: "1", description: "Completely Immobile: Does not make even slight changes in body or extremity position without assistance." },
-          { rating: "2", description: "Very Limited: Makes occasional slight changes in body or extremity position but unable to make frequent or significant changes independently." },
-          { rating: "3", description: "Slightly Limited: Makes frequent though slight changes in body or extremity position independently." },
-          { rating: "4", description: "No Limitations: Makes major and frequent changes in position without assistance." },
-        ],
-      },
-      {
-        name: "Nutrition",
-        scoringOptions: [
-          { rating: "1", description: "Very Poor: Never eats a complete meal; rarely eats more than 1/3 of any food offered; eats 2 servings or less of protein per day; takes fluids poorly; does not take a liquid dietary supplement; OR is NPO and/or maintained on clear liquids or IVs for more than 5 days." },
-          { rating: "2", description: "Probably Inadequate: Rarely eats a complete meal and generally eats only about 1/2 of any food offered; protein intake includes only 3 servings of meat or dairy products per day; occasionally will take a dietary supplement; OR receives less than optimum amount of liquid diet or tube feeding." },
-          { rating: "3", description: "Adequate: Eats over half of most meals; eats a total of 4 servings of protein each day; occasionally will refuse a meal, but will usually take a supplement if offered; OR is on a tube feeding or TPN regimen which probably meets most of nutritional needs." },
-          { rating: "4", description: "Excellent: Eats most of every meal; never refuses a meal; usually eats a total of 4 or more servings of protein per day; occasionally eats between meals; does not require supplementation." },
-        ],
-      },
-      {
-        name: "Friction and Shear",
-        scoringOptions: [
-          { rating: "1", description: "Problem: Requires moderate to maximum assistance in moving; complete lifting without sliding against sheets is impossible; frequently slides down in bed or chair, requiring frequent repositioning with maximum assistance; spasticity, contractures, or agitation lead to almost constant friction." },
-          { rating: "2", description: "Potential Problem: Moves feebly or requires minimum assistance; during a move, skin probably slides to some extent against sheets, chair, restraints, or other devices; maintains relatively good position in chair or bed most of the time but occasionally slides down." },
-          { rating: "3", description: "No Apparent Problem: Moves in bed and in chair independently and has sufficient muscle strength to lift up completely during move; maintains good position in bed or chair at all times." },
-        ],
-      },
-    ],
-    maxScore: "23", // Max score for Braden Scale is 23
-    interpretations: [
-      { result: "No Risk", range: "19-23", description: "Patients are unlikely to develop skin breakdown." },
-      { result: "Mild Risk", range: "15-18", description: "Patients demonstrate some risk factors for developing bedsores." },
-      { result: "Moderate Risk", range: "13-14", description: "Extra attention should be given; consider environmental safety and balance exercises." },
-      { result: "High Risk", range: "10-12", description: "Requires additional equipment and frequent repositioning." },
-      { result: "Severe Risk", range: "6-9", description: "At very high risk for skin breakdown; frequent monitoring is essential." },
-    ]
-  },
-  {
-    name: "PAINAD",
-    categories: [
-      {
-        name: "Breathing (Independent of Vocalization)",
-        scoringOptions: [
-          { rating: "0", description: "Normal" },
-          { rating: "1", description: "Occasional labored breathing, short periods of hyperventilation" },
-          { rating: "2", description: "Noisy labored breathing, long periods of hyperventilation, Cheyne-Stokes" },
-        ],
-      },
-      {
-        name: "Negative Vocalization",
-        scoringOptions: [
-          { rating: "0", description: "None" },
-          { rating: "1", description: "Occasional moan or groan, low-level speech with a negative or disapproving quality" },
-          { rating: "2", description: "Repeated troubled calling out, loud moaning or groaning, crying" },
-        ],
-      },
-      {
-        name: "Facial Expression",
-        scoringOptions: [
-          { rating: "0", description: "Smiling or inexpressive" },
-          { rating: "1", description: "Sad, frightened, frown" },
-          { rating: "2", description: "Facial grimacing" },
-        ],
-      },
-      {
-        name: "Body Language",
-        scoringOptions: [
-          { rating: "0", description: "Relaxed" },
-          { rating: "1", description: "Tense, distressed pacing, fidgeting" },
-          { rating: "2", description: "Rigid, fists clenched, knees pulled up or pushing away, striking out" },
-        ],
-      },
-      {
-        name: "Consolability",
-        scoringOptions: [
-          { rating: "0", description: "No need to console" },
-          { rating: "1", description: "Distracted or reassured by voice or touch" },
-          { rating: "2", description: "Unable to console, distract, or reassure" },
-        ],
-      },
-    ],
-    maxScore: "10", // Max score for PAINAD Scale is 10 (5 categories * 2 points/category)
-    interpretations: [
-      { result: "Mild Pain", range: "1-3", description: "Possible mild discomfort." },
-      { result: "Moderate Pain", range: "4-6", description: "Likely moderate pain, consider intervention." },
-      { result: "Severe Pain", range: "7-10", description: "Severe pain, requires immediate attention and intervention." },
-    ]
+    toolId: FlexSheetSection.PAINAD
   }
-];
+]
 
+export const flexSheetSections: FlexSheetSections = {
+  [FlexSheetSection.VITALS]: vitalSignRows,
+  [FlexSheetSection.VITALS_OVERVIEW]: vitalSignOverviewRows,
+  [FlexSheetSection.INPUT]: inputRows,
+  [FlexSheetSection.OUTPUT]: outputRows,
+  [FlexSheetSection.BASE_PAIN]: basePainRows,
+  [FlexSheetSection.FACES_PAIN]: facesPainRows,
+  [FlexSheetSection.GENERAL_APPEARANCE]: generalAppearanceRows,
+  [FlexSheetSection.PSYCHOSOCIAL]: psychosocialRows,
+  [FlexSheetSection.HEENT]: heentRows,
+  [FlexSheetSection.NEURO]: neuroRows,
+  [FlexSheetSection.INTEGUMENT]: integumentRows,
+  [FlexSheetSection.CARDIAC]: cardiacRows,
+  [FlexSheetSection.RESPIRATORY]: respiratoryRows,
+  [FlexSheetSection.WOUND]: woundRows,
+  [FlexSheetSection.GI]: giRows,
+  [FlexSheetSection.MUSCULOSKELETAL]: musculoskeletalRows,
+  [FlexSheetSection.GENTIOURINARY]: genitourinaryRows,
+  [FlexSheetSection.IV_1]: ivRows1,
+  [FlexSheetSection.IV_2]: ivRows2,
+  [FlexSheetSection.NURSING_CARE]: nursingCareRows,
+  [FlexSheetSection.BRADEN]: bradenAssessmentTool,
+  [FlexSheetSection.CIWA]: ciwaAssessmentTool,
+  [FlexSheetSection.MORSE]: morseAssessmentTool,
+  [FlexSheetSection.PAINAD]: painadAssessmentTool,
+};
+
+export function addRows(section: FlexSheetSection): FlexSheetData[] {
+  return [...flexSheetSections[section]];
+}
+
+// This set represents the FlexSheet template selections made by an admin in the Case Builder.
+// In the future, these values would be fetched from Supabase, but this requires new forms
+// in the case builder to allow admin to make FlexSheet template selections.
+export const tempSelectionSet = new Set<FlexSheetSection>([
+  FlexSheetSection.VITALS,
+  FlexSheetSection.INPUT,
+  FlexSheetSection.OUTPUT,
+  FlexSheetSection.BASE_PAIN,
+  FlexSheetSection.FACES_PAIN,
+  FlexSheetSection.GENERAL_APPEARANCE,
+  FlexSheetSection.PSYCHOSOCIAL,
+  FlexSheetSection.HEENT,
+  FlexSheetSection.NEURO,
+  FlexSheetSection.INTEGUMENT,
+  FlexSheetSection.CARDIAC,
+  FlexSheetSection.RESPIRATORY,
+  FlexSheetSection.WOUND,
+  FlexSheetSection.GI,
+  FlexSheetSection.MUSCULOSKELETAL,
+  FlexSheetSection.GENTIOURINARY,
+  FlexSheetSection.IV_1,
+  FlexSheetSection.IV_2,
+  FlexSheetSection.NURSING_CARE,
+  FlexSheetSection.CIWA,
+]);
