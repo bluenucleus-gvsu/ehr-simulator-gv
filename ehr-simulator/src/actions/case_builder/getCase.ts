@@ -2,8 +2,8 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient";
-import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
 import { assertUuid } from "@/lib/caseBuilder/validation";
+import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
 import { DatabaseDocumentation } from "../simulation";
 
 export interface CaseBundle {

@@ -3,13 +3,13 @@
 import { useReactTable, getCoreRowModel, flexRender, type RowData } from "@tanstack/react-table";
 import { useState } from "react";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { AddTimeColumnButton } from "./components/addTimeColButton";
+import { AddTimeColumnButton } from "./addTimeColButton";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { toast } from "sonner";
-import FlexSheetColumnShifter from "./components/flexSheetColumnShifter";
-import { ImagingData, LabCellValue } from "../labs/components/labsData";
+import FlexSheetColumnShifter from "./flexSheetColumnShifter";
+import { ImagingData, LabCellValue } from "../../labs/components/labsData";
 import { DatabaseDocumentation } from "@/actions/simulation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
 import { getPinnedStyles } from "@/lib/flexSheet/flexSheetHelpers";

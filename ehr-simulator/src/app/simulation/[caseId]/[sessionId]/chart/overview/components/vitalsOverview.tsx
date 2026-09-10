@@ -48,7 +48,6 @@ function mostRecentVitals(
 }
 
 export function VitalsOverview({ dbDocumentation }: VitalsOverviewProps) {
-  // const { caseBundle } = useSimulationCase();
   const { simStartTime, isPresim } = useSimSessionContext();
 
   const flexSheetTemplate = useMemo(() => {
@@ -60,7 +59,7 @@ export function VitalsOverview({ dbDocumentation }: VitalsOverviewProps) {
     const mapped = buildChartingRowsFromBundle(dbDocumentation, flexSheetTemplate);
 
     const selectedOffsets = isPresim ?
-      Array.from(mapped.timePointsInPreSim)
+      Array.from(mapped.timeOffsetsInPreSim)
       : mapped.timeOffsets;
 
     return {

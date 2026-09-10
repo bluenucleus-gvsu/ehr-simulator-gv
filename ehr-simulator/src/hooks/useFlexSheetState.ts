@@ -6,7 +6,7 @@ interface UseFlexSheetStateProps {
   initialCharting: {
     rows: FlexSheetData[];
     timeOffsets: number[];
-    timePointsInPreSim: Set<number>;
+    timeOffsetsInPreSim: Set<number>;
   };
   isPresim: boolean | null;
   canEdit: boolean;
@@ -22,7 +22,7 @@ export function useFlexSheetState({
 
   const [timeOffsets, setTimeOffsets] = useState<number[]>(
     isPresim
-      ? Array.from(initialCharting.timePointsInPreSim).sort((a, b) => a - b)
+      ? Array.from(initialCharting.timeOffsetsInPreSim).sort((a, b) => a - b)
       : initialCharting.timeOffsets
   );
 
