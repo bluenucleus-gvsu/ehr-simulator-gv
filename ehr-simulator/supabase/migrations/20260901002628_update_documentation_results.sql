@@ -310,7 +310,7 @@ CREATE OR REPLACE VIEW all_documentation_results AS
     gi_symptoms, extremity_rom, gait, voiding, iv_site_1, iv_type_1, iv_location_1, iv_site_2, iv_type_2, iv_location_2,
     nursing_care_provided, level_of_consciousness, pupils, neuro_sensation, muscle_strength, mental_status, 
     wound_location, wound_type, wound_dimensions, wound_bed, wound_exudate, periwound_skin, primary_wound_dressing, 
-    secondary_wound_dressing, wound_stage, urine_description, pain_location, pain_characteristics, pain_alleviating_factors
+    secondary_wound_dressing, wound_stage, urine_description, pain_location, pain_characteristics, pain_alleviating_factors,
     pain_aggravating_factors, pain_interventions, faces_pain_scale,
     
     -- Scales & Scores
@@ -354,7 +354,7 @@ CREATE OR REPLACE VIEW all_documentation_results AS
     gi_symptoms, extremity_rom, gait, voiding, iv_site_1, iv_type_1, iv_location_1, iv_site_2, iv_type_2, iv_location_2,
     nursing_care_provided, level_of_consciousness, pupils, neuro_sensation, muscle_strength, mental_status, 
     wound_location, wound_type, wound_dimensions, wound_bed, wound_exudate, periwound_skin, primary_wound_dressing, 
-    secondary_wound_dressing, wound_stage, urine_description, pain_location, pain_characteristics, pain_alleviating_factors
+    secondary_wound_dressing, wound_stage, urine_description, pain_location, pain_characteristics, pain_alleviating_factors,
     pain_aggravating_factors, pain_interventions, faces_pain_scale,
     
     -- Scales & Scores

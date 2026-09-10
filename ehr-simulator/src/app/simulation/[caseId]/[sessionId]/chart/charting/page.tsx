@@ -1,5 +1,5 @@
 import { getAllDocumentationData } from "@/actions/simulation"
-import FlexSheetView from "./chartingView";
+import FlexSheetView from "./components/chartingView";
 
 interface FlexSheetProps {
   params: Promise<{

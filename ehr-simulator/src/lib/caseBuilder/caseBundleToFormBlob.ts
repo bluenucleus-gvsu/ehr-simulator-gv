@@ -141,8 +141,7 @@ export function caseBundleToFormBlob(bundle: CaseBundle): FormBlob {
     charting: {
       data: hydratedCharting.rows,
       timePoints: hydratedCharting.timeOffsets,
-      timePointsInPreSim: hydratedCharting.timePointsInPreSim,
-      visibleItems: hydratedCharting.visibleItems,
+      timePointsInPreSim: hydratedCharting.timeOffsetsInPreSim,
     },
     intakeOutput: intakeOutputBlocksFromCaseRow(caseRow.intake_output_blocks),
     medOrders: medOrderFormStateFromCaseBundle(bundle),

@@ -16,7 +16,7 @@ function getField(row: DatabaseDocumentation | undefined, key: string): unknown 
 export function buildChartingRowsFromBundle(
   documentationResults: DatabaseDocumentation[] | null | undefined,
   template: FlexSheetData[],
-): { rows: FlexSheetData[]; timeOffsets: number[]; timePointsInPreSim: Set<number>; visibleItems: Set<string> } {
+): { rows: FlexSheetData[]; timeOffsets: number[]; timeOffsetsInPreSim: Set<number>; } {
 
   const docs = documentationResults ?? [];
   const timeOffsetsSet = new Set<number>();
@@ -36,27 +36,19 @@ export function buildChartingRowsFromBundle(
   const timeOffsets = Array.from(timeOffsetsSet).sort((a, b) => a - b);
   const fallbackOffsets = timeOffsets.length > 0 ? timeOffsets : [0];
 
-  const visibleItems = new Set<string>();
-
   const rows = template.map((templateRow) => {
     const nextRow: FlexSheetData = { ...templateRow };
-    let hasValue = false;
     const mappedColumn = templateRow.id;
 
     for (const offset of fallbackOffsets) {
       const docRow = docByOffset.get(offset);
       const value = asCellString(getField(docRow, mappedColumn));
       nextRow[offset] = value;
-      if (value !== "") hasValue = true;
     }
 
-    if (templateRow.hideable) {
-      nextRow.hideable = !hasValue;
-      if (hasValue) visibleItems.add(templateRow.field);
-    }
 
     return nextRow;
   });
 
-  return { rows, timeOffsets: fallbackOffsets, timePointsInPreSim: timeOffsetsInPreSim, visibleItems };
+  return { rows, timeOffsets: fallbackOffsets, timeOffsetsInPreSim };
 }

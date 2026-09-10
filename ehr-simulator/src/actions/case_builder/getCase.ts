@@ -1,8 +1,9 @@
 "use server"
 
+import { createClient } from "@supabase/supabase-js";
 import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient";
-import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
 import { assertUuid } from "@/lib/caseBuilder/validation";
+import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
 import { DatabaseDocumentation } from "../simulation";
 
 export interface CaseBundle {
@@ -79,7 +80,13 @@ export async function getCaseBundle(
 ): Promise<CaseBundle> {
 
   assertUuid(caseId, "Case ID");
-  const supabase = await createCaseBuilderAdminClient();
+  // This bundle is also used by the student simulation chart. Do not require
+  // case-builder admin access for this read-only path.
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  );
 
   const [
     caseRes,
