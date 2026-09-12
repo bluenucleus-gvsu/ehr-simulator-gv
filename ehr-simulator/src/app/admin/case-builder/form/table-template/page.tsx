@@ -8,7 +8,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useFormContext } from "@/context/FormContext";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
-import { CaseSection } from "@/lib/saveCase";
+import { CaseSection } from "@/lib/caseSections";
 import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 import { FormShell } from "../../components/formShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

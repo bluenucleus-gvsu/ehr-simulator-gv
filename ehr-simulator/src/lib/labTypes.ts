@@ -1,5 +1,4 @@
 import { ImagingData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
-import { timeColumnCell } from "@/utils/timeColumnCell";
 import { LabTableData } from '@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData';
 import { MicrobiologyReportData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
 
@@ -159,6 +158,14 @@ function parseNumeric(value: unknown): number | null {
   if (value === "" || value == null) return null
   const n = Number(value)
   return Number.isFinite(n) ? n : null
+}
+
+export function timeColumnCell(row: Record<string | number | symbol, unknown>, offset: number): unknown {
+  const fromNum = row[offset];
+  if (fromNum !== undefined && fromNum !== null) return fromNum;
+  const fromStr = row[String(offset)];
+  if (fromStr !== undefined && fromStr !== null) return fromStr;
+  return undefined;
 }
 
 export function transformLabTableToSchema(

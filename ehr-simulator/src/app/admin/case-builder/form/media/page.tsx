@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useFormContext } from "@/context/FormContext";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
-import { CaseSection } from "@/lib/saveCase";
+import { CaseSection } from "@/lib/caseSections";
 import type { MediaImageData } from "@/utils/form";
 import { toast } from "sonner";
 import { caseBuilderPath } from "@/lib/caseBuilder/routes";

@@ -1,6 +1,6 @@
 "use server"
 
-import { CaseSection } from "@/lib/saveCase"
+import { CaseSection } from "@/lib/caseSections"
 import { upsertCaseDemographics } from "@/actions/case_builder/upsertCaseDemographics";
 import { updatePatientHistory } from "@/actions/case_builder/updatePatientHistory";
 import { updateClinicalDocuments } from "@/actions/case_builder/updateClinicalDocuments";
