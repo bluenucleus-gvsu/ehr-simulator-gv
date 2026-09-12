@@ -14,7 +14,7 @@ import { FormShell } from "../../components/formShell";
 import { ChartingToolTip } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/ChartingToolTip";
 import { FormTable } from "../../components/FormTable";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
-import { CaseSection } from "@/lib/saveCase";
+import { CaseSection } from "@/lib/caseSections";
 import CheckBoxList from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/checkBoxList";
 import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 

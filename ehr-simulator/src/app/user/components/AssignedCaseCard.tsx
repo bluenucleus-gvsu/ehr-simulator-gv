@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation"; // Use Next.js router
-import { markSessionInProgress } from "@/actions/simulation"; // Adjust import path
+import { useRouter } from "next/navigation";
+import { markSessionInProgress } from "@/actions/simulation";
 import { getAssignedSimulationLifecycle } from "@/utils/assignedSimulationLifecycle";
 
-type Props = {
+type AssignedCaseCardProps = {
   id: string;
   caseId: string;
   sessionId: string | null;
@@ -26,7 +26,7 @@ export default function AssignedCaseCard({
   simTime,
   presimTime,
   groupMembers = [],
-}: Props) {
+}: AssignedCaseCardProps) {
   const router = useRouter();
   const [isStarting, setIsStarting] = useState(false); // Add a loading state
 
@@ -40,6 +40,7 @@ export default function AssignedCaseCard({
   const isActivePhase = lifecycle.availability === "active";
   const isPresimPhase = lifecycle.availability === "presim";
   const isCompletedPhase = lifecycle.availability === "completed";
+
   const handleRoute = async (pathSuffix: string, isStartingSim: boolean = false) => {
     if (!sessionId) {
       toast.error("Session is still being generated. Please try again later.");
@@ -85,7 +86,6 @@ export default function AssignedCaseCard({
         {isActivePhase ? (
           <button
             className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-            // Pass `true` here to trigger the server action!
             onClick={() => handleRoute('chart/overview', true)}
             disabled={isStarting}
             aria-label={`Start simulation ${name ?? id}`}
@@ -95,7 +95,6 @@ export default function AssignedCaseCard({
         ) : isPresimPhase ? (
           <button
             className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
-            // Pass `false` (or nothing) so it just routes to the case report without updating the status
             onClick={() => handleRoute('chart/overview', false)}
             aria-label={`View pre-sim chart for ${name ?? id}`}
           >

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { updateMedications } from "@/actions/case_builder/updateMedications";
 import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 import { assertValidSaveRequest } from "@/lib/caseBuilder/validation";
-import { CaseSection } from "@/lib/saveCase";
+import { CaseSection } from "@/lib/caseSections";
 import type { CaseBundle } from "@/actions/case_builder/getCase";
 import { medOrderFormStateFromCaseBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marFromBundle";
 import { buildLabRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsFromBundle";

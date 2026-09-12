@@ -1,5 +1,4 @@
 import { getMedicationAdministrations, getMedicationOrders } from "@/actions/simulation";
-import { resolveSimulationRouteContext } from "@/actions/simulation/getSimulationContext";
 import { AllMedicationTypes, MedicationOrder } from "./components/marData";
 import { mapDatabaseMedToFrontend } from "./components/marHelpers";
 import MarView from "./components/marView";
@@ -13,13 +12,11 @@ interface PageProps {
 
 const Mar = async ({ params }: PageProps) => {
   const awaitedParams = await params;
-  const { caseId: routeCaseId, sessionId } = awaitedParams;
-  const routeContext = await resolveSimulationRouteContext(routeCaseId);
-  const resolvedCaseId = routeContext.caseId;
+  const { caseId, sessionId } = awaitedParams;
 
   const [medData, administrationData] = await Promise.all([
-    getMedicationOrders(resolvedCaseId),
-    getMedicationAdministrations(resolvedCaseId, sessionId),
+    getMedicationOrders(caseId),
+    getMedicationAdministrations(caseId, sessionId),
   ]);
 
   if (!medData.success || !medData.data) {
@@ -27,7 +24,8 @@ const Mar = async ({ params }: PageProps) => {
       medicationOrders={[]}
       medications={[]}
       medicationAdministrations={[]}
-      params={awaitedParams}
+      caseId={caseId}
+      sessionId={sessionId}
     />
   }
 
@@ -72,7 +70,8 @@ const Mar = async ({ params }: PageProps) => {
       medicationOrders={formattedOrders}
       medications={formattedMedications}
       medicationAdministrations={medicationAdministrations}
-      params={awaitedParams}
+      caseId={caseId}
+      sessionId={sessionId}
     />
   )
 

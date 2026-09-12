@@ -33,7 +33,7 @@ import { useFormContext } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
 import { Checkbox } from "@/components/ui/checkbox"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
-import { CaseSection } from "@/lib/saveCase"
+import { CaseSection } from "@/lib/caseSections"
 import { caseBuilderPath } from "@/lib/caseBuilder/routes"
 
 const categories: OrderType["category"][] = ["Nursing", "Respiratory", "Laboratory", "Consult", "Diet", "Medication"]

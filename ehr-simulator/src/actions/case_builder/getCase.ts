@@ -3,13 +3,14 @@
 import { createClient } from "@supabase/supabase-js";
 import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient";
 import { assertUuid } from "@/lib/caseBuilder/validation";
+import { Database } from "../../../database.types";
 
 export interface CaseBundle {
   caseRow: CaseRow
   safetyAlerts: CaseBundleRow[]
   familyHistory: CaseBundleRow[]
   clinicalDocuments: CaseBundleRow[]
-  orders: CaseBundleRow[]
+  orders: DatabaseOrder[]
   labResults: CaseBundleRow[]
   imagingReports: ImagingReportRow[]
   microbiologyReports: MicrobiologyReportRow[]
@@ -21,14 +22,10 @@ export interface CaseBundle {
 }
 
 type NamedLookup = { id?: string | null; name?: string | null };
+export type DatabaseOrder = Database['public']['Tables']['orders']['Row'];
 
-export type CaseRow = Record<string, unknown> & {
-  id?: string | null;
-  first_name?: string | null;
-  last_name?: string | null;
-  date_of_birth?: string | null;
-  code_status?: string | null;
-  attending_provider?: string | null;
+
+export type CaseRow = Database['public']['Tables']['cases']['Row'] & {
   isolation_precautions?: NamedLookup | null;
   relationship_status?: NamedLookup | null;
 };
@@ -230,7 +227,7 @@ export async function getCaseBundle(
     safetyAlerts: (safetyAlertsRes.data ?? []) as CaseBundleRow[],
     familyHistory: (familyHistoryRes.data ?? []) as CaseBundleRow[],
     clinicalDocuments: (clinicalDocumentsRes.data ?? []) as CaseBundleRow[],
-    orders: (ordersRes.data ?? []) as CaseBundleRow[],
+    orders: (ordersRes.data ?? []) as DatabaseOrder[],
     labResults: (labResultsRes.data ?? []) as CaseBundleRow[],
     imagingReports: (imagingReportsRes.data ?? []) as ImagingReportRow[],
     microbiologyReports: (microbiologyReportsRes.data ?? []) as MicrobiologyReportRow[],

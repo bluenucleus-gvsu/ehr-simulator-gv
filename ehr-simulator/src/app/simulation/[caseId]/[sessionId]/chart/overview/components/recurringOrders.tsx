@@ -9,45 +9,15 @@ import StyledTitle from "./styledTitle"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
 import { useSimSessionContext } from "@/context/SimSessionContext"
 import { isVisibleForSimulationPhase } from "@/lib/simulationPhaseVisibility"
+import { DatabaseOrder } from "@/actions/case_builder/getCase"
+import { OrderType } from "../../orders/components/orderData"
 
-type DbOrder = {
-  id?: string
-  category?: string | null
-  title?: string | null
-  details?: string | null
-  is_important?: boolean | null
-  is_in_presim?: boolean | null
-  phase?: number | null
-}
-
-/** Match categories the same way as `chart/orders/page.tsx` */
-function categoryMatches(category: string, section: "nursing" | "respiratory" | "diet" | "laboratory" | "consult" | "medication"): boolean {
-  const c = category.trim().toLowerCase()
-  switch (section) {
-    case "nursing":
-      return c === "nursing"
-    case "respiratory":
-      return c === "respiratory"
-    case "laboratory":
-      return c === "laboratory" || c === "lab" || c === "labs"
-    case "consult":
-      return c === "consult"
-    default:
-      return false
-  }
-}
-
-const SECTIONS: { key: "nursing" | "respiratory" | "diet" | "laboratory" | "consult" | "medication"; label: string }[] = [
-  { key: "nursing", label: "Nursing" },
-  { key: "respiratory", label: "Respiratory" },
-  { key: "laboratory", label: "Labs" },
-  { key: "consult", label: "Consults" },
-]
+const ORDER_CATEGORIES: OrderType["category"][] = ["Nursing", "Respiratory", "Laboratory", "Consult", "Diet", "Medication"]
 
 const RecurringOrders = () => {
   const { caseBundle } = useSimulationCase()
   const { isPresim, currentPhase } = useSimSessionContext()
-  const orders = (caseBundle?.orders ?? []) as DbOrder[]
+  const orders = (caseBundle?.orders ?? []) as DatabaseOrder[]
   const important = orders.filter((order) =>
     order.is_important &&
     isVisibleForSimulationPhase({
@@ -63,14 +33,17 @@ const RecurringOrders = () => {
       <StyledTitle color="bg-sky-200" firstLetter="R" secondLetter="ecurring Orders" />
       <CardContent className="grid gap-4 px-8">
         <div className="flex flex-col w-full items-start gap-3">
-          {SECTIONS.map(({ key, label }) => {
-            const rows = important.filter((o) => categoryMatches(o.category ?? "", key))
+          {ORDER_CATEGORIES.map((category, i) => {
+            const rows = important.filter((o) => o.category === category)
+
+            if (rows.length === 0) return null
+
             return (
-              <div key={key} className="flex flex-col gap-2 w-full">
-                <p className="text-sm font-medium leading-none">{label}</p>
+              <div key={i} className="flex flex-col gap-2 w-full">
+                <p className="text-sm font-medium leading-none">{category}</p>
                 {rows.map((order) => (
                   <div
-                    key={order.id ?? `${key}-${order.title}-${order.details}`}
+                    key={order.id ?? `${order.title}-${order.details}`}
                     className="flex pl-2 gap-3 items-center"
                   >
                     <p className="text-xs text-neutral-500 tracking-tight">{order.title ?? "Untitled Order"}</p>
@@ -86,9 +59,6 @@ const RecurringOrders = () => {
                     </TooltipProvider>
                   </div>
                 ))}
-                {rows.length === 0 ? (
-                  <p className="pl-2 text-xs text-neutral-400">No important {label.toLowerCase()} orders.</p>
-                ) : null}
               </div>
             )
           })}

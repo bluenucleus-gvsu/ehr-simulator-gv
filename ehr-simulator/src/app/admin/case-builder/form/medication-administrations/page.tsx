@@ -32,7 +32,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useFormContext } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
 import ColumnShiftControl from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/columnShiftControl"
-import { CaseSection } from "@/lib/saveCase"
+import { CaseSection } from "@/lib/caseSections"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
 import { caseBuilderPath } from "@/lib/caseBuilder/routes"
 

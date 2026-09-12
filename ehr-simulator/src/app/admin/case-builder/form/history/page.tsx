@@ -28,7 +28,7 @@ import { nursingAlerts } from "@/utils/form";
 import { HistoryFormData } from "@/utils/form";
 import { FormShell } from "../../components/formShell";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
-import { CaseSection } from "@/lib/saveCase";
+import { CaseSection } from "@/lib/caseSections";
 import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 
 const FormSection = ({

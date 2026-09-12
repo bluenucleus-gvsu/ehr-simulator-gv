@@ -2,7 +2,11 @@
 
 import { createContext, useContext } from "react";
 import type { CaseBundle } from "@/actions/case_builder/getCase";
-import type { SimulationRouteContext } from "@/actions/simulation/getSimulationContext";
+
+interface SimulationRouteContext {
+  caseId: string;
+  sessionId: string;
+}
 
 interface SimulationCaseContextValue {
   routeContext: SimulationRouteContext | null;

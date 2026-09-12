@@ -3,10 +3,8 @@ import RecurringOrders from "./components/recurringOrders"
 import Nutrition from "./components/nutrition"
 import ActiveProblems from "./components/activeProblems"
 import Alerts from "./components/alerts"
-// import CareTeam from "./components/careTeam"
 import { SelectedLabs } from "./components/selectedLabs"
-// import MarSnapshot from "./components/marSnapshot"
-import Demographics from "./components/demographics"
+import DemographicsCard from "./components/demographics"
 import FamilyHistory from "./components/familyHistory"
 import SurgicalHistory from "./components/surgicalHistory"
 import SocialHabits from "./components/socialHabits"
@@ -29,16 +27,13 @@ const OverviewPage = ({ params }: OverviewPageProps) => {
     <RecurringOrders key="recurring-orders" />,
     <Visitors key="visitors" />,
     <Nutrition key="nutrition" />,
-    // Care team is hard-coded
-    // <CareTeam key="care-team" />,
     <IntakeOutput key="intake-output" />,
     <SelectedLabs key="selected-labs" />,
-    // <MarSnapshot key="mar-snapshot" />,
-    <Demographics key="demographics" />,
+    <DemographicsCard key="demographics" />,
     <FamilyHistory key="family-history" />,
     <SurgicalHistory key="surgical-history" />,
     <SocialHabits key="social-habits" />,
-    <LivingSituation key="living-situation" />,
+    <LivingSituation key="living-situation" />
   ];
 
   return (

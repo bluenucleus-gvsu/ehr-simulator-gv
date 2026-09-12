@@ -1,19 +1,15 @@
 'use client'
 
 import { Expand, Home, Minimize, PillBottle, Stethoscope } from "lucide-react"
-import { useEffect, useState, type ReactNode } from "react"
-import Link from 'next/link'
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
 import InfoTooltip from "@/components/helpTooltip";
 import AdminSimControl from "@/app/simulation/[caseId]/[sessionId]/chart/components/adminSimControl";
+import ChartTabs from "./chartTabs";
 
-interface HeaderProps {
-  tabs?: ReactNode;
-}
-
-const Header = ({ tabs }: HeaderProps) => {
+const Header = () => {
   const [isFullscreen, setIsFullScreen] = useState(false)
   const { userId, userRole, isPresim, loading, currentPhase, handlePhaseChange, handlePresimStatusChange } = useSimSessionContext();
   const router = useRouter()
@@ -57,16 +53,14 @@ const Header = ({ tabs }: HeaderProps) => {
     }
   };
   return (
-    <header className="shrink-0 border-b border-white/20 h-(--header-height)">
+    <header className={`shrink-0 ${isPresim ? "bg-amber-600" : "bg-lime-600"} border-b border-white/20 h-(--header-height)`}>
       <div className="flex h-(--header-height) justify-between items-center pl-8 gap-3">
         <div className="flex items-center gap-3">
           <Stethoscope color="white" size={26} strokeWidth={2.5} />
-          <Link href="#">
-            <h1 className="text-3xl font-bold text-white hover:opacity-90 transition-opacity leading-none">
-              <span>Flex</span>
-              <span className="font-normal">Chart</span>
-            </h1>
-          </Link>
+          <h1 className="text-3xl font-bold text-white">
+            <span>Flex</span>
+            <span className="font-normal">Chart</span>
+          </h1>
           <div
             className={`hidden lg:block rounded-xl border px-3 py-1.5 shadow-lg transition-all duration-200 text-nowrap ${modeClasses}`}
             aria-live="polite"
@@ -77,9 +71,7 @@ const Header = ({ tabs }: HeaderProps) => {
             <p className="text-[10px] font-medium leading-tight opacity-95">{modeSubtext}</p>
           </div>
         </div>
-        <div className="flex items-end h-full gap-4">
-          {tabs}
-        </div>
+        <ChartTabs />
         <div className="flex pr-8 gap-4">
           {userRole === "admin" &&
             <AdminSimControl

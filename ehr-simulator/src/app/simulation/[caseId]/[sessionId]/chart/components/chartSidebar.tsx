@@ -2,16 +2,35 @@
 
 import { CircleUserRound } from "lucide-react";
 import { useMemo } from "react";
-import { buildChartDataFromCaseRow } from "./chartData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
-import { useSimSessionContext } from "@/context/SimSessionContext";
 
-// Define types for local state
 interface MarCounts {
   prn: number;
   scheduled: number;
   continuous: number;
+}
+
+function formatHeight(heightFt: unknown, heightIn: unknown): string {
+  const feet = String(heightFt ?? "0").trim();
+  const inches = String(heightIn ?? "0").trim();
+  return `${feet}' ${inches}"`;
+}
+
+function formatWeight(weightKg: unknown): string {
+  const value = String(weightKg ?? "").trim();
+  return value ? `${value} kg` : "---";
+}
+
+export function valueFromJoinedName(raw: unknown): string {
+  if (Array.isArray(raw)) {
+    const first = raw[0] as { name?: string } | undefined;
+    return first?.name?.trim() || "";
+  }
+  if (raw && typeof raw === "object") {
+    return String((raw as { name?: string }).name ?? "").trim() || "None";
+  }
+  return "None";
 }
 
 function ChartSidebarSkeleton() {
@@ -33,19 +52,8 @@ function ChartSidebarSkeleton() {
 
 export default function ChartSidebar() {
   const { caseBundle } = useSimulationCase();
-  const { simStartTime } = useSimSessionContext();
+  const patientDetails = caseBundle?.caseRow
 
-  const referenceTime = useMemo(
-    () => new Date(simStartTime ?? Date.now()),
-    [simStartTime],
-  );
-  const sidebarData = useMemo(
-    () =>
-      buildChartDataFromCaseRow((caseBundle?.caseRow as Record<string, unknown> | null | undefined) ?? null, {
-        referenceTime,
-      }),
-    [caseBundle?.caseRow, referenceTime],
-  );
   const marData = useMemo<MarCounts>(() => {
     const orders = (caseBundle?.medicationOrders ?? []) as Array<{ priority?: string | null; frequency?: string | null }>;
     return orders.reduce(
@@ -62,7 +70,6 @@ export default function ChartSidebar() {
       { prn: 0, continuous: 0, scheduled: 0 },
     );
   }, [caseBundle?.medicationOrders]);
-  // --- Render Logic ---
 
   if (!caseBundle) {
     return (
@@ -72,15 +79,20 @@ export default function ChartSidebar() {
     )
   }
 
-  if (!sidebarData || Object.keys(sidebarData).length === 0) {
+  if (!patientDetails) {
     return (
       <div className="w-64 h-full min-h-0 flex flex-col justify-start items-center bg-gray-200 border-r border-gray-300 p-2 flex-shrink-0">
         <p className="mt-10">No patient data.</p>
       </div>
     )
   }
+  const fullName = [patientDetails.first_name, patientDetails.last_name].filter(Boolean).join(' ')
 
-  // --- Helper Functions ---
+  const allergies = !patientDetails.allergies || patientDetails.allergies.length === 0
+    ? "None" : patientDetails.allergies.join(', ');
+
+  const pmh = !patientDetails.medical_history || patientDetails.medical_history.length === 0
+    ? "None" : patientDetails.medical_history.join(', ');
 
   const displayOrderCount = (count: number | undefined) => {
     if (count === undefined) return '';
@@ -96,25 +108,20 @@ export default function ChartSidebar() {
         <CircleUserRound size={100} strokeWidth={0.8} color="oklch(38% 0.189 293.745)" className="rounded-full bg-white" />
       </span>
       <div className="flex flex-col items-center">
-        <h1 className="text-purple-900 text-lg font-medium tracking-tight">{sidebarData.name.value}</h1>
+        <h1 className="text-purple-900 text-lg font-medium tracking-tight">{fullName}</h1>
         <p className="text-purple-900 text-sm font-light tracking-tight">
-          {sidebarData.age.label}:
-          <span className="pl-2 font-normal">{sidebarData.age.value}</span>
+          Age:
+          <span className="pl-2 font-normal">{"TEMP AGE"}</span>
         </p>
 
         <p className="text-purple-900 text-sm font-light tracking-tight">
-          {sidebarData.mrn.label}:
-          <span className="pl-2 font-normal">{sidebarData.mrn.value}</span>
+          MRN:
+          <span className="pl-2 font-normal">{patientDetails.mrn}</span>
         </p>
 
-        {/* <p className="text-purple-900 text-sm font-light tracking-tight">
-          {sidebarData.dob.label}:
-          <span className="pl-2 font-normal">{sidebarData.dob.value}</span>
-        </p> */}
-
         <p className="text-purple-900 text-sm font-light tracking-tight">
-          {sidebarData.code.label}:
-          <span className="pl-2 font-normal">{sidebarData.code.value}</span>
+          Code Status:
+          <span className="pl-2 font-normal">{patientDetails.code_status}</span>
         </p>
       </div>
 
@@ -123,17 +130,13 @@ export default function ChartSidebar() {
         <div className="relative flex flex-col border bg-white border-purple-900 w-full h-fit px-2 py-3 gap-1 rounded-lg shadow-md">
           <p className="font-medium text-purple-900 tracking-tight -top-3 absolute left-2 bg-white rounded-2xl  px-1">This Admission</p>
 
-          {/* <p className="text-purple-900 text-xs font-light tracking-tight">
-            <span className="underline">{sidebarData.admissionDate.label}:</span>
-            <span className="pl-2 font-normal">{sidebarData.admissionDate.value}</span>
-          </p> */}
           <p className="text-purple-900 text-xs font-light tracking-tight">
-            <span className="underline">{sidebarData.attending.label}:</span>
-            <span className="pl-2 font-normal">{sidebarData.attending.value}</span>
+            <span className="underline">Attending Provider:</span>
+            <span className="pl-2 font-normal">{patientDetails.attending_provider}</span>
           </p>
           <p className="text-purple-900 text-xs font-light tracking-tight">
-            <span className="underline">{sidebarData.location.label}:</span>
-            <span className="pl-2 font-normal">{sidebarData.location.value}</span>
+            <span className="underline">Location:</span>
+            <span className="pl-2 font-normal">Simulation Suite</span>
           </p>
         </div>
 
@@ -141,40 +144,24 @@ export default function ChartSidebar() {
         <div className="relative flex flex-col bg-white border border-purple-900 w-full h-fit px-2 py-3 gap-1 rounded-lg shadow-md">
           <p className="font-medium text-purple-900 tracking-tight -top-3 absolute left-2 bg-white rounded-2xl px-1">Clinical Info</p>
           <p className="text-purple-900 text-xs font-light tracking-tight">
-            <span className="underline">{sidebarData.height.label}:</span>
-            <span className="pl-2 font-normal">{sidebarData.height.value}</span>
+            <span className="underline">Height:</span>
+            <span className="pl-2 font-normal">{formatHeight(patientDetails.height_ft, patientDetails.height_in)}</span>
           </p>
           <p className="text-purple-900 text-xs font-light tracking-tight">
-            <span className="underline">{sidebarData.weight.label}:</span>
-            <span className="pl-2 font-normal">{sidebarData.weight.value}</span>
+            <span className="underline">Weight:</span>
+            <span className="pl-2 font-normal">{formatWeight(patientDetails.weight_kg)}</span>
           </p>
           <p className="text-purple-900 text-xs font-light tracking-tight">
-            <span className="underline text-nowrap">{sidebarData.isolation.label}:</span>
-            <span className="pl-2 font-normal">{sidebarData.isolation.value}</span>
-            {/* <span className="pl-1">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Info size={14} color="oklch(38.1% 0.176 304.987)" />
-                  </TooltipTrigger>
-                  <TooltipContent className="w-fit">
-                    <p className="max-w-120 text-wrap">{sidebarData.isolation.tooltip}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </span> */}
+            <span className="underline text-nowrap">Isolation Status:</span>
+            <span className="pl-2 font-normal">{valueFromJoinedName(patientDetails.isolation_precautions)}</span>
           </p>
           <p className="text-purple-900 text-xs font-light tracking-tight">
-            <span className="underline text-nowrap">{sidebarData.allergies.label}:</span>
-            <span className='font-normal decoration-none no-underline px-2  rounded-md'>
-              {sidebarData.allergies.value.length ? sidebarData.allergies.value.join(", ") : "None"}
-            </span>
+            <span className="underline text-nowrap">Allergies:</span>
+            <span className='font-normal decoration-none no-underline px-2 rounded-md'>{allergies}</span>
           </p>
           <p className="text-purple-900 text-xs font-light tracking-tight">
-            <span className="underline pr-2 text-nowrap">{sidebarData.pmh.label}:</span>
-            <span className='font-normal decoration-none no-underline rounded-md'>
-              {sidebarData.pmh.value.length ? sidebarData.pmh.value.join(", ") : "None"}
-            </span>
+            <span className="underline pr-2 text-nowrap">Past Medical History:</span>
+            <span className='font-normal decoration-none no-underline rounded-md'>{pmh}</span>
           </p>
 
         </div>
