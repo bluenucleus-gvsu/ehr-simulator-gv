@@ -162,3 +162,22 @@ export async function getUsersGroupId(userId: string) {
     message: 'Successfully retrieved user data.'
   }
 }
+
+export async function getUserRole(userId: string): Promise<string | null>{
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { data: profile, error} = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", userId)
+      .single();
+
+  if (error){
+    return null
+  }
+
+  return profile?.role
+}

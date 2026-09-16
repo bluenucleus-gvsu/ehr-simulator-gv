@@ -1,3 +1,4 @@
+import { getUserRole } from "@/actions/users";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { emailIsDevAdminAllowlist } from "@/lib/devAdminEmails";
@@ -28,16 +29,10 @@ export default async function AdminLayout({
     }
 
     // Check role from the application's users table (public.users)
-    const { data: profile, error: profileError } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    const role = profile?.role as string | undefined;
+    const role = await getUserRole(user.id)
     const devBypass = emailIsDevAdminAllowlist(user.email ?? undefined);
 
-    if ((profileError || !profile || role !== "admin") && !devBypass) {
+    if ((role !== "admin") && !devBypass) {
       return (
         <main className="p-8 min-h-screen flex items-center justify-center">
           <div className="max-w-xl w-full text-center bg-white rounded-lg shadow p-6">
