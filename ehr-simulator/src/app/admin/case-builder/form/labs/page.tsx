@@ -9,8 +9,6 @@ import { TooltipPortal } from "@radix-ui/react-tooltip";
 
 import { TestTube2 } from "lucide-react";
 import { AddTableColumn } from "./components/addTimeCol";
-import { Label } from "@/components/ui/label";
-import Combobox from "@/components/ui/combobox";
 import { useRouter } from "next/navigation";
 import { LabTableImagingReport, LabTableInputCell, LabTableMicrobioReport } from "./components/labTableInputCell";
 import { useFormContext } from "@/context/FormContext";
@@ -45,8 +43,8 @@ function ensureNumberSet(input: unknown): Set<number> {
 function LabForm() {
   const { onDataChange, labData, caseId } = useFormContext()
   const [labTableData, setLabTableData] = useState<LabTableData[]>(labData.data);
-  const [visibleItems, setVisibleItems] = useState<Set<string>>(ensureStringSet(labData.visibleItems));
-  const [comboboxValue, setComboboxValue] = useState<string>('');
+  const [visibleItems] = useState<Set<string>>(ensureStringSet(labData.visibleItems));
+
   const {
     timePoints,
     timePointsInPresim,
@@ -57,46 +55,18 @@ function LabForm() {
 
   const router = useRouter()
 
-  // Get all hideable options for Combobox selector
-  const hideableOptions = useMemo(() => {
-    return labTableData
-      .filter(row => row.hideable === true)
-      .filter(row => !visibleItems.has(row.field))
-      .map(row => ({
-        value: row.field,
-        label: row.field
-      }));
-  }, [labTableData, visibleItems]);
-
-  // Filter data to only show visible rows
-  const filteredLabTableData = useMemo(() => {
-    return labTableData.filter(row => {
-      // Always show non-hideable rows
-      if (!row.hideable) return true;
-      return visibleItems.has(row.field);
-    });
-  }, [labTableData, visibleItems]);
-
-  // Handler to add an item to visible list
-  const handleAddVisibleItem = (fieldName: string) => {
-    if (fieldName) {
-      setVisibleItems(prev => new Set([...prev, fieldName]));
-      setComboboxValue("");
-    }
-  };
-
   const goBack = () => {
-    onDataChange('labs', {
+    onDataChange(CaseSection.LABS, {
       data: labTableData,
       timePoints: timePoints,
       timePointsInPreSim: timePointsInPresim,
       visibleItems: visibleItems
     });
-    router.push(caseBuilderPath("/admin/case-builder/form/orders", caseId));
+    router.push(caseBuilderPath("/admin/case-builder/form/table-template", caseId));
   }
 
   const handleSubmit = async () => {
-    onDataChange('labs', {
+    onDataChange(CaseSection.LABS, {
       data: labTableData,
       timePoints: timePoints,
       timePointsInPreSim: timePointsInPresim,
@@ -234,7 +204,7 @@ function LabForm() {
   );
 
   const ptTable = useReactTable({
-    data: filteredLabTableData,
+    data: labTableData,
     columns,
     enablePinning: true,
     initialState: {
@@ -244,7 +214,7 @@ function LabForm() {
     },
     meta: {
       updateData: (rowIndex, columnId, value) => {
-        const filteredRow = filteredLabTableData[rowIndex];
+        const filteredRow = labTableData[rowIndex];
         const actualIndex = labTableData.findIndex(row => row.field === filteredRow?.field);
         setLabTableData(old =>
           old.map((row, index) => {
@@ -265,7 +235,7 @@ function LabForm() {
   return (
     <FormShell
       title="Lab Results"
-      stepDescription="Step 5 of 10: Enter laboratory and imaging results"
+      stepDescription="Enter laboratory and imaging results"
       icon={<TestTube2 className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}
@@ -277,10 +247,10 @@ function LabForm() {
       <div className="bg-slate-50/50 flex-1 flex flex-col min-h-0 px-6 pt-4">
         <div className="h-12 px-4 w-full flex justify-start gap-12 mb-3 items-end">
           <AddTableColumn handleColumnAdd={addTimePoint} />
-          <div>
+          {/* <div>
             <Label>Imaging Options</Label>
             <Combobox onValueChange={handleAddVisibleItem} value={comboboxValue} displayText="Select scans..." data={hideableOptions} />
-          </div>
+          </div> */}
           <div className="flex items-end gap-2">
             <div className="space-y-1.5">
               <p className="w-fit items-center  px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-50 text-yellow-600 border border-yellow-300 uppercase tracking-wide">

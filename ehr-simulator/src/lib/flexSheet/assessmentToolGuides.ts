@@ -313,7 +313,8 @@ export const assessmentToolGuides: AssessmentToolGuides = {
 
 
 // For EHR sidebar - only includes guides for selected Assessment Tools
-export function buildAssessmentToolGuide(toolSelections: Set<string>) {
+export function buildAssessmentToolGuide(toolList: string[]) {
+  const toolSelections = new Set(toolList);
   const baseTemplate = [] as AssessmentToolGuide[];
 
   for (const [name, guide] of Object.entries(assessmentToolGuides)) {

@@ -39,7 +39,7 @@ const ChartLayout = async ({ children, params }: ChartLayoutProps) => {
                 </div>
               </div>
             </div>
-            <FlexSheetSidebar />
+            <FlexSheetSidebar sections={serverCaseBundle.caseRow.flexsheet_sections ?? []} />
           </SimulationShell>
         </SimSessionProvider>
       </SidebarProvider>

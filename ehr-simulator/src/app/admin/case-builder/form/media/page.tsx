@@ -22,7 +22,7 @@ const MediaForm = () => {
 
   const updateImages = (nextImages: MediaImageData[]) => {
     setImages(nextImages);
-    onDataChange("media", nextImages);
+    onDataChange(CaseSection.MEDIA, nextImages);
   };
 
   const handleSubmit = async () => {
@@ -30,7 +30,7 @@ const MediaForm = () => {
       toast.error("Please complete earlier steps.");
       return;
     }
-    try{
+    try {
       const result = await saveCaseData({
         payload: images,
         section: CaseSection.MEDIA,
@@ -38,14 +38,14 @@ const MediaForm = () => {
       });
       if (result?.data) updateImages(result.data);
       router.push(caseBuilderPath("/admin/case-builder/form/review", caseId));
-    } catch(err){
+    } catch (err) {
       console.error(err);
       toast.error("Failed to save Media.");
     }
-};
+  };
 
   const goBack = () => {
-    onDataChange("media", images);
+    onDataChange(CaseSection.MEDIA, images);
     router.push(caseBuilderPath("/admin/case-builder/form/medication-administrations", caseId));
   };
 
@@ -54,7 +54,7 @@ const MediaForm = () => {
 
     const selectedFiles = Array.from(e.target.files).filter((file) => {
       if (!file.type.startsWith('image/')) return false;
-      if (file.size >= MAX_SIZE_MB * 1024 * 1024){
+      if (file.size >= MAX_SIZE_MB * 1024 * 1024) {
         toast.error(`${file.name} exceeds ${MAX_SIZE_MB}MB and was skipped.`);
         return false;
       }
@@ -82,7 +82,7 @@ const MediaForm = () => {
   return (
     <FormShell
       title="Add Media"
-      stepDescription="Step 10 of 11: Review case before submitting"
+      stepDescription="Review case before submitting"
       icon={<ImageIcon className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}

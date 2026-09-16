@@ -5,6 +5,7 @@ import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient
 import { assertUuid } from "@/lib/caseBuilder/validation";
 import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
 import { DatabaseDocumentation } from "../simulation";
+import { FlexSheetSection } from "@/lib/flexSheet/flexSheetSections";
 
 export interface CaseBundle {
   caseRow: CaseRow
@@ -34,7 +35,7 @@ export type CaseRow = Record<string, unknown> & {
   isolation_precautions?: NamedLookup | null;
   relationship_status?: NamedLookup | null;
   case_specialty: CaseSpecialty;
-  flexsheet_sections: string[] | null;
+  flexsheet_sections: FlexSheetSection[] | null;
 };
 
 export type CaseBundleRow = Record<string, unknown> & {

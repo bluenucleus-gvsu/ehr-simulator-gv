@@ -6,8 +6,7 @@ import { medOrderFormStateFromCaseBundle } from "@/app/simulation/[caseId]/[sess
 import { defaultDemographicData, defaultHistoryData } from "@/context/FormContext";
 import type { DemographicFormData, FormBlob } from "@/utils/form";
 import { intakeOutputBlocksFromCaseRow } from "@/utils/form";
-import { buildFlexSheetTemplate, CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
-import { tempSelectionSet } from "@/lib/flexSheet/flexSheetSections";
+import { buildTableTemplate } from "@/lib/flexSheet/flexSheetTemplate";
 
 function text(row: CaseBundleRow, key: string): string {
   const value = row[key];
@@ -71,9 +70,11 @@ export function caseBundleToFormBlob(bundle: CaseBundle): FormBlob {
     },
     labTemplate,
   );
+
+  const tableSections = new Set(caseRow.flexsheet_sections ?? []);
   const hydratedCharting = buildChartingRowsFromBundle(
     bundle.documentationResults ?? [],
-    buildFlexSheetTemplate(CaseSpecialty.MED_SURG, tempSelectionSet),
+    buildTableTemplate(tableSections),
   );
 
   return {
@@ -114,6 +115,7 @@ export function caseBundleToFormBlob(bundle: CaseBundle): FormBlob {
       visibleInPresim: Boolean(order.is_in_presim),
       phase: Math.max(1, Number(order.phase ?? 1)),
     })),
+    tableTemplate: caseRow.flexsheet_sections ?? [],
     labs: {
       data: hydratedLabs.rows,
       timePoints: hydratedLabs.timePoints.length ? hydratedLabs.timePoints : [0],

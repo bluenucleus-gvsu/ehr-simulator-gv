@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { buildFlexSheetTemplate } from "@/lib/flexSheet/flexSheetTemplate";
+import { buildTableTemplate } from "@/lib/flexSheet/flexSheetTemplate";
 import { buildAssessmentToolGuide } from "@/lib/flexSheet/assessmentToolGuides";
 import { CaseBundle } from "@/actions/case_builder/getCase";
 import { buildChartingRowsFromBundle } from "@/lib/flexSheet/flexSheetRowGenerator";
@@ -9,18 +9,13 @@ export function useFlexSheetInitialization(
   caseBundle: CaseBundle | null,
   documentation: DatabaseDocumentation[]
 ) {
-  const { chartingSections, caseSpecialty } = useMemo(() => {
-    const sections = caseBundle?.caseRow.flexsheet_sections;
-
-    return {
-      chartingSections: new Set(sections ?? []),
-      caseSpecialty: caseBundle?.caseRow.case_specialty ?? null,
-    };
+  const chartingSections = useMemo(() => {
+    return caseBundle?.caseRow.flexsheet_sections ?? [];
   }, [caseBundle]);
 
   const flexSheetTemplate = useMemo(
-    () => buildFlexSheetTemplate(caseSpecialty, chartingSections),
-    [chartingSections, caseSpecialty]
+    () => buildTableTemplate(new Set(chartingSections)),
+    [chartingSections]
   );
 
   const initialCharting = useMemo(

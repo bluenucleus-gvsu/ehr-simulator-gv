@@ -106,19 +106,19 @@ const HistoryForm = () => {
       setPendingNavigation('back');
       setShowUnsavedWarning(true);
     } else {
-      onDataChange("history", newHistoryData);
+      onDataChange(CaseSection.HISTORY, newHistoryData);
       router.push(caseBuilderPath("/admin/case-builder/form/demographics", caseId));
     }
   }
 
   const saveAndContinue = async () => {
-    onDataChange("history", newHistoryData);
+    onDataChange(CaseSection.HISTORY, newHistoryData);
     await saveCaseData({ payload: newHistoryData, section: CaseSection.HISTORY, caseId });
     router.push(caseBuilderPath("/admin/case-builder/form/notes", caseId));
   }
 
   const saveAndGoBack = () => {
-    onDataChange("history", newHistoryData);
+    onDataChange(CaseSection.HISTORY, newHistoryData);
     router.push(caseBuilderPath("/admin/case-builder/form/demographics", caseId));
   }
 
@@ -168,7 +168,7 @@ const HistoryForm = () => {
   return (
     <FormShell
       title="Patient History"
-      stepDescription="Step 2 of 10: Document medical history and social context"
+      stepDescription="Document medical history and social context"
       icon={<FileClock className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}

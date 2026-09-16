@@ -21,7 +21,6 @@ import Combobox from "@/components/ui/combobox"
 
 import {
   MedicationOrder,
-  // allMedications,
   MedAdministrationInstance,
   AdministrationStatus,
   AllMedicationTypes,
@@ -147,12 +146,12 @@ export default function MedicationAdministrationsForm() {
   }
 
   const goBack = () => {
-    onDataChange('medAdministrationInstances', medAdministrations)
+    onDataChange(CaseSection.MEDICATION_ADMINISTRATIONS, medAdministrations)
     router.push(caseBuilderPath("/admin/case-builder/form/medications", caseId));
   }
 
   const handleSubmit = async () => {
-    onDataChange('medAdministrationInstances', medAdministrations)
+    onDataChange(CaseSection.MEDICATION_ADMINISTRATIONS, medAdministrations)
 
     await saveCaseData({
       payload: {
@@ -182,7 +181,7 @@ export default function MedicationAdministrationsForm() {
   return (
     <FormShell
       title="Medication History"
-      stepDescription="Step 9 of 10: Document past administrations and Due times"
+      stepDescription="Document past administrations and Due times"
       icon={<Syringe className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}
