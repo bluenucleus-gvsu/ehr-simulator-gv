@@ -81,7 +81,7 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
 
     setSelectedMeds(prev => prev.filter((_, i) => i !== index))
     setMedOrders(remainingOrders)
-    onDataChange('medAdministrationInstances', remainingAdministrations)
+    onDataChange(CaseSection.MEDICATION_ADMINISTRATIONS, remainingAdministrations)
   }
 
   const handleOrderChange = (index: number, field: keyof MedicationOrder, value: string | boolean | number) => {
@@ -107,7 +107,7 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
   }, [medications]);
 
   const goBack = () => {
-    onDataChange('medOrders', {
+    onDataChange(CaseSection.MEDICATION_ORDERS, {
       createdOrders: medOrders,
       selectedMeds: selectedMeds
     });
@@ -120,11 +120,11 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
       medAdministrationData,
     )
 
-    onDataChange('medOrders', {
+    onDataChange(CaseSection.MEDICATION_ORDERS, {
       createdOrders: medOrders,
       selectedMeds: selectedMeds
     });
-    onDataChange('medAdministrationInstances', validAdministrations)
+    onDataChange(CaseSection.MEDICATION_ADMINISTRATIONS, validAdministrations)
     if (caseId) {
       await saveCaseData({
         payload: { orders: medOrders, administrations: validAdministrations },
@@ -137,7 +137,7 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
   return (
     <FormShell
       title="Medication Orders"
-      stepDescription="Step 8 of 9: Create Medication Orders"
+      stepDescription="Create Medication Orders"
       icon={<Pill className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}

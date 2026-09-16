@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildChartingRowsFromBundle } from "@/lib/flexSheet/flexSheetRowGenerator";
+import { buildChartingRowsFromBundle, mergeTemplateWithExistingRows } from "@/lib/flexSheet/flexSheetRowGenerator";
 import type { DatabaseDocumentation } from "@/actions/simulation";
 import type { FlexSheetData } from "@/lib/flexSheet/flexSheetTypes";
 
@@ -143,5 +143,74 @@ describe("buildChartingRowsFromBundle", () => {
       expect(result.rows[0][0]).toBe("88");
     });
 
+  });
+});
+
+describe("mergeTemplateWithExistingRows", () => {
+  describe("row set changes (specialty switch)", () => {
+    it("drops saved rows that are not in the new template", () => {
+      const template = [templateRow("hr")];
+      const savedRows = [
+        { ...templateRow("hr"), 0: "72" },
+        { ...templateRow("bp"), 0: "120/80" },
+      ];
+
+      expect(mergeTemplateWithExistingRows(template, savedRows, [0])).toEqual([
+        { ...templateRow("hr"), 0: "72" },
+      ]);
+    });
+
+    it("adds template rows with no saved counterpart as bare rows", () => {
+      const template = [templateRow("hr"), templateRow("temp")];
+      const savedRows = [{ ...templateRow("hr"), 0: "72" }];
+
+      expect(mergeTemplateWithExistingRows(template, savedRows, [0])).toEqual([
+        { ...templateRow("hr"), 0: "72" },
+        templateRow("temp"),
+      ]);
+    });
+
+    it("rebuilds shared rows from the new template schema and includes only listed time offsets", () => {
+      const template = [templateRow("hr")];
+      const savedRows = [
+        { ...templateRow("hr"), 0: "72", 60: "84", },
+      ];
+
+      expect(mergeTemplateWithExistingRows(template, savedRows, [0])).toEqual([
+        { ...templateRow("hr"), 0: "72" },
+      ]);
+    });
+  });
+
+  describe("value carry-over", () => {
+    it("copies only offsets present on the saved row", () => {
+      const savedRows = [{ ...templateRow("hr"), 0: "72" }];
+
+      const merged = mergeTemplateWithExistingRows([templateRow("hr")], savedRows, [0, 60, 120]);
+
+      expect(merged[0]).toEqual({ ...templateRow("hr"), 0: "72" });
+    });
+  });
+
+  describe("null and empty inputs", () => {
+    it("returns the template untouched when savedRows is null", () => {
+      const template = [templateRow("hr")];
+
+      expect(mergeTemplateWithExistingRows(template, null, [0])).toEqual(template);
+    });
+
+    it("returns the template untouched when savedRows is empty", () => {
+      const template = [templateRow("hr")];
+
+      expect(mergeTemplateWithExistingRows(template, [], [0])).toEqual(template);
+    });
+
+    it("returns bare template rows when timePoints is empty", () => {
+      const savedRows = [{ ...templateRow("hr"), 0: "72" }];
+
+      expect(mergeTemplateWithExistingRows([templateRow("hr")], savedRows, [])).toEqual([
+        templateRow("hr"),
+      ]);
+    });
   });
 });

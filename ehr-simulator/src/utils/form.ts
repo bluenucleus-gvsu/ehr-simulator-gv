@@ -3,6 +3,8 @@ import { AllMedicationTypes, MedAdministrationInstance, MedicationOrder } from "
 import { ClinicalNote } from "@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData";
 import { OrderType } from "@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData";
 import { FlexSheetData } from "@/lib/flexSheet/flexSheetTypes";
+import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
+import { FlexSheetSection } from "@/lib/flexSheet/flexSheetSections";
 
 export interface DemographicFormData {
   DOBDay: string;
@@ -31,7 +33,15 @@ export interface DemographicFormData {
   contactRelationship: string;
   contactPhone: string;
   phaseCount: number;
+  caseSpecialty: CaseSpecialty;
 }
+
+export const caseSpecialtyLabels: Record<CaseSpecialty, string> = {
+  [CaseSpecialty.MED_SURG]: 'Med-Surg',
+  [CaseSpecialty.OB]: 'OB',
+  [CaseSpecialty.MENTAL_HEALTH]: 'Mental Health',
+  [CaseSpecialty.PUBLIC_HEALTH]: 'Public Health',
+};
 
 export interface HistoryFormData {
   medicalHistory: string[]
@@ -79,6 +89,7 @@ export interface FormBlob {
   history: HistoryFormData;
   notes: ClinicalNote[];
   orders: OrderType[];
+  tableTemplate: FlexSheetSection[];
   labs: TableFormData<LabTableData>;
   charting: TableFormData<FlexSheetData>;
   intakeOutput: IntakeOutputFormData[];
@@ -87,7 +98,7 @@ export interface FormBlob {
   media: MediaImageData[];
 }
 
-export type CompleteFormType = DemographicFormData | HistoryFormData | ClinicalNote[] | OrderType[] | TableFormData<FlexSheetData | LabTableData> | IntakeOutputFormData[] | MedOrderFormData | MedAdministrationInstance[] | MediaImageData[]
+export type CompleteFormType = DemographicFormData | HistoryFormData | ClinicalNote[] | OrderType[] | TableFormData<FlexSheetData | LabTableData> | IntakeOutputFormData[] | FlexSheetSection[] | MedOrderFormData | MedAdministrationInstance[] | MediaImageData[]
 
 export const formatTimeOffset = (minuteOffset: number) => {
   const minutesInDay = 1440;

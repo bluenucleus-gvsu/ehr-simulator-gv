@@ -1,4 +1,5 @@
 import { CaseSection, type CaseSection as CaseSectionValue } from "@/lib/saveCase";
+import { FlexSheetSection } from "../flexSheet/flexSheetSections";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -37,6 +38,17 @@ function assertPhase(value: unknown, label: string, phaseCount = 10): number {
     fail(`${label} must be a whole number from 1 to ${phaseCount}.`);
   }
   return phase;
+}
+
+function assertValidValue(value: unknown[], label: string, mapping: Record<string, string>) {
+  const validValues = new Set(Object.values(mapping));
+
+  value.forEach((value, index) => {
+    if (typeof value !== "string" || !validValues.has(value)) {
+      fail(`${label}[${index}] is an invalid value`)
+    }
+  })
+
 }
 
 function validateTablePayload(value: unknown, label: string): void {
@@ -98,6 +110,9 @@ export function assertValidSaveRequest(
         assertPhase(order.phase, `orders[${index}].phase`);
       });
       return;
+    case CaseSection.TABLE_TEMPLATE:
+      assertValidValue(array(payloadValue, "tableTemplate"), 'tableTemplate', FlexSheetSection)
+      return
     case CaseSection.LABS:
       validateTablePayload(payloadValue, "labs");
       return;

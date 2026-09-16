@@ -24,12 +24,15 @@ import { FlexSheetData } from "@/lib/flexSheet/flexSheetTypes";
 import type { LabTableData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
 import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient";
 import { assertValidSaveRequest } from "@/lib/caseBuilder/validation";
+import { FlexSheetSection } from "@/lib/flexSheet/flexSheetSections";
+import { updateTableTemplate } from "./updateTableTemplate";
 
 type SaveCaseArgs =
   | { section: typeof CaseSection.DEMOGRAPHICS; payload: DemographicFormData; caseId?: string | null }
   | { section: typeof CaseSection.HISTORY; payload: HistoryFormData; caseId?: string | null }
   | { section: typeof CaseSection.CLINICAL_DOCUMENTS; payload: ClinicalNote[]; caseId?: string | null }
   | { section: typeof CaseSection.ORDERS; payload: OrderType[]; caseId?: string | null }
+  | { section: typeof CaseSection.TABLE_TEMPLATE; payload: FlexSheetSection[]; caseId?: string | null }
   | { section: typeof CaseSection.LABS; payload: TableSavePayload<LabTableData>; caseId?: string | null }
   | { section: typeof CaseSection.DOCUMENTATION; payload: TableSavePayload<FlexSheetData>; caseId?: string | null }
   | { section: typeof CaseSection.INTAKE_OUTPUT; payload: IntakeOutputFormData[]; caseId?: string | null }
@@ -60,6 +63,8 @@ export async function saveCaseData({ payload, section, caseId }: SaveCaseArgs) {
       return await updateClinicalDocuments(supabase, payload, caseId);
     case CaseSection.ORDERS:
       return await updateOrders(supabase, payload, caseId);
+    case CaseSection.TABLE_TEMPLATE:
+      return await updateTableTemplate(supabase, payload, caseId);
     case CaseSection.LABS:
       return await updateLabs(supabase, payload, caseId);
     case CaseSection.DOCUMENTATION:

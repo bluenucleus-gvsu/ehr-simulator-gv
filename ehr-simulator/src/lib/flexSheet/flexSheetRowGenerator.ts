@@ -52,3 +52,27 @@ export function buildChartingRowsFromBundle(
 
   return { rows, timeOffsets: fallbackOffsets, timeOffsetsInPreSim };
 }
+
+
+export function mergeTemplateWithExistingRows(
+  template: FlexSheetData[],
+  savedRows: FlexSheetData[] | null,
+  timePoints: number[],
+): FlexSheetData[] {
+  const savedById = new Map((savedRows ?? []).map(row => [row.id, row]));
+
+  const rows = template.map(templateRow => {
+    const saved = savedById.get(templateRow.id);
+    if (!saved) return templateRow;
+    const merged: FlexSheetData = { ...templateRow };
+
+    timePoints.forEach(offset => {
+      if (offset in saved) {
+        merged[offset] = saved[offset];
+      }
+    })
+
+    return merged;
+  });
+  return rows;
+}

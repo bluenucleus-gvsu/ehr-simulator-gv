@@ -15,11 +15,13 @@ import {
 } from "@/components/ui/accordion"
 import { buildAssessmentToolGuide } from "@/lib/flexSheet/assessmentToolGuides"
 import { AssessmentToolGuide } from "@/lib/flexSheet/flexSheetTypes"
-import { tempSelectionSet } from "@/lib/flexSheet/flexSheetSections"
 
+interface FlexSheetSidebarProps {
+  sections: string[]
+}
 
-const FlexSheetSidebar = () => {
-  const assessmentTools: AssessmentToolGuide[] = buildAssessmentToolGuide(tempSelectionSet)
+const FlexSheetSidebar = ({ sections }: FlexSheetSidebarProps) => {
+  const assessmentTools: AssessmentToolGuide[] = buildAssessmentToolGuide(sections);
   return (
     <Sidebar
       side="right"

@@ -1,6 +1,5 @@
 import { addRows, FlexSheetSection } from "@/lib/flexSheet/flexSheetSections";
 import { Database } from "@/../database.types";
-import { FlexSheetData } from "./flexSheetTypes";
 
 export const CaseSpecialty = {
   MED_SURG: "med_surg",
@@ -11,8 +10,8 @@ export const CaseSpecialty = {
 
 export type CaseSpecialty = Database['public']['Enums']['case_specialty_type'];
 
-function buildMedSurgTemplate(selections: Set<string>) {
-  const allAvailableMedSurgSections = [
+export function buildTableTemplate(selections: Set<FlexSheetSection>) {
+  const allTableSections = [
     FlexSheetSection.VITALS,
     FlexSheetSection.INPUT,
     FlexSheetSection.OUTPUT,
@@ -38,7 +37,7 @@ function buildMedSurgTemplate(selections: Set<string>) {
     FlexSheetSection.PAINAD
   ];
 
-  const customTemplate = allAvailableMedSurgSections
+  const customTemplate = allTableSections
     .filter(section => selections.has(section))
     .flatMap(section => addRows(section));
 
@@ -49,29 +48,3 @@ function buildMedSurgTemplate(selections: Set<string>) {
 export function buildOverviewTemplate() {
   return addRows(FlexSheetSection.VITALS_OVERVIEW);
 }
-
-
-export function buildFlexSheetTemplate(specialty: CaseSpecialty | null, selections: Set<string>) {
-  let template: FlexSheetData[] = [];
-
-  if (!specialty) {
-    return template
-  }
-  switch (specialty) {
-    case CaseSpecialty.MED_SURG:
-      template = buildMedSurgTemplate(selections);
-      break;
-    case CaseSpecialty.OB:
-      //template = assembleObTemplate(toolSelections);
-      break;
-    case CaseSpecialty.MENTAL_HEALTH:
-      //template = assembleMentalHealthTemplate(toolSelections);
-      break;
-    case CaseSpecialty.PUBLIC_HEALTH:
-      // template = assemblePublicHealthTemplate(toolSelections);
-      break;
-  }
-
-  return template;
-}
-

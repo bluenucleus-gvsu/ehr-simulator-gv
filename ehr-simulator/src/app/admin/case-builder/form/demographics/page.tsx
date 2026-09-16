@@ -25,16 +25,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import InfoTooltip from "../../../../../components/helpTooltip";
+import InfoTooltip from "@/components/helpTooltip";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useFormContext } from "@/context/FormContext";
-import { relationshipStatuses, precautions, months, codeStatuses, days, insuranceOptions, DemographicFormData } from "@/utils/form";
+import { relationshipStatuses, precautions, months, codeStatuses, days, insuranceOptions, DemographicFormData, caseSpecialtyLabels } from "@/utils/form";
 import { buttonVariants } from "@/components/ui/button";
-import { FormShell } from "../../components/formShell";
+import { FormShell } from "@/app/admin/case-builder/components/formShell";
 import { CaseSection } from "@/lib/saveCase";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { caseBuilderPath } from "@/lib/caseBuilder/routes";
+import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
 
 export default function DemographicsForm() {
   const { onDataChange, demographicData: initialData, setCaseId, caseId } = useFormContext();
@@ -56,7 +57,7 @@ export default function DemographicsForm() {
   }
 
   const handleSubmit = async () => {
-    onDataChange("demographics", demographicsData)
+    onDataChange(CaseSection.DEMOGRAPHICS, demographicsData)
     const result = await saveCaseData({
       payload: demographicsData,
       section: CaseSection.DEMOGRAPHICS,
@@ -111,7 +112,7 @@ export default function DemographicsForm() {
     <FormShell
       title="Patient Demographics"
       icon={<User className="text-slate-400" />}
-      stepDescription="Step 1 of 10: Basic identification and admission details"
+      stepDescription="Basic identification and admission details"
       onSubmit={handleSubmit}
       goBack={goBack}
       continueButtonText="Continue"
@@ -141,21 +142,45 @@ export default function DemographicsForm() {
                   placeholder="e.g. 68-year-old male admitted with shortness of breath..."
                   className="min-h-[100px] bg-white"
                 />
-                <div className="mt-4 max-w-xs space-y-2">
-                  <Label htmlFor="phaseCount">Simulation phases</Label>
-                  <Input
-                    id="phaseCount"
-                    type="number"
-                    min={1}
-                    max={10}
-                    value={demographicsData.phaseCount}
-                    onChange={(event) => setDemographicsData({
-                      ...demographicsData,
-                      phaseCount: Math.min(10, Math.max(1, Number(event.target.value) || 1)),
-                    })}
-                  />
-                  <p className="text-xs text-slate-500">Content assigned to a later phase appears when faculty advance the simulation.</p>
+
+                <div className="grid grid-cols-2 mt-4">
+                  <div className="space-y-2 max-w-xs">
+                    <Label htmlFor="phaseCount">Simulation phases</Label>
+                    <Input
+                      id="phaseCount"
+                      type="number"
+                      min={1}
+                      max={10}
+                      value={demographicsData.phaseCount}
+                      onChange={(event) => setDemographicsData({
+                        ...demographicsData,
+                        phaseCount: Math.min(10, Math.max(1, Number(event.target.value) || 1)),
+                      })}
+                    />
+                    <p className="text-xs text-slate-500">Content assigned to a later phase appears when faculty advance the simulation.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">Case Specialty</Label>
+                    <Select
+                      required
+                      name="caseSpecialty"
+                      onValueChange={(value) => { setDemographicsData({ ...demographicsData, ["caseSpecialty"]: value as CaseSpecialty }) }}
+                      value={demographicsData.caseSpecialty}
+                    >
+                      <SelectTrigger className=" bg-white"><SelectValue placeholder="Specialty" />
+                        <ChevronDown />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(caseSpecialtyLabels).map(([value, label], i) => {
+                          return (
+                            <SelectItem key={i} value={value}>{label}</SelectItem>
+                          )
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
+
               </CardContent>
             </Card>
 
