@@ -4,7 +4,7 @@ import { useState } from "react";
 import bwipjs from "@bwip-js/browser";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SimCase } from "@/actions/cases";
-import { format, differenceInYears } from "date-fns";
+import { format } from "date-fns";
 import { AllMedicationTypes } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
 
 interface BarcodeGeneratorProps {
@@ -248,35 +248,32 @@ const BardcodeGenerator = ({
             <div class="sheet">
               <div class="label-grid">
                 ${Array.from(
-                  {
-                    length:
-                      (wristbandStartRow - 1) * WRISTBAND_LABEL_COLUMNS +
-                      (wristbandStartColumn - 1),
-                  },
-                  () => `<div class="label"></div>`,
-                ).join("")}
+          {
+            length:
+              (wristbandStartRow - 1) * WRISTBAND_LABEL_COLUMNS +
+              (wristbandStartColumn - 1),
+          },
+          () => `<div class="label"></div>`,
+        ).join("")}
                 ${casesWithBarcodes
-                  .map((c) => {
-                    const count = caseQuantities[c.id] || 1;
-                    const age = c.date_of_birth
-                      ? differenceInYears(new Date(), new Date(c.date_of_birth))
-                      : "N/A";
-                    return Array.from(
-                      { length: count },
-                      () => `
+            .map((c) => {
+              const count = caseQuantities[c.id] || 1;
+              const age = c.age
+              return Array.from(
+                { length: count },
+                () => `
                       <div class="label">
                       <div class="label-barcode">${c.qrDataUrl}</div>
                         <div class="label-text">
                           <div class="patient-name">${c.first_name} ${c.last_name}</div>
-                          <div class="patient-detail"><strong>DOB:</strong> ${c.date_of_birth || "N/A"}</div>
                           <div class="patient-detail"><strong>Age:</strong> ${age}</div>
                           <div class="patient-detail"><strong>MRN:</strong> ${c.mrn || "12345678"}</div>
                         </div>
                       </div>
                     `,
-                    ).join("");
-                  })
-                  .join("")}
+              ).join("");
+            })
+            .join("")}
               </div>
             </div>
           </body>
@@ -417,21 +414,19 @@ const BardcodeGenerator = ({
         <div className="flex space-x-6">
           <button
             onClick={() => setActiveTab("medications")}
-            className={`pb-3 text-sm font-medium transition-colors ${
-              activeTab === "medications"
-                ? "border-b-2 border-blue-600 text-blue-600"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
+            className={`pb-3 text-sm font-medium transition-colors ${activeTab === "medications"
+              ? "border-b-2 border-blue-600 text-blue-600"
+              : "text-gray-500 hover:text-gray-700"
+              }`}
           >
             Medication Barcodes
           </button>
           <button
             onClick={() => setActiveTab("wristbands")}
-            className={`pb-3 text-sm font-medium transition-colors ${
-              activeTab === "wristbands"
-                ? "border-b-2 border-blue-600 text-blue-600"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
+            className={`pb-3 text-sm font-medium transition-colors ${activeTab === "wristbands"
+              ? "border-b-2 border-blue-600 text-blue-600"
+              : "text-gray-500 hover:text-gray-700"
+              }`}
           >
             Patient Wristbands
           </button>

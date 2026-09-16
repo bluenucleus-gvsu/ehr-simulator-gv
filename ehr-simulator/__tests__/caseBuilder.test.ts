@@ -38,14 +38,14 @@ describe("case minimum requirements", () => {
     first_name: "Avery",
     last_name: "Jones",
     description: "Post-operative patient",
-    date_of_birth: "1984-05-12",
+    age: 27,
   };
 
   it("makes a case usable as soon as its minimum fields are present", () => {
     expect(caseMeetsMinimumRequirements(usableCase)).toBe(true);
   });
 
-  it.each(["first_name", "last_name", "description", "date_of_birth"] as const)(
+  it.each(["first_name", "last_name", "description", "age"] as const)(
     "rejects a case with no %s",
     (field) => {
       expect(caseMeetsMinimumRequirements({ ...usableCase, [field]: " " })).toBe(false);
