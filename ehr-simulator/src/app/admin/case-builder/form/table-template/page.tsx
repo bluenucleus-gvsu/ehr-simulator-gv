@@ -16,6 +16,8 @@ import { FlexSheetSection } from "@/lib/flexSheet/flexSheetSections";
 import { flexSheetSectionNameMap, specialtyDefaultSections } from "@/lib/caseBuilder/defaultTableTemplates";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CheckedState } from "@radix-ui/react-checkbox";
+import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
+import { Button } from "@/components/ui/button";
 
 
 const TableTemplateForm = () => {
@@ -36,6 +38,11 @@ const TableTemplateForm = () => {
       }
       return newSet
     })
+  }
+
+  const handleSpecialtyChange = (specialty: CaseSpecialty) => {
+    const defaultSections = new Set(specialtyDefaultSections[specialty]);
+    setUpdatedTemplate(defaultSections);
   }
 
   const goBack = () => {
@@ -65,20 +72,40 @@ const TableTemplateForm = () => {
         <div className="max-w-6xl mx-auto space-y-6 pb-20">
           <div className="grid grid-cols-1 gap-6">
             <Card className="border-slate-200 shadow-sm h-fit pt-0">
-              <CardHeader className="bg-slate-50 border-b border-slate-200 pt-4 !pb-2 rounded-t-xl">
+              <CardHeader className="flex justify-between bg-slate-50 border-b border-slate-200 pt-4 !pb-2 rounded-t-xl">
                 <CardTitle className="text-lg flex items-center justify-between">
                   <span className="flex items-center gap-2"><Table2 className="w-4 h-4 text-blue-600" />FlexSheet Template</span>
                 </CardTitle>
+                <Button onClick={() => handleSpecialtyChange(demographicData.caseSpecialty)}>Revert to Default Selection</Button>
               </CardHeader>
-              <CardContent className="space-y-2">
-                {(Object.entries(flexSheetSectionNameMap) as [FlexSheetSection, string][]).map(([value, label]) => {
-                  return (
-                    <div key={value} className="flex items-center gap-2">
-                      <Checkbox checked={updatedTemplate.has(value)} onCheckedChange={(checked) => handleCheckBoxChange(checked, value)} />
-                      <p>{label}</p>
-                    </div>
-                  )
-                })}
+              <CardContent>
+                <div className="columns-1 sm:columns-2">
+                  {(Object.entries(flexSheetSectionNameMap) as [FlexSheetSection, string][]).map(([value, label]) => {
+                    const isChecked = updatedTemplate.has(value);
+
+                    return (
+                      <label
+                        key={value}
+                        htmlFor={value}
+                        className="flex items-center space-x-3 cursor-pointer group p-2 mb-2 rounded-md transition-colors hover:bg-slate-100 break-inside-avoid"
+                      >
+                        <Checkbox
+                          id={value}
+                          checked={isChecked}
+                          onCheckedChange={(checked) => handleCheckBoxChange(checked, value)}
+                        />
+                        <span
+                          className={`text-sm transition-colors ${isChecked
+                            ? "font-medium"
+                            : "text-slate-600 group-hover:text-black"
+                            }`}
+                        >
+                          {label}
+                        </span>
+                      </label>
+                    )
+                  })}
+                </div>
               </CardContent>
             </Card>
           </div>
