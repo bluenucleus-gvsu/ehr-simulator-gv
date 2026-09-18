@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       case_family_history: {
@@ -1386,184 +1411,238 @@ export type Database = {
       }
       lab_results: {
         Row: {
-          albumin: number | null
-          alp: number | null
-          alt: number | null
-          ammonia: number | null
-          amylase: number | null
-          ast: number | null
-          blood: string | null
-          bun: number | null
-          calcium: number | null
+          albumin: string | null
+          alp: string | null
+          alt: string | null
+          ammonia: string | null
+          amylase: string | null
+          art_pco2: string | null
+          art_ph: string | null
+          art_po2: string | null
+          art_so2: string | null
+          ast: string | null
+          basophils: string | null
+          blood_type: string | null
+          bnp: string | null
+          bun: string | null
+          calcium: string | null
           case_id: string
-          chloride: number | null
-          ckmb: number | null
-          co2: number | null
+          chloride: string | null
+          ckmb: string | null
           created_at: string
-          creatinine: number | null
-          crp: number | null
+          creatinine: string | null
+          crp: string | null
+          d_dimer: string | null
           data: Json
-          esr: number | null
-          free_t3: number | null
-          free_t4: number | null
-          glucose: number | null
-          hco3: number | null
-          hdl_cholesterol: number | null
-          hematocrit: number | null
-          hemoglobin: number | null
+          eosinophils: string | null
+          esr: string | null
+          free_t3: string | null
+          free_t4: string | null
+          glucose: string | null
+          hba1c: string | null
+          hco3: string | null
+          hdl_cholesterol: string | null
+          hematocrit: string | null
+          hemoglobin: string | null
           id: string
+          inr: string | null
           is_in_presim: boolean
           ketones: string | null
-          lactate: number | null
-          ldl_cholesterol: number | null
+          lactate: string | null
+          ldl_cholesterol: string | null
           leukocyte_esterase: string | null
-          lipase: number | null
-          magnesium: number | null
-          mch: number | null
-          mchc: number | null
-          mcv: number | null
-          myoglobin: number | null
+          lipase: string | null
+          lymphocytes: string | null
+          magnesium: string | null
+          mch: string | null
+          mchc: string | null
+          mcv: string | null
+          monocytes: string | null
+          myoglobin: string | null
+          neutrophils: string | null
           nitrites: string | null
-          pco2: number | null
-          phosphate: number | null
-          platelets: number | null
-          po2: number | null
-          potassium: number | null
-          protein: string | null
-          pt: number | null
-          ptt: number | null
-          rbc: number | null
-          sodium: number | null
-          specific_gravity: number | null
+          phosphate: string | null
+          platelets: string | null
+          potassium: string | null
+          procal: string | null
+          pt: string | null
+          ptt: string | null
+          rbc: string | null
+          rh_factor: string | null
+          sodium: string | null
+          specific_gravity: string | null
           time_offset: number
-          total_bilirubin: number | null
-          total_cholesterol: number | null
-          triglycerides: number | null
-          troponin: number | null
-          tsh: number | null
+          total_bilirubin: string | null
+          total_cholesterol: string | null
+          total_co2: string | null
+          triglycerides: string | null
+          troponin: string | null
+          tsh: string | null
+          urine_blood: string | null
           urine_glucose: string | null
-          urine_ph: number | null
-          wbc: number | null
+          urine_ph: string | null
+          urine_protein: string | null
+          ven_pco2: string | null
+          ven_ph: string | null
+          ven_po2: string | null
+          ven_so2: string | null
+          wbc: string | null
         }
         Insert: {
-          albumin?: number | null
-          alp?: number | null
-          alt?: number | null
-          ammonia?: number | null
-          amylase?: number | null
-          ast?: number | null
-          blood?: string | null
-          bun?: number | null
-          calcium?: number | null
+          albumin?: string | null
+          alp?: string | null
+          alt?: string | null
+          ammonia?: string | null
+          amylase?: string | null
+          art_pco2?: string | null
+          art_ph?: string | null
+          art_po2?: string | null
+          art_so2?: string | null
+          ast?: string | null
+          basophils?: string | null
+          blood_type?: string | null
+          bnp?: string | null
+          bun?: string | null
+          calcium?: string | null
           case_id: string
-          chloride?: number | null
-          ckmb?: number | null
-          co2?: number | null
+          chloride?: string | null
+          ckmb?: string | null
           created_at?: string
-          creatinine?: number | null
-          crp?: number | null
+          creatinine?: string | null
+          crp?: string | null
+          d_dimer?: string | null
           data?: Json
-          esr?: number | null
-          free_t3?: number | null
-          free_t4?: number | null
-          glucose?: number | null
-          hco3?: number | null
-          hdl_cholesterol?: number | null
-          hematocrit?: number | null
-          hemoglobin?: number | null
+          eosinophils?: string | null
+          esr?: string | null
+          free_t3?: string | null
+          free_t4?: string | null
+          glucose?: string | null
+          hba1c?: string | null
+          hco3?: string | null
+          hdl_cholesterol?: string | null
+          hematocrit?: string | null
+          hemoglobin?: string | null
           id?: string
+          inr?: string | null
           is_in_presim?: boolean
           ketones?: string | null
-          lactate?: number | null
-          ldl_cholesterol?: number | null
+          lactate?: string | null
+          ldl_cholesterol?: string | null
           leukocyte_esterase?: string | null
-          lipase?: number | null
-          magnesium?: number | null
-          mch?: number | null
-          mchc?: number | null
-          mcv?: number | null
-          myoglobin?: number | null
+          lipase?: string | null
+          lymphocytes?: string | null
+          magnesium?: string | null
+          mch?: string | null
+          mchc?: string | null
+          mcv?: string | null
+          monocytes?: string | null
+          myoglobin?: string | null
+          neutrophils?: string | null
           nitrites?: string | null
-          pco2?: number | null
-          phosphate?: number | null
-          platelets?: number | null
-          po2?: number | null
-          potassium?: number | null
-          protein?: string | null
-          pt?: number | null
-          ptt?: number | null
-          rbc?: number | null
-          sodium?: number | null
-          specific_gravity?: number | null
+          phosphate?: string | null
+          platelets?: string | null
+          potassium?: string | null
+          procal?: string | null
+          pt?: string | null
+          ptt?: string | null
+          rbc?: string | null
+          rh_factor?: string | null
+          sodium?: string | null
+          specific_gravity?: string | null
           time_offset: number
-          total_bilirubin?: number | null
-          total_cholesterol?: number | null
-          triglycerides?: number | null
-          troponin?: number | null
-          tsh?: number | null
+          total_bilirubin?: string | null
+          total_cholesterol?: string | null
+          total_co2?: string | null
+          triglycerides?: string | null
+          troponin?: string | null
+          tsh?: string | null
+          urine_blood?: string | null
           urine_glucose?: string | null
-          urine_ph?: number | null
-          wbc?: number | null
+          urine_ph?: string | null
+          urine_protein?: string | null
+          ven_pco2?: string | null
+          ven_ph?: string | null
+          ven_po2?: string | null
+          ven_so2?: string | null
+          wbc?: string | null
         }
         Update: {
-          albumin?: number | null
-          alp?: number | null
-          alt?: number | null
-          ammonia?: number | null
-          amylase?: number | null
-          ast?: number | null
-          blood?: string | null
-          bun?: number | null
-          calcium?: number | null
+          albumin?: string | null
+          alp?: string | null
+          alt?: string | null
+          ammonia?: string | null
+          amylase?: string | null
+          art_pco2?: string | null
+          art_ph?: string | null
+          art_po2?: string | null
+          art_so2?: string | null
+          ast?: string | null
+          basophils?: string | null
+          blood_type?: string | null
+          bnp?: string | null
+          bun?: string | null
+          calcium?: string | null
           case_id?: string
-          chloride?: number | null
-          ckmb?: number | null
-          co2?: number | null
+          chloride?: string | null
+          ckmb?: string | null
           created_at?: string
-          creatinine?: number | null
-          crp?: number | null
+          creatinine?: string | null
+          crp?: string | null
+          d_dimer?: string | null
           data?: Json
-          esr?: number | null
-          free_t3?: number | null
-          free_t4?: number | null
-          glucose?: number | null
-          hco3?: number | null
-          hdl_cholesterol?: number | null
-          hematocrit?: number | null
-          hemoglobin?: number | null
+          eosinophils?: string | null
+          esr?: string | null
+          free_t3?: string | null
+          free_t4?: string | null
+          glucose?: string | null
+          hba1c?: string | null
+          hco3?: string | null
+          hdl_cholesterol?: string | null
+          hematocrit?: string | null
+          hemoglobin?: string | null
           id?: string
+          inr?: string | null
           is_in_presim?: boolean
           ketones?: string | null
-          lactate?: number | null
-          ldl_cholesterol?: number | null
+          lactate?: string | null
+          ldl_cholesterol?: string | null
           leukocyte_esterase?: string | null
-          lipase?: number | null
-          magnesium?: number | null
-          mch?: number | null
-          mchc?: number | null
-          mcv?: number | null
-          myoglobin?: number | null
+          lipase?: string | null
+          lymphocytes?: string | null
+          magnesium?: string | null
+          mch?: string | null
+          mchc?: string | null
+          mcv?: string | null
+          monocytes?: string | null
+          myoglobin?: string | null
+          neutrophils?: string | null
           nitrites?: string | null
-          pco2?: number | null
-          phosphate?: number | null
-          platelets?: number | null
-          po2?: number | null
-          potassium?: number | null
-          protein?: string | null
-          pt?: number | null
-          ptt?: number | null
-          rbc?: number | null
-          sodium?: number | null
-          specific_gravity?: number | null
+          phosphate?: string | null
+          platelets?: string | null
+          potassium?: string | null
+          procal?: string | null
+          pt?: string | null
+          ptt?: string | null
+          rbc?: string | null
+          rh_factor?: string | null
+          sodium?: string | null
+          specific_gravity?: string | null
           time_offset?: number
-          total_bilirubin?: number | null
-          total_cholesterol?: number | null
-          triglycerides?: number | null
-          troponin?: number | null
-          tsh?: number | null
+          total_bilirubin?: string | null
+          total_cholesterol?: string | null
+          total_co2?: string | null
+          triglycerides?: string | null
+          troponin?: string | null
+          tsh?: string | null
+          urine_blood?: string | null
           urine_glucose?: string | null
-          urine_ph?: number | null
-          wbc?: number | null
+          urine_ph?: string | null
+          urine_protein?: string | null
+          ven_pco2?: string | null
+          ven_ph?: string | null
+          ven_po2?: string | null
+          ven_so2?: string | null
+          wbc?: string | null
         }
         Relationships: [
           {
@@ -2293,12 +2372,7 @@ export type Database = {
         Returns: undefined
       }
       case_builder_replace_labs: {
-        Args: {
-          p_case_id: string
-          p_imaging_rows: Json
-          p_lab_rows: Json
-          p_microbiology_rows: Json
-        }
+        Args: { p_case_id: string; p_lab_rows: Json }
         Returns: undefined
       }
       case_builder_replace_media: {
@@ -2486,6 +2560,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       clinical_doc_category_type: [

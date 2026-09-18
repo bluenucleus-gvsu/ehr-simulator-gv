@@ -11,13 +11,7 @@ import { Button } from "@/components/ui/button";
 import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { toast } from "sonner";
 import FlexSheetColumnShifter from "./components/flexSheetColumnShifter";
-
-import {
-  type FlexSheetData,
-  assessmentTools,
-  flexSheetTemplate,
-} from "./components/flexSheetData";
-import { ImagingData, LabCellValue } from "../labs/components/labsData";
+import { type FlexSheetData, assessmentTools, flexSheetTemplate } from "./components/flexSheetData";
 import { TableAssessmentSelectCell, TableInputCell } from "./components/tableInputCell";
 import { ChartingToolTip } from "./components/ChartingToolTip";
 import { DatabaseDocumentation, StudentDatabaseDocumentation, upsertDocumentationRows } from "@/actions/simulation";
@@ -47,7 +41,7 @@ declare module '@tanstack/react-table' {
     updateData: (
       rowIndex: number,
       columnId: string,
-      value: string | string[] | ImagingData | LabCellValue | Partial<TData>) => void
+      value: string | string[] | Partial<TData>) => void
   }
 }
 
@@ -72,8 +66,6 @@ export function FlexSheetView({ dbDocumentation, params }: FlexSheetViewProps) {
   const [timeOffsets, setTimeOffsets] = useState(isPresim ?
     Array.from(initialCharting.timePointsInPreSim).sort((a, b) => a - b)
     : initialCharting.timeOffsets)
-
-
 
   const [data, setData] = useState<FlexSheetData[]>(initialCharting.rows);
   const [fieldSelections, setFieldSelections] = useState<Record<string, string[]>>({});

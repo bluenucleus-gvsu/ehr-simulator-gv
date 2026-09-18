@@ -14,16 +14,7 @@ import {
   TableCell,
   TableFooter
 } from "@/components/ui/table";
-
-import ImagingReport from "./components/imagingReport";
-import PathologyReport from "./components/microbiologyReport";
-import {
-  type ImagingData,
-  type LabTableData,
-  type MicrobiologyReportData,
-  labTemplate,
-  getResultStatus,
-} from "./components/labsData"
+import { type LabTableData, labTemplate, getResultStatus, LabSeverityLevel, } from "./components/labsData"
 import { buildLabRowsFromBundle } from "./components/labsFromBundle";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
 import { useSimSessionContext } from "@/context/SimSessionContext";
@@ -44,7 +35,7 @@ function LabPage() {
       rows,
       timePoints: dbTimePoints,
       timePointsInPresim
-    } = buildLabRowsFromBundle(caseBundle, labTemplate);
+    } = buildLabRowsFromBundle(caseBundle?.labResults ?? [], labTemplate);
 
     setLabTableData(rows);
 
@@ -130,8 +121,8 @@ function LabPage() {
             const criticalRange = row.original?.criticalRange
 
             const resultStatus = getResultStatus(initialValue, abnormalRange, criticalRange);
-            const isCritical = resultStatus === "critical"
-            const isAbnormal = resultStatus === "abnormal"
+            const isCritical = resultStatus === LabSeverityLevel.CRITICAL;
+            const isAbnormal = resultStatus === LabSeverityLevel.ABNORMAL
 
             return (
               <div key={`${row.id}-${column.id}-${row.original.field}`} className="flex items-center w-full px-2">
@@ -139,41 +130,6 @@ function LabPage() {
                 <p className={`w-full text-right text-xs ${(isAbnormal || isCritical) && "text-red-600 font-medium"}`}>{initialValue}</p>
               </div>
             );
-          }
-
-          // --- IMAGING CELLS ---
-          else if (rowType === "imaging") {
-            const imagingReport = (getValue() as ImagingData) || { displayName: "", technique: "", findings: [], impressions: [''] }
-            if (!imagingReport.displayName) {
-              return <></>
-            }
-            return (
-              <ImagingReport
-                key={`${row.id}-${column.id}-${row.original.field}`}
-                cellName={row.original.field}
-                imagingReportContents={imagingReport}
-                displayTime={displayTime || ''}
-                displayDate={displayDate || ''}
-              />
-            )
-          }
-
-          // --- MICROBIOLOGY CELLS ---
-          else if (rowType === "microbiology") {
-            const pathologyReport = (getValue() as MicrobiologyReportData) || {}
-            if (Object.keys(pathologyReport).length === 0) {
-              return <></>
-            }
-            return (
-              <PathologyReport
-                key={`${row.id}-${column.id}-${row.original.field}`}
-                report={pathologyReport}
-                cellLabel={row.original.field}
-                displayTime={displayTime || ''}
-                displayDate={displayDate || ''}
-
-              />
-            )
           }
         }
       })

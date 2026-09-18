@@ -8,3 +8,9 @@ UPDATE public.users SET role = 'admin' where full_name = 'Matt Smith';
 
 INSERT INTO course_cases (case_id, course_id) VALUES 
 ((SELECT id from cases where first_name = 'Harold'), (select id from courses where code = 'NUR 380'))
+
+SELECT column_name, data_type 
+FROM information_schema.columns 
+WHERE table_schema = 'public' 
+  AND table_name = 'lab_results'
+ORDER BY ordinal_position;

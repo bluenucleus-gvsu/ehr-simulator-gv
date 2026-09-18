@@ -21,7 +21,7 @@ function asCellString(value: unknown): string {
 export function buildChartingRowsFromBundle(
   documentationResults: DocumentationRow[] | null | undefined,
   template: FlexSheetData[],
-): { rows: FlexSheetData[]; timeOffsets: number[]; timePointsInPreSim: Set<number>; visibleItems: Set<string> } {
+): { rows: FlexSheetData[]; timeOffsets: number[]; timePointsInPreSim: Set<number> } {
   const docs = documentationResults ?? [];
   const timeOffsets = Array.from(
     new Set(
@@ -44,7 +44,6 @@ export function buildChartingRowsFromBundle(
     }
   }
 
-  const visibleItems = new Set<string>();
   const rows = template.map((templateRow) => {
     const nextRow: FlexSheetData = { ...templateRow };
     let hasValue = false;
@@ -59,11 +58,10 @@ export function buildChartingRowsFromBundle(
 
     if (templateRow.hideable) {
       nextRow.hideable = !hasValue;
-      if (hasValue) visibleItems.add(templateRow.field);
     }
 
     return nextRow;
   });
 
-  return { rows, timeOffsets: fallbackOffsets, timePointsInPreSim, visibleItems };
+  return { rows, timeOffsets: fallbackOffsets, timePointsInPreSim };
 }
