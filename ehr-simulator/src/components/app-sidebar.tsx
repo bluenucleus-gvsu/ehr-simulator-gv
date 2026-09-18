@@ -40,11 +40,6 @@ const adminRoutes = [
     url: "/admin/barcodes",
     icom: ScanBarcode,
   },
-  {
-    title: "Active Simulations (WIP)",
-    url: "/",
-    icom: Presentation,
-  },
 ]
 
 export function AppSidebar() {
