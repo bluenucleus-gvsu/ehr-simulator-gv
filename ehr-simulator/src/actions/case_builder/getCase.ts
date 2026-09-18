@@ -3,6 +3,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient";
 import { assertUuid } from "@/lib/caseBuilder/validation";
+import { Database } from "../../../database.types";
 
 export interface CaseBundle {
   caseRow: CaseRow
@@ -10,7 +11,7 @@ export interface CaseBundle {
   familyHistory: CaseBundleRow[]
   clinicalDocuments: CaseBundleRow[]
   orders: CaseBundleRow[]
-  labResults: CaseBundleRow[]
+  labResults: DatabaseLabRow[]
   imagingReports: ImagingReportRow[]
   microbiologyReports: MicrobiologyReportRow[]
   documentationResults: CaseBundleRow[]
@@ -57,6 +58,7 @@ export type CaseBundleRow = Record<string, unknown> & {
   reporter?: string | null;
 };
 
+export type DatabaseLabRow = Database['public']['Tables']['lab_results']['Row'];
 export type ImagingReportRow = CaseBundleRow & { is_critical?: boolean | null };
 export type MicrobiologyReportRow = CaseBundleRow & { is_critical?: boolean | string | null };
 
@@ -231,7 +233,7 @@ export async function getCaseBundle(
     familyHistory: (familyHistoryRes.data ?? []) as CaseBundleRow[],
     clinicalDocuments: (clinicalDocumentsRes.data ?? []) as CaseBundleRow[],
     orders: (ordersRes.data ?? []) as CaseBundleRow[],
-    labResults: (labResultsRes.data ?? []) as CaseBundleRow[],
+    labResults: (labResultsRes.data ?? []),
     imagingReports: (imagingReportsRes.data ?? []) as ImagingReportRow[],
     microbiologyReports: (microbiologyReportsRes.data ?? []) as MicrobiologyReportRow[],
     documentationResults: (documentationResultsRes.data ?? []) as CaseBundleRow[],

@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       case_data: {
@@ -2376,17 +2401,10 @@ export type Database = {
         Args: { p_case_id: string; p_history: Json }
         Returns: undefined
       }
-      case_builder_replace_labs:
-        | { Args: { p_case_id: string; p_lab_rows: Json }; Returns: undefined }
-        | {
-            Args: {
-              p_case_id: string
-              p_imaging_rows: Json
-              p_lab_rows: Json
-              p_microbiology_rows: Json
-            }
-            Returns: undefined
-          }
+      case_builder_replace_labs: {
+        Args: { p_case_id: string; p_lab_rows: Json }
+        Returns: undefined
+      }
       case_builder_replace_media: {
         Args: { p_case_id: string; p_rows: Json }
         Returns: undefined
@@ -2572,6 +2590,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       clinical_doc_category_type: [

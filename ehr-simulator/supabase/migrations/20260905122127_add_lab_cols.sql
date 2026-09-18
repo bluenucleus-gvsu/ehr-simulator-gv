@@ -30,7 +30,7 @@ ALTER TABLE IF EXISTS lab_results RENAME COLUMN co2 TO total_co2;
 ALTER TABLE IF EXISTS lab_results RENAME COLUMN blood TO urine_blood;
 ALTER TABLE IF EXISTS lab_results RENAME COLUMN protein TO urine_protein;
 
-ALTER TABLE lab_results
+ALTER TABLE IF EXISTS lab_results
   ALTER COLUMN albumin TYPE text,
   ALTER COLUMN alp TYPE text,
   ALTER COLUMN alt TYPE text,
@@ -78,7 +78,9 @@ ALTER TABLE lab_results
   ALTER COLUMN ven_po2 TYPE text,
   ALTER COLUMN wbc TYPE text;
 
--- Remove MicrobiologyReport, ImagingReport, and case_creation_complete
+-- Remove old overload that used to accept imaging/microbiology jsonb payloads
+DROP FUNCTION IF EXISTS public.case_builder_replace_labs(uuid, jsonb, jsonb, jsonb);
+
 CREATE OR REPLACE FUNCTION public.case_builder_replace_labs(
   p_case_id uuid,
   p_lab_rows jsonb
@@ -117,3 +119,6 @@ BEGIN
   )).* FROM jsonb_array_elements(COALESCE(p_lab_rows, '[]'::jsonb)) item;
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public.case_builder_replace_labs(uuid, jsonb) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.case_builder_replace_labs(uuid, jsonb) TO service_role;

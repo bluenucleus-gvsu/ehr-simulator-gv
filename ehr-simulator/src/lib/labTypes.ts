@@ -29,32 +29,30 @@ export function transformLabTableToSchema(
     }
 
     for (const row of data) {
-      if (!row.id) continue
+      if (row.rowType !== "results") continue
 
       const cellValue = timeColumnCell(row as unknown as Record<string | number | symbol, unknown>, timePoint)
 
-      if (row.rowType === "results") {
-        const columnName = row.id;
+      const columnName = row.id;
 
-        if (columnName) {
-          /// TODO: This is workaround, update mappings above to satisfy type checking
-          ;; (baseRow[columnName as keyof LabResultInsert] as string | null) =
-            cellValue === "" || cellValue == null ? null : String(cellValue);
-        } else {
-          const currentData = (baseRow.data as Record<string, any>) || {};
-          const currentUnstructured = (currentData.unstructured as Record<string, any>) || {};
+      if (columnName) {
+        /// TODO: This is workaround, update mappings above to satisfy type checking
+        ;; (baseRow[columnName as keyof LabResultInsert] as string | null) =
+          cellValue === "" || cellValue == null ? null : String(cellValue);
+      } else {
+        const currentData = (baseRow.data as Record<string, any>) || {};
+        const currentUnstructured = (currentData.unstructured as Record<string, any>) || {};
 
-          baseRow.data = {
-            ...currentData,
-            unstructured: {
-              ...currentUnstructured,
-              [row.id]: cellValue ?? null,
-            },
-          }
+        baseRow.data = {
+          ...currentData,
+          unstructured: {
+            ...currentUnstructured,
+            [row.field]: cellValue === "" || cellValue == null ? null : String(cellValue),
+          },
         }
       }
-
     }
+
     return baseRow
   })
 
