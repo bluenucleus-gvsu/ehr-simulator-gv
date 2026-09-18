@@ -32,7 +32,6 @@ export function transformLabTableToSchema(
       case_id: caseId,
       time_offset: timePoint,
       is_in_presim: timePointsInPreSim.has(timePoint),
-      data: {},
     }
 
     for (const row of data) {
@@ -46,17 +45,6 @@ export function transformLabTableToSchema(
         /// TODO: This is workaround, update mappings above to satisfy type checking
         ;; (baseRow[columnName as keyof LabResultInsert] as string | null) =
           cellValue === "" || cellValue == null ? null : String(cellValue);
-      } else {
-        const currentData = (baseRow.data as Record<string, any>) || {};
-        const currentUnstructured = (currentData.unstructured as Record<string, any>) || {};
-
-        baseRow.data = {
-          ...currentData,
-          unstructured: {
-            ...currentUnstructured,
-            [row.field]: cellValue === "" || cellValue == null ? null : String(cellValue),
-          },
-        }
       }
     }
 

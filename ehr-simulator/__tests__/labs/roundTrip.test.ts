@@ -15,7 +15,7 @@ import { getCaseBundle } from "@/actions/case_builder/getCase";
 const CASE_ID = randomUUID();
 const TIME_OFFSET_1 = 0;
 const TIME_OFFSET_2 = -45;
-const NON_LAB_COLUMNS = ["case_id", "data", "time_offset", "is_in_presim"];
+const NON_LAB_COLUMNS = ["case_id", "time_offset", "is_in_presim"];
 
 /* 
   Tests full Lab Result path from Case Builder to EHR View
@@ -31,6 +31,7 @@ describe("Lab Results round trip process", () => {
       first_name: "Samuel",
       last_name: "Jones",
       code_status: "Full",
+      case_specialty: "med_surg"
     });
     if (error) throw new Error(`Could not create test case: ${error.message}`);
   });

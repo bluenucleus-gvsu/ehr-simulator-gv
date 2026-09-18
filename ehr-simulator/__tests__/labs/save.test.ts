@@ -80,13 +80,11 @@ describe("transformLabTableToSchema", () => {
     });
 
     expect(labResults[0]).toMatchObject({ sodium: "145" });
-    expect(labResults[0].data).toEqual({});
   });
 
-  it("keeps rows without an id in the unstructured data blob", () => {
+  it("skips results rows without a column id", () => {
     const data: LabTableData[] = [
       { field: "Custom Biomarker", rowType: "results", hideable: true, [0]: "positive" },
-      { field: "Another Biomarker", rowType: "results", hideable: true, [0]: "" },
     ];
 
     const { labResults } = transformLabTableToSchema(caseId, {
@@ -95,11 +93,11 @@ describe("transformLabTableToSchema", () => {
       timePointsInPreSim: new Set([0]),
     });
 
-    expect(labResults[0].data).toEqual({
-      unstructured: {
-        "Custom Biomarker": "positive",
-        "Another Biomarker": null,
-      },
+    expect(labResults[0]).not.toHaveProperty("Custom Biomarker");
+    expect(labResults[0]).toEqual({
+      case_id: caseId,
+      time_offset: 0,
+      is_in_presim: true,
     });
   });
 
@@ -171,7 +169,6 @@ describe("updateLabs", () => {
       case_id: caseId,
       time_offset: 5,
       is_in_presim: false,
-      data: {},
     }]);
   });
 });

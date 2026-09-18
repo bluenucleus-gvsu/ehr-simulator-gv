@@ -68,29 +68,6 @@ describe("buildLabRowsFromBundle", () => {
     expect(rowById(rows, "potassium")[0]).toBe("");
   });
 
-  it("reads unstructured values from the data blob by field name", () => {
-    const template: LabTableData[] = [
-      {
-        field: "Custom Biomarker",
-        rowType: "results",
-        hideable: true,
-      },
-    ];
-
-    const { rows } = buildLabRowsFromBundle(
-      [
-        {
-          id: "lab-1",
-          time_offset: 0,
-          data: { unstructured: { "Custom Biomarker": "positive" } },
-        },
-      ],
-      template,
-    );
-
-    expect(rows[0][0]).toBe("positive");
-  });
-
   it("keeps the last row when two rows share a time offset", () => {
     const { rows } = buildLabRowsFromBundle(
       [

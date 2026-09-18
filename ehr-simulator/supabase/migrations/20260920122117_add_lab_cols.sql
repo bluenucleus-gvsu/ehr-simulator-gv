@@ -78,7 +78,11 @@ ALTER TABLE IF EXISTS lab_results
   ALTER COLUMN ven_po2 TYPE text,
   ALTER COLUMN wbc TYPE text;
 
--- Remove old overload that used to accept imaging/microbiology jsonb payloads
+-- The data jsonb blob is no longer used in lab_result data flow
+ALTER TABLE IF EXISTS lab_results
+  DROP COLUMN IF EXISTS data;
+
+-- Remove old overload that accepted imaging and microbiology Report jsonb payloads
 DROP FUNCTION IF EXISTS public.case_builder_replace_labs(uuid, jsonb, jsonb, jsonb);
 
 CREATE OR REPLACE FUNCTION public.case_builder_replace_labs(
@@ -113,7 +117,6 @@ BEGIN
     NULL::public.lab_results,
     item || jsonb_build_object(
       'id', gen_random_uuid(), 'case_id', p_case_id, 'created_at', now(),
-      'data', COALESCE(item->'data', '{}'::jsonb),
       'is_in_presim', COALESCE((item->>'is_in_presim')::boolean, true)
     )
   )).* FROM jsonb_array_elements(COALESCE(p_lab_rows, '[]'::jsonb)) item;
@@ -122,3 +125,8 @@ $$;
 
 REVOKE ALL ON FUNCTION public.case_builder_replace_labs(uuid, jsonb) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.case_builder_replace_labs(uuid, jsonb) TO service_role;
+
+-- Restore the 3 instances of lab_result data being caught by the jsonb column (Harold Adams case)
+UPDATE public.lab_results SET neutrophils = '78' WHERE time_offset = -1440 AND case_id = '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc';
+UPDATE public.lab_results SET lymphocytes = '20', neutrophils = '72', monocytes = '6' WHERE time_offset = -2880 AND case_id = '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc';
+UPDATE public.lab_results SET neutrophils = '85' WHERE time_offset = -120 AND case_id = '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc';

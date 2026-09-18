@@ -116,9 +116,6 @@ export function caseBundleToFormBlob(bundle: CaseBundle): FormBlob {
       data: hydratedLabs.rows,
       timePoints: hydratedLabs.timePoints.length ? hydratedLabs.timePoints : [0],
       timePointsInPreSim: new Set(hydratedLabs.timePointsInPresim),
-      visibleItems: new Set(
-        hydratedLabs.rows.filter((row) => row.hideable).map((row) => row.field),
-      ),
     },
     charting: {
       data: hydratedCharting.rows,

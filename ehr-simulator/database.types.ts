@@ -205,10 +205,7 @@ export type Database = {
           age: number | null
           allergies: string[] | null
           attending_provider: string | null
-<<<<<<< HEAD
           case_specialty: Database["public"]["Enums"]["case_specialty_type"]
-=======
->>>>>>> 3388220 (update lab_result schema)
           code_status: Database["public"]["Enums"]["code_status_type"]
           created_at: string | null
           description: string | null
@@ -246,10 +243,7 @@ export type Database = {
           age?: number | null
           allergies?: string[] | null
           attending_provider?: string | null
-<<<<<<< HEAD
           case_specialty: Database["public"]["Enums"]["case_specialty_type"]
-=======
->>>>>>> 3388220 (update lab_result schema)
           code_status: Database["public"]["Enums"]["code_status_type"]
           created_at?: string | null
           description?: string | null
@@ -287,10 +281,7 @@ export type Database = {
           age?: number | null
           allergies?: string[] | null
           attending_provider?: string | null
-<<<<<<< HEAD
           case_specialty?: Database["public"]["Enums"]["case_specialty_type"]
-=======
->>>>>>> 3388220 (update lab_result schema)
           code_status?: Database["public"]["Enums"]["code_status_type"]
           created_at?: string | null
           description?: string | null
@@ -575,10 +566,6 @@ export type Database = {
           orientation: string | null
           output_selections: string | null
           oxygen_device: string | null
-<<<<<<< HEAD
-=======
-          pain: string | null
->>>>>>> 3388220 (update lab_result schema)
           pain_aggravating_factors: string | null
           pain_alleviating_factors: string | null
           pain_characteristics: string | null
@@ -602,15 +589,9 @@ export type Database = {
           skin: string | null
           speech: string | null
           spo2: string | null
-<<<<<<< HEAD
           stool_occurrence: string | null
           stool_output_ml: string | null
           supplemental_o2_rate: string | null
-=======
-          stool: string | null
-          supplemental_o2_rate: string | null
-          tactile_disturbances: number | null
->>>>>>> 3388220 (update lab_result schema)
           temp: string | null
           temp_source: string | null
           time_offset: number
@@ -711,10 +692,6 @@ export type Database = {
           orientation?: string | null
           output_selections?: string | null
           oxygen_device?: string | null
-<<<<<<< HEAD
-=======
-          pain?: string | null
->>>>>>> 3388220 (update lab_result schema)
           pain_aggravating_factors?: string | null
           pain_alleviating_factors?: string | null
           pain_characteristics?: string | null
@@ -738,15 +715,9 @@ export type Database = {
           skin?: string | null
           speech?: string | null
           spo2?: string | null
-<<<<<<< HEAD
           stool_occurrence?: string | null
           stool_output_ml?: string | null
           supplemental_o2_rate?: string | null
-=======
-          stool?: string | null
-          supplemental_o2_rate?: string | null
-          tactile_disturbances?: number | null
->>>>>>> 3388220 (update lab_result schema)
           temp?: string | null
           temp_source?: string | null
           time_offset: number
@@ -847,10 +818,6 @@ export type Database = {
           orientation?: string | null
           output_selections?: string | null
           oxygen_device?: string | null
-<<<<<<< HEAD
-=======
-          pain?: string | null
->>>>>>> 3388220 (update lab_result schema)
           pain_aggravating_factors?: string | null
           pain_alleviating_factors?: string | null
           pain_characteristics?: string | null
@@ -874,15 +841,9 @@ export type Database = {
           skin?: string | null
           speech?: string | null
           spo2?: string | null
-<<<<<<< HEAD
           stool_occurrence?: string | null
           stool_output_ml?: string | null
           supplemental_o2_rate?: string | null
-=======
-          stool?: string | null
-          supplemental_o2_rate?: string | null
-          tactile_disturbances?: number | null
->>>>>>> 3388220 (update lab_result schema)
           temp?: string | null
           temp_source?: string | null
           time_offset?: number
@@ -1070,10 +1031,6 @@ export type Database = {
           orientation: string | null
           output_selections: string | null
           oxygen_device: string | null
-<<<<<<< HEAD
-=======
-          pain: string | null
->>>>>>> 3388220 (update lab_result schema)
           pain_aggravating_factors: string | null
           pain_alleviating_factors: string | null
           pain_characteristics: string | null
@@ -1097,15 +1054,9 @@ export type Database = {
           skin: string | null
           speech: string | null
           spo2: string | null
-<<<<<<< HEAD
           stool_occurrence: string | null
           stool_output_ml: string | null
           supplemental_o2_rate: string | null
-=======
-          stool: string | null
-          supplemental_o2_rate: string | null
-          tactile_disturbances: number | null
->>>>>>> 3388220 (update lab_result schema)
           temp: string | null
           temp_source: string | null
           time_offset: number
@@ -1209,10 +1160,6 @@ export type Database = {
           orientation?: string | null
           output_selections?: string | null
           oxygen_device?: string | null
-<<<<<<< HEAD
-=======
-          pain?: string | null
->>>>>>> 3388220 (update lab_result schema)
           pain_aggravating_factors?: string | null
           pain_alleviating_factors?: string | null
           pain_characteristics?: string | null
@@ -1236,15 +1183,9 @@ export type Database = {
           skin?: string | null
           speech?: string | null
           spo2?: string | null
-<<<<<<< HEAD
           stool_occurrence?: string | null
           stool_output_ml?: string | null
           supplemental_o2_rate?: string | null
-=======
-          stool?: string | null
-          supplemental_o2_rate?: string | null
-          tactile_disturbances?: number | null
->>>>>>> 3388220 (update lab_result schema)
           temp?: string | null
           temp_source?: string | null
           time_offset: number
@@ -1348,10 +1289,6 @@ export type Database = {
           orientation?: string | null
           output_selections?: string | null
           oxygen_device?: string | null
-<<<<<<< HEAD
-=======
-          pain?: string | null
->>>>>>> 3388220 (update lab_result schema)
           pain_aggravating_factors?: string | null
           pain_alleviating_factors?: string | null
           pain_characteristics?: string | null
@@ -1375,15 +1312,9 @@ export type Database = {
           skin?: string | null
           speech?: string | null
           spo2?: string | null
-<<<<<<< HEAD
           stool_occurrence?: string | null
           stool_output_ml?: string | null
           supplemental_o2_rate?: string | null
-=======
-          stool?: string | null
-          supplemental_o2_rate?: string | null
-          tactile_disturbances?: number | null
->>>>>>> 3388220 (update lab_result schema)
           temp?: string | null
           temp_source?: string | null
           time_offset?: number
@@ -1646,7 +1577,6 @@ export type Database = {
           creatinine: string | null
           crp: string | null
           d_dimer: string | null
-          data: Json
           eosinophils: string | null
           esr: string | null
           free_t3: string | null
@@ -1674,17 +1604,6 @@ export type Database = {
           myoglobin: string | null
           neutrophils: string | null
           nitrites: string | null
-<<<<<<< HEAD
-          pco2: number | null
-          phosphate: number | null
-          platelets: number | null
-          po2: number | null
-          potassium: number | null
-          protein: string | null
-          pt: number | null
-          ptt: number | null
-          rbc: number | null
-=======
           phosphate: string | null
           platelets: string | null
           potassium: string | null
@@ -1692,7 +1611,6 @@ export type Database = {
           pt: string | null
           ptt: string | null
           rbc: string | null
->>>>>>> 3388220 (update lab_result schema)
           rh_factor: string | null
           sodium: string | null
           specific_gravity: string | null
@@ -1736,7 +1654,6 @@ export type Database = {
           creatinine?: string | null
           crp?: string | null
           d_dimer?: string | null
-          data?: Json
           eosinophils?: string | null
           esr?: string | null
           free_t3?: string | null
@@ -1764,17 +1681,6 @@ export type Database = {
           myoglobin?: string | null
           neutrophils?: string | null
           nitrites?: string | null
-<<<<<<< HEAD
-          pco2?: number | null
-          phosphate?: number | null
-          platelets?: number | null
-          po2?: number | null
-          potassium?: number | null
-          protein?: string | null
-          pt?: number | null
-          ptt?: number | null
-          rbc?: number | null
-=======
           phosphate?: string | null
           platelets?: string | null
           potassium?: string | null
@@ -1782,7 +1688,6 @@ export type Database = {
           pt?: string | null
           ptt?: string | null
           rbc?: string | null
->>>>>>> 3388220 (update lab_result schema)
           rh_factor?: string | null
           sodium?: string | null
           specific_gravity?: string | null
@@ -1826,7 +1731,6 @@ export type Database = {
           creatinine?: string | null
           crp?: string | null
           d_dimer?: string | null
-          data?: Json
           eosinophils?: string | null
           esr?: string | null
           free_t3?: string | null
@@ -1854,17 +1758,6 @@ export type Database = {
           myoglobin?: string | null
           neutrophils?: string | null
           nitrites?: string | null
-<<<<<<< HEAD
-          pco2?: number | null
-          phosphate?: number | null
-          platelets?: number | null
-          po2?: number | null
-          potassium?: number | null
-          protein?: string | null
-          pt?: number | null
-          ptt?: number | null
-          rbc?: number | null
-=======
           phosphate?: string | null
           platelets?: string | null
           potassium?: string | null
@@ -1872,7 +1765,6 @@ export type Database = {
           pt?: string | null
           ptt?: string | null
           rbc?: string | null
->>>>>>> 3388220 (update lab_result schema)
           rh_factor?: string | null
           sodium?: string | null
           specific_gravity?: string | null
@@ -2569,7 +2461,6 @@ export type Database = {
           orientation: string | null
           output_selections: string | null
           oxygen_device: string | null
-<<<<<<< HEAD
           pain_aggravating_factors: string | null
           pain_alleviating_factors: string | null
           pain_characteristics: string | null
@@ -2584,11 +2475,6 @@ export type Database = {
           parenteral_intake_ml: string | null
           periwound_skin: string | null
           primary_wound_dressing: string | null
-=======
-          pain: string | null
-          parenteral_nutrition: string | null
-          paroxysmal_sweats: number | null
->>>>>>> 3388220 (update lab_result schema)
           psychosocial_selections: string | null
           pupils: string | null
           respiratory_selections: string | null
@@ -2599,15 +2485,9 @@ export type Database = {
           source_type: string | null
           speech: string | null
           spo2: string | null
-<<<<<<< HEAD
           stool_occurrence: string | null
           stool_output_ml: string | null
           supplemental_o2_rate: string | null
-=======
-          stool: string | null
-          supplemental_o2_rate: string | null
-          tactile_disturbances: number | null
->>>>>>> 3388220 (update lab_result schema)
           temp: string | null
           temp_source: string | null
           time_offset: number | null
@@ -2660,36 +2540,10 @@ export type Database = {
         Args: { p_case_id: string; p_history: Json }
         Returns: undefined
       }
-<<<<<<< HEAD
-<<<<<<< HEAD
-      case_builder_replace_labs: {
-        Args: {
-          p_case_id: string
-          p_imaging_rows: Json
-          p_lab_rows: Json
-          p_microbiology_rows: Json
-        }
-        Returns: undefined
-      }
-=======
-      case_builder_replace_labs:
-        | { Args: { p_case_id: string; p_lab_rows: Json }; Returns: undefined }
-        | {
-            Args: {
-              p_case_id: string
-              p_imaging_rows: Json
-              p_lab_rows: Json
-              p_microbiology_rows: Json
-            }
-            Returns: undefined
-          }
->>>>>>> 3388220 (update lab_result schema)
-=======
       case_builder_replace_labs: {
         Args: { p_case_id: string; p_lab_rows: Json }
         Returns: undefined
       }
->>>>>>> 8ff1254 (add lab tests)
       case_builder_replace_media: {
         Args: { p_case_id: string; p_rows: Json }
         Returns: undefined

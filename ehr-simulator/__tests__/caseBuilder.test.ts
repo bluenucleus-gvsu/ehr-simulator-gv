@@ -6,8 +6,6 @@ import { assertValidSaveRequest } from "@/lib/caseBuilder/validation";
 import { CaseSection } from "@/lib/caseSections";
 import type { CaseBundle } from "@/actions/case_builder/getCase";
 import { medOrderFormStateFromCaseBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marFromBundle";
-import { buildLabRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsFromBundle";
-import type { LabTableData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
 import {
   filterAdministrationsForOrders,
   normalizeOptionalNumericInput,
@@ -195,19 +193,5 @@ describe("case-builder edit hydration", () => {
     expect(hydrated.createdOrders[0].medicationId).toBe(medicationId);
     expect(hydrated.selectedMeds[0].id).toBe(medicationId);
     expect(hydrated.createdOrders.map((order) => order.phase)).toEqual([2, 3]);
-  });
-
-  it("rehydrates unstructured lab values instead of dropping them", () => {
-    const template: LabTableData[] = [{
-      field: "Custom Biomarker",
-      rowType: "results",
-      hideable: true
-    }];
-
-    const hydrated = buildLabRowsFromBundle(
-      [{ id: "lab-1", time_offset: 0, data: { unstructured: { "Custom Biomarker": "positive" } } }],
-      template);
-
-    expect(hydrated.rows[0][0]).toBe("positive");
   });
 });
