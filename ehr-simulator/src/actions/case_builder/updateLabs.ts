@@ -8,7 +8,6 @@ type LabSavePayload = {
   data: LabTableData[];
   timePoints: number[];
   timePointsInPreSim: number[];
-  visibleItems?: string[];
 };
 
 export async function updateLabs(

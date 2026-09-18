@@ -34,30 +34,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      case_data: {
-        Row: {
-          age: number | null
-          description: string | null
-          diagnosis: string | null
-          id: string
-          name: string
-        }
-        Insert: {
-          age?: number | null
-          description?: string | null
-          diagnosis?: string | null
-          id?: string
-          name: string
-        }
-        Update: {
-          age?: number | null
-          description?: string | null
-          diagnosis?: string | null
-          id?: string
-          name?: string
-        }
-        Relationships: []
-      }
       case_family_history: {
         Row: {
           case_id: string
@@ -226,11 +202,11 @@ export type Database = {
       cases: {
         Row: {
           admitting_diagnosis: string | null
+          age: number | null
           allergies: string[] | null
           attending_provider: string | null
           code_status: Database["public"]["Enums"]["code_status_type"]
           created_at: string | null
-          date_of_birth: string | null
           description: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
@@ -240,7 +216,6 @@ export type Database = {
           height_ft: number | null
           height_in: number | null
           id: string
-          inpatient_duration_days: number | null
           insurance: Database["public"]["Enums"]["insurance_type"] | null
           intake_output_blocks: Json
           isolation_precautions_id: string | null
@@ -256,17 +231,16 @@ export type Database = {
           requires_interpreter: boolean
           social_habits: string[] | null
           surgical_history: string[] | null
-          time_of_admission: string | null
           updated_at: string
           weight_kg: number | null
         }
         Insert: {
           admitting_diagnosis?: string | null
+          age?: number | null
           allergies?: string[] | null
           attending_provider?: string | null
           code_status: Database["public"]["Enums"]["code_status_type"]
           created_at?: string | null
-          date_of_birth?: string | null
           description?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
@@ -276,7 +250,6 @@ export type Database = {
           height_ft?: number | null
           height_in?: number | null
           id?: string
-          inpatient_duration_days?: number | null
           insurance?: Database["public"]["Enums"]["insurance_type"] | null
           intake_output_blocks?: Json
           isolation_precautions_id?: string | null
@@ -292,17 +265,16 @@ export type Database = {
           requires_interpreter?: boolean
           social_habits?: string[] | null
           surgical_history?: string[] | null
-          time_of_admission?: string | null
           updated_at?: string
           weight_kg?: number | null
         }
         Update: {
           admitting_diagnosis?: string | null
+          age?: number | null
           allergies?: string[] | null
           attending_provider?: string | null
           code_status?: Database["public"]["Enums"]["code_status_type"]
           created_at?: string | null
-          date_of_birth?: string | null
           description?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
@@ -312,7 +284,6 @@ export type Database = {
           height_ft?: number | null
           height_in?: number | null
           id?: string
-          inpatient_duration_days?: number | null
           insurance?: Database["public"]["Enums"]["insurance_type"] | null
           intake_output_blocks?: Json
           isolation_precautions_id?: string | null
@@ -328,7 +299,6 @@ export type Database = {
           requires_interpreter?: boolean
           social_habits?: string[] | null
           surgical_history?: string[] | null
-          time_of_admission?: string | null
           updated_at?: string
           weight_kg?: number | null
         }
