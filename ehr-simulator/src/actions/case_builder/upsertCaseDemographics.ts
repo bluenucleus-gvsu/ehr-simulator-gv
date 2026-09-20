@@ -45,6 +45,7 @@ export async function upsertCaseDemographics(
     emergency_contact_name: d.contact ?? null,
     emergency_contact_relationship: d.contactRelationship ?? null,
     emergency_contact_phone: (d.contactPhone ?? "").trim() || null,
+    case_photo_url: d.casePhotoUrl ?? null,
     updated_at: now,
     ...(!caseId ? { created_at: now } : {}),
   };

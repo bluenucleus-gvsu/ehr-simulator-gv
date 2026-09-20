@@ -22,11 +22,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { buttonVariants } from "@/components/ui/button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useFormContext } from "@/context/FormContext";
 import { relationshipStatuses, precautions, codeStatuses, insuranceOptions, DemographicFormData } from "@/utils/form";
-import { buttonVariants } from "@/components/ui/button";
 import { FormShell } from "../../components/formShell";
 import { CaseSection } from "@/lib/saveCase";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
@@ -34,6 +34,8 @@ import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 import { toast } from "sonner";
 import { hasText } from "@/lib/caseMinimumRequirements";
+import { removeCasePhoto, saveCasePhoto } from "@/actions/case_builder/casePhoto";
+import { CasePhotoUploader } from "../../components/casePhotoUploader";
 
 export default function DemographicsForm() {
   const { onDataChange, demographicData: initialData, setCaseId, caseId } = useFormContext();
@@ -41,6 +43,10 @@ export default function DemographicsForm() {
   const [missingFields, setMissingFields] = useState<Set<string>>(new Set())
   const router = useRouter();
   const [showCancelAlert, setShowCancelAlert] = useState<boolean>(false);
+
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoRemoved, setPhotoRemoved] = useState(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
 
   const goBack = () => {
     setShowCancelAlert(true);
@@ -94,15 +100,52 @@ export default function DemographicsForm() {
     }
     onDataChange("demographics", demographicsData)
     const result = await saveCaseData({
-      payload: demographicsData,
+      payload: { ...demographicsData, casePhotoUrl: photoRemoved ? undefined : demographicsData.casePhotoUrl },
       section: CaseSection.DEMOGRAPHICS,
       caseId: caseId
     });
 
     if (result?.id) {
       setCaseId(result.id)
+      setPhotoBusy(true)
+      try {
+        if (photoFile) {
+          const url = await saveCasePhoto(result.id, photoFile)
+          const updatedDemographics = { ...demographicsData, casePhotoUrl: url }
+          setDemographicsData(updatedDemographics)
+          onDataChange("demographics", updatedDemographics)
+        } else if (photoRemoved && demographicsData.casePhotoUrl) {
+          await removeCasePhoto(result.id)
+          onDataChange("demographics", { ...demographicsData, casePhotoUrl: undefined })
+        }
+      } finally {
+        setPhotoBusy(false)
+      }
     }
     router.push(caseBuilderPath("/admin/case-builder/form/history", result?.id ?? caseId));
+  }
+
+  const handlePhotoChange = (file: File | null) => {
+    setPhotoFile(file)
+    setPhotoRemoved(false)
+  }
+
+  const handlePhotoRemove = async () => {
+    setPhotoFile(null)
+    setPhotoRemoved(true)
+    const updatedDemographics = { ...demographicsData, casePhotoUrl: undefined }
+    setDemographicsData(updatedDemographics)
+    onDataChange("demographics", updatedDemographics)
+    if (caseId && demographicsData.casePhotoUrl) {
+      setPhotoBusy(true)
+      try {
+        await removeCasePhoto(caseId)
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Unable to remove the image.")
+      } finally {
+        setPhotoBusy(false)
+      }
+    }
   }
 
   const limits = {
@@ -159,9 +202,8 @@ export default function DemographicsForm() {
       <div className="flex overflow-y-auto flex-col w-full bg-slate-50/50">
         <div className="flex-1 p-6 md:px-12 lg:px-24">
           <div className="max-w-6xl mx-auto space-y-6 pb-20">
-
             <Card className="border-slate-200 shadow-sm pt-4">
-              <CardHeader className="pb-3">
+              <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <FileText className="w-5 h-5 text-blue-600" />
                   Case Overview
@@ -171,34 +213,45 @@ export default function DemographicsForm() {
                   {missingFields.has('summary') && <p className="text-red-600 text-sm">(Required)</p>}
                 </div>
               </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={demographicsData.summary}
-                  onChange={(e) => { setDemographicsData({ ...demographicsData, ["summary"]: e.target.value }) }}
-                  name="summary"
-                  placeholder="e.g. 68-year-old male admitted with shortness of breath..."
-                  className="min-h-[100px] bg-white"
-                />
-                <div className="mt-4 max-w-xs space-y-2">
-                  <Label htmlFor="phaseCount">Simulation phases</Label>
-                  <Input
-                    id="phaseCount"
-                    type="number"
-                    min={1}
-                    max={10}
-                    value={demographicsData.phaseCount}
-                    onChange={(event) => setDemographicsData({
-                      ...demographicsData,
-                      phaseCount: Math.min(10, Math.max(1, Number(event.target.value) || 1)),
-                    })}
-                  />
-                  <p className="text-xs text-slate-500">Content assigned to a later phase appears when faculty advance the simulation.</p>
+              <CardContent className="flex flex-col">
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_15.5rem]">
+                  <div className="space-y-4">
+                    <Textarea
+                      value={demographicsData.summary}
+                      onChange={(e) => { setDemographicsData({ ...demographicsData, ["summary"]: e.target.value }) }}
+                      name="summary"
+                      placeholder="e.g. 68-year-old male admitted with shortness of breath..."
+                      className="h-32 min-h-16 bg-white"
+                    />
+                    <div className="max-w-xs space-y-2">
+                      <Label htmlFor="phaseCount">Simulation phases</Label>
+                      <Input
+                        id="phaseCount"
+                        type="number"
+                        min={1}
+                        max={10}
+                        value={demographicsData.phaseCount}
+                        onChange={(event) => setDemographicsData({
+                          ...demographicsData,
+                          phaseCount: Math.min(10, Math.max(1, Number(event.target.value) || 1)),
+                        })}
+                      />
+                      <p className="text-xs text-slate-500">Content assigned to a later phase appears when faculty advance the simulation.</p>
+                    </div>
+                  </div>
+                  <div className="w-full max-w-[15.5rem] justify-self-center">
+                    <CasePhotoUploader
+                      imageUrl={demographicsData.casePhotoUrl}
+                      disabled={photoBusy}
+                      onFileChange={handlePhotoChange}
+                      onRemove={handlePhotoRemove}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
             <div className="grid grid-cols-1 gap-6">
-
               <Card className="border-slate-200 shadow-sm h-fit pt-4">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -254,7 +307,6 @@ export default function DemographicsForm() {
                             if (Number(e.target.value) <= limits.maxAge && (Number(e.target.value) >= limits.minAge)) {
                               setDemographicsData({ ...demographicsData, ["age"]: e.target.value })
                               clearMissingField("age", e.target.value);
-
                             }
                           }}
                           required
@@ -279,7 +331,6 @@ export default function DemographicsForm() {
                         onValueChange={(value) => {
                           setDemographicsData({ ...demographicsData, ["codeStatus"]: value })
                           clearMissingField("codeStatus", value);
-
                         }}
                         value={demographicsData.codeStatus}
                       >
@@ -561,7 +612,6 @@ export default function DemographicsForm() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="contactRelationship">Contact Relationship</Label>
-
                     <Input
                       required
                       name="contactRelationship"
