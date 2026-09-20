@@ -288,7 +288,7 @@ export default function DemographicsForm() {
                           <ChevronDown />
                         </SelectTrigger>
                         <SelectContent>
-                          {codeStatuses.map((s, i) => <SelectItem key={i} value={s}>{s}</SelectItem>)}
+                          {codeStatuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
@@ -377,7 +377,7 @@ export default function DemographicsForm() {
                           <ChevronDown />
                         </SelectTrigger>
                         <SelectContent>
-                          {precautions.map((p, i) => <SelectItem key={i} value={p}>{p}</SelectItem>)}
+                          {precautions.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
@@ -420,7 +420,7 @@ export default function DemographicsForm() {
                           <ChevronDown />
                         </SelectTrigger>
                         <SelectContent>
-                          {insuranceOptions.map((o, i) => <SelectItem key={i} value={o}>{o}</SelectItem>)}
+                          {insuranceOptions.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
@@ -450,7 +450,7 @@ export default function DemographicsForm() {
                           <ChevronDown />
                         </SelectTrigger>
                         <SelectContent>
-                          {relationshipStatuses.map((s, i) => <SelectItem key={i} value={s}>{s}</SelectItem>)}
+                          {relationshipStatuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
