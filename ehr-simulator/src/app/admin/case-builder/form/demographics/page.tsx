@@ -114,6 +114,7 @@ export default function DemographicsForm() {
           const updatedDemographics = { ...demographicsData, casePhotoUrl: url }
           setDemographicsData(updatedDemographics)
           onDataChange("demographics", updatedDemographics)
+          setPhotoFile(null)
         } else if (photoRemoved && demographicsData.casePhotoUrl) {
           await removeCasePhoto(result.id)
           onDataChange("demographics", { ...demographicsData, casePhotoUrl: undefined })
@@ -125,9 +126,24 @@ export default function DemographicsForm() {
     router.push(caseBuilderPath("/admin/case-builder/form/history", result?.id ?? caseId));
   }
 
-  const handlePhotoChange = (file: File | null) => {
+  const handlePhotoChange = async (file: File | null) => {
     setPhotoFile(file)
     setPhotoRemoved(false)
+
+    if (!file || !caseId) return
+
+    setPhotoBusy(true)
+    try {
+      const url = await saveCasePhoto(caseId, file)
+      const updatedDemographics = { ...demographicsData, casePhotoUrl: url }
+      setDemographicsData(updatedDemographics)
+      onDataChange("demographics", updatedDemographics)
+      setPhotoFile(null)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to save the image.")
+    } finally {
+      setPhotoBusy(false)
+    }
   }
 
   const handlePhotoRemove = async () => {
