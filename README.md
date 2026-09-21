@@ -1,7 +1,7 @@
 # Run the EHR Simulator (macOS and Windows)
 **Project Mission**: Develop a software to aid in medical simulation, mimicking medical standards, such as EPIC.
 
-**Technical Description**: This app is a **Next.js 16** frontend in the `ehr-simulator` folder. It talks to **Supabase** (Postgres, Auth, and server actions that use the service role key). You can point it at a **hosted Supabase project** or run **Supabase locally** with Docker all found at [Supabase Setup](#5-supabase-choose-one-path).
+**Technical Description**: This app is a **Next.js 16** frontend in the `ehr-simulator` folder. It talks to **Supabase** (Postgres, Auth, and server actions that use the secret key). You can point it at a **hosted Supabase project** or run **Supabase locally** with Docker all found at [Supabase Setup](#5-supabase-choose-one-path).
 
 ---
 ## Table of Contents
@@ -50,9 +50,9 @@ npm install
 1. Create or open a project in the [Supabase dashboard](https://supabase.com/dashboard).
 2. Copy the **Project URL**, found on the Project Overview page, into `.env.local`:
     - URL → `NEXT_PUBLIC_SUPABASE_URL`
-3. **Project Settings → API Keys**: copy **anon public** key, and **service_role** key into `.env.local`:
-    - anon public → `NEXT_PUBLIC_SUPABASE_ANON_KEY` and usually also `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (unless your project uses a distinct publishable key)
-    - service_role → `SUPABASE_SERVICE_ROLE_KEY`
+3. **Project Settings → API Keys**: copy the **publishable** and **secret** keys into `.env.local`:
+    - publishable → `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+    - secret → `SUPABASE_SECRET_KEY`
 4. Ensure **Authentication → URL configuration** includes your local app URL, e.g. `http://localhost:3000`, then add the auth callback path your app uses (e.g. `/auth/callback`).
 5. **Google sign-in**: enable the Google provider under **Authentication → Providers** and follow these steps [Google Cloud OAuth Setup](#6-google-cloud-oauth-setup-required-for-google-sign-in), copy the Client Secret and Client ID and paste them into the Google provider settings in the Supabase dashboard.
 > Apply any SQL migrations your team uses (for example from `supabase/migrations/`) via the Supabase SQL editor or linked CI, so your schema matches the app.
@@ -66,7 +66,7 @@ npm install
     npx supabase start
     ```
     
-3. After it starts, the CLI prints **Project URL**, **Publishable**(sb_publishable...), **Anon Key**(_Secrect Key_), and **Service Role Key**(sb_secret...). Put them in `.env.local` as in Path A. For a default local stack, the URL is often `http://127.0.0.1:54321` (see `supabase/config.toml` → `[api]` → `port`).
+3. After it starts, the CLI prints **Project URL**, **Publishable** (sb_publishable...), and **Secret** (sb_secret...). Put them in `.env.local` as `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `SUPABASE_SECRET_KEY`. For a default local stack, the URL is often `http://127.0.0.1:54321` (see `supabase/config.toml` → `[api]` → `port`).
     
 4. **Google OAuth on localhost** still requires configuring the provider in the **local** Supabase instance (or you rely on seeded users / bypass flows your team documents). If it is not stopped it will give a callback error.
     
