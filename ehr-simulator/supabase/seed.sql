@@ -1,6 +1,3 @@
--- Case Id and Session Id for testing
--- http://127.0.0.1:3000/simulation/e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d/a5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9a/chart/mar
-
 -- Expose all tables to the API for local development
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
@@ -128,7 +125,8 @@ INSERT INTO public.cases (
   last_name, 
   code_status, 
   admitting_diagnosis,
-  case_specialty
+  case_specialty,
+  age
 ) 
 VALUES
   (
@@ -139,7 +137,8 @@ VALUES
     'Peterson', 
     'Full', 
     'Acute CHF Exacerbation',
-    'med_surg'
+    'med_surg',
+    73
   ),
   (
     'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', 
@@ -149,7 +148,8 @@ VALUES
     'Dix', 
     'Full', 
     'Acute Pancreatitis',
-    'med_surg'
+    'med_surg',
+    62
   ),
   (
     'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d', 
@@ -159,7 +159,8 @@ VALUES
     'Chen', 
     'DNR',       
     'Community Acquired Pneumonia',
-    'med_surg'
+    'med_surg',
+    54
   ),
   (
     '5a6b7c8d-9e0f-1a2b-3c4d-5e6f7a8b9c0d', 
@@ -169,7 +170,8 @@ VALUES
     'Jenkins', 
     'Full', 
     'Diabetic Ketoacidosis (DKA)',
-    'med_surg'
+    'med_surg',
+    29
   );
 
 INSERT INTO public.section_assignments (section_id, case_id, sim_time, presim_time) 
@@ -689,8 +691,8 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 
-INSERT INTO "public"."cases" ("id", "name", "description", "first_name", "last_name", "date_of_birth", "code_status", "height_ft", "height_in", "weight_kg", "isolation_precautions_id", "language", "insurance", "employment", "relationship_status_id", "religion", "requires_interpreter", "admitting_diagnosis", "attending_provider", "inpatient_duration_days", "time_of_admission", "medical_history", "surgical_history", "allergies", "social_habits", "living_situation", "updated_at", "created_at", "emergency_contact_name", "emergency_contact_relationship", "case_specialty") VALUES
-	('2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Case Harold Adams', 'Mr. Harold Adams, a 72-year-old male, was admitted two days ago for hyponatremia related to vomiting and diarrhea from a gastrointestinal illness he caught on a cruise. His sodium levels have been improving, but this morning, he begins to show signs of infection and early septic shock.', 'Harold', 'Adams', '1954-03-22', 'Full', 6, 2, 75, NULL, 'English', NULL, 'Retired School Teacher', NULL, 'None', false, 'Hyponatremia', 'David Adler MD', 2, '09:00:00', '{Hypertension,GERD}', '{Appendectomy}', '{Seasonal}', '{}', '{"Lives with Spouse"}', '2026-03-19 20:20:08.403+00', '2026-03-19 20:16:45.238+00', 'Linda Adams', 'Wife', 'med_surg');
+INSERT INTO "public"."cases" ("id", "name", "description", "first_name", "last_name", "code_status", "height_ft", "height_in", "weight_kg", "isolation_precautions_id", "language", "insurance", "employment", "relationship_status_id", "religion", "requires_interpreter", "admitting_diagnosis", "attending_provider", "medical_history", "surgical_history", "allergies", "social_habits", "living_situation", "updated_at", "created_at", "emergency_contact_name", "emergency_contact_relationship", "case_specialty", "age") VALUES
+	('2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Case Harold Adams', 'Mr. Harold Adams, a 72-year-old male, was admitted two days ago for hyponatremia related to vomiting and diarrhea from a gastrointestinal illness he caught on a cruise. His sodium levels have been improving, but this morning, he begins to show signs of infection and early septic shock.', 'Harold', 'Adams', 'Full', 6, 2, 75, NULL, 'English', NULL, 'Retired School Teacher', NULL, 'None', false, 'Hyponatremia', 'David Adler MD', '{Hypertension,GERD}', '{Appendectomy}', '{Seasonal}', '{}', '{"Lives with Spouse"}', '2026-03-19 20:20:08.403+00', '2026-03-19 20:16:45.238+00', 'Linda Adams', 'Wife', 'med_surg', 71);
 
 
 

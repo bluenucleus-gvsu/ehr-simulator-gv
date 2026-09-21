@@ -15,6 +15,7 @@ import { useFormContext } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
 import { CaseSection } from "@/lib/saveCase"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
+import { toast } from "sonner"
 import { caseBuilderPath } from "@/lib/caseBuilder/routes"
 import { filterAdministrationsForOrders } from "@/lib/caseBuilder/medicationPayload"
 
@@ -42,6 +43,10 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
   const [selectedMed, setSelectedMed] = useState('')
   const [selectedMeds, setSelectedMeds] = useState<AllMedicationTypes[]>(medOrderData.selectedMeds)
   const [medOrders, setMedOrders] = useState<MedicationOrder[]>(medOrderData.createdOrders)
+  const validateMedOrders = () => {
+    return medOrders.every(order => order.priority && order.frequency && order.orderingProvider)
+  }
+
 
   const handleAddMedication = (newMedId: string) => {
     setSelectedMed(newMedId)
@@ -107,6 +112,12 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
   }, [medications]);
 
   const goBack = () => {
+    const canSubmit = validateMedOrders()
+    if (!canSubmit) {
+      toast.warning('Every order must be assigned a Priority, Frequency, and Provider.')
+      return
+    }
+
     onDataChange('medOrders', {
       createdOrders: medOrders,
       selectedMeds: selectedMeds
@@ -115,6 +126,12 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
   }
 
   const handleSubmit = async () => {
+    const canSubmit = validateMedOrders()
+    if (!canSubmit) {
+      toast.warning('Every order must be assigned a Priority, Frequency, and Provider.')
+      return
+    }
+
     const validAdministrations = filterAdministrationsForOrders(
       medOrders,
       medAdministrationData,
@@ -124,8 +141,14 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
       createdOrders: medOrders,
       selectedMeds: selectedMeds
     });
+
     onDataChange('medAdministrationInstances', validAdministrations)
+
     if (caseId) {
+      onDataChange('medOrders', {
+        createdOrders: medOrders,
+        selectedMeds: selectedMeds
+      });
       await saveCaseData({
         payload: { orders: medOrders, administrations: validAdministrations },
         section: CaseSection.MEDICATION_ORDERS,

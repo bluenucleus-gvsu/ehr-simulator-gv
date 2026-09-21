@@ -47,7 +47,7 @@ export async function resolveSimulationRouteContext(routeId: string): Promise<Si
   const caseId = resolved?.caseId ?? routeId;
   const { data: caseRow, error: caseError } = await supabase
     .from("cases")
-    .select("id, first_name, last_name, description, date_of_birth")
+    .select("id, first_name, last_name, description, age")
     .eq("id", caseId)
     .maybeSingle();
 

@@ -7,32 +7,33 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
-      case_data: {
-        Row: {
-          age: number | null
-          description: string | null
-          diagnosis: string | null
-          id: string
-          name: string
-        }
-        Insert: {
-          age?: number | null
-          description?: string | null
-          diagnosis?: string | null
-          id?: string
-          name: string
-        }
-        Update: {
-          age?: number | null
-          description?: string | null
-          diagnosis?: string | null
-          id?: string
-          name?: string
-        }
-        Relationships: []
-      }
       case_family_history: {
         Row: {
           case_id: string
@@ -201,12 +202,12 @@ export type Database = {
       cases: {
         Row: {
           admitting_diagnosis: string | null
+          age: number | null
           allergies: string[] | null
           attending_provider: string | null
           case_specialty: Database["public"]["Enums"]["case_specialty_type"]
           code_status: Database["public"]["Enums"]["code_status_type"]
           created_at: string | null
-          date_of_birth: string | null
           description: string | null
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
@@ -219,7 +220,6 @@ export type Database = {
           height_ft: number | null
           height_in: number | null
           id: string
-          inpatient_duration_days: number | null
           insurance: Database["public"]["Enums"]["insurance_type"] | null
           intake_output_blocks: Json
           isolation_precautions_id: string | null
@@ -235,18 +235,17 @@ export type Database = {
           requires_interpreter: boolean
           social_habits: string[] | null
           surgical_history: string[] | null
-          time_of_admission: string | null
           updated_at: string
           weight_kg: number | null
         }
         Insert: {
           admitting_diagnosis?: string | null
+          age?: number | null
           allergies?: string[] | null
           attending_provider?: string | null
           case_specialty: Database["public"]["Enums"]["case_specialty_type"]
           code_status: Database["public"]["Enums"]["code_status_type"]
           created_at?: string | null
-          date_of_birth?: string | null
           description?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
@@ -259,7 +258,6 @@ export type Database = {
           height_ft?: number | null
           height_in?: number | null
           id?: string
-          inpatient_duration_days?: number | null
           insurance?: Database["public"]["Enums"]["insurance_type"] | null
           intake_output_blocks?: Json
           isolation_precautions_id?: string | null
@@ -275,18 +273,17 @@ export type Database = {
           requires_interpreter?: boolean
           social_habits?: string[] | null
           surgical_history?: string[] | null
-          time_of_admission?: string | null
           updated_at?: string
           weight_kg?: number | null
         }
         Update: {
           admitting_diagnosis?: string | null
+          age?: number | null
           allergies?: string[] | null
           attending_provider?: string | null
           case_specialty?: Database["public"]["Enums"]["case_specialty_type"]
           code_status?: Database["public"]["Enums"]["code_status_type"]
           created_at?: string | null
-          date_of_birth?: string | null
           description?: string | null
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
@@ -299,7 +296,6 @@ export type Database = {
           height_ft?: number | null
           height_in?: number | null
           id?: string
-          inpatient_duration_days?: number | null
           insurance?: Database["public"]["Enums"]["insurance_type"] | null
           intake_output_blocks?: Json
           isolation_precautions_id?: string | null
@@ -315,7 +311,6 @@ export type Database = {
           requires_interpreter?: boolean
           social_habits?: string[] | null
           surgical_history?: string[] | null
-          time_of_admission?: string | null
           updated_at?: string
           weight_kg?: number | null
         }
@@ -2416,6 +2411,7 @@ export type Database = {
           output_selections: string | null
           oxygen_device: string | null
           pain_aggravating_factors: string | null
+          pain_alleviating_factors: string | null
           pain_characteristics: string | null
           pain_interventions: string | null
           pain_location: string | null
@@ -2713,6 +2709,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       case_specialty_type: ["med_surg", "ob", "mental_health", "public_health"],

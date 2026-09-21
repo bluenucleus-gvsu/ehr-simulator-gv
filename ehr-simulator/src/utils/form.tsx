@@ -5,10 +5,6 @@ import { OrderType } from "@/app/simulation/[caseId]/[sessionId]/chart/orders/co
 import { FlexSheetData } from "@/lib/flexSheet/flexSheetTypes";
 
 export interface DemographicFormData {
-  DOBDay: string;
-  DOBMonth: string;
-  admissionDateOffest: string;
-  admissionTime: string;
   admittingDiagnosis: string;
   age: string;
   attendingProviderName: string;
