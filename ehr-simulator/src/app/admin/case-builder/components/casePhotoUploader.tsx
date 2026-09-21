@@ -86,7 +86,7 @@ export function CasePhotoUploader({
           disabled={disabled}
         >
           <ImagePlus />
-          {previewUrl ? "Replace profile image" : "Upload profile image"}
+          {previewUrl ? "Replace patient image" : "Upload patient image"}
         </Button>
         {previewUrl && (
           <Button
