@@ -31,6 +31,7 @@ export type CaseRow = Record<string, unknown> & {
   attending_provider?: string | null;
   isolation_precautions?: NamedLookup | null;
   relationship_status?: NamedLookup | null;
+  case_photo_url?: string | null;
 };
 
 export type CaseBundleRow = Record<string, unknown> & {
