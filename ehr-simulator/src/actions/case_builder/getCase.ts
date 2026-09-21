@@ -80,7 +80,7 @@ export async function getCaseBundle(
   // case-builder admin access for this read-only path.
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    process.env.SUPABASE_SECRET_KEY!,
     { auth: { persistSession: false, autoRefreshToken: false } },
   );
 
