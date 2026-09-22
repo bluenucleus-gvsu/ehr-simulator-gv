@@ -1,11 +1,37 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+
+export function focusColumnOffset(
+  timeOffsets: number[],
+  target: number,
+  tableWidth: number
+): number {
+  const index = timeOffsets.indexOf(target);
+  if (index === -1) return 0;
+
+  const maxOffset = Math.max(0, timeOffsets.length - tableWidth);
+
+  let page = maxOffset;
+  while (page > index) {
+    page -= tableWidth;
+  }
+  return Math.max(0, page);
+}
 
 export function useFlexSheetPagination(timeOffsets: number[], tableWidth: number) {
   const maxOffset = Math.max(0, timeOffsets.length - tableWidth);
   const remainder = timeOffsets.length % tableWidth;
 
-  // Initialize offset to the right-most (latest) columns
-  const [columnOffset, setColumnOffset] = useState(maxOffset);
+  const [columnOffset, setColumnOffset] = useState(0);
+  const [aligned, setAligned] = useState(false);
+
+  useEffect(() => {
+    if (timeOffsets.length === 0) return;
+    const newMax = Math.max(0, timeOffsets.length - tableWidth);
+    if (!aligned || columnOffset > newMax) {
+      setColumnOffset(newMax);
+      setAligned(true);
+    }
+  }, [timeOffsets, columnOffset, aligned, tableWidth]);
 
   // Calculate the subset of time columns currently visible
   const slicedTimeOffsets = useMemo(() => {

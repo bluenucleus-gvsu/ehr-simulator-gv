@@ -123,24 +123,26 @@ export function useFlexSheetState({
   );
 
   const handleColumnAdd = useCallback(
-    (newDate: Date | null) => {
+    (newDate: Date | null): { timeOffsets: number[]; added: number } | null => {
       if (!newDate || !simStartTime) {
-        return
+        return null;
       }
 
-      const newTime = differenceInMinutes(newDate.getTime(), simStartTime)
+      const newTime = differenceInMinutes(newDate.getTime(), simStartTime);
 
       if (!canEdit) {
         toast.error("FlexSheets are view-only in pre-simulation.");
-        return;
+        return null;
       }
       if (timeOffsets.includes(newTime)) {
         handleConflictingTimes(newTime, simStartTime);
-        return;
+        return null;
       }
-      setTimeOffsets((prev) => [...prev, newTime].sort((a, b) => a - b));
+      const nextTimeOffsets = [...timeOffsets, newTime].sort((a, b) => a - b);
+      setTimeOffsets(nextTimeOffsets);
       setData((prevData) => prevData.map((row) => ({ ...row, [newTime]: "" })));
-      columnAddSuccess(newTime, simStartTime)
+      columnAddSuccess(newTime, simStartTime);
+      return { timeOffsets: nextTimeOffsets, added: newTime };
     },
     [canEdit, timeOffsets, simStartTime]
   );

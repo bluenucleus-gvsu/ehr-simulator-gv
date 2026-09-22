@@ -17,7 +17,7 @@ import { useSimulationCase } from "@/context/SimulationCaseContext";
 import { useStudentSimulationEditAccess } from "@/utils/studentSimulationEditAccess";
 import { useFlexSheetInitialization } from "@/hooks/useFlexSheetInitialization";
 import { useFlexSheetState } from "@/hooks/useFlexSheetState";
-import { useFlexSheetPagination } from "@/hooks/useFlexSheetPagination";
+import { focusColumnOffset, useFlexSheetPagination } from "@/hooks/useFlexSheetPagination";
 import { useFlexSheetDerivedData } from "@/hooks/useFlexSheetDerivedData";
 import { saveFlexSheetData } from "@/lib/flexSheet/flexSheetSave";
 import { useFlexSheetColumns } from "@/hooks/useFlexSheetColumns";
@@ -60,7 +60,14 @@ export function FlexSheet({ documentation, caseId, sessionId }: FlexSheetProps) 
     resetDirtyColumns
   } = useFlexSheetState({ initialCharting, isPresim, canEdit, simStartTime, handleUnsavedCharting });
 
-  const { slicedTimeOffsets, columnOffset, handleColOffsetChange } = useFlexSheetPagination(timeOffsets, TABLE_WIDTH);
+  const { slicedTimeOffsets, columnOffset, handleColOffsetChange, setColumnOffset } = useFlexSheetPagination(timeOffsets, TABLE_WIDTH);
+
+  const handleColumnAddWithSnap = (date: Date | null) => {
+    const result = handleColumnAdd(date);
+    if (result) {
+      setColumnOffset(focusColumnOffset(result.timeOffsets, result.added, TABLE_WIDTH));
+    }
+  };
 
   const filteredData = useFlexSheetDerivedData(data, fieldSelections, timeOffsets);
 
@@ -117,7 +124,7 @@ export function FlexSheet({ documentation, caseId, sessionId }: FlexSheetProps) 
       <div className="flex h-full min-h-0 w-full flex-col items-stretch justify-start gap-2 pt-2">
         <div className="flex w-full shrink-0 justify-start gap-3">
           <AddTimeColumnButton
-            onColumnAdd={handleColumnAdd}
+            onColumnAdd={handleColumnAddWithSnap}
             existingTimeColumns={timeOffsets}
             sessionStartTime={simStartTime}
           />
