@@ -22,7 +22,6 @@ export function useFlexSheetPagination(timeOffsets: number[], tableWidth: number
     (shift: number | "reset") => {
       if (typeof shift === "number") {
         setColumnOffset((prev) => {
-          // Special case for shifting from 0 when there's a remainder
           if (prev === 0 && shift > 0 && remainder !== 0) {
             return remainder;
           }
@@ -43,6 +42,6 @@ export function useFlexSheetPagination(timeOffsets: number[], tableWidth: number
     columnOffset,
     slicedTimeOffsets,
     handleColOffsetChange,
-    setColumnOffset, // Exposed so we can manually adjust it when a new column is added
+    setColumnOffset,
   };
 }

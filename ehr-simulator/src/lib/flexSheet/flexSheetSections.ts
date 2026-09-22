@@ -173,11 +173,6 @@ export const vitalSignRows: readonly FlexSheetData[] = [
     normalRange: { low: 95, high: 100 }
   },
   {
-    id: 'supplemental_o2_rate',
-    field: "Supplemental O2 Rate (Lpm)",
-    componentType: "input",
-  },
-  {
     id: "oxygen_device",
     field: "Oxygen Device",
     componentType: "assessmentselect",
@@ -190,6 +185,11 @@ export const vitalSignRows: readonly FlexSheetData[] = [
       { subsetId: "Tracheostomy Collar", label: "Tracheostomy Collar" },
       { subsetId: "Simple Mask", label: "Simple Mask" },
     ]
+  },
+  {
+    id: 'supplemental_o2_rate',
+    field: "Supplemental O2 Rate (Lpm)",
+    componentType: "input",
   },
   {
     id: "weight_kg",

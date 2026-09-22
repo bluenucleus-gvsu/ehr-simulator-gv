@@ -31,7 +31,7 @@ declare module '@tanstack/react-table' {
   }
 }
 
-interface FlexSheetViewProps {
+export interface FlexSheetProps {
   documentation: DatabaseDocumentation[];
   caseId: string;
   sessionId: string;
@@ -39,8 +39,9 @@ interface FlexSheetViewProps {
 
 const TABLE_WIDTH = 6;
 
-export function FlexSheetView({ documentation, caseId, sessionId }: FlexSheetViewProps) {
+export function FlexSheet({ documentation, caseId, sessionId }: FlexSheetProps) {
   const { caseBundle } = useSimulationCase();
+
   const { canEdit } = useStudentSimulationEditAccess();
   const { groupId, userId, simStartTime, handleUnsavedCharting, isPresim } = useSimSessionContext();
   const [isSaving, setIsSaving] = useState(false);
@@ -57,7 +58,7 @@ export function FlexSheetView({ documentation, caseId, sessionId }: FlexSheetVie
     handleSubsetSelection,
     handleColumnAdd,
     resetDirtyColumns
-  } = useFlexSheetState({ initialCharting, isPresim, canEdit, handleUnsavedCharting });
+  } = useFlexSheetState({ initialCharting, isPresim, canEdit, simStartTime, handleUnsavedCharting });
 
   const { slicedTimeOffsets, columnOffset, handleColOffsetChange } = useFlexSheetPagination(timeOffsets, TABLE_WIDTH);
 
@@ -181,4 +182,4 @@ export function FlexSheetView({ documentation, caseId, sessionId }: FlexSheetVie
   );
 }
 
-export default FlexSheetView;
+export default FlexSheet;

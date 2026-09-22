@@ -27,7 +27,7 @@ export const TableInputFormCell = ({ getValue, row, column, table, visibleInPres
     setValue(initialValue);
   }, [initialValue]);
 
-  const alertFlag = getAlertFlag(row.original, value, row.original.componentType);
+  const alertFlag = getAlertFlag(row.original, value);
 
   const onBlur = () => {
     if (value != initialValue) {

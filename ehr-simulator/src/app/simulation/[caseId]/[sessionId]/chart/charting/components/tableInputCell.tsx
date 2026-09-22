@@ -21,7 +21,7 @@ const TableInputCell = ({ getValue, row, column, table, readOnly = false }: Cell
   const initialValue = (getValue() as string) || "";
   const [value, setValue] = useState(initialValue);
 
-  const alertFlag = getAlertFlag(row.original, value, row.original.componentType);
+  const alertFlag = getAlertFlag(row.original, value);
 
   const onBlur = () => {
     if (readOnly) return;

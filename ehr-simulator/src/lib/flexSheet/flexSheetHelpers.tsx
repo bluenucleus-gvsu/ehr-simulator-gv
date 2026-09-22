@@ -12,9 +12,8 @@ const BP_THRESHOLDS = {
 export function getAlertFlag(
   rowOriginal: FlexSheetData,
   value: string,
-  componentType: string
 ): boolean {
-  if (!value || componentType != 'input') {
+  if (!value || rowOriginal.componentType != 'input') {
     return false
   }
 

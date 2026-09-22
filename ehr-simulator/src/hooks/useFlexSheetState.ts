@@ -1,4 +1,6 @@
+import { formatTimeFromOffset } from "@/lib/flexSheet/flexSheetHelpers";
 import { FlexSheetData } from "@/lib/flexSheet/flexSheetTypes";
+import { differenceInMinutes } from "date-fns";
 import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -8,41 +10,63 @@ interface UseFlexSheetStateProps {
     timeOffsets: number[];
     timeOffsetsInPreSim: Set<number>;
   };
+  simStartTime: number | null,
   isPresim: boolean | null;
   canEdit: boolean;
   handleUnsavedCharting: (hasUnsaved: boolean) => void;
 }
 
+function columnAddSuccess(timeOffset: number, sessionStartTime: number | null) {
+  const timeData = formatTimeFromOffset(timeOffset, sessionStartTime)
+  const date = timeData?.date || 'Unknown Date'
+  const time = timeData?.time || 'Unknown Time'
+  toast.success(`Column added at ${time + ' on ' + date}.`);
+}
+
+function handleConflictingTimes(timeOffset: number, sessionStartTime: number) {
+  const timeData = formatTimeFromOffset(timeOffset, sessionStartTime)
+  const date = timeData?.date || 'Unknown Date'
+  const time = timeData?.time || 'Unknown Time'
+  toast.error(`Column for ${date + ' at ' + time} already exists`, {
+    description: "Please choose a different time or use an existing column.",
+  });
+}
+
+
 export function useFlexSheetState({
   initialCharting,
   isPresim,
   canEdit,
+  simStartTime,
   handleUnsavedCharting,
 }: UseFlexSheetStateProps) {
 
-  const [timeOffsets, setTimeOffsets] = useState<number[]>(
-    isPresim
+  const [timeOffsets, setTimeOffsets] = useState<number[]>([]);
+  const [fieldSelections, setFieldSelections] = useState<Record<string, string[]>>({});
+
+  useEffect(() => {
+    if (isPresim == null) return;
+
+    const resolvedOffsets = isPresim
       ? Array.from(initialCharting.timeOffsetsInPreSim).sort((a, b) => a - b)
-      : initialCharting.timeOffsets
-  );
+      : initialCharting.timeOffsets;
+
+    setTimeOffsets(resolvedOffsets);
+
+    const selections: Record<string, string[]> = {};
+    initialCharting.rows.forEach((row) => {
+      if (row.componentType !== "checkboxlist") return;
+      resolvedOffsets.forEach((time) => {
+        const val = row[time];
+        if (typeof val === "string" && val.length > 0) {
+          selections[`${row.id}-${time}`] = val.split(",");
+        }
+      });
+    });
+    setFieldSelections(selections);
+  }, [isPresim, initialCharting]);
 
   const [data, setData] = useState(initialCharting.rows);
-
-  const [fieldSelections, setFieldSelections] = useState<Record<string, string[]>>(() => {
-    const initialSelections: Record<string, string[]> = {};
-
-    initialCharting.rows.forEach((row) => {
-      if (row.componentType === "checkboxlist") {
-        timeOffsets.forEach((time) => {
-          const val = row[time];
-          if (typeof val === "string" && val.length > 0) {
-            initialSelections[`${row.id}-${time}`] = val.split(",");
-          }
-        });
-      }
-    });
-    return initialSelections;
-  });
 
   const [dirtyColumns, setDirtyColumns] = useState<Set<string>>(new Set());
 
@@ -69,7 +93,10 @@ export function useFlexSheetState({
 
   const handleSubsetSelection = useCallback(
     (rowId: string, columnId: string, selectedIdsForField: string[]) => {
-      if (!canEdit) return;
+      if (!canEdit) {
+        return;
+      }
+
       const selectionKey = `${rowId}-${columnId}`;
 
       setFieldSelections((prev) => ({
@@ -96,19 +123,26 @@ export function useFlexSheetState({
   );
 
   const handleColumnAdd = useCallback(
-    (newTime: number) => {
+    (newDate: Date | null) => {
+      if (!newDate || !simStartTime) {
+        return
+      }
+
+      const newTime = differenceInMinutes(newDate.getTime(), simStartTime)
+
       if (!canEdit) {
         toast.error("FlexSheets are view-only in pre-simulation.");
         return;
       }
       if (timeOffsets.includes(newTime)) {
-        toast.error(`A column for time ${newTime} already exists.`);
+        handleConflictingTimes(newTime, simStartTime);
         return;
       }
       setTimeOffsets((prev) => [...prev, newTime].sort((a, b) => a - b));
       setData((prevData) => prevData.map((row) => ({ ...row, [newTime]: "" })));
+      columnAddSuccess(newTime, simStartTime)
     },
-    [canEdit, timeOffsets]
+    [canEdit, timeOffsets, simStartTime]
   );
 
   const resetDirtyColumns = useCallback(() => {

@@ -4,70 +4,31 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@radix-ui/react-popover";
 import { TimePickerInput } from "@/components/ui/time-picker-input";
 import { Clock, Plus } from "lucide-react";
-import { toast } from "sonner";
-import { differenceInMinutes } from "date-fns";
-import { formatTimeFromOffset } from "@/lib/flexSheet/flexSheetHelpers";
 
 interface AddTimeColumnButtonProps {
-  onColumnAdd: (timeString: number) => void;
+  onColumnAdd: (timeString: Date) => void;
   existingTimeColumns: number[];
   sessionStartTime: number | null;
 }
 
-function handleConflictingTimes(timeOffset: number, sessionStartTime: number) {
-  const timeData = formatTimeFromOffset(timeOffset, sessionStartTime)
-  const date = timeData?.date || 'Unknown Date'
-  const time = timeData?.time || 'Unknown Time'
-  toast.error(`Column for ${date + ' at ' + time} already exists`, {
-    description: "Please choose a different time or use an existing column.",
-  });
-}
-
-function columnAddSuccess(timeOffset: number, sessionStartTime: number) {
-  const timeData = formatTimeFromOffset(timeOffset, sessionStartTime)
-  const date = timeData?.date || 'Unknown Date'
-  const time = timeData?.time || 'Unknown Time'
-  toast.success(`Column added at ${time + ' on ' + date}.`);
-}
-
-export function AddTimeColumnButton({ onColumnAdd, existingTimeColumns, sessionStartTime }: AddTimeColumnButtonProps) {
+export function AddTimeColumnButton({ onColumnAdd }: AddTimeColumnButtonProps) {
   const [selectedTime, setSelectedTime] = useState<Date | undefined>(new Date());
   const [isPopoverOpen, setIsPopoverOpen] = useState<boolean>(false);
 
   const handleAddTime = () => {
-    if (!sessionStartTime) {
-      return;
-    }
-    const timeOffset = differenceInMinutes(new Date().getTime(), sessionStartTime)
-
-    if (existingTimeColumns.includes(timeOffset)) {
-      handleConflictingTimes(timeOffset, sessionStartTime)
+    if (!selectedTime) {
       return;
     }
 
-    onColumnAdd(timeOffset);
-    columnAddSuccess(timeOffset, sessionStartTime);
+    onColumnAdd(selectedTime);
   }
 
   const handleAddUserDefinedTime = () => {
-    if (!sessionStartTime) {
+    if (!selectedTime) {
       return
     }
-    if (!selectedTime) {
-      toast.error("Please select a time to add.", {
-        description: "The time field cannot be empty.",
-      });
-      return;
-    }
-    const timeOffset = differenceInMinutes(selectedTime.getTime(), sessionStartTime)
 
-    if (existingTimeColumns.includes(timeOffset)) {
-      handleConflictingTimes(timeOffset, sessionStartTime)
-      return;
-    }
-
-    onColumnAdd(timeOffset);
-    columnAddSuccess(timeOffset, sessionStartTime);
+    onColumnAdd(selectedTime);
     setIsPopoverOpen(false);
     setSelectedTime(new Date());
   }
