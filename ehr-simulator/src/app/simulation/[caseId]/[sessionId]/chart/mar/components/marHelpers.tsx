@@ -91,17 +91,9 @@ function renderMedCardHelper(order: MedicationOrder) {
 }
 
 function renderIvMedDetails(order: MedicationOrder, medication: IvMedication) {
-  const doseDetails = !medication.isVariableDose && order.dose ?
-    `${order.dose / medication.strength} ${pluralize(order.dose / medication.strength, medication.dispenseUnit)}`
-    : 'Variable Dose'
-
   return (
     <div className="flex gap-1.5 h-fit flex-wrap">
       <span className="text-nowrap">{medication.route}</span>
-      <div className="h-5">
-        <Separator className="bg-gray-300" orientation="vertical" />
-      </div>
-      <span className="text-nowrap">{doseDetails}</span>
       {/* Include infusion rate and units if both present */}
       {order.infusionRate && medication.infusionRateUnit &&
         <>
@@ -138,17 +130,9 @@ export const renderMedCardDetails = (medication: AllMedicationTypes, order: Medi
     case "SL":
     case "IM":
     case "Inhalation":
-      const doseText = order.dose ?
-        `${order.dose / medication.strength} ${pluralize(order.dose / medication.strength, medication.dispenseUnit)}`
-        : 'Variable Dose'
       return (
         <div className="flex gap-1.5 h-fit flex-wrap">
           <span className="text-nowrap">{medication.route}</span>
-          <div className="h-5">
-            <Separator className="bg-gray-300" orientation="vertical" />
-          </div>
-
-          <span className="text-nowrap">{doseText}</span>
           {renderMedCardHelper(order)}
         </div>
       )
