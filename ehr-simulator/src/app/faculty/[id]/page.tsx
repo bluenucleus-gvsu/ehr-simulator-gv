@@ -24,6 +24,18 @@ export default async function FacultyPage({
     notFound();
   }
 
+  const role = await getUserRole(user.id)
+  if ((role !== "admin") && (role !== "faculty")) {
+      return (
+        <main className="p-8 min-h-screen flex items-center justify-center">
+          <div className="max-w-xl w-full text-center bg-white rounded-lg shadow p-6">
+            <h1 className="text-2xl font-semibold mb-2">Not authorized</h1>
+            <p className="text-sm text-muted-foreground">You do not have permission to access the faculty area.</p>
+          </div>
+        </main>
+      );
+    }
+
   let facultyName = "Faculty";
   let avatarUrl = "";
 
@@ -47,18 +59,6 @@ export default async function FacultyPage({
   const courses = await getFacultyCourses()
 
   const courseCodes = courses.filter((c) => c.active).map((c) => c.code || c.name);
-
-  const role = await getUserRole(id)
-  if ((role !== "admin") && (role !== "faculty")) {
-      return (
-        <main className="p-8 min-h-screen flex items-center justify-center">
-          <div className="max-w-xl w-full text-center bg-white rounded-lg shadow p-6">
-            <h1 className="text-2xl font-semibold mb-2">Not authorized</h1>
-            <p className="text-sm text-muted-foreground">You do not have permission to access the faculty area.</p>
-          </div>
-        </main>
-      );
-    }
 
   return (
     <main className="p-6 max-w-6xl mx-auto space-y-6">
