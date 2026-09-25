@@ -39,14 +39,15 @@ export function useFlexSheetColumns({
 
           if (rowType === "titleRow") {
             const wdlDescription = info.row.original?.wdlDescription;
+            const field = info.row.original.field;
             if (wdlDescription && wdlDescription.length > 0) {
               return (
-                <ChartingToolTip field={info.row.original.field} descriptions={wdlDescription} />
+                <ChartingToolTip field={field} descriptions={wdlDescription} />
               );
             }
             return (
-              <p className="min-w-24 h-full text-xs text-left py-0 pl-2 px-2 font-medium text-lime-900">
-                {info.row.original.field}
+              <p data-testid={field} className="min-w-24 h-full text-xs text-left py-0 pl-2 px-2 font-medium text-lime-900">
+                {field}
               </p>
             );
           }

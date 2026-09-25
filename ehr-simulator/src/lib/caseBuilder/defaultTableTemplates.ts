@@ -9,7 +9,7 @@ export const flexSheetSectionNameMap: Partial<Record<FlexSheetSection, string>> 
   [FlexSheetSection.FACES_PAIN]: 'Faces Pain Scale',
   [FlexSheetSection.GENERAL_APPEARANCE]: 'General Appearance',
   [FlexSheetSection.PSYCHOSOCIAL]: 'Psychosocial Assessment',
-  [FlexSheetSection.HEENT]: 'HEENT  Assessment',
+  [FlexSheetSection.HEENT]: 'HEENT Assessment',
   [FlexSheetSection.NEURO]: 'Neurological Assessment',
   [FlexSheetSection.INTEGUMENT]: 'Integumentary Assessment',
   [FlexSheetSection.CARDIAC]: 'Cardiovascular Assessment',

@@ -8,7 +8,7 @@ interface ChartingToopTipProps {
 export function ChartingToolTip({ field, descriptions }: ChartingToopTipProps) {
   return (
     <Tooltip>
-      <TooltipTrigger className="px-2 font-medium text-xs text-lime-900 text-left">
+      <TooltipTrigger id='' data-testid={field} className="px-2 font-medium text-xs text-lime-900 text-left">
         {field}
       </TooltipTrigger>
       <TooltipContent className="bg-white shadow shadow-black/30 rounded-xl ml-4 py-3 px-4 z-51 max-w-sm">
