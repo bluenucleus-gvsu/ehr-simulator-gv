@@ -57,6 +57,7 @@ function demographicsFromCaseRow(caseRow: CaseBundleRow): DemographicFormData {
     contactRelationship: text(caseRow, "emergency_contact_relationship"),
     contactPhone: text(caseRow, "emergency_contact_phone"),
     phaseCount: Math.max(1, Number(caseRow.phase_count ?? 1)),
+    casePhotoUrl: text(caseRow, "case_photo_url") || undefined,
   };
 }
 

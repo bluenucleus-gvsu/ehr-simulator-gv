@@ -12,7 +12,7 @@ import { caseBundleToFormBlob } from "@/lib/caseBuilder/caseBundleToFormBlob";
 
 const DEMOGRAPHICS_PATH = "/admin/case-builder/form/demographics";
 
-export function CaseBuilderBootstrap({ children }: { children: React.ReactNode }) {
+export function CaseBuilderBootstrap({ children }: Readonly<{ children: React.ReactNode }>) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
