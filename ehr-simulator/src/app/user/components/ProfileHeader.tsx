@@ -53,7 +53,7 @@ export default function ProfileHeader({ name, avatarUrl, classes = [] }: Props) 
             try {
               const supabase = createBrowserClient(
                 process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+                process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
               );
 
               await supabase.auth.signOut();
@@ -64,7 +64,7 @@ export default function ProfileHeader({ name, avatarUrl, classes = [] }: Props) 
                 if (typeof window !== "undefined") {
                   window.localStorage.removeItem("role");
                 }
-              } catch {}
+              } catch { }
               // redirect to login
               window.location.href = "/auth/login";
             }

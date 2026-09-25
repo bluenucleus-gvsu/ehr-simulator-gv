@@ -58,7 +58,7 @@ export default function FacultyHeader({ name, avatarUrl, courses = [] }: Props) 
             try {
               const supabase = createBrowserClient(
                 process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+                process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
               );
               await supabase.auth.signOut();
             } catch {
@@ -68,7 +68,7 @@ export default function FacultyHeader({ name, avatarUrl, courses = [] }: Props) 
                 if (typeof window !== "undefined") {
                   window.localStorage.removeItem("role");
                 }
-              } catch {}
+              } catch { }
               window.location.href = "/auth/login";
             }
           }}
