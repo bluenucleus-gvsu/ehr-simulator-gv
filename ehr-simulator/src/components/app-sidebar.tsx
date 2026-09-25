@@ -40,11 +40,6 @@ const adminRoutes = [
     url: "/admin/barcodes",
     icom: ScanBarcode,
   },
-  {
-    title: "Active Simulations (WIP)",
-    url: "/",
-    icom: Presentation,
-  },
 ]
 
 export function AppSidebar() {
@@ -57,7 +52,7 @@ export function AppSidebar() {
   const defaultRoutes = [
     {
       title: "Profile",
-      url: user?.id ? `/user/${user.id}` : "/user",
+      url: user?.id ? `/user/profile/${user.id}` : "/user",
       icom: User,
     },
     {
@@ -67,7 +62,7 @@ export function AppSidebar() {
     },
     {
       title: "Settings",
-      url: "/",
+      url: "/admin/settings",
       icom: Settings,
     },
   ];
