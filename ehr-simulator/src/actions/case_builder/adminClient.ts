@@ -1,8 +1,9 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../../../database.types";
 import { emailIsDevAdminAllowlist } from "@/lib/devAdminEmails";
 import { createServerSupabase } from "@/utils/supabase/server";
 
-export async function createCaseBuilderAdminClient(): Promise<SupabaseClient> {
+export async function createCaseBuilderAdminClient(): Promise<SupabaseClient<Database>> {
   const sessionClient = await createServerSupabase();
   const { data: { user }, error: userError } = await sessionClient.auth.getUser();
 
@@ -27,7 +28,7 @@ export async function createCaseBuilderAdminClient(): Promise<SupabaseClient> {
     throw new Error("Case-builder database credentials are not configured.");
   }
 
-  return createClient(url, serviceRoleKey, {
+  return createClient<Database>(url, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }

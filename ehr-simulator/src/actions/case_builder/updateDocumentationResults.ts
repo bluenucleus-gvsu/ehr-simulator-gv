@@ -1,6 +1,7 @@
 "use server"
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../../../database.types";
 import { transformDocumentationTableToSchema } from "@/lib/documentationTypes";
 import type { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
 
@@ -11,7 +12,7 @@ type DocumentationSavePayload = {
 };
 
 export async function updateDocumentationResults(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   payload: DocumentationSavePayload,
   caseId: string,
 ) {

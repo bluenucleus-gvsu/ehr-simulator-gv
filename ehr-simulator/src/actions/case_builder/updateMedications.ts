@@ -1,6 +1,7 @@
 "use server"
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../../../database.types";
 import type {
   MedAdministrationInstance,
   MedicationOrder,
@@ -8,7 +9,7 @@ import type {
 import { normalizeOptionalNumericInput } from "@/lib/caseBuilder/medicationPayload";
 
 export async function updateMedications(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   payload: { orders: MedicationOrder[]; administrations: MedAdministrationInstance[] },
   caseId: string,
 ) {

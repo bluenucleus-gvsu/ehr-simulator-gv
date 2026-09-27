@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "../../../database.types";
 import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient";
 import { assertUuid } from "@/lib/caseBuilder/validation";
 
@@ -78,7 +79,7 @@ export async function getCaseBundle(
   assertUuid(caseId, "Case ID");
   // This bundle is also used by the student simulation chart. Do not require
   // case-builder admin access for this read-only path.
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { persistSession: false, autoRefreshToken: false } },

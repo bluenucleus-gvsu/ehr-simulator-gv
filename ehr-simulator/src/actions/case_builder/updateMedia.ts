@@ -1,6 +1,7 @@
 "use server"
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../../../database.types";
 
 type MediaImagePayload = {
   previewUrl?: string | null;
@@ -9,7 +10,7 @@ type MediaImagePayload = {
 } | string;
 
 export async function updateMedia(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   payload: MediaImagePayload[] | MediaImagePayload,
   caseId?: string | null,
 ) {

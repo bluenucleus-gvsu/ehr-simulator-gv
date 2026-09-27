@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import { createBrowserClient } from "@supabase/ssr";
+import type { Database } from "../../../../database.types";
 
 type Props = {
   name: string;
@@ -51,7 +52,7 @@ export default function ProfileHeader({ name, avatarUrl, classes = [] }: Props) 
           className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm"
           onClick={async () => {
             try {
-              const supabase = createBrowserClient(
+              const supabase = createBrowserClient<Database>(
                 process.env.NEXT_PUBLIC_SUPABASE_URL!,
                 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
               );
@@ -64,7 +65,7 @@ export default function ProfileHeader({ name, avatarUrl, classes = [] }: Props) 
                 if (typeof window !== "undefined") {
                   window.localStorage.removeItem("role");
                 }
-              } catch {}
+              } catch { }
               // redirect to login
               window.location.href = "/auth/login";
             }

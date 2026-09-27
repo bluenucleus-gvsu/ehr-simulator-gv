@@ -1,8 +1,9 @@
 import { SupabaseClient } from "@supabase/supabase-js"
+import type { Database } from "../../../database.types"
 import type { DemographicFormData } from "@/utils/form"
 
 export async function upsertCaseDemographics(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   payload: DemographicFormData,
   caseId?: string | null
 ) {
@@ -63,14 +64,14 @@ export async function upsertCaseDemographics(
 }
 
 async function resolveRelationshipStatusId(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   name: string | null | undefined,
 ): Promise<string | null> {
   return resolveLookupId(supabase, "relationship_statuses", name)
 }
 
 async function resolveLookupId(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   table: "relationship_statuses" | "isolation_precautions",
   name: string | null | undefined,
 ): Promise<string | null> {

@@ -1,10 +1,11 @@
 "use server"
 
 import { SupabaseClient } from "@supabase/supabase-js"
+import type { Database } from "../../../database.types"
 import type { IntakeOutputFormData } from "@/utils/form"
 
 export async function updateCaseIntakeOutput(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   payload: IntakeOutputFormData[],
   caseId: string,
 ) {

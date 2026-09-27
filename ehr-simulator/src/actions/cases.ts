@@ -236,7 +236,7 @@ export async function createSectionCaseAssignment(payload: SectionAssignmentInse
 }
 
 export async function deleteSectionCaseAssignment(id: string): Promise<ActionResponse> {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
@@ -264,7 +264,7 @@ export async function deleteSectionCaseAssignment(id: string): Promise<ActionRes
 }
 
 export async function getCourseCaseAssignments() {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );

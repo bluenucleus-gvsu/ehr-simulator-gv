@@ -1,6 +1,7 @@
 "use server"
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../../../database.types";
 import { transformLabTableToSchema } from "@/lib/labTypes";
 import type { LabTableData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
 
@@ -12,7 +13,7 @@ type LabSavePayload = {
 };
 
 export async function updateLabs(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   payload: LabSavePayload,
   caseId: string,
 ) {

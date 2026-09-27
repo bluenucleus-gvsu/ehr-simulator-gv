@@ -1,10 +1,11 @@
 "use server"
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../../../database.types";
 import type { OrderType } from "@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData";
 
 export async function updateOrders(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   orders: OrderType[],
   caseId: string,
 ) {

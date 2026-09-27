@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@supabase/supabase-js";
-import { Tables, TablesInsert } from "../../database.types";
+import { Tables, TablesInsert, type Database } from "../../database.types";
 import { ActionResponse } from "./cases";
 import { revalidatePath } from "next/cache";
 
@@ -19,7 +19,7 @@ export type User = Tables<"users">
 export type UserInsert = TablesInsert<"users">
 
 export async function getAllCourses(): Promise<ActionResponse<Course[] | null>> {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
@@ -46,7 +46,7 @@ export async function getAllCourses(): Promise<ActionResponse<Course[] | null>> 
 }
 
 export async function getCourseById(id: string): Promise<ActionResponse<Course | null>> {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
@@ -78,7 +78,7 @@ export async function getCourseById(id: string): Promise<ActionResponse<Course |
 }
 
 export async function getSectionsByCourseId(id: string) {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
@@ -106,7 +106,7 @@ export async function getSectionsByCourseId(id: string) {
 
 
 export async function createCourse(course: CourseInsert): Promise<ActionResponse<Course>> {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
@@ -125,7 +125,7 @@ export async function createCourse(course: CourseInsert): Promise<ActionResponse
 }
 
 export async function updateCourse(course: CourseInsert): Promise<ActionResponse<Course>> {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
@@ -149,7 +149,7 @@ export async function updateCourse(course: CourseInsert): Promise<ActionResponse
 }
 
 export async function createSection(section: SectionInsert): Promise<ActionResponse<Section>> {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
@@ -179,7 +179,7 @@ export async function createSection(section: SectionInsert): Promise<ActionRespo
 }
 
 export async function createGroup(group: GroupInsert) {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
@@ -207,7 +207,7 @@ export async function createGroup(group: GroupInsert) {
 }
 
 export async function createGroupMembers(groupMember: GroupMembersInsert) {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );

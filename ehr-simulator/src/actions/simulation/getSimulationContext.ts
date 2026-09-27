@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "../../../database.types";
 import { caseMeetsMinimumRequirements } from "@/lib/caseMinimumRequirements";
 
 export interface SimulationRouteContext {
@@ -15,7 +16,7 @@ export interface SimulationRouteContext {
  * (`section_assignments`, `case_sessions`); some legacy/admin flows may also use `cases.id`.
  */
 export async function resolveSimulationRouteContext(routeId: string): Promise<SimulationRouteContext> {
-  const supabase = createClient(
+  const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );

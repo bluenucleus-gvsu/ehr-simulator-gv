@@ -1,6 +1,7 @@
 "use server"
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../../../database.types";
 
 type ClinicalDocCategoryType =
   | "Admission"
@@ -56,7 +57,7 @@ function normalizeCategory(note: ClinicalNoteInput): ClinicalDocCategoryType {
 }
 
 export async function updateClinicalDocuments(
-  supabase: SupabaseClient,
+  supabase: SupabaseClient<Database>,
   notes: ClinicalNoteInput[],
   caseId: string
 ) {
