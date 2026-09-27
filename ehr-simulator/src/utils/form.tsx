@@ -43,7 +43,6 @@ export interface TableFormData<T> {
   data: T[];
   timePoints: number[];
   timePointsInPreSim: Set<number>;
-  visibleItems?: Set<string>;
 }
 
 export interface ChartingFormData {

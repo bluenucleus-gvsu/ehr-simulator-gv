@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import StyledTitle from "./styledTitle"
 import { formatTimeFromOffset } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetHelpers"
-import { getResultStatus } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData"
+import { getResultStatus, LabSeverityLevel } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData"
 import { AlertTriangle } from "lucide-react"
 import { useMemo } from "react"
 import { labTemplate } from "../../labs/components/labsData"
@@ -12,32 +12,33 @@ import { useSimulationCase } from "@/context/SimulationCaseContext"
 import { useSimSessionContext } from "@/context/SimSessionContext"
 
 
-const selectedLabs = [
-  "Sodium",
-  "Potassium",
-  "Creatinine",
-  "Glucose",
-  "RBC",
-  "WBC",
-  "Platelets"
+const HIGHLIGHTED_LABS = [
+  "sodium",
+  "potassium",
+  "creatinine",
+  "glucose",
+  "rbc",
+  "wbc",
+  "platelets"
 ];
 
 export function SelectedLabs() {
   const { caseBundle } = useSimulationCase()
-  const { simStartTime } = useSimSessionContext()
-  const startTime = simStartTime ?? Date.now()
+  const { simStartTime, isPresim } = useSimSessionContext()
+  const startTime = simStartTime ?? Date.now();
 
   const { filteredData, labTimesMostRecentFirst } = useMemo(() => {
-    const { rows, timePoints } = buildLabRowsFromBundle(caseBundle, labTemplate)
-    // timePoints from bundle are sorted descending (largest offset = furthest in the past).
-    // Smaller offset = closer to sim "now" → most recent; iterate ascending to pick latest result.
+    const { rows, timePointsInPresim, timePoints } = buildLabRowsFromBundle(caseBundle?.labResults || [], labTemplate)
 
-    const labTimesMostRecentFirst = [...timePoints].sort((a, b) => a - b)
+    const targetTimePoints = isPresim ? timePointsInPresim : timePoints;
+    console.log(timePointsInPresim)
+    const labTimesMostRecentFirst = [...targetTimePoints].sort((a, b) => b - a)
+
     return {
-      filteredData: rows.filter(row => row.rowType === "results" && selectedLabs.includes(row.field)),
+      filteredData: rows.filter(row => (row.rowType === "results" && row.id) && HIGHLIGHTED_LABS.includes(row.id)),
       labTimesMostRecentFirst,
     }
-  }, [caseBundle])
+  }, [caseBundle, isPresim])
 
 
   const selectedLabData = filteredData.map(row => {
@@ -82,8 +83,8 @@ export function SelectedLabs() {
           const criticalRange = labData.criticalRange
 
           const resultStatus = getResultStatus(labData.value, normalRange, criticalRange)
-          const isCritical = resultStatus === "critical"
-          const isAbnormal = resultStatus === "abnormal"
+          const isCritical = resultStatus === LabSeverityLevel.CRITICAL;
+          const isAbnormal = resultStatus === LabSeverityLevel.ABNORMAL;
 
 
           return (
