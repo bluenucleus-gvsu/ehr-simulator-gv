@@ -33,6 +33,7 @@ export default function ProfileHeader({ name, avatarUrl, classes = [] }: Props) 
             // If your external domains aren't configured in next.config.js,
             // fallback to unoptimized to avoid loader errors in dev.
             unoptimized
+            loading="eager"
           />
         ) : (
           <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-lg font-semibold text-slate-700">
