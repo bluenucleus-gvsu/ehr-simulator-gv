@@ -1,17 +1,21 @@
-const { defineConfig } = require('vitest/config')
-const react = require('@vitejs/plugin-react')
-const path = require('path')
+import { defineConfig } from "vitest/config";
+import { loadEnv } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "path";
 
-module.exports = defineConfig({
-  plugins: [react()],
-  test: {
-    environment: 'jsdom',
-    setupFiles: ['./vitest.setup.ts'],
-    globals: true,
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
+export default defineConfig(({ mode }) => {
+  return {
+    plugins: [react()],
+    test: {
+      environment: "jsdom",
+      setupFiles: ["./vitest.setup.ts"],
+      globals: true,
+      env: loadEnv(mode, process.cwd(), ""),
     },
-  },
-})
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
+    },
+  };
+});

@@ -17,7 +17,7 @@ export default function CaseListItem({ courseCaseAssignment }: CaseListItemProps
   const canUseCase = caseMeetsMinimumRequirements(courseCaseAssignment);
 
   return (
-    <div className="border rounded-md p-4 py-5 border-l-10 border-l-blue-700">
+    <div data-testid='' className="border rounded-md p-4 py-5 border-l-10 border-l-blue-700">
       <div className="flex justify-between">
         <div className="">
           <h2 className="text-xl font-semibold">{name}</h2>
@@ -31,10 +31,11 @@ export default function CaseListItem({ courseCaseAssignment }: CaseListItemProps
             disabled={!canUseCase}
             title={canUseCase ? "Preview case" : "Complete the required case information before previewing"}
             onClick={() => router.push(previewUrl)}
+            data-testid={`button-${id}`}
           >
             Preview Case
           </Button>
-          <Button onClick={() => router.push(editUrl)}>Edit Case</Button>
+          <Button data-testid={`edit-${id}`} onClick={() => router.push(editUrl)}>Edit Case</Button>
         </div>
       </div>
       <p className="text-sm text-gray-400 mt-2 line-clamp-2">{description}</p>

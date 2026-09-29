@@ -106,12 +106,12 @@ export default function OrdersForm() {
   }
 
   const goBack = () => {
-    onDataChange('orders', orders)
+    onDataChange(CaseSection.ORDERS, orders)
     router.push(caseBuilderPath("/admin/case-builder/form/notes", caseId));
   }
 
   const handleSubmit = async () => {
-    onDataChange('orders', orders)
+    onDataChange(CaseSection.ORDERS, orders)
 
     await saveCaseData({
       payload: orders,
@@ -119,7 +119,7 @@ export default function OrdersForm() {
       caseId: caseId
     })
 
-    router.push(caseBuilderPath('/admin/case-builder/form/labs', caseId))
+    router.push(caseBuilderPath('/admin/case-builder/form/table-template', caseId))
   }
 
   const handlePresimCheckbox = (check: boolean) => {
@@ -133,7 +133,7 @@ export default function OrdersForm() {
     <FormShell
       title="Order Entry"
       icon={<ClipboardList className="text-slate-400" />}
-      stepDescription="Step 4 of 10: Create provider and nursing orders"
+      stepDescription="Create provider and nursing orders"
       onSubmit={handleSubmit}
       goBack={goBack}
       continueButtonText={"Continue"}

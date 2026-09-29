@@ -74,7 +74,7 @@ export default function ChartTabs() {
     {
       name: "Media",
       value: "media",
-      icon: <ImageIcon className="size-4"/>,
+      icon: <ImageIcon className="size-4" />,
       path: `/simulation/${caseId}/${sessionId}/chart/media`,
     },
     {
@@ -93,6 +93,7 @@ export default function ChartTabs() {
           {[
             ...tabs.map((tab) => (
               <TabsTrigger
+                id={tab.value}
                 key={tab.value}
                 onClick={() => handleTabClick(tab.path)}
                 value={tab.value}

@@ -5,14 +5,18 @@ import { CompleteFormType, defaultIoData, defaultOrders, DemographicFormData, Fo
 import { ClinicalNote } from '@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData';
 import { OrderType } from '@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData';
 import { LabTableData, labTemplate } from '@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData';
-import { FlexSheetData, flexSheetTemplate } from '@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData';
 import { MedAdministrationInstance } from '@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData';
+import { buildTableTemplate, CaseSpecialty } from '@/lib/flexSheet/flexSheetTemplate';
+import { FlexSheetData } from '@/lib/flexSheet/flexSheetTypes';
+import { FlexSheetSection } from '@/lib/flexSheet/flexSheetSections';
+import { CaseSection } from '@/lib/saveCase';
 
 interface FormContextType {
   demographicData: DemographicFormData;
   historyData: HistoryFormData;
   noteData: ClinicalNote[];
   orderData: OrderType[];
+  tableTemplateData: FlexSheetSection[];
   labData: TableFormData<LabTableData>;
   chartingData: TableFormData<FlexSheetData>;
   ioData: IntakeOutputFormData[];
@@ -21,7 +25,7 @@ interface FormContextType {
   mediaData: MediaImageData[];
   caseId?: string;
   setCaseId: (id: string) => void;
-  onDataChange: (key: keyof FormBlob, data: CompleteFormType) => void;
+  onDataChange: (key: CaseSection, data: CompleteFormType) => void;
   replaceFormData: (data: FormBlob, caseId: string) => void;
 }
 
@@ -48,6 +52,7 @@ export const defaultDemographicData: DemographicFormData = {
   contactRelationship: '',
   contactPhone: '',
   phaseCount: 1,
+  caseSpecialty: CaseSpecialty.MED_SURG,
 }
 export const defaultHistoryData: HistoryFormData = {
   medicalHistory: [],
@@ -66,6 +71,7 @@ const FormContext = createContext<FormContextType>({
   historyData: defaultHistoryData,
   noteData: [],
   orderData: [],
+  tableTemplateData: [],
   labData: { data: [], timePoints: [0], timePointsInPreSim: new Set(), visibleItems: new Set() },
   chartingData: { data: [], timePoints: [0], timePointsInPreSim: new Set(), visibleItems: new Set() },
   ioData: defaultIoData,
@@ -81,6 +87,7 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
   const [historyData, setHistoryData] = useState<HistoryFormData>(defaultHistoryData);
   const [noteData, setNoteData] = useState<ClinicalNote[]>([]);
   const [orderData, setOrderData] = useState<OrderType[]>(defaultOrders);
+  const [tableTemplateData, setTableTemplateData] = useState<FlexSheetSection[]>([]);
   const [labData, setLabData] = useState<TableFormData<LabTableData>>({
     data: labTemplate,
     timePoints: [0],
@@ -88,7 +95,7 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
     visibleItems: new Set()
   });
   const [chartingData, setChartingData] = useState<TableFormData<FlexSheetData>>({
-    data: flexSheetTemplate,
+    data: buildTableTemplate(new Set(tableTemplateData)),
     timePoints: [0],
     timePointsInPreSim: new Set<number>(),
     visibleItems: new Set()
@@ -98,36 +105,39 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
   const [medAdministrationData, setMedAdministrationData] = useState<MedAdministrationInstance[]>([])
   const [mediaData, setMediaData] = useState<MediaImageData[]>([]);
 
-  const onDataChange = useCallback((key: keyof FormBlob, value: CompleteFormType) => {
+  const onDataChange = useCallback((key: CaseSection, value: CompleteFormType) => {
     switch (key) {
-      case 'demographics':
+      case CaseSection.DEMOGRAPHICS:
         setDemographicData(value as DemographicFormData);
         break;
-      case 'history':
+      case CaseSection.HISTORY:
         setHistoryData(value as HistoryFormData);
         break;
-      case 'notes':
+      case CaseSection.CLINICAL_DOCUMENTS:
         setNoteData(value as ClinicalNote[]);
         break;
-      case 'orders':
+      case CaseSection.ORDERS:
         setOrderData(value as OrderType[]);
         break;
-      case 'labs':
+      case CaseSection.TABLE_TEMPLATE:
+        setTableTemplateData(value as FlexSheetSection[])
+        break;
+      case CaseSection.LABS:
         setLabData(value as TableFormData<LabTableData>);
         break;
-      case 'charting':
+      case CaseSection.DOCUMENTATION:
         setChartingData(value as TableFormData<FlexSheetData>);
         break;
-      case 'intakeOutput':
+      case CaseSection.INTAKE_OUTPUT:
         setIoData(value as IntakeOutputFormData[]);
         break;
-      case 'medOrders':
+      case CaseSection.MEDICATION_ORDERS:
         setMedOrderData(value as MedOrderFormData);
         break;
-      case 'medAdministrationInstances':
+      case CaseSection.MEDICATION_ADMINISTRATIONS:
         setMedAdministrationData(value as MedAdministrationInstance[]);
         break;
-      case 'media':
+      case CaseSection.MEDIA:
         setMediaData(value as MediaImageData[]);
         break;
     }
@@ -138,6 +148,7 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
     setHistoryData(data.history);
     setNoteData(data.notes);
     setOrderData(data.orders);
+    setTableTemplateData(data.tableTemplate)
     setLabData(data.labs);
     setChartingData(data.charting);
     setIoData(data.intakeOutput);
@@ -155,6 +166,7 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
       historyData,
       noteData,
       orderData,
+      tableTemplateData,
       labData,
       chartingData,
       ioData,
