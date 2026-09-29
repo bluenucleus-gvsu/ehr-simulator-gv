@@ -13,12 +13,6 @@ CREATE INDEX IF NOT EXISTS idx_group_members_group_student
 CREATE INDEX IF NOT EXISTS idx_documentation_results_case_time
   ON public.documentation_results (case_id, time_offset, created_at);
 
-CREATE INDEX IF NOT EXISTS idx_imaging_reports_case_created
-  ON public.imaging_reports (case_id, created_at);
-
-CREATE INDEX IF NOT EXISTS idx_microbiology_reports_case_created
-  ON public.microbiology_reports (case_id, created_at);
-
 CREATE INDEX IF NOT EXISTS idx_student_med_admin_case_session
   ON public.student_medication_administrations (case_id, case_session_id);
 
