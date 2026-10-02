@@ -28,8 +28,8 @@ import { useRouter } from "next/navigation";
 import { useFormContext } from "@/context/FormContext";
 import { relationshipStatuses, precautions, codeStatuses, insuranceOptions, DemographicFormData, caseSpecialtyLabels } from "@/utils/form";
 import { buttonVariants } from "@/components/ui/button";
-import { FormShell } from "@/app/admin/case-builder/components/formShell";
-import { CaseSection } from "@/lib/saveCase";
+import { FormShell } from "../../components/formShell";
+import { CaseSection } from "@/lib/caseSections";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 
 import { caseBuilderPath } from "@/lib/caseBuilder/routes";

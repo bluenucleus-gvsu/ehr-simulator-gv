@@ -9,7 +9,7 @@ import { MedAdministrationInstance } from '@/app/simulation/[caseId]/[sessionId]
 import { buildTableTemplate, CaseSpecialty } from '@/lib/flexSheet/flexSheetTemplate';
 import { FlexSheetData } from '@/lib/flexSheet/flexSheetTypes';
 import { FlexSheetSection } from '@/lib/flexSheet/flexSheetSections';
-import { CaseSection } from '@/lib/saveCase';
+import { CaseSection } from '@/lib/caseSections';
 
 interface FormContextType {
   demographicData: DemographicFormData;

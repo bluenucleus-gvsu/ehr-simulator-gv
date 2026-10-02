@@ -1,5 +1,5 @@
-import { CaseSection, type CaseSection as CaseSectionValue } from "@/lib/saveCase";
 import { FlexSheetSection } from "../flexSheet/flexSheetSections";
+import { CaseSection, type CaseSection as CaseSectionValue } from "@/lib/caseSections";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 

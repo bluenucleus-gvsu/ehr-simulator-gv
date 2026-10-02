@@ -12,7 +12,7 @@ import { useSimulationCase } from "@/context/SimulationCaseContext"
 import { useSimSessionContext } from "@/context/SimSessionContext"
 
 
-const selectedLabs = [
+const SELECTED_LABS = [
   "Sodium",
   "Potassium",
   "Creatinine",
@@ -34,7 +34,7 @@ export function SelectedLabs() {
 
     const labTimesMostRecentFirst = [...timePoints].sort((a, b) => a - b)
     return {
-      filteredData: rows.filter(row => row.rowType === "results" && selectedLabs.includes(row.field)),
+      filteredData: rows.filter(row => row.rowType === "results" && SELECTED_LABS.includes(row.field)),
       labTimesMostRecentFirst,
     }
   }, [caseBundle])
