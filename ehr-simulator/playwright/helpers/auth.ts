@@ -1,7 +1,7 @@
 import { config as loadEnv } from "dotenv";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { resolve } from "path";
-import type { Browser, BrowserContext } from "@playwright/test";
+import type { Browser, BrowserContext, Page } from "@playwright/test";
 
 loadEnv({ path: resolve(process.cwd(), ".env.local") });
 
@@ -40,4 +40,15 @@ export async function authenticatedContext(
   role: string,
 ): Promise<BrowserContext> {
   return browser.newContext({ storageState: authState(role) });
+}
+
+/** Resolves the signed-in user's id from the "My Profile" link on the home page. */
+export async function currentUserId(page: Page): Promise<string> {
+  await page.goto("/");
+  const href = await page.getByRole("link", { name: "My Profile" }).getAttribute("href");
+  const match = href?.match(/\/user\/profile\/([0-9a-f-]{36})/);
+  if (!match) {
+    throw new Error(`[e2e] could not resolve user id from My Profile href: ${href}`);
+  }
+  return match[1];
 }
