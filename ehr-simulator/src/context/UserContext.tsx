@@ -4,13 +4,14 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { emailIsDevAdminAllowlist } from '@/lib/devAdminEmails'
 import { getUserRole } from '@/actions/users'
 import { createBrowserSupabase } from '@/utils/supabase/client'
+import { User } from '@supabase/supabase-js';
 
 const supabase = createBrowserSupabase();
 
 type UserRoles = "student" | "admin" | "faculty"
 
 interface UserContextType {
-  user: any;
+  user: User | null;
   role: UserRoles | null;
   loading: boolean;
 }
@@ -22,7 +23,7 @@ const UserContext = createContext<UserContextType>({
 })
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [role, setRole] = useState<UserRoles | null>(null)
   const [loading, setLoading] = useState<boolean>(true);
 

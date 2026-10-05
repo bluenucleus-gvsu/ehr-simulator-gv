@@ -1,11 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { Course } from "@/actions/courses";
+import type { CourseRow } from "@/types/db";
 import { format } from "date-fns";
 
 interface CourseListItemProps {
-  course: Course;
+  course: CourseRow;
 }
 
 export default function CourseListItem({ course }: CourseListItemProps) {

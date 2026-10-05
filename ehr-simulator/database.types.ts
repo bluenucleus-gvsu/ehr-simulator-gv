@@ -140,6 +140,7 @@ export type Database = {
       }
       case_sessions: {
         Row: {
+          archived_at: string | null
           case_id: string | null
           completed_at: string | null
           current_phase: number
@@ -152,6 +153,7 @@ export type Database = {
           student_ids: string | null
         }
         Insert: {
+          archived_at?: string | null
           case_id?: string | null
           completed_at?: string | null
           current_phase?: number
@@ -164,6 +166,7 @@ export type Database = {
           student_ids?: string | null
         }
         Update: {
+          archived_at?: string | null
           case_id?: string | null
           completed_at?: string | null
           current_phase?: number
@@ -2528,6 +2531,7 @@ export type Database = {
       }
     }
     Functions: {
+      archive_due_case_sessions: { Args: never; Returns: number }
       case_builder_replace_clinical_documents: {
         Args: { p_case_id: string; p_rows: Json }
         Returns: undefined
@@ -2556,7 +2560,6 @@ export type Database = {
         Args: { p_case_id: string; p_rows: Json }
         Returns: undefined
       }
-      get_user_courses: { Args: { p_user_id: string }; Returns: Json }
     }
     Enums: {
       case_specialty_type: "med_surg" | "ob" | "mental_health" | "public_health"

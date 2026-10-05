@@ -3,13 +3,13 @@
 import { useState } from "react";
 import bwipjs from "@bwip-js/browser";
 import { Checkbox } from "@/components/ui/checkbox";
-import { SimCase } from "@/actions/cases";
+import type { CaseRow } from "@/types/db";
 import { format } from "date-fns";
 import { AllMedicationTypes } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
 
 interface BarcodeGeneratorProps {
   medications: AllMedicationTypes[];
-  simCases: SimCase[];
+  simCases: CaseRow[];
 }
 
 type TabType = "medications" | "wristbands";

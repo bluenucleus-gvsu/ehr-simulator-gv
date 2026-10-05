@@ -4,13 +4,14 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { markSessionInProgress } from "@/actions/simulation";
-import { getAssignedSimulationLifecycle } from "@/utils/assignedSimulationLifecycle";
+import type { CaseSessionAvailability } from "@/utils/assignedSimulationLifecycle";
+import CaseCardField from "@/app/user/components/CaseCardField";
 
 type AssignedCaseCardProps = {
   id: string;
-  caseId: string;
+  caseId: string | null;
   sessionId: string | null;
-  sessionStatus?: string | null;
+  availability?: CaseSessionAvailability;
   name?: string | null;
   simTime?: string | null;
   presimTime?: string | null;
@@ -21,29 +22,30 @@ export default function AssignedCaseCard({
   id,
   caseId,
   sessionId,
-  sessionStatus,
+  availability = "upcoming",
   name,
   simTime,
   presimTime,
   groupMembers = [],
 }: AssignedCaseCardProps) {
   const router = useRouter();
-  const [isStarting, setIsStarting] = useState(false); // Add a loading state
+  const [isStarting, setIsStarting] = useState(false);
 
-  const lifecycle = getAssignedSimulationLifecycle({
-    simTime,
-    presimTime,
-    sessionStatus,
-  });
-  const sim = lifecycle.simDate;
-  const presim = lifecycle.presimDate;
-  const isActivePhase = lifecycle.availability === "active";
-  const isPresimPhase = lifecycle.availability === "presim";
-  const isCompletedPhase = lifecycle.availability === "completed";
+  const simDate = simTime ? new Date(simTime) : null;
+  const presimDate = presimTime ? new Date(presimTime) : null;
+  const isActive = availability === "active";
+  const isPresim = availability === "presim";
+  const isUpcoming = availability === "upcoming";
+  const isUnavailable = !caseId;
 
   const handleRoute = async (pathSuffix: string, isStartingSim: boolean = false) => {
     if (!sessionId) {
       toast.error("Session is still being generated. Please try again later.");
+      return;
+    }
+
+    if (!caseId) {
+      toast.error("This case is no longer available.");
       return;
     }
 
@@ -61,29 +63,37 @@ export default function AssignedCaseCard({
   };
 
   return (
-    <div className="border rounded-md p-3 bg-white shadow-sm flex items-center justify-between">
+    <div
+      data-testid="case-card"
+      data-session-id={sessionId ?? undefined}
+      className="border rounded-md p-4 pt-3 bg-white shadow-sm flex items-center justify-between"
+    >
       <div>
-        <div className="font-semibold">{name ?? "Untitled Simulation"}</div>
-        {sim
-          ? <div className="text-sm text-muted-foreground">Sim: {sim.toLocaleString()}</div>
-          : <div className="text-sm text-muted-foreground">Sim: TBD</div>}
-        {presim
-          ? <div className="text-sm text-muted-foreground">Pre-sim: {presim.toLocaleString()}</div>
+        <div className="font-semibold text-lg pb-2">{name ?? "Untitled Simulation"}</div>
+        <CaseCardField label="Sim">{simDate ? simDate.toLocaleString() : "TBD"}</CaseCardField>
+        {presimDate
+          ? <CaseCardField label="Pre-sim">{presimDate.toLocaleString()}</CaseCardField>
           : null}
-        <div className="text-sm text-muted-foreground">
-          Group: {groupMembers.length ? groupMembers.join(", ") : "No members"}
-        </div>
-        {isActivePhase ? (
-          <div className="text-xs font-medium text-green-700">Mode: Active Simulation</div>
-        ) : isPresimPhase ? (
-          <div className="text-xs font-medium text-indigo-700">Mode: Pre-Sim</div>
-        ) : isCompletedPhase ? (
-          <div className="text-xs font-medium text-slate-600">Mode: Simulation ended</div>
+        <CaseCardField label="Group">
+          {groupMembers.length ? groupMembers.join(", ") : "No members"}
+        </CaseCardField>
+        {isUpcoming && presimDate ? (
+          <div className="text-slate-800 pt-2">
+            Pre-sim opens {presimDate.toLocaleString()}
+          </div>
         ) : null}
       </div>
 
       <div className="ml-4 flex items-center gap-2">
-        {isActivePhase ? (
+        {isUnavailable ? (
+          <button
+            className="px-3 py-1 text-sm bg-slate-500 text-white rounded opacity-80 cursor-not-allowed"
+            disabled
+            aria-label={`Case ${name ?? id} is unavailable`}
+          >
+            Case unavailable
+          </button>
+        ) : isActive ? (
           <button
             className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
             onClick={() => handleRoute('chart/overview', true)}
@@ -92,7 +102,7 @@ export default function AssignedCaseCard({
           >
             {isStarting ? "Loading..." : "Enter Active Simulation"}
           </button>
-        ) : isPresimPhase ? (
+        ) : isPresim ? (
           <button
             className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
             onClick={() => handleRoute('chart/overview', false)}
@@ -100,22 +110,13 @@ export default function AssignedCaseCard({
           >
             Enter Pre-Sim Mode
           </button>
-        ) : isCompletedPhase ? (
-          <button
-            type="button"
-            className="px-3 py-1 text-sm bg-slate-600 text-white rounded hover:bg-slate-700"
-            onClick={() => handleRoute("chart/overview", false)}
-            aria-label={`Open chart for ${name ?? id}`}
-          >
-            Open chart
-          </button>
         ) : (
           <button
             className="px-3 py-1 text-sm bg-slate-500 text-white rounded opacity-80 cursor-not-allowed"
             disabled
-            aria-label={`Simulation ${name ?? id} not available`}
+            aria-label={`Simulation ${name ?? id} not available yet`}
           >
-            Not Available
+            Not available yet
           </button>
         )}
       </div>

@@ -15,11 +15,12 @@ import { format } from "date-fns";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { CasesData, createSectionCaseAssignment, deleteSectionCaseAssignment, SectionAssignmentInsert, SectionSimulationsData } from "@/actions/cases";
+import { CasesData, createSectionCaseAssignment, deleteSectionCaseAssignment, CourseSection } from "@/actions/cases";
+import type { SectionAssignmentInsert } from "@/types/db";
 import { toast } from "sonner";
 
 interface CaseAssignmentProps {
-  sections: SectionSimulationsData
+  sections: CourseSection[]
   cases: CasesData
   isEditMode: boolean
   existing_id?: string;
@@ -53,6 +54,16 @@ const CaseAssignment = ({ sections, cases, isEditMode, existing_id, initialData 
   }
 
   const handleSubmit = async () => {
+    if (presimDate.getTime() > simDate.getTime()) {
+      toast.error("Pre-sim time must be at or before the sim time.");
+      return;
+    }
+
+    if (!isEditMode && simDate.getTime() <= Date.now()) {
+      toast.error("Sim time must be in the future.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     const payload: SectionAssignmentInsert = {
@@ -134,14 +145,14 @@ const CaseAssignment = ({ sections, cases, isEditMode, existing_id, initialData 
                   {
                     sections.length > 0 && (
                       sections.map((section, index) => {
-                        if (!section.meeting_time) {
+                        if (!section.meetingTime) {
                           return (
                             <SelectItem key={`${index}`} value={section.id}>
                               {section.name}
                             </SelectItem>
                           )
                         }
-                        const displayTime = format(section.meeting_time, 'p')
+                        const displayTime = format(section.meetingTime, 'p')
                         return (
                           <SelectItem key={`${index}`} value={section.id}>
                             {section.name} - {displayTime}
