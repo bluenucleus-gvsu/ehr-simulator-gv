@@ -3,6 +3,7 @@
 import { createClient, PostgrestError } from "@supabase/supabase-js";
 import { Database } from "../../database.types";
 import { revalidatePath } from "next/cache";
+import { caseMeetsMinimumRequirements } from "@/lib/caseMinimumRequirements";
 
 export type SectionAssignment = Database['public']['Tables']['section_assignments']['Row'];
 export type SectionAssignmentInsert = Database['public']['Tables']['section_assignments']['Insert'];
@@ -16,7 +17,7 @@ export type ActionResponse<T = null> = {
   error?: PostgrestError;
 };
 
-export async function getAllSimCases() {
+export async function getAllSimCases(options?: { usableOnly?: boolean }) {
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -38,7 +39,7 @@ export async function getAllSimCases() {
 
   return {
     success: true,
-    data,
+    data: options?.usableOnly ? (data ?? []).filter(caseMeetsMinimumRequirements) : data,
     message: 'Successfully retrieved Sim Cases'
   };
 }
@@ -65,7 +66,7 @@ export async function getSimCaseById(id: string) {
   }
   return {
     success: true,
-    data,
+    data: data?.filter(caseMeetsMinimumRequirements) ?? [],
     message: 'Successfully retrieved Sim Cases'
   };
 }
@@ -94,7 +95,7 @@ export async function getCaseByCourseId() {
 
   return {
     success: true,
-    data: data,
+    data: data?.filter(caseMeetsMinimumRequirements) ?? [],
     message: 'Successfully retrieved Sim Cases paired with this course',
   };
 }
@@ -189,6 +190,27 @@ export async function createSectionCaseAssignment(payload: SectionAssignmentInse
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
+  if (!payload.case_id) {
+    return {
+      success: false,
+      message: "A case is required for this assignment.",
+    };
+  }
+
+  const { data: simCase, error: caseError } = await supabase
+    .from("cases")
+    .select("first_name, last_name, description, age")
+    .eq("id", payload.case_id)
+    .maybeSingle();
+
+  if (caseError || !simCase || !caseMeetsMinimumRequirements(simCase)) {
+    return {
+      success: false,
+      message: "This case does not meet the minimum requirements for use.",
+      error: caseError ?? undefined,
+    };
+  }
+
   const { data, error } = await supabase
     .from('section_assignments')
     .upsert(payload)
@@ -254,6 +276,9 @@ export async function getCourseCaseAssignments() {
       name,
       description, 
       admitting_diagnosis,
+      first_name,
+      last_name,
+      age,
       course_cases (
         id,
         course_id,
@@ -274,7 +299,7 @@ export async function getCourseCaseAssignments() {
     };
   }
 
-  const assignments = data?.flatMap((caseItem) => {
+  const assignments = data?.filter(caseMeetsMinimumRequirements).flatMap((caseItem) => {
     // Handle unassigned cases (Left Join equivalent)
     if (!caseItem.course_cases || caseItem.course_cases.length === 0) {
       return [{

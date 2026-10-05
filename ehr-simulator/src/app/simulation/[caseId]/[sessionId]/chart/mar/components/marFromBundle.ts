@@ -41,28 +41,45 @@ function findCatalogMedicationByCatalogId(catalogId: string): AllMedicationTypes
   return allMedications.find((m) => m.id === catalogId);
 }
 
-function findCatalogMedicationByDbMed(med: {
-  generic_name?: string;
-  route?: string;
-  strength?: number | string | null;
-}): AllMedicationTypes | undefined {
-  if (!med?.generic_name || !med?.route) return undefined;
-  const g = med.generic_name.toLowerCase().trim();
-  const route = med.route as AllMedicationTypes["route"];
-  const strength = Number(med.strength);
-  return allMedications.find(
-    (m) =>
-      m.genericName.toLowerCase() === g &&
-      m.route === route &&
-      Math.abs(Number(m.strength) - strength) < 0.001,
-  );
-}
-
 function embeddedMedication(row: { medications?: unknown }): Record<string, unknown> | null {
   const raw = row.medications;
   if (raw == null) return null;
   if (Array.isArray(raw)) return (raw[0] as Record<string, unknown>) ?? null;
   return raw as Record<string, unknown>;
+}
+
+function dispenseUnitName(med: Record<string, unknown>): string {
+  const raw = med.dispense_units;
+  const joined = Array.isArray(raw) ? raw[0] : raw;
+  if (joined && typeof joined === "object" && "name" in joined) {
+    return String((joined as { name?: unknown }).name ?? "dose");
+  }
+  return "dose";
+}
+
+/** Keep the database UUID as the medication identity used by medication_orders. */
+function medicationFromDb(med: Record<string, unknown>): AllMedicationTypes | null {
+  const id = String(med.id ?? "");
+  const genericName = String(med.generic_name ?? "");
+  const route = String(med.route ?? "") as AllMedicationTypes["route"];
+  if (!id || !genericName || !route) return null;
+
+  return {
+    id,
+    genericName,
+    brandName: med.brand_name ? String(med.brand_name) : undefined,
+    route,
+    strength: Number(med.strength ?? 0),
+    strengthUnit: String(med.strength_unit ?? ""),
+    dispenseUnit: dispenseUnitName(med),
+    isVariableDose: Boolean(med.is_variable_dose),
+    infusionRateUnit: med.infusion_rate_unit
+      ? String(med.infusion_rate_unit)
+      : undefined,
+    diluent: med.diluent ? String(med.diluent) : undefined,
+    totalVolume: med.total_volume == null ? undefined : Number(med.total_volume),
+    bgDosing: [],
+  } as AllMedicationTypes;
 }
 
 function placeholderMedication(id: string, label: string): OralMedication {
@@ -100,11 +117,11 @@ export function medOrderFormStateFromCaseBundle(caseBundle: CaseBundle | null): 
     if (!id) continue;
 
     const med = embeddedMedication(row);
-    const catalog = med
-      ? findCatalogMedicationByDbMed(med as { generic_name?: string; route?: string; strength?: number })
-      : undefined;
+    const catalog = med ? medicationFromDb(med) : null;
     if (!catalog) continue;
 
+    // The medication form keeps this array positional with createdOrders.
+    // Duplicate orders for the same medication therefore need duplicate entries.
     selectedMeds.push(catalog);
     const pr = String(row.priority ?? "");
     const priority: MedicationOrder["priority"] =
@@ -123,7 +140,7 @@ export function medOrderFormStateFromCaseBundle(caseBundle: CaseBundle | null): 
       infusionRate: parseInfusionRate(row.infusion_rate as string | undefined),
       dose: Number(row.dose ?? 0),
       visibleInPresim: Boolean(row.is_in_presim ?? true),
-      phase: Number(row.phase),
+      phase: Number(row.phase ?? 1),
     });
   }
 
@@ -154,7 +171,7 @@ export function buildMarFromCaseBundle(caseBundle: CaseBundle | null): {
     if (!id) continue;
 
     const med = embeddedMedication(row);
-    const catalog = med ? findCatalogMedicationByDbMed(med as { generic_name?: string; route?: string; strength?: number }) : undefined;
+    const catalog = med ? medicationFromDb(med) ?? undefined : undefined;
     const genericLabel = (med?.generic_name as string) ?? "Medication";
     const medicationId = catalog?.id ?? `db-med-${id}`;
 
@@ -182,7 +199,7 @@ export function buildMarFromCaseBundle(caseBundle: CaseBundle | null): {
       infusionRate: parseInfusionRate(row.infusion_rate as string | undefined),
       dose: Number(row.dose ?? 0),
       visibleInPresim: Boolean(row.is_in_presim ?? true),
-      phase: Number(row.phase),
+      phase: Number(row.phase ?? 1),
     };
     medicationOrders.push(mo);
     orderIndex.set(id, mo);
@@ -272,7 +289,7 @@ export function buildMarFromCaseBundle(caseBundle: CaseBundle | null): {
       notes: a.notes ?? "",
       administeredDose: Number(a.administered_dose ?? 0),
       visibleInPresim: a.is_in_presim ?? true,
-      phase: Number(a.phase),
+      phase: Number(a.phase ?? 1),
     });
   });
 

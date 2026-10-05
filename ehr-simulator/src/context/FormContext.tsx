@@ -1,18 +1,22 @@
 'use client';
 
-import { createContext, useCallback, useContext, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useState } from 'react';
 import { CompleteFormType, defaultIoData, defaultOrders, DemographicFormData, FormBlob, HistoryFormData, IntakeOutputFormData, MedOrderFormData, MediaImageData, TableFormData } from '@/utils/form';
 import { ClinicalNote } from '@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData';
 import { OrderType } from '@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData';
 import { LabTableData, labTemplate } from '@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData';
-import { FlexSheetData, flexSheetTemplate } from '@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData';
 import { MedAdministrationInstance } from '@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData';
+import { buildTableTemplate, CaseSpecialty } from '@/lib/flexSheet/flexSheetTemplate';
+import { FlexSheetData } from '@/lib/flexSheet/flexSheetTypes';
+import { FlexSheetSection } from '@/lib/flexSheet/flexSheetSections';
+import { CaseSection } from '@/lib/caseSections';
 
 interface FormContextType {
   demographicData: DemographicFormData;
   historyData: HistoryFormData;
   noteData: ClinicalNote[];
   orderData: OrderType[];
+  tableTemplateData: FlexSheetSection[];
   labData: TableFormData<LabTableData>;
   chartingData: TableFormData<FlexSheetData>;
   ioData: IntakeOutputFormData[];
@@ -21,18 +25,11 @@ interface FormContextType {
   mediaData: MediaImageData[];
   caseId?: string;
   setCaseId: (id: string) => void;
-  onDataChange: (key: keyof FormBlob, data: CompleteFormType) => void;
-  /** Unsaved local row on the active case-builder page (merged on Save). */
-  registerCaseBuilderLocalOverlay: (fn: (() => Partial<FormBlob>) | null) => void;
-  getCaseBuilderSaveBlob: () => FormBlob;
-  applyCaseBuilderOverlayToContext: () => void;
+  onDataChange: (key: CaseSection, data: CompleteFormType) => void;
+  replaceFormData: (data: FormBlob, caseId: string) => void;
 }
 
-const defaultDemographicData: DemographicFormData = {
-  DOBDay: '',
-  DOBMonth: '',
-  admissionDateOffest: '',
-  admissionTime: '',
+export const defaultDemographicData: DemographicFormData = {
   admittingDiagnosis: '',
   age: '',
   attendingProviderName: '',
@@ -54,8 +51,10 @@ const defaultDemographicData: DemographicFormData = {
   contact: '',
   contactRelationship: '',
   contactPhone: '',
+  phaseCount: 1,
+  caseSpecialty: CaseSpecialty.MED_SURG,
 }
-const defaultHistoryData = {
+export const defaultHistoryData: HistoryFormData = {
   medicalHistory: [],
   surgicalHistory: [],
   allergies: [],
@@ -64,19 +63,6 @@ const defaultHistoryData = {
   alerts: [],
   familyHistory: []
 }
-const emptyFormBlob = (): FormBlob => ({
-  demographics: defaultDemographicData,
-  history: defaultHistoryData,
-  notes: [],
-  orders: [],
-  labs: { data: [], timePoints: [0], timePointsInPreSim: new Set(), visibleItems: new Set() },
-  charting: { data: [], timePoints: [0], timePointsInPreSim: new Set(), visibleItems: new Set() },
-  intakeOutput: defaultIoData,
-  medOrders: { createdOrders: [], selectedMeds: [] },
-  medAdministrationInstances: [],
-  media: [],
-});
-
 const FormContext = createContext<FormContextType>({
   onDataChange: () => { },
   setCaseId: () => { },
@@ -85,117 +71,90 @@ const FormContext = createContext<FormContextType>({
   historyData: defaultHistoryData,
   noteData: [],
   orderData: [],
-  labData: { data: [], timePoints: [0], timePointsInPreSim: new Set(), visibleItems: new Set() },
-  chartingData: { data: [], timePoints: [0], timePointsInPreSim: new Set(), visibleItems: new Set() },
+  tableTemplateData: [],
+  labData: { data: [], timePoints: [0], timePointsInPreSim: new Set() },
+  chartingData: { data: [], timePoints: [0], timePointsInPreSim: new Set() },
   ioData: defaultIoData,
   medOrderData: { createdOrders: [], selectedMeds: [] },
   medAdministrationData: [],
   mediaData: [],
-  registerCaseBuilderLocalOverlay: () => { },
-  getCaseBuilderSaveBlob: emptyFormBlob,
-  applyCaseBuilderOverlayToContext: () => { },
+  replaceFormData: () => { },
 });
 
 export function FormContextProvider({ children }: { children: React.ReactNode }) {
-  const caseBuilderLocalOverlayRef = useRef<(() => Partial<FormBlob>) | null>(null);
-
   const [caseId, setCaseId] = useState<string | undefined>(undefined);
   const [demographicData, setDemographicData] = useState<DemographicFormData>(defaultDemographicData);
   const [historyData, setHistoryData] = useState<HistoryFormData>(defaultHistoryData);
   const [noteData, setNoteData] = useState<ClinicalNote[]>([]);
   const [orderData, setOrderData] = useState<OrderType[]>(defaultOrders);
+  const [tableTemplateData, setTableTemplateData] = useState<FlexSheetSection[]>([]);
   const [labData, setLabData] = useState<TableFormData<LabTableData>>({
     data: labTemplate,
     timePoints: [0],
     timePointsInPreSim: new Set<number>(),
-    visibleItems: new Set()
   });
   const [chartingData, setChartingData] = useState<TableFormData<FlexSheetData>>({
-    data: flexSheetTemplate,
+    data: buildTableTemplate(new Set(tableTemplateData)),
     timePoints: [0],
     timePointsInPreSim: new Set<number>(),
-    visibleItems: new Set()
   });
   const [ioData, setIoData] = useState<IntakeOutputFormData[]>(defaultIoData);
   const [medOrderData, setMedOrderData] = useState<MedOrderFormData>({ createdOrders: [], selectedMeds: [] });
   const [medAdministrationData, setMedAdministrationData] = useState<MedAdministrationInstance[]>([])
   const [mediaData, setMediaData] = useState<MediaImageData[]>([]);
 
-  const onDataChange = (key: keyof FormBlob, value: CompleteFormType) => {
+  const onDataChange = useCallback((key: CaseSection, value: CompleteFormType) => {
     switch (key) {
-      case 'demographics':
+      case CaseSection.DEMOGRAPHICS:
         setDemographicData(value as DemographicFormData);
         break;
-      case 'history':
+      case CaseSection.HISTORY:
         setHistoryData(value as HistoryFormData);
         break;
-      case 'notes':
+      case CaseSection.CLINICAL_DOCUMENTS:
         setNoteData(value as ClinicalNote[]);
         break;
-      case 'orders':
+      case CaseSection.ORDERS:
         setOrderData(value as OrderType[]);
         break;
-      case 'labs':
+      case CaseSection.TABLE_TEMPLATE:
+        setTableTemplateData(value as FlexSheetSection[])
+        break;
+      case CaseSection.LABS:
         setLabData(value as TableFormData<LabTableData>);
         break;
-      case 'charting':
+      case CaseSection.DOCUMENTATION:
         setChartingData(value as TableFormData<FlexSheetData>);
         break;
-      case 'intakeOutput':
+      case CaseSection.INTAKE_OUTPUT:
         setIoData(value as IntakeOutputFormData[]);
         break;
-      case 'medOrders':
+      case CaseSection.MEDICATION_ORDERS:
         setMedOrderData(value as MedOrderFormData);
         break;
-      case 'medAdministrationInstances':
+      case CaseSection.MEDICATION_ADMINISTRATIONS:
         setMedAdministrationData(value as MedAdministrationInstance[]);
         break;
-      case 'media':
+      case CaseSection.MEDIA:
         setMediaData(value as MediaImageData[]);
         break;
     }
-  }
-
-  const registerCaseBuilderLocalOverlay = useCallback((fn: (() => Partial<FormBlob>) | null) => {
-    caseBuilderLocalOverlayRef.current = fn;
   }, []);
 
-  const getCaseBuilderSaveBlob = useCallback((): FormBlob => {
-    const overlay = caseBuilderLocalOverlayRef.current?.() ?? {};
-    return {
-      demographics: overlay.demographics ?? demographicData,
-      history: overlay.history ?? historyData,
-      notes: overlay.notes ?? noteData,
-      orders: overlay.orders ?? orderData,
-      labs: overlay.labs ?? labData,
-      charting: overlay.charting ?? chartingData,
-      intakeOutput: overlay.intakeOutput ?? ioData,
-      medOrders: overlay.medOrders ?? medOrderData,
-      medAdministrationInstances: overlay.medAdministrationInstances ?? medAdministrationData,
-      media: overlay.media ?? mediaData,
-    };
-  }, [
-    demographicData,
-    historyData,
-    noteData,
-    orderData,
-    labData,
-    chartingData,
-    ioData,
-    medOrderData,
-    medAdministrationData,
-    mediaData,
-  ]);
-
-  const applyCaseBuilderOverlayToContext = useCallback(() => {
-    const overlay = caseBuilderLocalOverlayRef.current?.() ?? {};
-    (Object.keys(overlay) as (keyof FormBlob)[]).forEach((key) => {
-      const val = overlay[key];
-      if (val !== undefined) {
-        onDataChange(key, val as CompleteFormType);
-      }
-    });
-  }, [onDataChange]);
+  const replaceFormData = useCallback((data: FormBlob, id: string) => {
+    setDemographicData(data.demographics);
+    setHistoryData(data.history);
+    setNoteData(data.notes);
+    setOrderData(data.orders);
+    setTableTemplateData(data.tableTemplate)
+    setLabData(data.labs);
+    setChartingData(data.charting);
+    setIoData(data.intakeOutput);
+    setMedOrderData(data.medOrders);
+    setMedAdministrationData(data.medAdministrationInstances);
+    setMediaData(data.media);
+    setCaseId(id);
+  }, []);
 
   return (
     <FormContext.Provider value={{
@@ -205,6 +164,7 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
       historyData,
       noteData,
       orderData,
+      tableTemplateData,
       labData,
       chartingData,
       ioData,
@@ -212,9 +172,7 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
       medAdministrationData,
       mediaData,
       onDataChange,
-      registerCaseBuilderLocalOverlay,
-      getCaseBuilderSaveBlob,
-      applyCaseBuilderOverlayToContext,
+      replaceFormData,
     }}>
       {children}
     </FormContext.Provider>

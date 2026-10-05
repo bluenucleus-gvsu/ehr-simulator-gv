@@ -1,21 +1,25 @@
 'use client'
 
 import { useReactTable, getCoreRowModel, createColumnHelper } from "@tanstack/react-table";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { AddTableColumn } from "../labs/components/addTimeCol";
 import { useRouter } from "next/navigation";
-import { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
+import { FlexSheetData } from "@/lib/flexSheet/flexSheetTypes";
 import { Clipboard } from "lucide-react";
 import { TableAssessmentSelectFormCell, TableInputFormCell } from "./components/tableInputFormCell";
 import { useFormContext } from "@/context/FormContext";
 import { useTimePoints } from "../../components/useFormTableOffsets";
 import { TableFormHeader } from "../../components/tableFormHeader";
 import { FormShell } from "../../components/formShell";
-import { ChartingToolTip } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/ChartingToolTip";
+import { ChartingToolTip } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetToolTip";
 import { FormTable } from "../../components/FormTable";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
-import { CaseSection } from "@/lib/saveCase";
+import { CaseSection } from "@/lib/caseSections";
 import CheckBoxList from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/checkBoxList";
+import { caseBuilderPath } from "@/lib/caseBuilder/routes";
+import { specialtyDefaultSections } from "@/lib/caseBuilder/defaultTableTemplates";
+import { mergeTemplateWithExistingRows } from "@/lib/flexSheet/flexSheetRowGenerator";
+import { buildTableTemplate } from "@/lib/flexSheet/flexSheetTemplate";
 
 
 const columnHelper = createColumnHelper<FlexSheetData>();
@@ -33,8 +37,19 @@ function ensureNumberSet(input: unknown): Set<number> {
 }
 
 function ChartingForm() {
-  const { onDataChange, chartingData: initialChartingData, caseId, registerCaseBuilderLocalOverlay } = useFormContext()
-  const [chartingData, setChartingData] = useState<FlexSheetData[]>(initialChartingData.data)
+  const { onDataChange, chartingData: initialChartingData, demographicData, tableTemplateData, caseId } = useFormContext();
+
+  const [chartingData, setChartingData] = useState<FlexSheetData[]>(() => {
+    const effectiveSections = tableTemplateData.length > 0
+      ? tableTemplateData
+      : specialtyDefaultSections[demographicData.caseSpecialty];
+    return mergeTemplateWithExistingRows(
+      buildTableTemplate(new Set(effectiveSections)),
+      initialChartingData.data,
+      initialChartingData.timePoints
+    );
+  });
+
   const {
     timePoints,
     timePointsInPresim,
@@ -45,35 +60,17 @@ function ChartingForm() {
 
   const router = useRouter()
 
-  useEffect(() => {
-    registerCaseBuilderLocalOverlay(() => ({
-      charting: {
-        data: chartingData,
-        timePoints,
-        timePointsInPreSim: timePointsInPresim,
-        visibleItems: initialChartingData.visibleItems,
-      },
-    }));
-    return () => registerCaseBuilderLocalOverlay(null);
-  }, [
-    chartingData,
-    timePoints,
-    timePointsInPresim,
-    initialChartingData.visibleItems,
-    registerCaseBuilderLocalOverlay,
-  ]);
-
   const goBack = () => {
-    onDataChange('charting', {
+    onDataChange(CaseSection.DOCUMENTATION, {
       data: chartingData,
       timePoints: timePoints,
       timePointsInPreSim: timePointsInPresim
     })
-    router.push("/admin/case-builder/form/labs");
+    router.push(caseBuilderPath("/admin/case-builder/form/labs", caseId));
   }
 
   const handleSubmit = async () => {
-    onDataChange('charting', {
+    onDataChange(CaseSection.DOCUMENTATION, {
       data: chartingData,
       timePoints: timePoints,
       timePointsInPreSim: timePointsInPresim
@@ -89,7 +86,7 @@ function ChartingForm() {
       caseId: caseId
     })
 
-    router.push('/admin/case-builder/form/intake-output')
+    router.push(caseBuilderPath('/admin/case-builder/form/intake-output', caseId))
   }
   const handleSubsetSelection = (rowId: string, columnId: string, selectedIdsForField: string[]) => {
     setChartingData(prevData => prevData.map(row => {
@@ -233,7 +230,7 @@ function ChartingForm() {
   return (
     <FormShell
       title="Documentation"
-      stepDescription="Step 6 of 10: Nursing charting and assessments"
+      stepDescription="Nursing charting and assessments"
       icon={<Clipboard className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}

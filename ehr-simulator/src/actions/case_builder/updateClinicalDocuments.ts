@@ -24,6 +24,7 @@ type ClinicalNoteInput = {
   content: string;
   excludedFromPresim?: boolean;
   docType?: "soap" | "free_text";
+  phase?: number;
 };
 
 const VALID_CATEGORIES: ClinicalDocCategoryType[] = [
@@ -60,36 +61,24 @@ export async function updateClinicalDocuments(
   caseId: string
 ) {
   if (!caseId) throw new Error("Case ID is required");
-  const { error: deleteErr } = await supabase
-    .from("clinical_documents")
-    .delete()
-    .eq("case_id", caseId);
-
-  if (deleteErr) {
-    throw new Error(deleteErr.message);
-  }
-
-  if (notes.length === 0) return [];
-
   const rows = notes.map((note) => ({
-    case_id: caseId,
     is_in_presim: !note.excludedFromPresim,
     category: normalizeCategory(note),
     specialty: note.specialty?.trim(),
     author: note.author?.trim() || "Unknown",
     time_offset: Number(note.timeOffset) || 0,
     doc_text: note.content ?? "<p></p>",
+    phase: Number(note.phase ?? 1),
   }));
 
-  const { data, error } = await supabase
-    .from("clinical_documents")
-    .insert(rows)
-    .select("*");
+  const { error } = await supabase.rpc("case_builder_replace_clinical_documents", {
+    p_case_id: caseId,
+    p_rows: rows,
+  });
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return data;
+  return rows;
 }
-

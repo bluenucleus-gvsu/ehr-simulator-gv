@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   Home,
   AlertTriangle,
@@ -28,7 +28,8 @@ import { nursingAlerts } from "@/utils/form";
 import { HistoryFormData } from "@/utils/form";
 import { FormShell } from "../../components/formShell";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
-import { CaseSection } from "@/lib/saveCase";
+import { CaseSection } from "@/lib/caseSections";
+import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 
 const FormSection = ({
   icon: Icon,
@@ -57,7 +58,7 @@ const FormSection = ({
 const HistoryForm = () => {
   const router = useRouter();
 
-  const { onDataChange, historyData, caseId, registerCaseBuilderLocalOverlay } = useFormContext();
+  const { onDataChange, historyData, caseId } = useFormContext();
   const [medicalHistory, setMedicalHistory] = useState<string[]>(historyData.medicalHistory);
   const [surgicalHistory, setSurgicalHistory] = useState<string[]>(historyData.surgicalHistory);
   const [familyHistory, setFamilyHistory] = useState<FamilyHistoryData[]>(historyData.familyHistory);
@@ -100,49 +101,35 @@ const HistoryForm = () => {
     alerts: alerts,
   }
 
-  useEffect(() => {
-    registerCaseBuilderLocalOverlay(() => ({ history: newHistoryData }));
-    return () => registerCaseBuilderLocalOverlay(null);
-  }, [
-    registerCaseBuilderLocalOverlay,
-    medicalHistory,
-    surgicalHistory,
-    familyHistory,
-    socialHistory,
-    livingSituation,
-    allergies,
-    alerts,
-  ]);
-
   const goBack = () => {
     if (checkUnsaved()) {
       setPendingNavigation('back');
       setShowUnsavedWarning(true);
     } else {
-      onDataChange("history", newHistoryData);
-      router.push("/admin/case-builder/form/demographics");
+      onDataChange(CaseSection.HISTORY, newHistoryData);
+      router.push(caseBuilderPath("/admin/case-builder/form/demographics", caseId));
     }
   }
 
-  const saveAndContinue = () => {
-    onDataChange("history", newHistoryData);
-    saveCaseData({ payload: newHistoryData, section: CaseSection.HISTORY, caseId });
-    router.push("/admin/case-builder/form/notes");
+  const saveAndContinue = async () => {
+    onDataChange(CaseSection.HISTORY, newHistoryData);
+    await saveCaseData({ payload: newHistoryData, section: CaseSection.HISTORY, caseId });
+    router.push(caseBuilderPath("/admin/case-builder/form/notes", caseId));
   }
 
   const saveAndGoBack = () => {
-    onDataChange("history", newHistoryData);
-    router.push("/admin/case-builder/form/demographics");
+    onDataChange(CaseSection.HISTORY, newHistoryData);
+    router.push(caseBuilderPath("/admin/case-builder/form/demographics", caseId));
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Guardrail against unsaved text in MultiTextInput fields
     if (checkUnsaved()) {
       setPendingNavigation('continue');
       setShowUnsavedWarning(true);
     }
     else {
-      saveAndContinue();
+      await saveAndContinue();
     }
   }
 
@@ -150,11 +137,11 @@ const HistoryForm = () => {
     if (pendingNavigation === 'back') {
       saveAndGoBack();
     } else {
-      saveAndContinue();
+      void saveAndContinue();
     }
   }
 
-  const UnsavedTextAlert = () => (
+  const unsavedTextAlert = (
     <AlertDialog
       open={showUnsavedWarning}
       onOpenChange={setShowUnsavedWarning}
@@ -181,7 +168,7 @@ const HistoryForm = () => {
   return (
     <FormShell
       title="Patient History"
-      stepDescription="Step 2 of 10: Document medical history and social context"
+      stepDescription="Document medical history and social context"
       icon={<FileClock className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}
@@ -190,7 +177,7 @@ const HistoryForm = () => {
       continueButtonTooltip="Proceed to Next Page"
       backButtonTooltip="Return to Previous Page"
     >
-      <UnsavedTextAlert />
+      {unsavedTextAlert}
       <div className="bg-slate-50/50 flex-1 overflow-y-auto p-6 md:px-12 lg:px-24">
         <div className="max-w-6xl mx-auto space-y-6 pb-20">
           <div className="grid grid-cols-1 gap-6">

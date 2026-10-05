@@ -13,8 +13,11 @@ import MedCardForm from "./components/medCardForm"
 import { useRouter } from "next/navigation"
 import { useFormContext } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
-import { CaseSection } from "@/lib/saveCase"
+import { CaseSection } from "@/lib/caseSections"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
+import { toast } from "sonner"
+import { caseBuilderPath } from "@/lib/caseBuilder/routes"
+import { filterAdministrationsForOrders } from "@/lib/caseBuilder/medicationPayload"
 
 function getComboboxData(medications: AllMedicationTypes[]) {
   return medications.map(med => {
@@ -36,10 +39,14 @@ interface MedicationOrderFormProps {
 
 export default function MedicationOrderForm({ medications }: MedicationOrderFormProps) {
   const router = useRouter()
-  const { onDataChange, medOrderData, caseId, medAdministrationData } = useFormContext()
+  const { onDataChange, medOrderData, demographicData, caseId, medAdministrationData } = useFormContext()
   const [selectedMed, setSelectedMed] = useState('')
   const [selectedMeds, setSelectedMeds] = useState<AllMedicationTypes[]>(medOrderData.selectedMeds)
   const [medOrders, setMedOrders] = useState<MedicationOrder[]>(medOrderData.createdOrders)
+  const validateMedOrders = () => {
+    return medOrders.every(order => order.priority && order.frequency && order.orderingProvider)
+  }
+
 
   const handleAddMedication = (newMedId: string) => {
     setSelectedMed(newMedId)
@@ -58,6 +65,7 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
             orderingProvider: '',
             dose: medication.isVariableDose ? null : 0,
             visibleInPresim: true,
+            phase: 1,
             status: "active"
 
           } as MedicationOrder
@@ -70,11 +78,18 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
   }
 
   const handleRemoveMedication = (index: number) => {
+    const remainingOrders = medOrders.filter((_, i) => i !== index)
+    const remainingAdministrations = filterAdministrationsForOrders(
+      remainingOrders,
+      medAdministrationData,
+    )
+
     setSelectedMeds(prev => prev.filter((_, i) => i !== index))
-    setMedOrders(prev => prev.filter((_, i) => i !== index))
+    setMedOrders(remainingOrders)
+    onDataChange(CaseSection.MEDICATION_ADMINISTRATIONS, remainingAdministrations)
   }
 
-  const handleOrderChange = (index: number, field: keyof MedicationOrder, value: string | boolean) => {
+  const handleOrderChange = (index: number, field: keyof MedicationOrder, value: string | boolean | number) => {
     setMedOrders(currentOrders =>
       currentOrders.map((order, i) => {
         if (i === index) {
@@ -97,31 +112,51 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
   }, [medications]);
 
   const goBack = () => {
-    onDataChange('medOrders', {
+    const canSubmit = validateMedOrders()
+    if (!canSubmit) {
+      toast.warning('Every order must be assigned a Priority, Frequency, and Provider.')
+      return
+    }
+
+    onDataChange(CaseSection.MEDICATION_ORDERS, {
       createdOrders: medOrders,
       selectedMeds: selectedMeds
     });
-    router.push("/admin/case-builder/form/intake-output");
+    router.push(caseBuilderPath("/admin/case-builder/form/intake-output", caseId));
   }
 
   const handleSubmit = async () => {
-    onDataChange('medOrders', {
-      createdOrders: medOrders,
-      selectedMeds: selectedMeds
-    });
+    const canSubmit = validateMedOrders()
+    if (!canSubmit) {
+      toast.warning('Every order must be assigned a Priority, Frequency, and Provider.')
+      return
+    }
+
+    const validAdministrations = filterAdministrationsForOrders(
+      medOrders,
+      medAdministrationData,
+    )
+
     if (caseId) {
+      onDataChange(CaseSection.MEDICATION_ORDERS, {
+        createdOrders: medOrders,
+        selectedMeds: selectedMeds
+      });
+
+      onDataChange(CaseSection.MEDICATION_ADMINISTRATIONS, validAdministrations)
+
       await saveCaseData({
-        payload: { orders: medOrders, administrations: medAdministrationData },
+        payload: { orders: medOrders, administrations: validAdministrations },
         section: CaseSection.MEDICATION_ORDERS,
         caseId,
       })
     }
-    router.push('/admin/case-builder/form/medication-administrations');
+    router.push(caseBuilderPath('/admin/case-builder/form/medication-administrations', caseId));
   }
   return (
     <FormShell
       title="Medication Orders"
-      stepDescription="Step 8 of 9: Create Medication Orders"
+      stepDescription="Create Medication Orders"
       icon={<Pill className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}
@@ -171,6 +206,7 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
                         index={index}
                         order={medOrders[index]}
                         onOrderChange={handleOrderChange}
+                        phaseCount={demographicData.phaseCount}
                       />
                     </div>
                   ))}

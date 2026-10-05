@@ -20,10 +20,8 @@ import { PatientStatusBadge } from './marHelpers';
 import ColumnShiftControl from './columnShiftControl';
 import { DatabaseMedAdministration, StudentMedicationAdministration, submitMedicationAdministrations } from '@/actions/simulation';
 import { useSimSessionContext } from '@/context/SimSessionContext';
-import { useSimulationCase } from '@/context/SimulationCaseContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useStudentSimulationEditAccess } from '@/utils/studentSimulationEditAccess';
-import { useParams } from 'next/navigation';
 import { isVisibleForSimulationPhase } from '@/lib/simulationPhaseVisibility';
 import { useSimulationScanner } from '@/hooks/useSimulationScanner';
 import ScanWristbandAlert from './scanWristbandAlert';
@@ -37,10 +35,8 @@ interface MarViewData {
   medications: AllMedicationTypes[];
   medicationOrders: MedicationOrder[];
   medicationAdministrations: DatabaseMedAdministration[];
-  params: {
-    caseId: string;
-    sessionId: string;
-  }
+  caseId: string;
+  sessionId: string;
 }
 
 const filterOptions = ["Scheduled", "Continuous", "PRN"]
@@ -48,15 +44,13 @@ export default function MarView({
   medications,
   medicationOrders,
   medicationAdministrations,
-  params
+  caseId,
+  sessionId
 }: MarViewData) {
   const router = useRouter();
-  const { routeContext } = useSimulationCase();
-  const resolvedCaseId = routeContext?.caseId ?? params.caseId;
   // context
   const { userId, groupId, isPresim, userName, simStartTime, loading, currentPhase } = useSimSessionContext();
   const { canEdit } = useStudentSimulationEditAccess();
-  const { caseId } = useParams()
   const patientWristband = String(caseId)
   // med data
   const [selectedOrders, setSelectedOrders] = useState<MedicationOrder[]>([]);
@@ -88,6 +82,24 @@ export default function MarView({
   const [elapsedMinutes, setElapsedMinutes] = useState(() => {
     return differenceInMinutes(new Date(), anchorDate);
   });
+
+  const medsById = useMemo(() => {
+    return medications.reduce((acc, med) => {
+      acc[med.id] = med;
+      return acc;
+    }, {} as { [id: string]: AllMedicationTypes });
+  }, [medications]);
+
+  const releasedMedicationOrders = useMemo(() => {
+    return medicationOrders.filter((order) =>
+      isVisibleForSimulationPhase({
+        isPresim: Boolean(isPresim),
+        isVisibleInPresim: order.visibleInPresim,
+        releasePhase: order.phase,
+        currentPhase,
+      }),
+    );
+  }, [medicationOrders, isPresim, currentPhase]);
 
   const handleScan = (symbol: string) => {
     // Patient wristband scan is 39 chars, if scans are failing due to excessive length 
@@ -170,8 +182,8 @@ export default function MarView({
       setNewAdministrations(prev => ({
         ...prev,
         [targetOrder.id]: {
-          case_id: resolvedCaseId,
-          case_session_id: params.sessionId,
+          case_id: caseId,
+          case_session_id: sessionId,
           medication_order_id: targetOrder.id,
           user_id: userId,
           group_id: groupId,
@@ -198,8 +210,8 @@ export default function MarView({
     setNewAdministrations(prev => ({
       ...prev,
       [order.id]: {
-        case_id: resolvedCaseId,
-        case_session_id: params.sessionId,
+        case_id: caseId,
+        case_session_id: sessionId,
         medication_order_id: order.id,
         user_id: userId,
         group_id: groupId,
@@ -301,7 +313,7 @@ export default function MarView({
       };
     });
 
-    const result = await submitMedicationAdministrations(payload, resolvedCaseId, params.sessionId)
+    const result = await submitMedicationAdministrations(payload, caseId, sessionId)
 
     if (!result.success) {
       toast.error(result.message ?? "Failed to save administrations");
@@ -312,7 +324,6 @@ export default function MarView({
     handleClearAllSelections()
     router.refresh();
   }
-
 
   const groupedAdministrationsByOrder = useMemo(() => {
     const visibleAdministrations = medicationAdministrations.filter((admin) =>
@@ -332,24 +343,6 @@ export default function MarView({
       return acc
     }, {} as { [orderId: string]: DatabaseMedAdministration[] })
   }, [medicationAdministrations, isPresim, currentPhase]);
-
-  const medsById = useMemo(() => {
-    return medications.reduce((acc, med) => {
-      acc[med.id] = med;
-      return acc;
-    }, {} as { [id: string]: AllMedicationTypes });
-  }, [medications]);
-
-  const releasedMedicationOrders = useMemo(() => {
-    return medicationOrders.filter((order) =>
-      isVisibleForSimulationPhase({
-        isPresim: Boolean(isPresim),
-        isVisibleInPresim: order.visibleInPresim,
-        releasePhase: order.phase,
-        currentPhase,
-      }),
-    );
-  }, [medicationOrders, isPresim, currentPhase]);
 
   const filteredMedOrders = useMemo(() => {
     return releasedMedicationOrders.filter((order) => {

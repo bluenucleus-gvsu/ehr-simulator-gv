@@ -4,7 +4,7 @@ import { useState } from "react";
 import bwipjs from "@bwip-js/browser";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SimCase } from "@/actions/cases";
-import { format, differenceInYears } from "date-fns";
+import { format } from "date-fns";
 import { AllMedicationTypes } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
 
 interface BarcodeGeneratorProps {
@@ -13,6 +13,11 @@ interface BarcodeGeneratorProps {
 }
 
 type TabType = "medications" | "wristbands";
+
+const MED_LABEL_COLUMNS = 4;
+const WRISTBAND_LABEL_COLUMNS = 3;
+const MED_LABEL_ROWS = 20;
+const WRISTBAND_LABEL_ROWS = 10;
 
 const BardcodeGenerator = ({
   medications,
@@ -24,11 +29,16 @@ const BardcodeGenerator = ({
   const [medQuantities, setMedQuantities] = useState<Record<string, number>>(
     {},
   );
+  const [medStartRow, setMedStartRow] = useState<number>(1);
+  const [medStartColumn, setMedStartColumn] = useState<number>(1);
 
   const [selectedCases, setSelectedCases] = useState<string[]>([]);
   const [caseQuantities, setCaseQuantities] = useState<Record<string, number>>(
     {},
   );
+  const [wristbandStartRow, setWristbandStartRow] = useState<number>(1);
+  const [wristbandStartColumn, setWristbandStartColumn] =
+    useState<number>(1);
 
   const [isPrinting, setIsPrinting] = useState<boolean>(false);
 
@@ -46,6 +56,20 @@ const BardcodeGenerator = ({
     setMedQuantities((prev) => ({ ...prev, [id]: safeValue }));
   };
 
+  const handleMedStartRowChange = (value: number) => {
+    const safeValue =
+      value < 1 || isNaN(value) ? 1 : Math.min(value, MED_LABEL_ROWS);
+    setMedStartRow(safeValue);
+  };
+
+  const handleMedStartColumnChange = (value: number) => {
+    const safeValue =
+      value < 1 || isNaN(value)
+        ? 1
+        : Math.min(value, MED_LABEL_COLUMNS);
+    setMedStartColumn(safeValue);
+  };
+
   const handleCaseChange = (id: string, checked: boolean) => {
     if (checked) {
       setSelectedCases((prev) => [...prev, id]);
@@ -58,6 +82,20 @@ const BardcodeGenerator = ({
   const handleCaseQuantityChange = (id: string, value: number) => {
     const safeValue = value < 1 || isNaN(value) ? 1 : value;
     setCaseQuantities((prev) => ({ ...prev, [id]: safeValue }));
+  };
+
+  const handleWristbandStartRowChange = (value: number) => {
+    const safeValue =
+      value < 1 || isNaN(value) ? 1 : Math.min(value, WRISTBAND_LABEL_ROWS);
+    setWristbandStartRow(safeValue);
+  };
+
+  const handleWristbandStartColumnChange = (value: number) => {
+    const safeValue =
+      value < 1 || isNaN(value)
+        ? 1
+        : Math.min(value, WRISTBAND_LABEL_COLUMNS);
+    setWristbandStartColumn(safeValue);
   };
 
   const generateMedBarcodeSvg = (text: string): string => {
@@ -110,6 +148,35 @@ const BardcodeGenerator = ({
           }),
         );
 
+        const medSkipCount =
+          (medStartRow - 1) * MED_LABEL_COLUMNS + (medStartColumn - 1);
+        const medLabelHtmls: string[] = Array.from(
+          { length: medSkipCount },
+          () => `<div class="label"></div>`,
+        );
+        medsWithBarcodes.forEach((med) => {
+          const count = medQuantities[med.id] || 1;
+          const name = `${med.genericName}${med.brandName ? " (" + med.brandName + ")" : ""}`;
+          const sub = `${med.strength}${med.strengthUnit} [${med.route}]`;
+          for (let i = 0; i < count; i++) {
+            medLabelHtmls.push(`
+            <div class="label">
+              <div class="barcode-container">${med.barcodeDataUrl}</div>
+              <div class="label-text">
+                <div class="med-name">${name}</div>
+                <div class="med-sub">${sub}</div>
+              </div>
+            </div>
+          `);
+          }
+        });
+
+        const medLabelsPerSheet = MED_LABEL_ROWS * MED_LABEL_COLUMNS;
+        const medSheets: string[][] = [];
+        for (let i = 0; i < medLabelHtmls.length; i += medLabelsPerSheet) {
+          medSheets.push(medLabelHtmls.slice(i, i + medLabelsPerSheet));
+        }
+
         printHTML = `
           <!DOCTYPE html>
           <html>
@@ -119,7 +186,8 @@ const BardcodeGenerator = ({
               * { box-sizing: border-box; margin: 0; padding: 0; }
               @page { size: 8.5in 11in; margin: 0; }
               body { font-family: Arial, sans-serif; background: white; }
-              .sheet { padding: 0.5in 0.33in 0 0.45in; }
+              .sheet { padding: 0.5in 0.33in 0.5in 0.45in; }
+              .sheet.page-break { page-break-after: always; break-after: page; }
               .label-grid { display: grid; grid-template-columns: repeat(4, 1.75in); column-gap: 0.25in; row-gap: 0; }
               .label { width: 1.75in; height: 0.5in; overflow: hidden; display: flex; flex-direction: row; align-items: center; padding: 1px 3px; gap: 3px; page-break-inside: avoid; }
               .label-text { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; padding-right: 3px; padding-left: 3px; }
@@ -130,29 +198,17 @@ const BardcodeGenerator = ({
             </style>
           </head>
           <body>
-          <div class="sheet">
+          ${medSheets
+            .map(
+              (sheetLabels, idx) => `
+          <div class="sheet${idx < medSheets.length - 1 ? " page-break" : ""}">
             <div class="label-grid">
-              ${medsWithBarcodes
-                .map((med) => {
-                  const count = medQuantities[med.id] || 1;
-                  const name = `${med.genericName}${med.brandName ? " (" + med.brandName + ")" : ""}`;
-                  const sub = `${med.strength}${med.strengthUnit} [${med.route}]`;
-                  return Array.from(
-                    { length: count },
-                    () => `
-            <div class="label">
-              <div class="barcode-container">${med.barcodeDataUrl}</div>
-              <div class="label-text">
-                <div class="med-name">${name}</div>
-                <div class="med-sub">${sub}</div>
-              </div>
-            </div>
-          `,
-                  ).join("");
-                })
-                .join("")}
+              ${sheetLabels.join("")}
             </div>
           </div>
+          `,
+            )
+            .join("")}
           </body>
           </html>
         `;
@@ -191,28 +247,33 @@ const BardcodeGenerator = ({
           <body>
             <div class="sheet">
               <div class="label-grid">
+                ${Array.from(
+          {
+            length:
+              (wristbandStartRow - 1) * WRISTBAND_LABEL_COLUMNS +
+              (wristbandStartColumn - 1),
+          },
+          () => `<div class="label"></div>`,
+        ).join("")}
                 ${casesWithBarcodes
-                  .map((c) => {
-                    const count = caseQuantities[c.id] || 1;
-                    const age = c.date_of_birth
-                      ? differenceInYears(new Date(), new Date(c.date_of_birth))
-                      : "N/A";
-                    return Array.from(
-                      { length: count },
-                      () => `
+            .map((c) => {
+              const count = caseQuantities[c.id] || 1;
+              const age = c.age
+              return Array.from(
+                { length: count },
+                () => `
                       <div class="label">
                       <div class="label-barcode">${c.qrDataUrl}</div>
                         <div class="label-text">
                           <div class="patient-name">${c.first_name} ${c.last_name}</div>
-                          <div class="patient-detail"><strong>DOB:</strong> ${c.date_of_birth || "N/A"}</div>
                           <div class="patient-detail"><strong>Age:</strong> ${age}</div>
                           <div class="patient-detail"><strong>MRN:</strong> ${c.mrn || "12345678"}</div>
                         </div>
                       </div>
                     `,
-                    ).join("");
-                  })
-                  .join("")}
+              ).join("");
+            })
+            .join("")}
               </div>
             </div>
           </body>
@@ -249,36 +310,123 @@ const BardcodeGenerator = ({
               Generate simulator barcodes and patient wristbands
             </p>
           </div>
-          <button
-            onClick={printItems}
-            className="bg-blue-600 text-white font-medium px-6 py-2.5 rounded-lg shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
-            disabled={isPrinting}
-          >
-            {isPrinting
-              ? "Generating..."
-              : `Print ${activeTab === "medications" ? "Labels" : "Wristbands"}`}
-          </button>
+          <div className="flex items-end gap-3">
+            {activeTab === "medications" ? (
+              <>
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor="med-start-row"
+                    className="text-sm font-medium text-gray-600"
+                  >
+                    Start row:
+                  </label>
+                  <input
+                    id="med-start-row"
+                    type="number"
+                    min="1"
+                    max={MED_LABEL_ROWS}
+                    className="w-20 px-3 py-1.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    value={medStartRow}
+                    onChange={(e) =>
+                      handleMedStartRowChange(parseInt(e.target.value, 10))
+                    }
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor="med-start-column"
+                    className="text-sm font-medium text-gray-600"
+                  >
+                    Start column:
+                  </label>
+                  <input
+                    id="med-start-column"
+                    type="number"
+                    min="1"
+                    max={MED_LABEL_COLUMNS}
+                    className="w-20 px-3 py-1.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    value={medStartColumn}
+                    onChange={(e) =>
+                      handleMedStartColumnChange(parseInt(e.target.value, 10))
+                    }
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor="wristband-start-row"
+                    className="text-sm font-medium text-gray-600"
+                  >
+                    Start row:
+                  </label>
+                  <input
+                    id="wristband-start-row"
+                    type="number"
+                    min="1"
+                    max={WRISTBAND_LABEL_ROWS}
+                    className="w-20 px-3 py-1.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    value={wristbandStartRow}
+                    onChange={(e) =>
+                      handleWristbandStartRowChange(
+                        parseInt(e.target.value, 10),
+                      )
+                    }
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label
+                    htmlFor="wristband-start-column"
+                    className="text-sm font-medium text-gray-600"
+                  >
+                    Start column:
+                  </label>
+                  <input
+                    id="wristband-start-column"
+                    type="number"
+                    min="1"
+                    max={WRISTBAND_LABEL_COLUMNS}
+                    className="w-20 px-3 py-1.5 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    value={wristbandStartColumn}
+                    onChange={(e) =>
+                      handleWristbandStartColumnChange(
+                        parseInt(e.target.value, 10),
+                      )
+                    }
+                  />
+                </div>
+              </>
+            )}
+            <button
+              onClick={printItems}
+              className="bg-blue-600 text-white font-medium px-6 py-2.5 rounded-lg shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+              disabled={isPrinting}
+            >
+              {isPrinting
+                ? "Generating..."
+                : `Print ${activeTab === "medications" ? "Labels" : "Wristbands"}`}
+            </button>
+          </div>
         </div>
 
         {/* Tab Navigation */}
         <div className="flex space-x-6">
           <button
             onClick={() => setActiveTab("medications")}
-            className={`pb-3 text-sm font-medium transition-colors ${
-              activeTab === "medications"
-                ? "border-b-2 border-blue-600 text-blue-600"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
+            className={`pb-3 text-sm font-medium transition-colors ${activeTab === "medications"
+              ? "border-b-2 border-blue-600 text-blue-600"
+              : "text-gray-500 hover:text-gray-700"
+              }`}
           >
             Medication Barcodes
           </button>
           <button
             onClick={() => setActiveTab("wristbands")}
-            className={`pb-3 text-sm font-medium transition-colors ${
-              activeTab === "wristbands"
-                ? "border-b-2 border-blue-600 text-blue-600"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
+            className={`pb-3 text-sm font-medium transition-colors ${activeTab === "wristbands"
+              ? "border-b-2 border-blue-600 text-blue-600"
+              : "text-gray-500 hover:text-gray-700"
+              }`}
           >
             Patient Wristbands
           </button>

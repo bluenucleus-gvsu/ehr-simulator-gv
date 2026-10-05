@@ -14,9 +14,9 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar"
 import { useUser } from "@/context/UserContext";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { createBrowserClient } from "@supabase/ssr";
+import { signOut } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 
 const adminRoutes = [
@@ -40,24 +40,18 @@ const adminRoutes = [
     url: "/admin/barcodes",
     icom: ScanBarcode,
   },
-  {
-    title: "Active Simulations (WIP)",
-    url: "/",
-    icom: Presentation,
-  },
 ]
 
 export function AppSidebar() {
 
   const { loading, user } = useUser();
   const pathname = usePathname();
-  const router = useRouter();
   const isCurrentPath = (url: string) => pathname === url;
 
   const defaultRoutes = [
     {
       title: "Profile",
-      url: user?.id ? `/user/${user.id}` : "/user",
+      url: user?.id ? `/user/profile/${user.id}` : "/user",
       icom: User,
     },
     {
@@ -67,25 +61,12 @@ export function AppSidebar() {
     },
     {
       title: "Settings",
-      url: "/",
+      url: "/admin/settings",
       icom: Settings,
     },
   ];
 
   if (loading) return null;
-
-  const handleLogout = async () => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
-    await supabase.auth.signOut();
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem('role');
-    }
-    router.push('/auth/login');
-  }
 
   return (
     <Sidebar>
@@ -132,7 +113,7 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <div className="w-full">
-          <Button variant="ghost" size="default" className="w-full justify-start" onClick={handleLogout}>
+          <Button variant="ghost" size="default" className="w-full justify-start" onClick={() => signOut()}>
             <LogOut />
             <span>Logout</span>
           </Button>

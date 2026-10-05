@@ -30,7 +30,8 @@ interface MedAdminCardProps {
   handleMedicationRemoval: (index: number) => void;
   index: number;
   order: MedicationOrder; // Data comes from parent
-  onOrderChange: (index: number, field: keyof MedicationOrder, value: string | boolean) => void;
+  onOrderChange: (index: number, field: keyof MedicationOrder, value: string | boolean | number) => void;
+  phaseCount: number;
 }
 
 const MedCardForm = ({
@@ -38,7 +39,8 @@ const MedCardForm = ({
   handleMedicationRemoval,
   index,
   order: orderData,
-  onOrderChange
+  onOrderChange,
+  phaseCount,
 }: MedAdminCardProps) => {
 
   const isVariableDose = medication.isVariableDose;
@@ -159,6 +161,22 @@ const MedCardForm = ({
             <Input
               value={orderData.orderingProvider || ''}
               onChange={(e) => onOrderChange(index, 'orderingProvider', e.target.value)}
+              className="bg-white sm:text-xs md:text-xs"
+            />
+          </div>
+          <div className="w-full space-y-1">
+            <Label htmlFor={`Phase-${index}`}>Release Phase</Label>
+            <Input
+              id={`Phase-${index}`}
+              type="number"
+              min={1}
+              max={phaseCount}
+              value={orderData.phase ?? 1}
+              onChange={(event) => onOrderChange(
+                index,
+                "phase",
+                Math.min(phaseCount, Math.max(1, Number(event.target.value) || 1)),
+              )}
               className="bg-white sm:text-xs md:text-xs"
             />
           </div>
