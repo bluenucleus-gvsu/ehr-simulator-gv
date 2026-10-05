@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { createBrowserClient } from "@supabase/ssr";
+import { signOut } from "@/actions/auth";
 
 type Props = {
   name: string;
@@ -49,26 +49,7 @@ export default function ProfileHeader({ name, avatarUrl, classes = [] }: Props) 
       <div className="flex items-center gap-3">
         <button
           className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm"
-          onClick={async () => {
-            try {
-              const supabase = createBrowserClient(
-                process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-              );
-
-              await supabase.auth.signOut();
-            } catch {
-              // ignore sign out errors
-            } finally {
-              try {
-                if (typeof window !== "undefined") {
-                  window.localStorage.removeItem("role");
-                }
-              } catch {}
-              // redirect to login
-              window.location.href = "/auth/login";
-            }
-          }}
+          onClick={() => signOut()}
         >
           Logout
         </button>
