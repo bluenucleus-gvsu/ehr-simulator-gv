@@ -1,13 +1,11 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
 import { emailIsDevAdminAllowlist } from '@/lib/devAdminEmails'
+import { getUserRole } from '@/actions/users'
+import { createBrowserSupabase } from '@/utils/supabase/client'
 
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-);
+const supabase = createBrowserSupabase();
 
 type UserRoles = "student" | "admin" | "faculty"
 
@@ -30,19 +28,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function loadUser() {
-      if (typeof window !== 'undefined') {
-        const cachedRole = window.localStorage.getItem('role')
-        if (cachedRole) setRole(cachedRole as UserRoles)
-      }
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUser(user)
+        const dbRole = await getUserRole(user.id)
         const devBypass = emailIsDevAdminAllowlist(user.email ?? undefined)
-        const newRole = ((devBypass ? 'admin' : user.user_metadata?.role) || null)
-        if (newRole && typeof window !== 'undefined') {
-          window.localStorage.setItem('role', newRole)
-          setRole(newRole as UserRoles)
-        }
+        const newRole = (devBypass ? 'admin' : dbRole) as UserRoles | null
+        setRole(newRole)
       }
       setLoading(false)
     }

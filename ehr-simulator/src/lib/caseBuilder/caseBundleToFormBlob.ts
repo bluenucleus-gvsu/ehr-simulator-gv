@@ -1,12 +1,12 @@
 import type { CaseBundle, CaseBundleRow } from "@/actions/case_builder/getCase";
-import { buildChartingRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/chartingFromBundle";
-import { flexSheetTemplate } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
+import { buildChartingRowsFromBundle } from "@/lib/flexSheet/flexSheetRowGenerator";
 import { buildLabRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsFromBundle";
 import { labTemplate } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
 import { medOrderFormStateFromCaseBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marFromBundle";
 import { defaultDemographicData, defaultHistoryData } from "@/context/FormContext";
 import type { DemographicFormData, FormBlob } from "@/utils/form";
 import { intakeOutputBlocksFromCaseRow } from "@/utils/form";
+import { buildTableTemplate } from "@/lib/flexSheet/flexSheetTemplate";
 
 function text(row: CaseBundleRow, key: string): string {
   const value = row[key];
@@ -63,16 +63,14 @@ function demographicsFromCaseRow(caseRow: CaseBundleRow): DemographicFormData {
 export function caseBundleToFormBlob(bundle: CaseBundle): FormBlob {
   const caseRow = bundle.caseRow ?? {};
   const hydratedLabs = buildLabRowsFromBundle(
-    {
-      labResults: bundle.labResults ?? [],
-      imagingReports: bundle.imagingReports ?? [],
-      microbiologyReports: bundle.microbiologyReports ?? [],
-    },
+    bundle.labResults ?? [],
     labTemplate,
   );
+
+  const tableSections = new Set(caseRow.flexsheet_sections ?? []);
   const hydratedCharting = buildChartingRowsFromBundle(
     bundle.documentationResults ?? [],
-    flexSheetTemplate,
+    buildTableTemplate(tableSections),
   );
 
   return {
@@ -113,19 +111,16 @@ export function caseBundleToFormBlob(bundle: CaseBundle): FormBlob {
       visibleInPresim: Boolean(order.is_in_presim),
       phase: Math.max(1, Number(order.phase ?? 1)),
     })),
+    tableTemplate: caseRow.flexsheet_sections ?? [],
     labs: {
       data: hydratedLabs.rows,
       timePoints: hydratedLabs.timePoints.length ? hydratedLabs.timePoints : [0],
       timePointsInPreSim: new Set(hydratedLabs.timePointsInPresim),
-      visibleItems: new Set(
-        hydratedLabs.rows.filter((row) => row.hideable).map((row) => row.field),
-      ),
     },
     charting: {
       data: hydratedCharting.rows,
       timePoints: hydratedCharting.timeOffsets,
-      timePointsInPreSim: hydratedCharting.timePointsInPreSim,
-      visibleItems: hydratedCharting.visibleItems,
+      timePointsInPreSim: hydratedCharting.timeOffsetsInPreSim,
     },
     intakeOutput: intakeOutputBlocksFromCaseRow(caseRow.intake_output_blocks),
     medOrders: medOrderFormStateFromCaseBundle(bundle),

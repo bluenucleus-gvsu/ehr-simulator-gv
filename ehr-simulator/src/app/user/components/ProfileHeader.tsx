@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { createBrowserClient } from "@supabase/ssr";
+import { signOut } from "@/actions/auth";
 
 type Props = {
   name: string;
@@ -49,6 +49,7 @@ export default function ProfileHeader({ name, avatarUrl, classes = [] }: Props) 
       <div className="flex items-center gap-3">
         <button
           className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm"
+<<<<<<< HEAD
           onClick={async () => {
             try {
               const supabase = createBrowserClient(
@@ -69,6 +70,9 @@ export default function ProfileHeader({ name, avatarUrl, classes = [] }: Props) 
               window.location.href = "/auth/login";
             }
           }}
+=======
+          onClick={() => signOut()}
+>>>>>>> 6ee6b10f92b60c67aebaec10e95c139b1806bedf
         >
           Logout
         </button>

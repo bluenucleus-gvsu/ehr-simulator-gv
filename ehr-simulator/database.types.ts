@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       case_family_history: {
@@ -180,6 +205,7 @@ export type Database = {
           age: number | null
           allergies: string[] | null
           attending_provider: string | null
+          case_specialty: Database["public"]["Enums"]["case_specialty_type"]
           code_status: Database["public"]["Enums"]["code_status_type"]
           created_at: string | null
           description: string | null
@@ -188,6 +214,9 @@ export type Database = {
           emergency_contact_relationship: string | null
           employment: string | null
           first_name: string
+          flexsheet_sections:
+            | Database["public"]["Enums"]["flexsheet_section_type"][]
+            | null
           height_ft: number | null
           height_in: number | null
           id: string
@@ -214,6 +243,7 @@ export type Database = {
           age?: number | null
           allergies?: string[] | null
           attending_provider?: string | null
+          case_specialty: Database["public"]["Enums"]["case_specialty_type"]
           code_status: Database["public"]["Enums"]["code_status_type"]
           created_at?: string | null
           description?: string | null
@@ -222,6 +252,9 @@ export type Database = {
           emergency_contact_relationship?: string | null
           employment?: string | null
           first_name: string
+          flexsheet_sections?:
+            | Database["public"]["Enums"]["flexsheet_section_type"][]
+            | null
           height_ft?: number | null
           height_in?: number | null
           id?: string
@@ -248,6 +281,7 @@ export type Database = {
           age?: number | null
           allergies?: string[] | null
           attending_provider?: string | null
+          case_specialty?: Database["public"]["Enums"]["case_specialty_type"]
           code_status?: Database["public"]["Enums"]["code_status_type"]
           created_at?: string | null
           description?: string | null
@@ -256,6 +290,9 @@ export type Database = {
           emergency_contact_relationship?: string | null
           employment?: string | null
           first_name?: string
+          flexsheet_sections?:
+            | Database["public"]["Enums"]["flexsheet_section_type"][]
+            | null
           height_ft?: number | null
           height_in?: number | null
           id?: string
@@ -449,315 +486,381 @@ export type Database = {
       documentation_results: {
         Row: {
           abdomen: string | null
-          activity: number | null
-          agitation: number | null
-          ambulatory_aid: number | null
-          anxiety: number | null
           appearance: string | null
           assessment_tool_selections: string | null
-          body_language: number | null
           bowel_sounds: string | null
           bp: string | null
+          bp_position: string | null
           bp_source: string | null
-          breathing_independent_of_vocalization: number | null
+          braden_activity: string | null
+          braden_friction_and_shear: string | null
+          braden_mobility: string | null
+          braden_moisture: string | null
+          braden_nutrition: string | null
+          braden_sensory_perception: string | null
+          cardiac_extremities: string | null
           cardiovascular_selections: string | null
           case_id: string
           chest_appearance: string | null
-          consolability: number | null
+          ciwa_agitation: string | null
+          ciwa_anxiety: string | null
+          ciwa_headache: string | null
+          ciwa_nausea_vomiting: string | null
+          ciwa_orientation: string | null
+          ciwa_sweats: string | null
+          ciwa_tactile: string | null
+          ciwa_tremor: string | null
+          ciwa_visual: string | null
           created_at: string
           ears: string | null
-          emesis: string | null
-          enteral_nutrition: string | null
-          enteral_output: string | null
-          extremities: string | null
+          emesis_occurrence: string | null
+          emesis_output_ml: string | null
+          enteral_intake_ml: string | null
+          enteral_output_ml: string | null
           extremity_rom: string | null
           eyes: string | null
-          facial_expression: number | null
-          fall_risk_gait: number | null
-          friction_and_shear: number | null
+          faces_pain_scale: string | null
           gait: string | null
           general_appearance_selections: string | null
           genitourinary_selections: string | null
           gi_selections: string | null
+          gi_symptoms: string | null
           hair_and_nails: string | null
           head_and_scalp: string | null
-          headache: number | null
           heart_sounds: string | null
           heent_selections: string | null
-          history_of_falling: number | null
           hr: string | null
           hr_source: string | null
           id: string
           intake_selections: string | null
           integument_selections: string | null
-          integument_status: string | null
-          intravenous: string | null
           is_in_presim: boolean
-          iv_location: string | null
-          iv_site: string | null
-          iv_therapy_heparin_lock: number | null
-          iv_type: string | null
+          iv_intake_ml: string | null
+          iv_location_1: string | null
+          iv_location_2: string | null
+          iv_site_1: string | null
+          iv_site_2: string | null
+          iv_type_1: string | null
+          iv_type_2: string | null
           jugular_distention: string | null
+          level_of_consciousness: string | null
           lung_sounds: string | null
-          mental_status: number | null
-          mobility: number | null
-          moisture: number | null
+          mean_arterial_pressure: string | null
+          mental_status: string | null
           mood_and_affect: string | null
+          morse_ambulatory_aid: string | null
+          morse_fall_history: string | null
+          morse_gait: string | null
+          morse_iv: string | null
+          morse_mental_status: string | null
+          morse_secondary_diagnosis: string | null
           motor_function: string | null
           mouth_and_throat: string | null
+          muscle_strength: string | null
           musculoskeletal_selections: string | null
-          nausea: string | null
-          nausea_vomiting: number | null
-          negative_vocalization: number | null
           neuro_selections: string | null
+          neuro_sensation: string | null
           nose: string | null
           nursing_care_provided: string | null
-          nutrition: number | null
-          oral: string | null
+          oral_intake_ml: string | null
           orientation: string | null
-          orientation2: number | null
           output_selections: string | null
           oxygen_device: string | null
-          pain: string | null
           pain_aggravating_factors: string | null
           pain_alleviating_factors: string | null
           pain_characteristics: string | null
           pain_interventions: string | null
           pain_location: string | null
-          parenteral_nutrition: string | null
-          paroxysmal_sweats: number | null
+          pain_numeric_scale: string | null
+          painad_body_language: string | null
+          painad_breathing: string | null
+          painad_consolability: string | null
+          painad_facial_expression: string | null
+          painad_negative_vocalization: string | null
+          parenteral_intake_ml: string | null
+          periwound_skin: string | null
+          primary_wound_dressing: string | null
           psychosocial_selections: string | null
+          pupils: string | null
           respiratory_selections: string | null
           rr: string | null
           safety_check: string | null
-          secondary_diagnosis: number | null
-          sensory_perception: number | null
+          secondary_wound_dressing: string | null
           skin: string | null
           speech: string | null
           spo2: string | null
-          stool: string | null
+          stool_occurrence: string | null
+          stool_output_ml: string | null
           supplemental_o2_rate: string | null
-          tactile_disturbances: number | null
           temp: string | null
           temp_source: string | null
           time_offset: number
-          tremor: number | null
           turgor: string | null
-          urine: string | null
           urine_description: string | null
-          visual_disturbances: number | null
+          urine_occurrence: string | null
+          urine_output_ml: string | null
           voiding: string | null
           weight_kg: string | null
           wound: string | null
-          wound_drainage: string | null
+          wound_bed: string | null
+          wound_dimensions: string | null
+          wound_exudate: string | null
+          wound_location: string | null
+          wound_output_ml: string | null
+          wound_stage: string | null
+          wound_type: string | null
         }
         Insert: {
           abdomen?: string | null
-          activity?: number | null
-          agitation?: number | null
-          ambulatory_aid?: number | null
-          anxiety?: number | null
           appearance?: string | null
           assessment_tool_selections?: string | null
-          body_language?: number | null
           bowel_sounds?: string | null
           bp?: string | null
+          bp_position?: string | null
           bp_source?: string | null
-          breathing_independent_of_vocalization?: number | null
+          braden_activity?: string | null
+          braden_friction_and_shear?: string | null
+          braden_mobility?: string | null
+          braden_moisture?: string | null
+          braden_nutrition?: string | null
+          braden_sensory_perception?: string | null
+          cardiac_extremities?: string | null
           cardiovascular_selections?: string | null
           case_id: string
           chest_appearance?: string | null
-          consolability?: number | null
+          ciwa_agitation?: string | null
+          ciwa_anxiety?: string | null
+          ciwa_headache?: string | null
+          ciwa_nausea_vomiting?: string | null
+          ciwa_orientation?: string | null
+          ciwa_sweats?: string | null
+          ciwa_tactile?: string | null
+          ciwa_tremor?: string | null
+          ciwa_visual?: string | null
           created_at?: string
           ears?: string | null
-          emesis?: string | null
-          enteral_nutrition?: string | null
-          enteral_output?: string | null
-          extremities?: string | null
+          emesis_occurrence?: string | null
+          emesis_output_ml?: string | null
+          enteral_intake_ml?: string | null
+          enteral_output_ml?: string | null
           extremity_rom?: string | null
           eyes?: string | null
-          facial_expression?: number | null
-          fall_risk_gait?: number | null
-          friction_and_shear?: number | null
+          faces_pain_scale?: string | null
           gait?: string | null
           general_appearance_selections?: string | null
           genitourinary_selections?: string | null
           gi_selections?: string | null
+          gi_symptoms?: string | null
           hair_and_nails?: string | null
           head_and_scalp?: string | null
-          headache?: number | null
           heart_sounds?: string | null
           heent_selections?: string | null
-          history_of_falling?: number | null
           hr?: string | null
           hr_source?: string | null
           id?: string
           intake_selections?: string | null
           integument_selections?: string | null
-          integument_status?: string | null
-          intravenous?: string | null
           is_in_presim?: boolean
-          iv_location?: string | null
-          iv_site?: string | null
-          iv_therapy_heparin_lock?: number | null
-          iv_type?: string | null
+          iv_intake_ml?: string | null
+          iv_location_1?: string | null
+          iv_location_2?: string | null
+          iv_site_1?: string | null
+          iv_site_2?: string | null
+          iv_type_1?: string | null
+          iv_type_2?: string | null
           jugular_distention?: string | null
+          level_of_consciousness?: string | null
           lung_sounds?: string | null
-          mental_status?: number | null
-          mobility?: number | null
-          moisture?: number | null
+          mean_arterial_pressure?: string | null
+          mental_status?: string | null
           mood_and_affect?: string | null
+          morse_ambulatory_aid?: string | null
+          morse_fall_history?: string | null
+          morse_gait?: string | null
+          morse_iv?: string | null
+          morse_mental_status?: string | null
+          morse_secondary_diagnosis?: string | null
           motor_function?: string | null
           mouth_and_throat?: string | null
+          muscle_strength?: string | null
           musculoskeletal_selections?: string | null
-          nausea?: string | null
-          nausea_vomiting?: number | null
-          negative_vocalization?: number | null
           neuro_selections?: string | null
+          neuro_sensation?: string | null
           nose?: string | null
           nursing_care_provided?: string | null
-          nutrition?: number | null
-          oral?: string | null
+          oral_intake_ml?: string | null
           orientation?: string | null
-          orientation2?: number | null
           output_selections?: string | null
           oxygen_device?: string | null
-          pain?: string | null
           pain_aggravating_factors?: string | null
           pain_alleviating_factors?: string | null
           pain_characteristics?: string | null
           pain_interventions?: string | null
           pain_location?: string | null
-          parenteral_nutrition?: string | null
-          paroxysmal_sweats?: number | null
+          pain_numeric_scale?: string | null
+          painad_body_language?: string | null
+          painad_breathing?: string | null
+          painad_consolability?: string | null
+          painad_facial_expression?: string | null
+          painad_negative_vocalization?: string | null
+          parenteral_intake_ml?: string | null
+          periwound_skin?: string | null
+          primary_wound_dressing?: string | null
           psychosocial_selections?: string | null
+          pupils?: string | null
           respiratory_selections?: string | null
           rr?: string | null
           safety_check?: string | null
-          secondary_diagnosis?: number | null
-          sensory_perception?: number | null
+          secondary_wound_dressing?: string | null
           skin?: string | null
           speech?: string | null
           spo2?: string | null
-          stool?: string | null
+          stool_occurrence?: string | null
+          stool_output_ml?: string | null
           supplemental_o2_rate?: string | null
-          tactile_disturbances?: number | null
           temp?: string | null
           temp_source?: string | null
           time_offset: number
-          tremor?: number | null
           turgor?: string | null
-          urine?: string | null
           urine_description?: string | null
-          visual_disturbances?: number | null
+          urine_occurrence?: string | null
+          urine_output_ml?: string | null
           voiding?: string | null
           weight_kg?: string | null
           wound?: string | null
-          wound_drainage?: string | null
+          wound_bed?: string | null
+          wound_dimensions?: string | null
+          wound_exudate?: string | null
+          wound_location?: string | null
+          wound_output_ml?: string | null
+          wound_stage?: string | null
+          wound_type?: string | null
         }
         Update: {
           abdomen?: string | null
-          activity?: number | null
-          agitation?: number | null
-          ambulatory_aid?: number | null
-          anxiety?: number | null
           appearance?: string | null
           assessment_tool_selections?: string | null
-          body_language?: number | null
           bowel_sounds?: string | null
           bp?: string | null
+          bp_position?: string | null
           bp_source?: string | null
-          breathing_independent_of_vocalization?: number | null
+          braden_activity?: string | null
+          braden_friction_and_shear?: string | null
+          braden_mobility?: string | null
+          braden_moisture?: string | null
+          braden_nutrition?: string | null
+          braden_sensory_perception?: string | null
+          cardiac_extremities?: string | null
           cardiovascular_selections?: string | null
           case_id?: string
           chest_appearance?: string | null
-          consolability?: number | null
+          ciwa_agitation?: string | null
+          ciwa_anxiety?: string | null
+          ciwa_headache?: string | null
+          ciwa_nausea_vomiting?: string | null
+          ciwa_orientation?: string | null
+          ciwa_sweats?: string | null
+          ciwa_tactile?: string | null
+          ciwa_tremor?: string | null
+          ciwa_visual?: string | null
           created_at?: string
           ears?: string | null
-          emesis?: string | null
-          enteral_nutrition?: string | null
-          enteral_output?: string | null
-          extremities?: string | null
+          emesis_occurrence?: string | null
+          emesis_output_ml?: string | null
+          enteral_intake_ml?: string | null
+          enteral_output_ml?: string | null
           extremity_rom?: string | null
           eyes?: string | null
-          facial_expression?: number | null
-          fall_risk_gait?: number | null
-          friction_and_shear?: number | null
+          faces_pain_scale?: string | null
           gait?: string | null
           general_appearance_selections?: string | null
           genitourinary_selections?: string | null
           gi_selections?: string | null
+          gi_symptoms?: string | null
           hair_and_nails?: string | null
           head_and_scalp?: string | null
-          headache?: number | null
           heart_sounds?: string | null
           heent_selections?: string | null
-          history_of_falling?: number | null
           hr?: string | null
           hr_source?: string | null
           id?: string
           intake_selections?: string | null
           integument_selections?: string | null
-          integument_status?: string | null
-          intravenous?: string | null
           is_in_presim?: boolean
-          iv_location?: string | null
-          iv_site?: string | null
-          iv_therapy_heparin_lock?: number | null
-          iv_type?: string | null
+          iv_intake_ml?: string | null
+          iv_location_1?: string | null
+          iv_location_2?: string | null
+          iv_site_1?: string | null
+          iv_site_2?: string | null
+          iv_type_1?: string | null
+          iv_type_2?: string | null
           jugular_distention?: string | null
+          level_of_consciousness?: string | null
           lung_sounds?: string | null
-          mental_status?: number | null
-          mobility?: number | null
-          moisture?: number | null
+          mean_arterial_pressure?: string | null
+          mental_status?: string | null
           mood_and_affect?: string | null
+          morse_ambulatory_aid?: string | null
+          morse_fall_history?: string | null
+          morse_gait?: string | null
+          morse_iv?: string | null
+          morse_mental_status?: string | null
+          morse_secondary_diagnosis?: string | null
           motor_function?: string | null
           mouth_and_throat?: string | null
+          muscle_strength?: string | null
           musculoskeletal_selections?: string | null
-          nausea?: string | null
-          nausea_vomiting?: number | null
-          negative_vocalization?: number | null
           neuro_selections?: string | null
+          neuro_sensation?: string | null
           nose?: string | null
           nursing_care_provided?: string | null
-          nutrition?: number | null
-          oral?: string | null
+          oral_intake_ml?: string | null
           orientation?: string | null
-          orientation2?: number | null
           output_selections?: string | null
           oxygen_device?: string | null
-          pain?: string | null
           pain_aggravating_factors?: string | null
           pain_alleviating_factors?: string | null
           pain_characteristics?: string | null
           pain_interventions?: string | null
           pain_location?: string | null
-          parenteral_nutrition?: string | null
-          paroxysmal_sweats?: number | null
+          pain_numeric_scale?: string | null
+          painad_body_language?: string | null
+          painad_breathing?: string | null
+          painad_consolability?: string | null
+          painad_facial_expression?: string | null
+          painad_negative_vocalization?: string | null
+          parenteral_intake_ml?: string | null
+          periwound_skin?: string | null
+          primary_wound_dressing?: string | null
           psychosocial_selections?: string | null
+          pupils?: string | null
           respiratory_selections?: string | null
           rr?: string | null
           safety_check?: string | null
-          secondary_diagnosis?: number | null
-          sensory_perception?: number | null
+          secondary_wound_dressing?: string | null
           skin?: string | null
           speech?: string | null
           spo2?: string | null
-          stool?: string | null
+          stool_occurrence?: string | null
+          stool_output_ml?: string | null
           supplemental_o2_rate?: string | null
-          tactile_disturbances?: number | null
           temp?: string | null
           temp_source?: string | null
           time_offset?: number
-          tremor?: number | null
           turgor?: string | null
-          urine?: string | null
           urine_description?: string | null
-          visual_disturbances?: number | null
+          urine_occurrence?: string | null
+          urine_output_ml?: string | null
           voiding?: string | null
           weight_kg?: string | null
           wound?: string | null
-          wound_drainage?: string | null
+          wound_bed?: string | null
+          wound_dimensions?: string | null
+          wound_exudate?: string | null
+          wound_location?: string | null
+          wound_output_ml?: string | null
+          wound_stage?: string | null
+          wound_type?: string | null
         }
         Relationships: [
           {
@@ -846,324 +949,390 @@ export type Database = {
       editable_documentation_results: {
         Row: {
           abdomen: string | null
-          activity: number | null
-          agitation: number | null
-          ambulatory_aid: number | null
-          anxiety: number | null
           appearance: string | null
           assessment_tool_selections: string | null
-          body_language: number | null
           bowel_sounds: string | null
           bp: string | null
+          bp_position: string | null
           bp_source: string | null
-          breathing_independent_of_vocalization: number | null
+          braden_activity: string | null
+          braden_friction_and_shear: string | null
+          braden_mobility: string | null
+          braden_moisture: string | null
+          braden_nutrition: string | null
+          braden_sensory_perception: string | null
+          cardiac_extremities: string | null
           cardiovascular_selections: string | null
           case_id: string
           case_session_id: string
           chest_appearance: string | null
-          consolability: number | null
+          ciwa_agitation: string | null
+          ciwa_anxiety: string | null
+          ciwa_headache: string | null
+          ciwa_nausea_vomiting: string | null
+          ciwa_orientation: string | null
+          ciwa_sweats: string | null
+          ciwa_tactile: string | null
+          ciwa_tremor: string | null
+          ciwa_visual: string | null
           created_at: string
           ears: string | null
-          emesis: string | null
-          enteral_nutrition: string | null
-          enteral_output: string | null
-          extremities: string | null
+          emesis_occurrence: string | null
+          emesis_output_ml: string | null
+          enteral_intake_ml: string | null
+          enteral_output_ml: string | null
           extremity_rom: string | null
           eyes: string | null
-          facial_expression: number | null
-          fall_risk_gait: number | null
-          friction_and_shear: number | null
+          faces_pain_scale: string | null
           gait: string | null
           general_appearance_selections: string | null
           genitourinary_selections: string | null
           gi_selections: string | null
+          gi_symptoms: string | null
           group_id: string
           hair_and_nails: string | null
           head_and_scalp: string | null
-          headache: number | null
           heart_sounds: string | null
           heent_selections: string | null
-          history_of_falling: number | null
           hr: string | null
           hr_source: string | null
           id: string
           intake_selections: string | null
           integument_selections: string | null
-          integument_status: string | null
-          intravenous: string | null
           is_in_presim: boolean
-          iv_location: string | null
-          iv_site: string | null
-          iv_therapy_heparin_lock: number | null
-          iv_type: string | null
+          iv_intake_ml: string | null
+          iv_location_1: string | null
+          iv_location_2: string | null
+          iv_site_1: string | null
+          iv_site_2: string | null
+          iv_type_1: string | null
+          iv_type_2: string | null
           jugular_distention: string | null
+          level_of_consciousness: string | null
           lung_sounds: string | null
-          mental_status: number | null
-          mobility: number | null
-          moisture: number | null
+          mean_arterial_pressure: string | null
+          mental_status: string | null
           mood_and_affect: string | null
+          morse_ambulatory_aid: string | null
+          morse_fall_history: string | null
+          morse_gait: string | null
+          morse_iv: string | null
+          morse_mental_status: string | null
+          morse_secondary_diagnosis: string | null
           motor_function: string | null
           mouth_and_throat: string | null
+          muscle_strength: string | null
           musculoskeletal_selections: string | null
-          nausea: string | null
-          nausea_vomiting: number | null
-          negative_vocalization: number | null
           neuro_selections: string | null
+          neuro_sensation: string | null
           nose: string | null
           nursing_care_provided: string | null
-          nutrition: number | null
-          oral: string | null
+          oral_intake_ml: string | null
           orientation: string | null
-          orientation2: number | null
           output_selections: string | null
           oxygen_device: string | null
-          pain: string | null
           pain_aggravating_factors: string | null
           pain_alleviating_factors: string | null
           pain_characteristics: string | null
           pain_interventions: string | null
           pain_location: string | null
-          parenteral_nutrition: string | null
-          paroxysmal_sweats: number | null
+          pain_numeric_scale: string | null
+          painad_body_language: string | null
+          painad_breathing: string | null
+          painad_consolability: string | null
+          painad_facial_expression: string | null
+          painad_negative_vocalization: string | null
+          parenteral_intake_ml: string | null
+          periwound_skin: string | null
+          primary_wound_dressing: string | null
           psychosocial_selections: string | null
+          pupils: string | null
           respiratory_selections: string | null
           rr: string | null
           safety_check: string | null
-          secondary_diagnosis: number | null
-          sensory_perception: number | null
+          secondary_wound_dressing: string | null
           skin: string | null
           speech: string | null
           spo2: string | null
-          stool: string | null
+          stool_occurrence: string | null
+          stool_output_ml: string | null
           supplemental_o2_rate: string | null
-          tactile_disturbances: number | null
           temp: string | null
           temp_source: string | null
           time_offset: number
-          tremor: number | null
           turgor: string | null
-          urine: string | null
           urine_description: string | null
+          urine_occurrence: string | null
+          urine_output_ml: string | null
           user_id: string
-          visual_disturbances: number | null
           voiding: string | null
           weight_kg: string | null
           wound: string | null
-          wound_drainage: string | null
+          wound_bed: string | null
+          wound_dimensions: string | null
+          wound_exudate: string | null
+          wound_location: string | null
+          wound_output_ml: string | null
+          wound_stage: string | null
+          wound_type: string | null
         }
         Insert: {
           abdomen?: string | null
-          activity?: number | null
-          agitation?: number | null
-          ambulatory_aid?: number | null
-          anxiety?: number | null
           appearance?: string | null
           assessment_tool_selections?: string | null
-          body_language?: number | null
           bowel_sounds?: string | null
           bp?: string | null
+          bp_position?: string | null
           bp_source?: string | null
-          breathing_independent_of_vocalization?: number | null
+          braden_activity?: string | null
+          braden_friction_and_shear?: string | null
+          braden_mobility?: string | null
+          braden_moisture?: string | null
+          braden_nutrition?: string | null
+          braden_sensory_perception?: string | null
+          cardiac_extremities?: string | null
           cardiovascular_selections?: string | null
           case_id: string
           case_session_id: string
           chest_appearance?: string | null
-          consolability?: number | null
+          ciwa_agitation?: string | null
+          ciwa_anxiety?: string | null
+          ciwa_headache?: string | null
+          ciwa_nausea_vomiting?: string | null
+          ciwa_orientation?: string | null
+          ciwa_sweats?: string | null
+          ciwa_tactile?: string | null
+          ciwa_tremor?: string | null
+          ciwa_visual?: string | null
           created_at?: string
           ears?: string | null
-          emesis?: string | null
-          enteral_nutrition?: string | null
-          enteral_output?: string | null
-          extremities?: string | null
+          emesis_occurrence?: string | null
+          emesis_output_ml?: string | null
+          enteral_intake_ml?: string | null
+          enteral_output_ml?: string | null
           extremity_rom?: string | null
           eyes?: string | null
-          facial_expression?: number | null
-          fall_risk_gait?: number | null
-          friction_and_shear?: number | null
+          faces_pain_scale?: string | null
           gait?: string | null
           general_appearance_selections?: string | null
           genitourinary_selections?: string | null
           gi_selections?: string | null
+          gi_symptoms?: string | null
           group_id: string
           hair_and_nails?: string | null
           head_and_scalp?: string | null
-          headache?: number | null
           heart_sounds?: string | null
           heent_selections?: string | null
-          history_of_falling?: number | null
           hr?: string | null
           hr_source?: string | null
           id?: string
           intake_selections?: string | null
           integument_selections?: string | null
-          integument_status?: string | null
-          intravenous?: string | null
           is_in_presim?: boolean
-          iv_location?: string | null
-          iv_site?: string | null
-          iv_therapy_heparin_lock?: number | null
-          iv_type?: string | null
+          iv_intake_ml?: string | null
+          iv_location_1?: string | null
+          iv_location_2?: string | null
+          iv_site_1?: string | null
+          iv_site_2?: string | null
+          iv_type_1?: string | null
+          iv_type_2?: string | null
           jugular_distention?: string | null
+          level_of_consciousness?: string | null
           lung_sounds?: string | null
-          mental_status?: number | null
-          mobility?: number | null
-          moisture?: number | null
+          mean_arterial_pressure?: string | null
+          mental_status?: string | null
           mood_and_affect?: string | null
+          morse_ambulatory_aid?: string | null
+          morse_fall_history?: string | null
+          morse_gait?: string | null
+          morse_iv?: string | null
+          morse_mental_status?: string | null
+          morse_secondary_diagnosis?: string | null
           motor_function?: string | null
           mouth_and_throat?: string | null
+          muscle_strength?: string | null
           musculoskeletal_selections?: string | null
-          nausea?: string | null
-          nausea_vomiting?: number | null
-          negative_vocalization?: number | null
           neuro_selections?: string | null
+          neuro_sensation?: string | null
           nose?: string | null
           nursing_care_provided?: string | null
-          nutrition?: number | null
-          oral?: string | null
+          oral_intake_ml?: string | null
           orientation?: string | null
-          orientation2?: number | null
           output_selections?: string | null
           oxygen_device?: string | null
-          pain?: string | null
           pain_aggravating_factors?: string | null
           pain_alleviating_factors?: string | null
           pain_characteristics?: string | null
           pain_interventions?: string | null
           pain_location?: string | null
-          parenteral_nutrition?: string | null
-          paroxysmal_sweats?: number | null
+          pain_numeric_scale?: string | null
+          painad_body_language?: string | null
+          painad_breathing?: string | null
+          painad_consolability?: string | null
+          painad_facial_expression?: string | null
+          painad_negative_vocalization?: string | null
+          parenteral_intake_ml?: string | null
+          periwound_skin?: string | null
+          primary_wound_dressing?: string | null
           psychosocial_selections?: string | null
+          pupils?: string | null
           respiratory_selections?: string | null
           rr?: string | null
           safety_check?: string | null
-          secondary_diagnosis?: number | null
-          sensory_perception?: number | null
+          secondary_wound_dressing?: string | null
           skin?: string | null
           speech?: string | null
           spo2?: string | null
-          stool?: string | null
+          stool_occurrence?: string | null
+          stool_output_ml?: string | null
           supplemental_o2_rate?: string | null
-          tactile_disturbances?: number | null
           temp?: string | null
           temp_source?: string | null
           time_offset: number
-          tremor?: number | null
           turgor?: string | null
-          urine?: string | null
           urine_description?: string | null
+          urine_occurrence?: string | null
+          urine_output_ml?: string | null
           user_id: string
-          visual_disturbances?: number | null
           voiding?: string | null
           weight_kg?: string | null
           wound?: string | null
-          wound_drainage?: string | null
+          wound_bed?: string | null
+          wound_dimensions?: string | null
+          wound_exudate?: string | null
+          wound_location?: string | null
+          wound_output_ml?: string | null
+          wound_stage?: string | null
+          wound_type?: string | null
         }
         Update: {
           abdomen?: string | null
-          activity?: number | null
-          agitation?: number | null
-          ambulatory_aid?: number | null
-          anxiety?: number | null
           appearance?: string | null
           assessment_tool_selections?: string | null
-          body_language?: number | null
           bowel_sounds?: string | null
           bp?: string | null
+          bp_position?: string | null
           bp_source?: string | null
-          breathing_independent_of_vocalization?: number | null
+          braden_activity?: string | null
+          braden_friction_and_shear?: string | null
+          braden_mobility?: string | null
+          braden_moisture?: string | null
+          braden_nutrition?: string | null
+          braden_sensory_perception?: string | null
+          cardiac_extremities?: string | null
           cardiovascular_selections?: string | null
           case_id?: string
           case_session_id?: string
           chest_appearance?: string | null
-          consolability?: number | null
+          ciwa_agitation?: string | null
+          ciwa_anxiety?: string | null
+          ciwa_headache?: string | null
+          ciwa_nausea_vomiting?: string | null
+          ciwa_orientation?: string | null
+          ciwa_sweats?: string | null
+          ciwa_tactile?: string | null
+          ciwa_tremor?: string | null
+          ciwa_visual?: string | null
           created_at?: string
           ears?: string | null
-          emesis?: string | null
-          enteral_nutrition?: string | null
-          enteral_output?: string | null
-          extremities?: string | null
+          emesis_occurrence?: string | null
+          emesis_output_ml?: string | null
+          enteral_intake_ml?: string | null
+          enteral_output_ml?: string | null
           extremity_rom?: string | null
           eyes?: string | null
-          facial_expression?: number | null
-          fall_risk_gait?: number | null
-          friction_and_shear?: number | null
+          faces_pain_scale?: string | null
           gait?: string | null
           general_appearance_selections?: string | null
           genitourinary_selections?: string | null
           gi_selections?: string | null
+          gi_symptoms?: string | null
           group_id?: string
           hair_and_nails?: string | null
           head_and_scalp?: string | null
-          headache?: number | null
           heart_sounds?: string | null
           heent_selections?: string | null
-          history_of_falling?: number | null
           hr?: string | null
           hr_source?: string | null
           id?: string
           intake_selections?: string | null
           integument_selections?: string | null
-          integument_status?: string | null
-          intravenous?: string | null
           is_in_presim?: boolean
-          iv_location?: string | null
-          iv_site?: string | null
-          iv_therapy_heparin_lock?: number | null
-          iv_type?: string | null
+          iv_intake_ml?: string | null
+          iv_location_1?: string | null
+          iv_location_2?: string | null
+          iv_site_1?: string | null
+          iv_site_2?: string | null
+          iv_type_1?: string | null
+          iv_type_2?: string | null
           jugular_distention?: string | null
+          level_of_consciousness?: string | null
           lung_sounds?: string | null
-          mental_status?: number | null
-          mobility?: number | null
-          moisture?: number | null
+          mean_arterial_pressure?: string | null
+          mental_status?: string | null
           mood_and_affect?: string | null
+          morse_ambulatory_aid?: string | null
+          morse_fall_history?: string | null
+          morse_gait?: string | null
+          morse_iv?: string | null
+          morse_mental_status?: string | null
+          morse_secondary_diagnosis?: string | null
           motor_function?: string | null
           mouth_and_throat?: string | null
+          muscle_strength?: string | null
           musculoskeletal_selections?: string | null
-          nausea?: string | null
-          nausea_vomiting?: number | null
-          negative_vocalization?: number | null
           neuro_selections?: string | null
+          neuro_sensation?: string | null
           nose?: string | null
           nursing_care_provided?: string | null
-          nutrition?: number | null
-          oral?: string | null
+          oral_intake_ml?: string | null
           orientation?: string | null
-          orientation2?: number | null
           output_selections?: string | null
           oxygen_device?: string | null
-          pain?: string | null
           pain_aggravating_factors?: string | null
           pain_alleviating_factors?: string | null
           pain_characteristics?: string | null
           pain_interventions?: string | null
           pain_location?: string | null
-          parenteral_nutrition?: string | null
-          paroxysmal_sweats?: number | null
+          pain_numeric_scale?: string | null
+          painad_body_language?: string | null
+          painad_breathing?: string | null
+          painad_consolability?: string | null
+          painad_facial_expression?: string | null
+          painad_negative_vocalization?: string | null
+          parenteral_intake_ml?: string | null
+          periwound_skin?: string | null
+          primary_wound_dressing?: string | null
           psychosocial_selections?: string | null
+          pupils?: string | null
           respiratory_selections?: string | null
           rr?: string | null
           safety_check?: string | null
-          secondary_diagnosis?: number | null
-          sensory_perception?: number | null
+          secondary_wound_dressing?: string | null
           skin?: string | null
           speech?: string | null
           spo2?: string | null
-          stool?: string | null
+          stool_occurrence?: string | null
+          stool_output_ml?: string | null
           supplemental_o2_rate?: string | null
-          tactile_disturbances?: number | null
           temp?: string | null
           temp_source?: string | null
           time_offset?: number
-          tremor?: number | null
           turgor?: string | null
-          urine?: string | null
           urine_description?: string | null
+          urine_occurrence?: string | null
+          urine_output_ml?: string | null
           user_id?: string
-          visual_disturbances?: number | null
           voiding?: string | null
           weight_kg?: string | null
           wound?: string | null
-          wound_drainage?: string | null
+          wound_bed?: string | null
+          wound_dimensions?: string | null
+          wound_exudate?: string | null
+          wound_location?: string | null
+          wound_output_ml?: string | null
+          wound_stage?: string | null
+          wound_type?: string | null
         }
         Relationships: [
           {
@@ -1386,184 +1555,235 @@ export type Database = {
       }
       lab_results: {
         Row: {
-          albumin: number | null
-          alp: number | null
-          alt: number | null
-          ammonia: number | null
-          amylase: number | null
-          ast: number | null
-          blood: string | null
-          bun: number | null
-          calcium: number | null
+          albumin: string | null
+          alp: string | null
+          alt: string | null
+          ammonia: string | null
+          amylase: string | null
+          art_pco2: string | null
+          art_ph: string | null
+          art_po2: string | null
+          art_so2: string | null
+          ast: string | null
+          basophils: string | null
+          blood_type: string | null
+          bnp: string | null
+          bun: string | null
+          calcium: string | null
           case_id: string
-          chloride: number | null
-          ckmb: number | null
-          co2: number | null
+          chloride: string | null
+          ckmb: string | null
           created_at: string
-          creatinine: number | null
-          crp: number | null
-          data: Json
-          esr: number | null
-          free_t3: number | null
-          free_t4: number | null
-          glucose: number | null
-          hco3: number | null
-          hdl_cholesterol: number | null
-          hematocrit: number | null
-          hemoglobin: number | null
+          creatinine: string | null
+          crp: string | null
+          d_dimer: string | null
+          eosinophils: string | null
+          esr: string | null
+          free_t3: string | null
+          free_t4: string | null
+          glucose: string | null
+          hba1c: string | null
+          hco3: string | null
+          hdl_cholesterol: string | null
+          hematocrit: string | null
+          hemoglobin: string | null
           id: string
+          inr: string | null
           is_in_presim: boolean
           ketones: string | null
-          lactate: number | null
-          ldl_cholesterol: number | null
+          lactate: string | null
+          ldl_cholesterol: string | null
           leukocyte_esterase: string | null
-          lipase: number | null
-          magnesium: number | null
-          mch: number | null
-          mchc: number | null
-          mcv: number | null
-          myoglobin: number | null
+          lipase: string | null
+          lymphocytes: string | null
+          magnesium: string | null
+          mch: string | null
+          mchc: string | null
+          mcv: string | null
+          monocytes: string | null
+          myoglobin: string | null
+          neutrophils: string | null
           nitrites: string | null
-          pco2: number | null
-          phosphate: number | null
-          platelets: number | null
-          po2: number | null
-          potassium: number | null
-          protein: string | null
-          pt: number | null
-          ptt: number | null
-          rbc: number | null
-          sodium: number | null
-          specific_gravity: number | null
+          phosphate: string | null
+          platelets: string | null
+          potassium: string | null
+          procal: string | null
+          pt: string | null
+          ptt: string | null
+          rbc: string | null
+          rh_factor: string | null
+          sodium: string | null
+          specific_gravity: string | null
           time_offset: number
-          total_bilirubin: number | null
-          total_cholesterol: number | null
-          triglycerides: number | null
-          troponin: number | null
-          tsh: number | null
+          total_bilirubin: string | null
+          total_cholesterol: string | null
+          total_co2: string | null
+          triglycerides: string | null
+          troponin: string | null
+          tsh: string | null
+          urine_blood: string | null
           urine_glucose: string | null
-          urine_ph: number | null
-          wbc: number | null
+          urine_ph: string | null
+          urine_protein: string | null
+          ven_pco2: string | null
+          ven_ph: string | null
+          ven_po2: string | null
+          ven_so2: string | null
+          wbc: string | null
         }
         Insert: {
-          albumin?: number | null
-          alp?: number | null
-          alt?: number | null
-          ammonia?: number | null
-          amylase?: number | null
-          ast?: number | null
-          blood?: string | null
-          bun?: number | null
-          calcium?: number | null
+          albumin?: string | null
+          alp?: string | null
+          alt?: string | null
+          ammonia?: string | null
+          amylase?: string | null
+          art_pco2?: string | null
+          art_ph?: string | null
+          art_po2?: string | null
+          art_so2?: string | null
+          ast?: string | null
+          basophils?: string | null
+          blood_type?: string | null
+          bnp?: string | null
+          bun?: string | null
+          calcium?: string | null
           case_id: string
-          chloride?: number | null
-          ckmb?: number | null
-          co2?: number | null
+          chloride?: string | null
+          ckmb?: string | null
           created_at?: string
-          creatinine?: number | null
-          crp?: number | null
-          data?: Json
-          esr?: number | null
-          free_t3?: number | null
-          free_t4?: number | null
-          glucose?: number | null
-          hco3?: number | null
-          hdl_cholesterol?: number | null
-          hematocrit?: number | null
-          hemoglobin?: number | null
+          creatinine?: string | null
+          crp?: string | null
+          d_dimer?: string | null
+          eosinophils?: string | null
+          esr?: string | null
+          free_t3?: string | null
+          free_t4?: string | null
+          glucose?: string | null
+          hba1c?: string | null
+          hco3?: string | null
+          hdl_cholesterol?: string | null
+          hematocrit?: string | null
+          hemoglobin?: string | null
           id?: string
+          inr?: string | null
           is_in_presim?: boolean
           ketones?: string | null
-          lactate?: number | null
-          ldl_cholesterol?: number | null
+          lactate?: string | null
+          ldl_cholesterol?: string | null
           leukocyte_esterase?: string | null
-          lipase?: number | null
-          magnesium?: number | null
-          mch?: number | null
-          mchc?: number | null
-          mcv?: number | null
-          myoglobin?: number | null
+          lipase?: string | null
+          lymphocytes?: string | null
+          magnesium?: string | null
+          mch?: string | null
+          mchc?: string | null
+          mcv?: string | null
+          monocytes?: string | null
+          myoglobin?: string | null
+          neutrophils?: string | null
           nitrites?: string | null
-          pco2?: number | null
-          phosphate?: number | null
-          platelets?: number | null
-          po2?: number | null
-          potassium?: number | null
-          protein?: string | null
-          pt?: number | null
-          ptt?: number | null
-          rbc?: number | null
-          sodium?: number | null
-          specific_gravity?: number | null
+          phosphate?: string | null
+          platelets?: string | null
+          potassium?: string | null
+          procal?: string | null
+          pt?: string | null
+          ptt?: string | null
+          rbc?: string | null
+          rh_factor?: string | null
+          sodium?: string | null
+          specific_gravity?: string | null
           time_offset: number
-          total_bilirubin?: number | null
-          total_cholesterol?: number | null
-          triglycerides?: number | null
-          troponin?: number | null
-          tsh?: number | null
+          total_bilirubin?: string | null
+          total_cholesterol?: string | null
+          total_co2?: string | null
+          triglycerides?: string | null
+          troponin?: string | null
+          tsh?: string | null
+          urine_blood?: string | null
           urine_glucose?: string | null
-          urine_ph?: number | null
-          wbc?: number | null
+          urine_ph?: string | null
+          urine_protein?: string | null
+          ven_pco2?: string | null
+          ven_ph?: string | null
+          ven_po2?: string | null
+          ven_so2?: string | null
+          wbc?: string | null
         }
         Update: {
-          albumin?: number | null
-          alp?: number | null
-          alt?: number | null
-          ammonia?: number | null
-          amylase?: number | null
-          ast?: number | null
-          blood?: string | null
-          bun?: number | null
-          calcium?: number | null
+          albumin?: string | null
+          alp?: string | null
+          alt?: string | null
+          ammonia?: string | null
+          amylase?: string | null
+          art_pco2?: string | null
+          art_ph?: string | null
+          art_po2?: string | null
+          art_so2?: string | null
+          ast?: string | null
+          basophils?: string | null
+          blood_type?: string | null
+          bnp?: string | null
+          bun?: string | null
+          calcium?: string | null
           case_id?: string
-          chloride?: number | null
-          ckmb?: number | null
-          co2?: number | null
+          chloride?: string | null
+          ckmb?: string | null
           created_at?: string
-          creatinine?: number | null
-          crp?: number | null
-          data?: Json
-          esr?: number | null
-          free_t3?: number | null
-          free_t4?: number | null
-          glucose?: number | null
-          hco3?: number | null
-          hdl_cholesterol?: number | null
-          hematocrit?: number | null
-          hemoglobin?: number | null
+          creatinine?: string | null
+          crp?: string | null
+          d_dimer?: string | null
+          eosinophils?: string | null
+          esr?: string | null
+          free_t3?: string | null
+          free_t4?: string | null
+          glucose?: string | null
+          hba1c?: string | null
+          hco3?: string | null
+          hdl_cholesterol?: string | null
+          hematocrit?: string | null
+          hemoglobin?: string | null
           id?: string
+          inr?: string | null
           is_in_presim?: boolean
           ketones?: string | null
-          lactate?: number | null
-          ldl_cholesterol?: number | null
+          lactate?: string | null
+          ldl_cholesterol?: string | null
           leukocyte_esterase?: string | null
-          lipase?: number | null
-          magnesium?: number | null
-          mch?: number | null
-          mchc?: number | null
-          mcv?: number | null
-          myoglobin?: number | null
+          lipase?: string | null
+          lymphocytes?: string | null
+          magnesium?: string | null
+          mch?: string | null
+          mchc?: string | null
+          mcv?: string | null
+          monocytes?: string | null
+          myoglobin?: string | null
+          neutrophils?: string | null
           nitrites?: string | null
-          pco2?: number | null
-          phosphate?: number | null
-          platelets?: number | null
-          po2?: number | null
-          potassium?: number | null
-          protein?: string | null
-          pt?: number | null
-          ptt?: number | null
-          rbc?: number | null
-          sodium?: number | null
-          specific_gravity?: number | null
+          phosphate?: string | null
+          platelets?: string | null
+          potassium?: string | null
+          procal?: string | null
+          pt?: string | null
+          ptt?: string | null
+          rbc?: string | null
+          rh_factor?: string | null
+          sodium?: string | null
+          specific_gravity?: string | null
           time_offset?: number
-          total_bilirubin?: number | null
-          total_cholesterol?: number | null
-          triglycerides?: number | null
-          troponin?: number | null
-          tsh?: number | null
+          total_bilirubin?: string | null
+          total_cholesterol?: string | null
+          total_co2?: string | null
+          triglycerides?: string | null
+          troponin?: string | null
+          tsh?: string | null
+          urine_blood?: string | null
           urine_glucose?: string | null
-          urine_ph?: number | null
-          wbc?: number | null
+          urine_ph?: string | null
+          urine_protein?: string | null
+          ven_pco2?: string | null
+          ven_ph?: string | null
+          ven_po2?: string | null
+          ven_so2?: string | null
+          wbc?: string | null
         }
         Relationships: [
           {
@@ -2159,105 +2379,133 @@ export type Database = {
       all_documentation_results: {
         Row: {
           abdomen: string | null
-          activity: number | null
-          agitation: number | null
-          ambulatory_aid: number | null
-          anxiety: number | null
           appearance: string | null
           assessment_tool_selections: string | null
-          body_language: number | null
           bowel_sounds: string | null
           bp: string | null
+          bp_position: string | null
           bp_source: string | null
-          breathing_independent_of_vocalization: number | null
+          braden_activity: string | null
+          braden_friction_and_shear: string | null
+          braden_mobility: string | null
+          braden_moisture: string | null
+          braden_nutrition: string | null
+          braden_sensory_perception: string | null
+          cardiac_extremities: string | null
           cardiovascular_selections: string | null
           case_id: string | null
           case_session_id: string | null
           chest_appearance: string | null
-          consolability: number | null
+          ciwa_agitation: string | null
+          ciwa_anxiety: string | null
+          ciwa_headache: string | null
+          ciwa_nausea_vomiting: string | null
+          ciwa_orientation: string | null
+          ciwa_sweats: string | null
+          ciwa_tactile: string | null
+          ciwa_tremor: string | null
+          ciwa_visual: string | null
           created_at: string | null
           ears: string | null
-          emesis: string | null
-          enteral_nutrition: string | null
-          enteral_output: string | null
-          extremities: string | null
+          emesis_occurrence: string | null
+          emesis_output_ml: string | null
+          enteral_intake_ml: string | null
+          enteral_output_ml: string | null
           extremity_rom: string | null
           eyes: string | null
-          facial_expression: number | null
-          fall_risk_gait: number | null
-          friction_and_shear: number | null
+          faces_pain_scale: string | null
           gait: string | null
           general_appearance_selections: string | null
           genitourinary_selections: string | null
           gi_selections: string | null
+          gi_symptoms: string | null
           group_id: string | null
           hair_and_nails: string | null
           head_and_scalp: string | null
-          headache: number | null
           heart_sounds: string | null
           heent_selections: string | null
-          history_of_falling: number | null
           hr: string | null
           hr_source: string | null
           id: string | null
           intake_selections: string | null
           integument_selections: string | null
-          integument_status: string | null
-          intravenous: string | null
           is_in_presim: boolean | null
-          iv_location: string | null
-          iv_site: string | null
-          iv_therapy_heparin_lock: number | null
-          iv_type: string | null
+          iv_intake_ml: string | null
+          iv_location_1: string | null
+          iv_location_2: string | null
+          iv_site_1: string | null
+          iv_site_2: string | null
+          iv_type_1: string | null
+          iv_type_2: string | null
           jugular_distention: string | null
+          level_of_consciousness: string | null
           lung_sounds: string | null
-          mental_status: number | null
-          mobility: number | null
-          moisture: number | null
+          mean_arterial_pressure: string | null
+          mental_status: string | null
           mood_and_affect: string | null
+          morse_ambulatory_aid: string | null
+          morse_fall_history: string | null
+          morse_gait: string | null
+          morse_iv: string | null
+          morse_mental_status: string | null
+          morse_secondary_diagnosis: string | null
           motor_function: string | null
           mouth_and_throat: string | null
+          muscle_strength: string | null
           musculoskeletal_selections: string | null
-          nausea: string | null
-          nausea_vomiting: number | null
-          negative_vocalization: number | null
           neuro_selections: string | null
+          neuro_sensation: string | null
           nose: string | null
           nursing_care_provided: string | null
-          nutrition: number | null
-          oral: string | null
+          oral_intake_ml: string | null
           orientation: string | null
-          orientation2: number | null
           output_selections: string | null
           oxygen_device: string | null
-          pain: string | null
-          parenteral_nutrition: string | null
-          paroxysmal_sweats: number | null
+          pain_aggravating_factors: string | null
+          pain_alleviating_factors: string | null
+          pain_characteristics: string | null
+          pain_interventions: string | null
+          pain_location: string | null
+          pain_numeric_scale: string | null
+          painad_body_language: string | null
+          painad_breathing: string | null
+          painad_consolability: string | null
+          painad_facial_expression: string | null
+          painad_negative_vocalization: string | null
+          parenteral_intake_ml: string | null
+          periwound_skin: string | null
+          primary_wound_dressing: string | null
           psychosocial_selections: string | null
+          pupils: string | null
           respiratory_selections: string | null
           rr: string | null
           safety_check: string | null
-          secondary_diagnosis: number | null
-          sensory_perception: number | null
+          secondary_wound_dressing: string | null
           skin: string | null
           source_type: string | null
           speech: string | null
           spo2: string | null
-          stool: string | null
+          stool_occurrence: string | null
+          stool_output_ml: string | null
           supplemental_o2_rate: string | null
-          tactile_disturbances: number | null
           temp: string | null
           temp_source: string | null
           time_offset: number | null
-          tremor: number | null
           turgor: string | null
-          urine: string | null
+          urine_description: string | null
+          urine_occurrence: string | null
+          urine_output_ml: string | null
           user_id: string | null
-          visual_disturbances: number | null
           voiding: string | null
           weight_kg: string | null
           wound: string | null
-          wound_drainage: string | null
+          wound_bed: string | null
+          wound_dimensions: string | null
+          wound_exudate: string | null
+          wound_location: string | null
+          wound_output_ml: string | null
+          wound_stage: string | null
+          wound_type: string | null
         }
         Relationships: []
       }
@@ -2293,12 +2541,7 @@ export type Database = {
         Returns: undefined
       }
       case_builder_replace_labs: {
-        Args: {
-          p_case_id: string
-          p_imaging_rows: Json
-          p_lab_rows: Json
-          p_microbiology_rows: Json
-        }
+        Args: { p_case_id: string; p_lab_rows: Json }
         Returns: undefined
       }
       case_builder_replace_media: {
@@ -2316,6 +2559,7 @@ export type Database = {
       get_user_courses: { Args: { p_user_id: string }; Returns: Json }
     }
     Enums: {
+      case_specialty_type: "med_surg" | "ob" | "mental_health" | "public_health"
       clinical_doc_category_type:
         | "Admission"
         | "Consent"
@@ -2330,6 +2574,31 @@ export type Database = {
         | "Telehealth"
         | "Student"
       code_status_type: "Full" | "DNR" | "Partial"
+      flexsheet_section_type:
+        | "vitals"
+        | "vitals_overview"
+        | "input"
+        | "output"
+        | "base_pain"
+        | "faces_pain"
+        | "general_appearance"
+        | "psychosocial"
+        | "heent"
+        | "neuro"
+        | "integument"
+        | "cardiac"
+        | "respiratory"
+        | "wound"
+        | "gi"
+        | "musculoskeletal"
+        | "genitourinary"
+        | "iv_1"
+        | "iv_2"
+        | "nursing_care"
+        | "braden"
+        | "morse"
+        | "ciwa"
+        | "painad"
       insurance_type: "Medicare" | "Medicaid" | "Private"
       iv_infusion_rate_type: "mL/hr" | "mg/hr" | "units/hr"
       medication_frequencies:
@@ -2376,12 +2645,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2405,11 +2674,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2430,11 +2699,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2455,11 +2724,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2472,11 +2741,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2486,8 +2755,12 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
+      case_specialty_type: ["med_surg", "ob", "mental_health", "public_health"],
       clinical_doc_category_type: [
         "Admission",
         "Consent",
@@ -2503,6 +2776,32 @@ export const Constants = {
         "Student",
       ],
       code_status_type: ["Full", "DNR", "Partial"],
+      flexsheet_section_type: [
+        "vitals",
+        "vitals_overview",
+        "input",
+        "output",
+        "base_pain",
+        "faces_pain",
+        "general_appearance",
+        "psychosocial",
+        "heent",
+        "neuro",
+        "integument",
+        "cardiac",
+        "respiratory",
+        "wound",
+        "gi",
+        "musculoskeletal",
+        "genitourinary",
+        "iv_1",
+        "iv_2",
+        "nursing_care",
+        "braden",
+        "morse",
+        "ciwa",
+        "painad",
+      ],
       insurance_type: ["Medicare", "Medicaid", "Private"],
       iv_infusion_rate_type: ["mL/hr", "mg/hr", "units/hr"],
       medication_frequencies: [

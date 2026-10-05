@@ -22,7 +22,7 @@ import { useFormContext } from "@/context/FormContext";
 import { IntakeOutputFormData } from "@/utils/form";
 import { FormShell } from "../../components/formShell";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
-import { CaseSection } from "@/lib/saveCase";
+import { CaseSection } from "@/lib/caseSections";
 import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 
 const chartConfig = {
@@ -120,7 +120,7 @@ export default function IntakeOutputForm() {
   const router = useRouter();
 
   const persistIo = async () => {
-    onDataChange("intakeOutput", intakeOutput);
+    onDataChange(CaseSection.INTAKE_OUTPUT, intakeOutput);
     if (caseId) {
       await saveCaseData({
         payload: intakeOutput,
@@ -143,7 +143,7 @@ export default function IntakeOutputForm() {
   return (
     <FormShell
       title="Intake & Output"
-      stepDescription="Step 7 of 10: Record patient intake and output"
+      stepDescription="Record patient intake and output"
       icon={<Droplets className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}
