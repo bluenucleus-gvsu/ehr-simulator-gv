@@ -72,8 +72,8 @@ const FormContext = createContext<FormContextType>({
   noteData: [],
   orderData: [],
   tableTemplateData: [],
-  labData: { data: [], timePoints: [0], timePointsInPreSim: new Set(), visibleItems: new Set() },
-  chartingData: { data: [], timePoints: [0], timePointsInPreSim: new Set(), visibleItems: new Set() },
+  labData: { data: [], timePoints: [0], timePointsInPreSim: new Set() },
+  chartingData: { data: [], timePoints: [0], timePointsInPreSim: new Set() },
   ioData: defaultIoData,
   medOrderData: { createdOrders: [], selectedMeds: [] },
   medAdministrationData: [],
@@ -92,13 +92,11 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
     data: labTemplate,
     timePoints: [0],
     timePointsInPreSim: new Set<number>(),
-    visibleItems: new Set()
   });
   const [chartingData, setChartingData] = useState<TableFormData<FlexSheetData>>({
     data: buildTableTemplate(new Set(tableTemplateData)),
     timePoints: [0],
     timePointsInPreSim: new Set<number>(),
-    visibleItems: new Set()
   });
   const [ioData, setIoData] = useState<IntakeOutputFormData[]>(defaultIoData);
   const [medOrderData, setMedOrderData] = useState<MedOrderFormData>({ createdOrders: [], selectedMeds: [] });

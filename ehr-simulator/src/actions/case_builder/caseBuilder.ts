@@ -43,7 +43,6 @@ type TableSavePayload<T> = {
   data: T[];
   timePoints: number[];
   timePointsInPreSim: number[];
-  visibleItems?: string[];
 };
 
 export async function saveCaseData({ payload, section, caseId }: SaveCaseArgs) {

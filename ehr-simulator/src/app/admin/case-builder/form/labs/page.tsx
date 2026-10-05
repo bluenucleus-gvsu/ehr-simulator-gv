@@ -6,11 +6,9 @@ import { useMemo, useState } from "react";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { TooltipContent } from "@radix-ui/react-tooltip";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
-
 import { TestTube2 } from "lucide-react";
 import { AddTableColumn } from "./components/addTimeCol";
 import { useRouter } from "next/navigation";
-import { LabTableImagingReport, LabTableInputCell, LabTableMicrobioReport } from "./components/labTableInputCell";
 import { useFormContext } from "@/context/FormContext";
 import { useTimePoints } from "../../components/useFormTableOffsets";
 import { FormShell } from "../../components/formShell";
@@ -19,14 +17,9 @@ import { FormTable } from "../../components/FormTable";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/caseSections";
 import { caseBuilderPath } from "@/lib/caseBuilder/routes";
+import { LabTableInputCell } from "./components/labTableInputCell";
 
 const columnHelper = createColumnHelper<LabTableData>();
-
-function ensureStringSet(input: unknown): Set<string> {
-  if (input instanceof Set) return input;
-  if (Array.isArray(input)) return new Set(input.filter((v): v is string => typeof v === "string"));
-  return new Set<string>();
-}
 
 function ensureNumberSet(input: unknown): Set<number> {
   if (input instanceof Set) return input;
@@ -43,7 +36,6 @@ function ensureNumberSet(input: unknown): Set<number> {
 function LabForm() {
   const { onDataChange, labData, caseId } = useFormContext()
   const [labTableData, setLabTableData] = useState<LabTableData[]>(labData.data);
-  const [visibleItems] = useState<Set<string>>(ensureStringSet(labData.visibleItems));
 
   const {
     timePoints,
@@ -60,7 +52,6 @@ function LabForm() {
       data: labTableData,
       timePoints: timePoints,
       timePointsInPreSim: timePointsInPresim,
-      visibleItems: visibleItems
     });
     router.push(caseBuilderPath("/admin/case-builder/form/table-template", caseId));
   }
@@ -70,7 +61,6 @@ function LabForm() {
       data: labTableData,
       timePoints: timePoints,
       timePointsInPreSim: timePointsInPresim,
-      visibleItems: visibleItems
     });
 
     await saveCaseData({
@@ -78,7 +68,6 @@ function LabForm() {
         data: labTableData,
         timePoints,
         timePointsInPreSim: Array.from(timePointsInPresim),
-        visibleItems: Array.from(visibleItems),
       },
       section: CaseSection.LABS,
       caseId: caseId
@@ -136,7 +125,7 @@ function LabForm() {
               );
             }
             return (
-              <p className="w-full text-right font-normal !py-0 px-2 text-xs text-gray-700 text-wrap">
+              <p className="w-full text-right font-normal py-0! px-2 text-xs text-gray-700 text-wrap">
                 {field}
               </p>
             );
@@ -173,26 +162,6 @@ function LabForm() {
                       visibleInPresim={timePointsInPresim.has(timePoint)}
                     />
                   );
-                case 'imaging':
-                  return (
-                    <LabTableImagingReport
-                      column={column}
-                      row={row}
-                      table={table}
-                      getValue={getValue}
-                      visibleInPresim={timePointsInPresim.has(timePoint)}
-                    />
-                  )
-                case 'microbiology':
-                  return (
-                    <LabTableMicrobioReport
-                      column={column}
-                      row={row}
-                      table={table}
-                      getValue={getValue}
-                      visibleInPresim={timePointsInPresim.has(timePoint)}
-                    />
-                  )
               }
             }
           }))
@@ -214,15 +183,14 @@ function LabForm() {
     },
     meta: {
       updateData: (rowIndex, columnId, value) => {
-        const filteredRow = labTableData[rowIndex];
-        const actualIndex = labTableData.findIndex(row => row.field === filteredRow?.field);
+        if (typeof value !== 'string') return;
         setLabTableData(old =>
           old.map((row, index) => {
-            if (index === actualIndex) {
+            if (index === rowIndex) {
               return {
-                ...old[actualIndex]!,
+                ...old[rowIndex]!,
                 [columnId]: value,
-              }
+              };
             }
             return row
           })
@@ -247,10 +215,6 @@ function LabForm() {
       <div className="bg-slate-50/50 flex-1 flex flex-col min-h-0 px-6 pt-4">
         <div className="h-12 px-4 w-full flex justify-start gap-12 mb-3 items-end">
           <AddTableColumn handleColumnAdd={addTimePoint} />
-          {/* <div>
-            <Label>Imaging Options</Label>
-            <Combobox onValueChange={handleAddVisibleItem} value={comboboxValue} displayText="Select scans..." data={hideableOptions} />
-          </div> */}
           <div className="flex items-end gap-2">
             <div className="space-y-1.5">
               <p className="w-fit items-center  px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-50 text-yellow-600 border border-yellow-300 uppercase tracking-wide">
@@ -261,7 +225,7 @@ function LabForm() {
               </p>
             </div>
           </div>
-        </div>
+        </div >
         <div className="flex flex-col overflow-hidden flex-1 w-full border border-gray-300 rounded-t-lg bg-white shadow-sm relative">
           <FormTable
             table={ptTable}
@@ -274,8 +238,8 @@ function LabForm() {
             }}
           />
         </div>
-      </div>
-    </FormShell>
+      </div >
+    </FormShell >
   );
 }
 

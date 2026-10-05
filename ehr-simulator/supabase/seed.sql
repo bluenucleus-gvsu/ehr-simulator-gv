@@ -1,4 +1,3 @@
--- Expose all tables to the API for local development
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
@@ -677,35 +676,8 @@ VALUES
     'Resting comfortably', 'Clear bilaterally', 'Regular rate and rhythm', 'Soft, non-tender'
   );
 
-SET session_replication_role = replica;
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
-
-
 INSERT INTO "public"."cases" ("id", "name", "description", "first_name", "last_name", "code_status", "height_ft", "height_in", "weight_kg", "isolation_precautions_id", "language", "insurance", "employment", "relationship_status_id", "religion", "requires_interpreter", "admitting_diagnosis", "attending_provider", "medical_history", "surgical_history", "allergies", "social_habits", "living_situation", "updated_at", "created_at", "emergency_contact_name", "emergency_contact_relationship", "age", "case_specialty") VALUES
 	('2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'Case Harold Adams', 'Mr. Harold Adams, a 72-year-old male, was admitted two days ago for hyponatremia related to vomiting and diarrhea from a gastrointestinal illness he caught on a cruise. His sodium levels have been improving, but this morning, he begins to show signs of infection and early septic shock.', 'Harold', 'Adams', 'Full', 6, 2, 75, NULL, 'English', NULL, 'Retired School Teacher', NULL, 'None', false, 'Hyponatremia', 'David Adler MD', '{Hypertension,GERD}', '{Appendectomy}', '{Seasonal}', '{}', '{"Lives with Spouse"}', '2026-03-19 20:20:08.403+00', '2026-03-19 20:16:45.238+00', 'Linda Adams', 'Wife', 71, 'med_surg');
-
-
-
-INSERT INTO "public"."case_family_history" ("id", "case_id", "relationship_id", "condition") VALUES
-	('4e3d98a6-e22f-40db-a8df-20a84c13fe54', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'f7748742-acf9-459c-bec6-7cc1dd607a8c', 'Type 2 Diabetes'),
-	('70d8819b-d55a-4018-8afd-316c1bf98858', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', '613d793a-51b9-4fad-b3f0-14f53ded1e3a', 'CHF');
-
-
-
-INSERT INTO "public"."case_safety_alerts" ("case_id", "safety_alert_id", "created_at") VALUES
-	('2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'eb4f2ae4-b3fd-4ad3-b6be-847009df98c9', '2026-03-19 20:20:09.168264+00'),
-	('2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', 'c07560fb-083b-4929-ada5-e7fade0e81d5', '2026-03-19 20:20:09.168264+00'),
-	('2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', '6d6b08ac-d28d-4f7d-ad95-1bfc14196e35', '2026-03-19 20:20:09.168264+00');
 
 
 INSERT INTO "public"."clinical_documents" ("id", "case_id", "is_in_presim", "category", "specialty", "author", "time_offset", "doc_text", "created_at") VALUES
@@ -718,6 +690,11 @@ INSERT INTO "public"."clinical_documents" ("id", "case_id", "is_in_presim", "cat
 	('a44db1fc-cf42-4c17-a55f-5fe54fb7e532', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 'Progress', 'Internal Medicine', 'Dr. Adler', 2880, '<h2><u>Subjective</u></h2><p>Patient presented with 3 days of nausea, vomiting, and diarrhea following return from cruise. Reports dizziness, fatigue, and poor oral intake.</p><h2><u>Objective</u></h2><ul class="list-disc ml-6"><li><p>Vitals: T 37.2°C, HR 88, BP 118/72, RR 18, SpO₂ 97% RA</p></li><li><p>Dry mucous membranes, skin tenting noted.</p></li><li><p>Alert and oriented ×3.</p></li><li><p>Abdomen soft, slightly tender, hyperactive bowel sounds.</p></li><li><p>Na⁺ 125 mEq/L, K⁺ 3.7 mEq/L</p></li><li><p>BUN 25 mg/dL, Creatinine 1.1 mg/dL</p></li><li><p>WBC 11,000/µL</p></li><li><p>Lactic acid 1.3 mmol/L</p></li></ul><h2><u>Assessment</u></h2><p>&nbsp;Hyponatremia likely secondary to fluid losses. Mild dehydration. Hemodynamically stable.</p><h2><u>Plan</u></h2><ul class="list-disc ml-6"><li><p>Start NS 75 mL/hr.</p></li><li><p>Advance diet as tolerated.</p></li><li><p>Monitor electrolytes every AM.</p></li><li><p>Fall precautions for dizziness.</p></li><li><p>PT/OT evaluation due to weakness.</p></li></ul><p></p>', '2026-03-19 20:40:02.736559+00'),
 	('191cb1f2-e8d4-4fa3-aba2-96eb53a36509', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 'Admission', 'Emergency Medicine', 'Dr. Chen', 3000, '<p>Chief Complaint: “Vomiting and diarrhea for several days, feeling dizzy.”</p><p>History of Present Illness: 72-year-old male presenting after returning from a cruise 3 days ago. Reports persistent nausea, vomiting, and watery diarrhea since returning home. States he has been unable to tolerate solid food and has had minimal oral intake. Reports dizziness when standing and significant fatigue. Denies chest pain or shortness of breath. No blood in stool. Stool pathogen studies pending.</p><p>Past Medical History: Hypertension, GERD</p><p>Medications:</p><p>Lisinopril 10 mg daily</p><p>Omeprazole 20 mg daily</p><p></p><p>Allergies: No known drug allergies</p><p>Physical Examination:</p><p>General: Appears fatigued, mildly dehydrated</p><p>Neuro: Alert and oriented ×3</p><p>HEENT: Dry mucous membranes</p><p>Cardiac: Regular rate and rhythm</p><p>Respiratory: Clear breath sounds bilaterally</p><p>Abdomen: Soft, mild diffuse tenderness, hyperactive bowel sounds</p><p>Skin: Warm, decreased turgor</p><p></p><p>ED Vital Signs:</p><p>T: 37.6°C, HR: 90, BP: 116/70, RR: 18, SpO₂: 96% RA</p><p></p><p>ED Laboratory Results:</p><p>Na⁺ 125 mEq/L</p><p>K⁺ 3.7 mEq/L</p><p>Cl⁻ 94 mEq/L</p><p>BUN 25 mg/dL</p><p>Creatinine 1.1 mg/dL</p><p>WBC 11,000 /µL</p><p>Lactic acid 1.3 mmol/L</p><p></p><p>ED Treatment Provided:1 L Normal Saline IV bolus. Ondansetron 4 mg IV for nausea. Basic metabolic panel and CBC obtained. Patient monitored for several hours.</p><p>Assessment:</p><p>Hyponatremia and dehydration likely secondary to gastrointestinal illness. Patient stable but symptomatic with dizziness and electrolyte imbalance.</p><p></p><p>Plan:</p><p>Admit to medical-surgical floor for IV fluids, electrolyte monitoring, and observation.</p>', '2026-03-19 20:40:02.736559+00');
 
+INSERT INTO "public"."lab_results" ("id", "case_id", "time_offset", "is_in_presim", "sodium", "potassium", "chloride", "bun", "creatinine", "glucose", "co2", "calcium", "lactate", "rbc", "wbc", "platelets", "hemoglobin", "hematocrit", "mcv", "mch", "mchc", "troponin", "ckmb", "myoglobin", "ast", "alt", "alp", "total_bilirubin", "albumin", "ammonia", "pco2", "po2", "hco3", "specific_gravity", "urine_ph", "protein", "urine_glucose", "ketones", "leukocyte_esterase", "nitrites", "blood", "pt", "ptt", "crp", "esr", "tsh", "free_t3", "free_t4", "total_cholesterol", "hdl_cholesterol", "ldl_cholesterol", "triglycerides", "magnesium", "phosphate", "amylase", "lipase", "created_at") VALUES
+  ('112ff01d-b6d4-444c-b0da-a1b2da55d3f4', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', -1440, true, '129', '3.6', '95', '28', '1.2', '118', null, null, null, null, '13.5', '210', '15', '45', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-03-19 21:05:12.560184+00'), 
+  ('38bfebf6-0e38-4174-bd1c-f77dc31000ff', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', -2880, true, '125', '3.7', '94', '25', '1.1', '108', '94', '9.1', '1.3', '6.2', '11', '220', '15.2', '46', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '1.03', '6', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '1.8', '3.2', null, null, '2026-03-19 21:05:12.560184+00'), 
+  ('ca69c267-a116-48a6-b5e3-5185dd8ea22c', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', -120, true, '126', '3.5', '93', '32', '1.4', '130', null, null, '2.4', null, '18.5', '200', '14.8', '44', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-03-19 21:05:12.560184+00');
+
 
 UPDATE public.cases 
   SET flexsheet_sections = ARRAY[
@@ -725,3 +702,6 @@ UPDATE public.cases
     'psychosocial', 'heent', 'neuro', 'integument', 'cardiac', 'respiratory', 'wound',
     'gi', 'musculoskeletal', 'genitourinary', 'iv_1', 'nursing_care', 'ciwa'
   ]::public.flexsheet_section_type[];
+
+
+
