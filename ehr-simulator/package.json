@@ -11,7 +11,6 @@
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "eslint",
-    "type-check": "tsc",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",

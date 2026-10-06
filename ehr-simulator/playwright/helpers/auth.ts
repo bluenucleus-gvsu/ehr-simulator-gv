@@ -2,6 +2,7 @@ import { config as loadEnv } from "dotenv";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { resolve } from "path";
 import type { Browser, BrowserContext, Page } from "@playwright/test";
+import { Database } from "../../database.types";
 
 loadEnv({ path: resolve(process.cwd(), ".env.local") });
 
@@ -9,7 +10,7 @@ export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 export const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-export const BASE_URL = "http://localhost:3000";
+export const BASE_URL = "http://localhost:3100";
 export const E2E_PASSWORD = "e2e-password123";
 
 export interface RoleAccount {
@@ -25,7 +26,7 @@ export const ROLE_ACCOUNTS: RoleAccount[] = [
 ];
 
 export function createServiceClient(): SupabaseClient {
-  return createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+  return createClient<Database>(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }

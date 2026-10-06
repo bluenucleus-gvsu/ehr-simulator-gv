@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@supabase/supabase-js";
-import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient";
+import { createStaffServiceClient } from "@/utils/supabase/staffAccess";
 import { assertUuid } from "@/lib/caseBuilder/validation";
 import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
 import { DatabaseDocumentation } from "../simulation";
@@ -63,7 +63,7 @@ export type ImagingReportRow = CaseBundleRow & { is_critical?: boolean | null };
 export type MicrobiologyReportRow = CaseBundleRow & { is_critical?: boolean | string | null };
 
 export async function getCaseBuilderMedications() {
-  const supabase = await createCaseBuilderAdminClient();
+  const supabase = await createStaffServiceClient(["admin"]);
   const { data, error } = await supabase
     .from("medications")
     .select("*, dispense_units(name)")

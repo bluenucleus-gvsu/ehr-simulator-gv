@@ -1,11 +1,15 @@
 'use server'
 
-import { createClient, type PostgrestError } from "@supabase/supabase-js";
+import { createClient, PostgrestError } from "@supabase/supabase-js";
 import { Database } from "../../database.types";
 import { ActionResponse, ExtractData } from "./cases";
 import { UUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { assertStudentActiveSessionWrite } from "@/actions/simulation/assertStudentActiveSessionWrite";
+import { SESSION_STATUS, type SessionStatus } from "@/utils/sessionStatus";
+import { createServiceSupabase } from "@/utils/supabase/service";
+import { createStaffServiceClient, isVerifiedStaff } from "@/utils/supabase/staffAccess";
+import { createServerSupabase } from "@/utils/supabase/server";
 
 export type EditableStudentNoteUpsert = Database['public']['Tables']['editable_clinical_documents']['Insert'];
 export type EditableStudentNote = Database['public']['Tables']['editable_clinical_documents']['Row'];
@@ -420,49 +424,45 @@ export async function upsertDocumentationRows(payload: StudentDatabaseDocumentat
   return { data, error };
 }
 
-
-export async function markSessionInProgress(sessionId: string) {
-  // Compatibility wrapper for existing callers.
-  return startSession(sessionId);
-}
-
-type SessionStatus = "assigned" | "in progress" | "completed" | "unassigned" | "archived" | null;
-
-type SessionTransitionResult = {
-  success: boolean;
-  error?: unknown;
-  message?: string;
-};
-
-function createServiceSupabase() {
-  return createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
-
-async function getSessionTransitionContext(sessionId: string) {
-  const supabase = createServiceSupabase();
-  const { data, error } = await supabase
-    .from("case_sessions")
-    .select("status, started_at, completed_at")
-    .eq("id", sessionId)
-    .single();
-
-  if (error) throw error;
-
-  return {
-    supabase,
-    session: data as { status: SessionStatus; started_at: string | null; completed_at: string | null },
-  };
-}
-
-export async function startSession(sessionId: string): Promise<SessionTransitionResult> {
+export async function markSessionInProgress(sessionId: string): Promise<ActionResponse> {
   try {
-    const { supabase, session } = await getSessionTransitionContext(sessionId);
+    const supabase = createServiceSupabase();
+    const { data: session, error: fetchError } = await supabase
+      .from("case_sessions")
+      .select("status, started_at, group_id")
+      .eq("id", sessionId)
+      .single();
+
+    if (fetchError || !session) throw fetchError ?? new Error("Session not found.");
+
+    // Students may only start sessions of groups they belong to; staff bypasses.
+    if (!(await isVerifiedStaff())) {
+      if (!session.group_id) {
+        return { success: false, message: "Session is not linked to a group." };
+      }
+
+      const authClient = await createServerSupabase();
+      const { data: { user } } = await authClient.auth.getUser();
+
+      if (!user) {
+        return { success: false, message: "You must be signed in." };
+      }
+
+      const { data: membership } = await authClient
+        .from("group_members")
+        .select("id")
+        .eq("group_id", session.group_id)
+        .eq("student_id", user.id)
+        .maybeSingle();
+
+      if (!membership) {
+        return { success: false, message: "You do not have access to this session." };
+      }
+    }
+
     const currentStatus = session.status;
 
-    if (currentStatus === "completed" || currentStatus === "archived") {
+    if (currentStatus === SESSION_STATUS.Completed || currentStatus === SESSION_STATUS.Archived) {
       return {
         success: false,
         message: `Cannot start session from status "${currentStatus}".`,
@@ -470,7 +470,7 @@ export async function startSession(sessionId: string): Promise<SessionTransition
     }
 
     const updates: { status: SessionStatus; started_at?: string } = {
-      status: "in progress",
+      status: SESSION_STATUS.InProgress,
     };
 
     if (!session.started_at) {
@@ -482,79 +482,104 @@ export async function startSession(sessionId: string): Promise<SessionTransition
       .update(updates)
       .eq("id", sessionId);
 
-    if (error) throw error;
-
-    return { success: true };
+    if (error) {
+      return {
+        success: false,
+        message: "Failed to update session."
+      }
+    }
+    return {
+      success: true,
+      message: "Successfully marked session as in-progress.",
+    };
   } catch (error) {
     console.error("Failed to start session:", error);
-    return { success: false, error };
+    return { success: false, message: "Failed to update session." };
   }
 }
 
-export async function completeSession(sessionId: string): Promise<SessionTransitionResult> {
+export async function completeCaseSession(assignmentId: string): Promise<ActionResponse<number>> {
   try {
-    const { supabase, session } = await getSessionTransitionContext(sessionId);
-    const currentStatus = session.status;
+    const supabase = await createStaffServiceClient();
+    const { data: sessions, error: fetchError } = await supabase
+      .from("case_sessions")
+      .select("id, started_at")
+      .eq("section_assignment_id", assignmentId);
 
-    if (currentStatus === "archived") {
-      return {
-        success: false,
-        message: "Cannot complete an archived session.",
-      };
+    if (fetchError) throw fetchError;
+    if (!sessions || sessions.length === 0) {
+      return { success: false, message: "No sessions found for this assignment." };
     }
 
-    const updates: { status: SessionStatus; started_at?: string; completed_at?: string } = {
-      status: "completed",
-      completed_at: session.completed_at ?? new Date().toISOString(),
+    const completedAt = new Date().toISOString();
+    const { error } = await supabase
+      .from("case_sessions")
+      .update({ status: SESSION_STATUS.Completed, completed_at: completedAt, archived_at: null })
+      .in("id", sessions.map((s) => s.id));
+
+    if (error) throw error;
+
+    const missingStart = sessions
+      .filter((session) => !session.started_at)
+      .map((session) => session.id);
+
+    if (missingStart.length > 0) {
+      const { error: startError } = await supabase
+        .from("case_sessions")
+        .update({ started_at: completedAt })
+        .in("id", missingStart);
+      if (startError) throw startError;
+    }
+
+    return {
+      success: true,
+      data: sessions.length,
+      message: "Successfully marked case session as completed"
     };
-
-    if (!session.started_at) {
-      updates.started_at = new Date().toISOString();
-    }
-
-    const { error } = await supabase
-      .from("case_sessions")
-      .update(updates)
-      .eq("id", sessionId);
-
-    if (error) throw error;
-
-    return { success: true };
   } catch (error) {
-    console.error("Failed to complete session:", error);
-    return { success: false, error };
+    console.error("Failed to complete assignment sessions:", error);
+    return {
+      success: false,
+      message: error instanceof Error && error.message
+        ? error.message
+        : "Failed to mark case session as complete",
+    };
   }
 }
 
-export async function expireSession(sessionId: string): Promise<SessionTransitionResult> {
+export async function archiveCaseSession(assignmentId: string): Promise<ActionResponse<number>> {
   try {
-    const { supabase, session } = await getSessionTransitionContext(sessionId);
-    const currentStatus = session.status;
+    const supabase = await createStaffServiceClient();
+    const { data: sessions, error: fetchError } = await supabase
+      .from("case_sessions")
+      .select("id")
+      .eq("section_assignment_id", assignmentId);
 
-    if (currentStatus === "completed") {
-      return {
-        success: false,
-        message: "Cannot expire a completed session.",
-      };
-    }
-
-    if (currentStatus === "archived") {
-      return { success: true };
+    if (fetchError) throw fetchError;
+    if (!sessions || sessions.length === 0) {
+      return { success: false, message: "No sessions found for this assignment." };
     }
 
     const { error } = await supabase
       .from("case_sessions")
-      .update({
-        status: "archived",
-      })
-      .eq("id", sessionId);
+      .update({ status: SESSION_STATUS.Archived, archived_at: new Date().toISOString(), completed_at: null })
+      .in("id", sessions.map((s) => s.id));
 
     if (error) throw error;
 
-    return { success: true };
+    return {
+      success: true,
+      data: sessions.length,
+      message: "Successfully archived case session"
+    };
   } catch (error) {
-    console.error("Failed to expire session:", error);
-    return { success: false, error };
+    console.error("Failed to archive assignment sessions:", error);
+    return {
+      success: false,
+      message: error instanceof Error && error.message
+        ? error.message
+        : "Failed to archive case session",
+    };
   }
 }
 

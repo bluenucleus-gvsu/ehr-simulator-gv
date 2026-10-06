@@ -4,7 +4,7 @@ import { useState } from "react";
 import CaseListItem from "./CaseListItem";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { SimCase } from "@/actions/cases";
+import type { CaseRow } from "@/types/db";
 import { ChevronDown, Search } from "lucide-react";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
@@ -12,11 +12,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { caseSpecialtyLabels } from "@/utils/form";
 
 interface CaseClientProps {
-  cases: SimCase[];
+  cases: CaseRow[];
 }
 
 function filterCases(
-  cases: SimCase[],
+  cases: CaseRow[],
   filterText: string,
   specialty: CaseSpecialty | ''
 ) {

@@ -1,4 +1,4 @@
-import { SimCase } from "@/actions/cases";
+import type { CaseRow } from "@/types/db";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -6,7 +6,7 @@ import { caseMeetsMinimumRequirements } from "@/lib/caseMinimumRequirements";
 
 
 interface CaseListItemProps {
-  courseCaseAssignment: SimCase;
+  courseCaseAssignment: CaseRow;
 }
 
 export default function CaseListItem({ courseCaseAssignment }: CaseListItemProps) {

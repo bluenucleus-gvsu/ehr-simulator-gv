@@ -5,10 +5,6 @@ import AssignedCaseCard from "@/app/user/components/AssignedCaseCard";
 import { createServerSupabase } from "@/utils/supabase/server";
 import { getUserCourses } from "@/actions/getUserCourses";
 
-function compareSimTimesLatestFirst(a: string | null, b: string | null): number {
-  return new Date(b ?? 0).getTime() - new Date(a ?? 0).getTime()
-}
-
 export default async function ProfilePage({ params }: Readonly<{ params: Promise<{ id: string }> }>) {
   const { id } = await params;
 
@@ -43,34 +39,8 @@ export default async function ProfilePage({ params }: Readonly<{ params: Promise
   const { activeCourses, inactiveCourses } = await getUserCourses(id);
   const allCourses = [...activeCourses, ...inactiveCourses];
 
-  // Keep completed cases authoritative from backend session lifecycle state.
-  const partitionCourses = (courses: typeof activeCourses) =>
-    courses.map((c) => {
-      const seen = new Set<string>();
-      const dedupedCompleted = c.completed.filter((item) => {
-        const k = `${item.id}|${item.completed_at ?? ""}`;
-        if (seen.has(k)) return false;
-        seen.add(k);
-        return true;
-      });
-      return {
-        ...c,
-        assigned: c.assigned.toSorted(
-          (a, b) => compareSimTimesLatestFirst(a.sim_time, b.sim_time)
-        ),
-        completed: dedupedCompleted.toSorted(
-          (a, b) => compareSimTimesLatestFirst(a.completed_at, b.completed_at)
-        ),
-        expired: c.expired.toSorted(
-          (a, b) => compareSimTimesLatestFirst(a.expired_at, b.expired_at)
-        ),
-      };
-    });
-  const filteredActive = partitionCourses(activeCourses);
-  const filteredInactive = partitionCourses(inactiveCourses);
-
   return (
-    <main className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="p-6 max-w-6xl mx-auto space-y-6">
       <ProfileHeader
         name={studentName}
         avatarUrl={avatarUrl}
@@ -79,148 +49,104 @@ export default async function ProfilePage({ params }: Readonly<{ params: Promise
 
       <section>
         <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <h3 className="text-lg font-semibold mb-3">Active Courses</h3>
-          {filteredActive.length === 0 ? (
+          <h3 className="text-xl font-semibold mb-3">Active Courses</h3>
+          {activeCourses.length === 0 ? (
             <div className="text-sm text-muted-foreground">No active courses.</div>
           ) : (
-            <ul className="space-y-4">
-              {filteredActive.map((course) => (
-                <li key={course.id} className="py-2 px-3 rounded border border-transparent hover:border-slate-200">
+            <div className="space-y-4">
+              {activeCourses.map((course) => (
+                <div key={course.id} className="py-2 px-3 rounded border border-slate-300">
                   <div className="font-medium mb-2">
                     {course.code ?? ""}{course.code && course.name ? " - " : ""}{course.name ?? "Unnamed Course"}
                   </div>
 
-                  <details className="mb-2 bg-slate-50 p-2 rounded">
-                    <summary className="cursor-pointer font-medium">Assigned Cases</summary>
+                  <details className="mb-4 bg-slate-100 p-3 rounded">
+                    <summary className="cursor-pointer font-medium">Active Sessions</summary>
                     <div className="mt-2">
-                      {course.assigned.length === 0 ? (
-                        <div className="text-sm text-muted-foreground">No assigned cases.</div>
+                      {course.activeSessions.length === 0 ? (
+                        <div className="text-sm text-muted-foreground">No active sessions.</div>
                       ) : (
-                        <ul className="space-y-2">
-                          {course.assigned.map((a) => (
-                            <li key={`${a.id}:${a.session_id ?? "no-session"}`} className="text-sm">
+                        <div className="ml-2 space-y-2">
+                          {course.activeSessions.map((session) => (
+                            <div key={session.sessionId} className="text-sm">
                               <AssignedCaseCard
-                                id={a.id}
-                                caseId={a.case_id}
-                                sessionId={a.session_id}
-                                sessionStatus={a.session_status ?? null}
-                                name={a.name}
-                                simTime={a.sim_time}
-                                presimTime={a.presim_time}
-                                groupMembers={a.groupMembers}
+                                id={session.sessionId}
+                                caseId={session.caseId}
+                                sessionId={session.sessionId}
+                                availability={session.availability}
+                                name={session.caseName}
+                                simTime={session.simTime}
+                                presimTime={session.presimTime}
+                                groupMembers={session.teamMembers}
                               />
-                            </li>
+                            </div>
                           ))}
-                        </ul>
+                        </div>
                       )}
                     </div>
                   </details>
 
-                  <details className="bg-slate-50 p-2 rounded">
-                    <summary className="cursor-pointer font-medium">Completed Cases</summary>
+                  <details className="bg-slate-100 p-3 rounded">
+                    <summary className="cursor-pointer font-medium">Past Sessions</summary>
                     <div className="mt-2">
-                      {course.completed.length === 0 ? (
-                        <div className="text-sm text-muted-foreground">No completed cases.</div>
+                      {course.pastSessions.length === 0 ? (
+                        <div className="text-sm text-muted-foreground">No past sessions.</div>
                       ) : (
-                        <ul className="list-disc pl-5 space-y-1">
-                          {course.completed.map((s, idx) => (
-                            <li key={`${course.id}:${s.id}:${s.completed_at ?? "na"}:${idx}`} className="text-sm">
+                        <div className="pl-5 space-y-1">
+                          {course.pastSessions.map((session) => (
+                            <div key={session.sessionId} className="text-sm">
                               <CompletedCaseCard
-                                id={s.id}
-                                name={s.name}
-                                groupMembers={s.teamMembers}
-                                date={s.completed_at}
-                                feedback={s.feedback}
+                                id={session.sessionId}
+                                caseId={session.caseId}
+                                sessionId={session.sessionId}
+                                name={session.caseName}
+                                groupMembers={session.teamMembers}
+                                feedback={session.feedback}
                               />
-                            </li>
+                            </div>
                           ))}
-                        </ul>
+                        </div>
                       )}
                     </div>
                   </details>
-
-                  <details className="bg-slate-50 p-2 rounded mt-2">
-                    <summary className="cursor-pointer font-medium">Expired Cases</summary>
-                    <div className="mt-2">
-                      {course.expired.length === 0 ? (
-                        <div className="text-sm text-muted-foreground">No expired cases.</div>
-                      ) : (
-                        <ul className="list-disc pl-5 space-y-1">
-                          {course.expired.map((s, idx) => (
-                            <li key={`${course.id}:${s.id}:${s.expired_at ?? "na"}:${idx}`} className="text-sm">
-                              <CompletedCaseCard
-                                id={s.id}
-                                name={s.name}
-                                groupMembers={s.teamMembers}
-                                date={s.expired_at}
-                                feedback={s.feedback ?? "Marked as expired."}
-                              />
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  </details>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
         </div>
 
         <div className="bg-white rounded-lg shadow p-4">
           <h3 className="text-lg font-semibold mb-3">Inactive Courses</h3>
-          {filteredInactive.length === 0 ? (
+          {inactiveCourses.length === 0 ? (
             <div className="text-sm text-muted-foreground">No inactive courses.</div>
           ) : (
             <ul className="space-y-4">
-              {filteredInactive.map((course) => (
-                <li key={course.id} className="py-2 px-3 rounded border border-transparent hover:border-slate-200">
+              {inactiveCourses.map((course) => (
+                <li key={course.id} className="py-2 px-3 rounded border border-slate-200">
                   <div className="font-medium mb-2">
                     {course.code ?? ""}{course.code && course.name ? " - " : ""}{course.name ?? "Unnamed Course"}
                   </div>
 
                   <details className="bg-slate-50 p-2 rounded">
-                    <summary className="cursor-pointer font-medium">Completed Cases</summary>
+                    <summary className="cursor-pointer font-medium">Past Sessions</summary>
                     <div className="mt-2">
-                      {course.completed.length === 0 ? (
-                        <div className="text-sm text-muted-foreground">No completed cases.</div>
+                      {course.pastSessions.length === 0 ? (
+                        <div className="text-sm text-muted-foreground">No past sessions.</div>
                       ) : (
-                        <ul className="list-disc pl-5 space-y-1">
-                          {course.completed.map((s, idx) => (
-                            <li key={`${course.id}:${s.id}:${s.completed_at ?? "na"}:${idx}`} className="text-sm">
+                        <div className="list-disc pl-5 space-y-1">
+                          {course.pastSessions.map((session) => (
+                            <div key={session.sessionId} className="text-sm">
                               <CompletedCaseCard
-                                id={s.id}
-                                name={s.name}
-                                groupMembers={s.teamMembers}
-                                date={s.completed_at}
-                                feedback={s.feedback}
+                                id={session.sessionId}
+                                caseId={session.caseId}
+                                sessionId={session.sessionId}
+                                name={session.caseName}
+                                groupMembers={session.teamMembers}
+                                feedback={session.feedback}
                               />
-                            </li>
+                            </div>
                           ))}
-                        </ul>
-                      )}
-                    </div>
-                  </details>
-
-                  <details className="bg-slate-50 p-2 rounded mt-2">
-                    <summary className="cursor-pointer font-medium">Expired Cases</summary>
-                    <div className="mt-2">
-                      {course.expired.length === 0 ? (
-                        <div className="text-sm text-muted-foreground">No expired cases.</div>
-                      ) : (
-                        <ul className="list-disc pl-5 space-y-1">
-                          {course.expired.map((s, idx) => (
-                            <li key={`${course.id}:${s.id}:${s.expired_at ?? "na"}:${idx}`} className="text-sm">
-                              <CompletedCaseCard
-                                id={s.id}
-                                name={s.name}
-                                groupMembers={s.teamMembers}
-                                date={s.expired_at}
-                                feedback={s.feedback ?? "Marked as expired."}
-                              />
-                            </li>
-                          ))}
-                        </ul>
+                        </div>
                       )}
                     </div>
                   </details>
@@ -230,6 +156,6 @@ export default async function ProfilePage({ params }: Readonly<{ params: Promise
           )}
         </div>
       </section>
-    </main>
+    </div>
   );
 }
