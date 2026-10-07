@@ -15,8 +15,6 @@ export interface CaseBundle {
   clinicalDocuments: CaseBundleRow[]
   orders: DatabaseOrder[]
   labResults: DatabaseLabRow[]
-  imagingReports: ImagingReportRow[]
-  microbiologyReports: MicrobiologyReportRow[]
   documentationResults: DatabaseDocumentation[]
   medicationAdministrations: CaseBundleRow[]
   caseImages: CaseBundleRow[]
@@ -59,8 +57,6 @@ export type CaseBundleRow = Record<string, unknown> & {
 };
 
 export type DatabaseLabRow = Database['public']['Tables']['lab_results']['Row'];
-export type ImagingReportRow = CaseBundleRow & { is_critical?: boolean | null };
-export type MicrobiologyReportRow = CaseBundleRow & { is_critical?: boolean | string | null };
 
 export async function getCaseBuilderMedications() {
   const supabase = await createCaseBuilderAdminClient();
@@ -93,8 +89,6 @@ export async function getCaseBundle(
     clinicalDocumentsRes,
     ordersRes,
     labResultsRes,
-    imagingReportsRes,
-    microbiologyReportsRes,
     documentationResultsRes,
     medicationAdministrationsRes,
     medicationOrdersRes,
@@ -146,18 +140,6 @@ export async function getCaseBundle(
       .order("time_offset", { ascending: true }),
 
     supabase
-      .from("imaging_reports")
-      .select("*")
-      .eq("case_id", caseId)
-      .order("created_at", { ascending: true }),
-
-    supabase
-      .from("microbiology_reports")
-      .select("*")
-      .eq("case_id", caseId)
-      .order("created_at", { ascending: true }),
-
-    supabase
       .from("documentation_results")
       .select("*")
       .eq("case_id", caseId)
@@ -192,8 +174,6 @@ export async function getCaseBundle(
     clinicalDocumentsRes.error,
     ordersRes.error,
     labResultsRes.error,
-    imagingReportsRes.error,
-    microbiologyReportsRes.error,
     documentationResultsRes.error,
     medicationAdministrationsRes.error,
     medicationOrdersRes.error,
@@ -234,8 +214,6 @@ export async function getCaseBundle(
     clinicalDocuments: (clinicalDocumentsRes.data ?? []) as CaseBundleRow[],
     orders: (ordersRes.data ?? []) as DatabaseOrder[],
     labResults: (labResultsRes.data ?? []),
-    imagingReports: (imagingReportsRes.data ?? []) as ImagingReportRow[],
-    microbiologyReports: (microbiologyReportsRes.data ?? []) as MicrobiologyReportRow[],
     documentationResults: (documentationResultsRes.data ?? []) as DatabaseDocumentation[],
     medicationAdministrations: (medicationAdministrationsRes.data ?? []) as CaseBundleRow[],
     caseImages: (caseImagesRes.data ?? []) as CaseBundleRow[],

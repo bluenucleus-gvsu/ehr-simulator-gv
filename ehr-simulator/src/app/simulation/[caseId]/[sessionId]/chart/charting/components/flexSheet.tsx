@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { toast } from "sonner";
 import FlexSheetColumnShifter from "./flexSheetColumnShifter";
-import { ImagingData, LabCellValue } from "../../labs/components/labsData";
+import { LabCellValue } from "../../labs/components/labsData";
 import { DatabaseDocumentation } from "@/actions/simulation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
 import { getPinnedStyles } from "@/lib/flexSheet/flexSheetHelpers";
@@ -27,7 +27,7 @@ declare module '@tanstack/react-table' {
     updateData: (
       rowIndex: number,
       columnId: string,
-      value: string | string[] | ImagingData | LabCellValue | Partial<TData>) => void
+      value: string | string[] | LabCellValue | Partial<TData>) => void
   }
 }
 

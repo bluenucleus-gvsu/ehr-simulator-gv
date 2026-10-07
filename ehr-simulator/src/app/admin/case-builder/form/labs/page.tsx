@@ -203,7 +203,7 @@ function LabForm() {
   return (
     <FormShell
       title="Lab Results"
-      stepDescription="Enter laboratory and imaging results"
+      stepDescription="Enter laboratory results"
       icon={<TestTube2 className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}
