@@ -16,7 +16,7 @@ import {
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { addMinutes, format } from "date-fns"
-// import DOMPurify from "dompurify"
+import DOMPurify from "dompurify"
 import { ClinicalDocumentView } from "@/actions/simulation"
 
 const displayDate = (startTime: number | null, offset: number) => {
@@ -102,7 +102,7 @@ export default function NoteDisplay({ note, startTime }: NoteDisplayProps) {
         <div className="px-8 py-4 text-sm text-black space-y-4 animate-in slide-in-from-top-2 duration-200 border-t  border-slate-100">
           <div
             className="w-full max-w-none [&_p]:min-h-[1rem]"
-            dangerouslySetInnerHTML={{ __html: note.doc_text }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(note.doc_text) }}
           />
         </div>
       </CollapsibleContent>

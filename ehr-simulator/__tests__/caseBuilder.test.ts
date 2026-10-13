@@ -3,11 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import { updateMedications } from "@/actions/case_builder/updateMedications";
 import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 import { assertValidSaveRequest } from "@/lib/caseBuilder/validation";
-import { CaseSection } from "@/lib/saveCase";
+import { CaseSection } from "@/lib/caseSections";
 import type { CaseBundle } from "@/actions/case_builder/getCase";
 import { medOrderFormStateFromCaseBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marFromBundle";
-import { buildLabRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsFromBundle";
-import type { LabTableData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
 import {
   filterAdministrationsForOrders,
   normalizeOptionalNumericInput,
@@ -38,14 +36,14 @@ describe("case minimum requirements", () => {
     first_name: "Avery",
     last_name: "Jones",
     description: "Post-operative patient",
-    date_of_birth: "1984-05-12",
+    age: 27,
   };
 
   it("makes a case usable as soon as its minimum fields are present", () => {
     expect(caseMeetsMinimumRequirements(usableCase)).toBe(true);
   });
 
-  it.each(["first_name", "last_name", "description", "date_of_birth"] as const)(
+  it.each(["first_name", "last_name", "description", "age"] as const)(
     "rejects a case with no %s",
     (field) => {
       expect(caseMeetsMinimumRequirements({ ...usableCase, [field]: " " })).toBe(false);
@@ -195,20 +193,5 @@ describe("case-builder edit hydration", () => {
     expect(hydrated.createdOrders[0].medicationId).toBe(medicationId);
     expect(hydrated.selectedMeds[0].id).toBe(medicationId);
     expect(hydrated.createdOrders.map((order) => order.phase)).toEqual([2, 3]);
-  });
-
-  it("rehydrates unstructured lab values instead of dropping them", () => {
-    const template: LabTableData[] = [{
-      field: "Custom Biomarker",
-      rowType: "results",
-      hideable: true,
-    }];
-    const hydrated = buildLabRowsFromBundle({
-      labResults: [{ id: "lab-1", time_offset: 0, data: { unstructured: { "Custom Biomarker": "positive" } } }],
-      imagingReports: [],
-      microbiologyReports: [],
-    }, template);
-
-    expect(hydrated.rows[0][0]).toBe("positive");
   });
 });

@@ -29,7 +29,6 @@ function displayTimeOffset(minutes: number): string {
 
 const NoteFormDisplay = ({ note, onDelete }: { note: ClinicalNote, onDelete: () => void }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const sanitizedContent = DOMPurify.sanitize(note.content)
 
   return (
     <Collapsible
@@ -75,7 +74,7 @@ const NoteFormDisplay = ({ note, onDelete }: { note: ClinicalNote, onDelete: () 
         <div className="p-4 text-sm text-black border-t border-slate-100 bg-white space-y-2">
           <div
             className="w-full max-w-none [&_p]:min-h-[1rem]"
-            dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(note.content) }}
           />
         </div>
       </CollapsibleContent>

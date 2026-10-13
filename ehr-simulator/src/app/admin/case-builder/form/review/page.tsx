@@ -66,7 +66,7 @@ export default function FormReview() {
             <CardHeader className="border-b text-lg font-semibold">Patient and scenario</CardHeader>
             <CardContent className="grid gap-3 pt-4 sm:grid-cols-2 lg:grid-cols-3">
               <p><strong>Name:</strong> {demographicData.firstName} {demographicData.lastName}</p>
-              <p><strong>Age / DOB:</strong> {demographicData.age || "None"} / {demographicData.DOBMonth} {demographicData.DOBDay}</p>
+              <p><strong>Age / DOB:</strong> {demographicData.age || "None"}</p>
               <p><strong>Diagnosis:</strong> {demographicData.admittingDiagnosis || "None"}</p>
               <p><strong>Code status:</strong> {demographicData.codeStatus || "None"}</p>
               <p><strong>Precautions:</strong> {demographicData.precautions || "None"}</p>

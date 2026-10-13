@@ -3,16 +3,13 @@ import SimulationGroupsView from "@/app/faculty/[id]/[sectionAssignmentId]/compo
 import { getSectionSimulationDetails } from "@/app/faculty/lib/facultyData";
 
 export default async function SimulationPage({
-  params,
+    params,
 }: {
-  params: Promise<{ id: string; sectionAssignmentId: string }>;
+    params: Promise<{ id: string; sectionAssignmentId: string }>;
 }) {
 
     const { sectionAssignmentId } = await params;
 
-    // Fetch the simulation data server-side using the sectionId from the URL
-    console.log(sectionAssignmentId)
-    //const activeSimView = null
     const activeSimView = await getSectionSimulationDetails(sectionAssignmentId)
 
     if (!activeSimView) {
@@ -24,6 +21,5 @@ export default async function SimulationPage({
         <div className="m-10">
             <SimulationGroupsView activeSimView={activeSimView} />
         </div>
-        
     );
 }

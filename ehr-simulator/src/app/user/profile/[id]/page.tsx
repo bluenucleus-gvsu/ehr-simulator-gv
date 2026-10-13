@@ -25,7 +25,7 @@ export default async function ProfilePage({ params }: Readonly<{ params: Promise
 
   const studentName = isOwnProfile
     ? user.user_metadata?.full_name || user.user_metadata?.name || user.email || "Student"
-    : (async () => {
+    : await (async () => {
       const { data: profile } = await supabase
         .from("users")
         .select("full_name, email, role")

@@ -1,4 +1,5 @@
-import { CaseSection, type CaseSection as CaseSectionValue } from "@/lib/saveCase";
+import { FlexSheetSection } from "../flexSheet/flexSheetSections";
+import { CaseSection, type CaseSection as CaseSectionValue } from "@/lib/caseSections";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -39,6 +40,17 @@ function assertPhase(value: unknown, label: string, phaseCount = 10): number {
   return phase;
 }
 
+function assertValidValue(value: unknown[], label: string, mapping: Record<string, string>) {
+  const validValues = new Set(Object.values(mapping));
+
+  value.forEach((value, index) => {
+    if (typeof value !== "string" || !validValues.has(value)) {
+      fail(`${label}[${index}] is an invalid value`)
+    }
+  })
+
+}
+
 function validateTablePayload(value: unknown, label: string): void {
   const payload = record(value, label);
   array(payload.data, `${label}.data`);
@@ -67,9 +79,6 @@ export function assertValidSaveRequest(
       requiredString(payload.summary, "Case summary");
       const codeStatus = requiredString(payload.codeStatus, "Code status");
       if (!["Full", "DNR", "Partial"].includes(codeStatus)) fail("Code status is not recognized.");
-      requiredString(payload.DOBMonth, "Birth month");
-      const day = finiteNumber(payload.DOBDay, "Birth day");
-      if (!Number.isInteger(day) || day < 1 || day > 31) fail("Birth day must be from 1 to 31.");
       const age = finiteNumber(payload.age, "Age");
       if (!Number.isInteger(age) || age < 0 || age > 120) fail("Age must be from 0 to 120.");
       assertPhase(payload.phaseCount ?? 1, "Phase count");
@@ -98,6 +107,9 @@ export function assertValidSaveRequest(
         assertPhase(order.phase, `orders[${index}].phase`);
       });
       return;
+    case CaseSection.TABLE_TEMPLATE:
+      assertValidValue(array(payloadValue, "tableTemplate"), 'tableTemplate', FlexSheetSection)
+      return
     case CaseSection.LABS:
       validateTablePayload(payloadValue, "labs");
       return;

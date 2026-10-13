@@ -28,6 +28,7 @@ const ContinueButton = ({ buttonText, onClick, tooltip }: SubmitButtonProps) => 
   return (
     <div className="">
       <Button
+        id="continue"
         className="w-full cursor-pointer"
         variant={"default"}
         onClick={() => void handleClick()}

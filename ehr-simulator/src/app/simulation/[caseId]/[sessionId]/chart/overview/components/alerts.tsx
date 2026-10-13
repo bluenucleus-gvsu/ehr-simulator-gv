@@ -3,22 +3,12 @@
 import { Card, CardContent } from "@/components/ui/card"
 import StyledTitle from "./styledTitle"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
-
-function alertName(raw: unknown): string {
-  if (Array.isArray(raw)) {
-    const first = raw[0] as { name?: string } | undefined
-    return first?.name ?? "N/A"
-  }
-  if (raw && typeof raw === "object") {
-    return (raw as { name?: string }).name ?? "N/A"
-  }
-  return "N/A"
-}
+import { valueFromJoinedName } from "../../components/chartSidebar"
 
 const Alerts = () => {
   const { caseBundle } = useSimulationCase();
   const alertNames = caseBundle?.safetyAlerts?.length
-    ? caseBundle.safetyAlerts.map((row) => alertName(row?.safety_alert))
+    ? caseBundle.safetyAlerts.map((row) => valueFromJoinedName(row?.safety_alert))
     : [];
 
   if (alertNames.length === 0) return null;

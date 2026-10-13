@@ -3,24 +3,14 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import StyledTitle from "./styledTitle"
-import { buildChartDataFromCaseRow } from "@/app/simulation/[caseId]/[sessionId]/chart/components/chartData"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
 
 const ActiveProblems = () => {
   const { caseBundle } = useSimulationCase()
-  const chartData = buildChartDataFromCaseRow((caseBundle?.caseRow as Record<string, unknown> | null | undefined) ?? null)
 
-  if (!chartData || Object.keys(chartData).length === 0) {
-    return (
-      <Card className="relative col-span-1 pt-2 overflow-hidden h-fit gap-3">
-        <StyledTitle color="bg-red-200" firstLetter="A" secondLetter="ctive Problems" />
-        <p>No data exists</p>
-      </Card>
-    )
-  }
+  const pmh = caseBundle?.caseRow.medical_history
 
-  const pmh = chartData.pmh.value.length ? chartData.pmh.value : [];
-  if (pmh.length === 0) return null;
+  if (!pmh || pmh.length === 0) return null;
 
   return (
     <Card className="relative col-span-1 pt-2 overflow-hidden h-fit gap-3">

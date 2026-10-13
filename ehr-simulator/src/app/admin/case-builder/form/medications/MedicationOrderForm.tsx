@@ -13,8 +13,9 @@ import MedCardForm from "./components/medCardForm"
 import { useRouter } from "next/navigation"
 import { useFormContext } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
-import { CaseSection } from "@/lib/saveCase"
+import { CaseSection } from "@/lib/caseSections"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
+import { toast } from "sonner"
 import { caseBuilderPath } from "@/lib/caseBuilder/routes"
 import { filterAdministrationsForOrders } from "@/lib/caseBuilder/medicationPayload"
 
@@ -42,6 +43,10 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
   const [selectedMed, setSelectedMed] = useState('')
   const [selectedMeds, setSelectedMeds] = useState<AllMedicationTypes[]>(medOrderData.selectedMeds)
   const [medOrders, setMedOrders] = useState<MedicationOrder[]>(medOrderData.createdOrders)
+  const validateMedOrders = () => {
+    return medOrders.every(order => order.priority && order.frequency && order.orderingProvider)
+  }
+
 
   const handleAddMedication = (newMedId: string) => {
     setSelectedMed(newMedId)
@@ -81,7 +86,7 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
 
     setSelectedMeds(prev => prev.filter((_, i) => i !== index))
     setMedOrders(remainingOrders)
-    onDataChange('medAdministrationInstances', remainingAdministrations)
+    onDataChange(CaseSection.MEDICATION_ADMINISTRATIONS, remainingAdministrations)
   }
 
   const handleOrderChange = (index: number, field: keyof MedicationOrder, value: string | boolean | number) => {
@@ -107,7 +112,13 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
   }, [medications]);
 
   const goBack = () => {
-    onDataChange('medOrders', {
+    const canSubmit = validateMedOrders()
+    if (!canSubmit) {
+      toast.warning('Every order must be assigned a Priority, Frequency, and Provider.')
+      return
+    }
+
+    onDataChange(CaseSection.MEDICATION_ORDERS, {
       createdOrders: medOrders,
       selectedMeds: selectedMeds
     });
@@ -115,17 +126,25 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
   }
 
   const handleSubmit = async () => {
+    const canSubmit = validateMedOrders()
+    if (!canSubmit) {
+      toast.warning('Every order must be assigned a Priority, Frequency, and Provider.')
+      return
+    }
+
     const validAdministrations = filterAdministrationsForOrders(
       medOrders,
       medAdministrationData,
     )
 
-    onDataChange('medOrders', {
-      createdOrders: medOrders,
-      selectedMeds: selectedMeds
-    });
-    onDataChange('medAdministrationInstances', validAdministrations)
     if (caseId) {
+      onDataChange(CaseSection.MEDICATION_ORDERS, {
+        createdOrders: medOrders,
+        selectedMeds: selectedMeds
+      });
+
+      onDataChange(CaseSection.MEDICATION_ADMINISTRATIONS, validAdministrations)
+
       await saveCaseData({
         payload: { orders: medOrders, administrations: validAdministrations },
         section: CaseSection.MEDICATION_ORDERS,
@@ -137,7 +156,7 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
   return (
     <FormShell
       title="Medication Orders"
-      stepDescription="Step 8 of 9: Create Medication Orders"
+      stepDescription="Create Medication Orders"
       icon={<Pill className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}

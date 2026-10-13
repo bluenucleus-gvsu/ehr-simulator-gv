@@ -1,8 +1,8 @@
 "use server"
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { transformDocumentationTableToSchema } from "@/lib/documentationTypes";
-import type { FlexSheetData } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetData";
+import { FlexSheetData } from "@/lib/flexSheet/flexSheetTypes";
+import { transformFlexSheetPayloadToSchema } from "@/lib/flexSheet/flexSheetHelpers";
 
 type DocumentationSavePayload = {
   data: FlexSheetData[];
@@ -15,7 +15,7 @@ export async function updateDocumentationResults(
   payload: DocumentationSavePayload,
   caseId: string,
 ) {
-  const rows = transformDocumentationTableToSchema(caseId, {
+  const rows = transformFlexSheetPayloadToSchema(caseId, {
     data: payload.data ?? [],
     timePoints: payload.timePoints ?? [],
     timePointsInPreSim: new Set(payload.timePointsInPreSim ?? []),

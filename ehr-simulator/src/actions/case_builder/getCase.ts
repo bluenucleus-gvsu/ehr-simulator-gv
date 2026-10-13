@@ -1,18 +1,23 @@
 "use server"
 
+import { createClient } from "@supabase/supabase-js";
 import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient";
 import { assertUuid } from "@/lib/caseBuilder/validation";
+import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
+import { DatabaseDocumentation } from "../simulation";
+import { FlexSheetSection } from "@/lib/flexSheet/flexSheetSections";
+import { Database } from "../../../database.types";
 
 export interface CaseBundle {
   caseRow: CaseRow
   safetyAlerts: CaseBundleRow[]
   familyHistory: CaseBundleRow[]
   clinicalDocuments: CaseBundleRow[]
-  orders: CaseBundleRow[]
-  labResults: CaseBundleRow[]
+  orders: DatabaseOrder[]
+  labResults: DatabaseLabRow[]
   imagingReports: ImagingReportRow[]
   microbiologyReports: MicrobiologyReportRow[]
-  documentationResults: CaseBundleRow[]
+  documentationResults: DatabaseDocumentation[]
   medicationAdministrations: CaseBundleRow[]
   caseImages: CaseBundleRow[]
   /** Structured med orders + joined medication rows (when present in DB). */
@@ -20,16 +25,13 @@ export interface CaseBundle {
 }
 
 type NamedLookup = { id?: string | null; name?: string | null };
+export type DatabaseOrder = Database['public']['Tables']['orders']['Row'];
 
-export type CaseRow = Record<string, unknown> & {
-  id?: string | null;
-  first_name?: string | null;
-  last_name?: string | null;
-  date_of_birth?: string | null;
-  code_status?: string | null;
-  attending_provider?: string | null;
+export type CaseRow = Database['public']['Tables']['cases']['Row'] & {
   isolation_precautions?: NamedLookup | null;
   relationship_status?: NamedLookup | null;
+  case_specialty: CaseSpecialty;
+  flexsheet_sections: FlexSheetSection[] | null;
 };
 
 export type CaseBundleRow = Record<string, unknown> & {
@@ -56,6 +58,7 @@ export type CaseBundleRow = Record<string, unknown> & {
   reporter?: string | null;
 };
 
+export type DatabaseLabRow = Database['public']['Tables']['lab_results']['Row'];
 export type ImagingReportRow = CaseBundleRow & { is_critical?: boolean | null };
 export type MicrobiologyReportRow = CaseBundleRow & { is_critical?: boolean | string | null };
 
@@ -75,7 +78,13 @@ export async function getCaseBundle(
 ): Promise<CaseBundle> {
 
   assertUuid(caseId, "Case ID");
-  const supabase = await createCaseBuilderAdminClient();
+  // This bundle is also used by the student simulation chart. Do not require
+  // case-builder admin access for this read-only path.
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  );
 
   const [
     caseRes,
@@ -223,11 +232,11 @@ export async function getCaseBundle(
     safetyAlerts: (safetyAlertsRes.data ?? []) as CaseBundleRow[],
     familyHistory: (familyHistoryRes.data ?? []) as CaseBundleRow[],
     clinicalDocuments: (clinicalDocumentsRes.data ?? []) as CaseBundleRow[],
-    orders: (ordersRes.data ?? []) as CaseBundleRow[],
-    labResults: (labResultsRes.data ?? []) as CaseBundleRow[],
+    orders: (ordersRes.data ?? []) as DatabaseOrder[],
+    labResults: (labResultsRes.data ?? []),
     imagingReports: (imagingReportsRes.data ?? []) as ImagingReportRow[],
     microbiologyReports: (microbiologyReportsRes.data ?? []) as MicrobiologyReportRow[],
-    documentationResults: (documentationResultsRes.data ?? []) as CaseBundleRow[],
+    documentationResults: (documentationResultsRes.data ?? []) as DatabaseDocumentation[],
     medicationAdministrations: (medicationAdministrationsRes.data ?? []) as CaseBundleRow[],
     caseImages: (caseImagesRes.data ?? []) as CaseBundleRow[],
     medicationOrders: medicationOrders as CaseBundleRow[],

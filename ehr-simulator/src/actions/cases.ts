@@ -199,7 +199,7 @@ export async function createSectionCaseAssignment(payload: SectionAssignmentInse
 
   const { data: simCase, error: caseError } = await supabase
     .from("cases")
-    .select("first_name, last_name, description, date_of_birth")
+    .select("first_name, last_name, description, age")
     .eq("id", payload.case_id)
     .maybeSingle();
 
@@ -278,7 +278,7 @@ export async function getCourseCaseAssignments() {
       admitting_diagnosis,
       first_name,
       last_name,
-      date_of_birth,
+      age,
       course_cases (
         id,
         course_id,

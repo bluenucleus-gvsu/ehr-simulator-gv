@@ -18,10 +18,10 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import Combobox from "@/components/ui/combobox"
+import FormTooltip from "@/components/form-tooltip"
 
 import {
   MedicationOrder,
-  // allMedications,
   MedAdministrationInstance,
   AdministrationStatus,
   AllMedicationTypes,
@@ -32,7 +32,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useFormContext } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
 import ColumnShiftControl from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/columnShiftControl"
-import { CaseSection } from "@/lib/saveCase"
+import { CaseSection } from "@/lib/caseSections"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
 import { caseBuilderPath } from "@/lib/caseBuilder/routes"
 
@@ -58,14 +58,14 @@ export default function MedicationAdministrationsForm() {
   const { onDataChange, medAdministrationData, medOrderData, demographicData, caseId } = useFormContext()
 
   const [medAdministrations, setMedAdministrations] = useState<MedAdministrationInstance[]>(medAdministrationData.filter(admin => {
-    return medOrderData.createdOrders.find(order => order.id === admin.medicationOrderId) !== undefined;
+    return medOrderData.createdOrders.some(order => order.id === admin.medicationOrderId);
   }))
   const [selectedOrder, setSelectedOrder] = useState<MedicationOrder>()
   const [selectedOrders, setSelectedOrders] = useState<MedicationOrder[]>(medOrderData.createdOrders)
 
   const [administratorId, setAdministratorId] = useState('')
   const [status, setStatus] = useState<AdministrationStatus>('Due')
-  const isInPast = status === 'Due' ? false : true
+  const isInPast = status !== 'Due'
   const [dose, setDose] = useState('')
   const [visibleInPresim, setVisibleInPresim] = useState<boolean>(true)
   const [phase, setPhase] = useState(1)
@@ -113,7 +113,7 @@ export default function MedicationAdministrationsForm() {
     setMedAdministrations(prev => [...prev, newMedAdministration])
 
     setSelectedOrders(prev => {
-      if (!prev.find(order => order.id === selectedOrder.id)) {
+      if (!prev.some(order => order.id === selectedOrder.id)) {
         return [selectedOrder, ...prev]
       }
       return prev
@@ -128,9 +128,9 @@ export default function MedicationAdministrationsForm() {
       setter('');
       return
     }
-    const numValue = parseFloat(inputValue);
+    const numValue = Number.parseFloat(inputValue);
 
-    if (!isNaN(numValue) && numValue >= 0 && numValue <= 99999999) {
+    if (!Number.isNaN(numValue) && numValue >= 0 && numValue <= 99999999) {
       setter(numValue);
     }
   };
@@ -147,12 +147,12 @@ export default function MedicationAdministrationsForm() {
   }
 
   const goBack = () => {
-    onDataChange('medAdministrationInstances', medAdministrations)
+    onDataChange(CaseSection.MEDICATION_ADMINISTRATIONS, medAdministrations)
     router.push(caseBuilderPath("/admin/case-builder/form/medications", caseId));
   }
 
   const handleSubmit = async () => {
-    onDataChange('medAdministrationInstances', medAdministrations)
+    onDataChange(CaseSection.MEDICATION_ADMINISTRATIONS, medAdministrations)
 
     await saveCaseData({
       payload: {
@@ -182,7 +182,7 @@ export default function MedicationAdministrationsForm() {
   return (
     <FormShell
       title="Medication History"
-      stepDescription="Step 9 of 10: Document past administrations and Due times"
+      stepDescription="Document past administrations and Due times"
       icon={<Syringe className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}
@@ -203,19 +203,49 @@ export default function MedicationAdministrationsForm() {
               <CardContent className="p-6 pt-0 flex flex-col gap-4">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                   <div className="lg:col-span-7 space-y-4">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold text-slate-500 uppercase">Select Order</Label>
-                      <Combobox
-                        value={selectedOrder?.id || ''}
-                        onValueChange={(id) => handleComboboxSelection(id)}
-                        data={comboboxData}
-                        displayText="Search medication orders..."
-                      />
+                    <div className="flex items-end gap-8">
+                      <div>
+                        <Label className="text-xs font-bold text-slate-500 uppercase">Select Order</Label>
+                        <div className="mt-1">
+                          <Combobox
+                            value={selectedOrder?.id || ''}
+                            onValueChange={(id) => handleComboboxSelection(id)}
+                            data={comboboxData}
+                            displayText="Search medication orders..."
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs font-bold text-slate-500 uppercase">Status</Label>
+                          <FormTooltip
+                            color="#62748e"
+                            size={16}
+                            tip="Changing the status of the order will automatically adjust whether the time offset is before or after the simulation starts."
+                          />
+                        </div>
+                        <div className="mt-1">
+                          <Select value={status} onValueChange={(v: AdministrationStatus) => setStatus(v)}>
+                            <SelectTrigger>
+                              <SelectValue />
+                              <ChevronDown />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Given">Given</SelectItem>
+                              <SelectItem value="Held">Held</SelectItem>
+                              <SelectItem value="Missed">Missed</SelectItem>
+                              <SelectItem value="Refused">Refused</SelectItem>
+                              <SelectItem value="Due">Due</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
                     <div className="p-4 rounded-lg border border-slate-200 bg-slate-50">
                       <div className="flex items-center justify-between mb-2">
                         <Label className="flex items-center gap-2 text-slate-700">
-                          <Clock className="w-4 h-4" /> Time Offset
+                          <Clock className="w-4 h-4" />
+                          <span>Time Offset - {isInPast ? <i>before</i> : <i>after</i>} the simulation starts</span>
                         </Label>
                       </div>
                       <div className="flex gap-2">
@@ -258,22 +288,6 @@ export default function MedicationAdministrationsForm() {
                             {linkedMed?.strengthUnit || 'units'}
                           </span>
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Status</Label>
-                        <Select value={status} onValueChange={(v: AdministrationStatus) => setStatus(v)}>
-                          <SelectTrigger>
-                            <SelectValue />
-                            <ChevronDown />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Given">Given</SelectItem>
-                            <SelectItem value="Held">Held</SelectItem>
-                            <SelectItem value="Missed">Missed</SelectItem>
-                            <SelectItem value="Refused">Refused</SelectItem>
-                            <SelectItem value="Due">Due</SelectItem>
-                          </SelectContent>
-                        </Select>
                       </div>
                     </div>
                     <div className="space-y-2">
