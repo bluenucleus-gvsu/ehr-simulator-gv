@@ -2,22 +2,13 @@
 
 import { useState, useMemo } from "react";
 import FeedbackModal from "@/app/faculty/components/FeedbackModal";
-import { FeedbackTarget, ActiveSimView } from "@/app/faculty/lib/types";
+import { FeedbackTarget, ActiveSimView } from "@/actions/faculty";
+import { formatSimTime } from "@/app/faculty/components/FacultyCoursesView";
 import { updateCurrentPhase } from "@/actions/simulation";
 import { useRouter } from "next/navigation";
 import AdvanceAlertDialog from "./AdvanceAlertDialog";
 import Phases from "./Phases";
 import { toast } from "sonner";
-
-function formatSimTime(dateStr: string) {
-  return new Date(dateStr).toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
 
 // ─── Simulation Groups View ───────────────────────────────────────────────────
 export default function SimulationGroupsView({
@@ -203,25 +194,26 @@ export default function SimulationGroupsView({
                 {group.members.map((member) => {
                   const memberFeedbackKey = `member:${member.id}`;
                   const hasMemberFeedback = !!submittedFeedback[memberFeedbackKey];
+                  const name = member.full_name || member.email || "Unknown Student";
                   return (
                     <li key={member.id} className="flex items-center justify-between py-2">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-xs font-semibold text-slate-600">
-                          {member.name
+                          {name
                             .split(" ")
-                            .map((n) => n[0])
+                            .map((n: string) => n[0])
                             .slice(0, 2)
                             .join("")
                             .toUpperCase()}
                         </div>
-                        <span className="text-sm text-slate-700">{member.name}</span>
+                        <span className="text-sm text-slate-700">{name}</span>
                       </div>
                       <button
                         onClick={() =>
                           setFeedbackTarget({
                             kind: "individual",
                             studentId: member.id,
-                            studentName: member.name,
+                            studentName: name,
                             groupName: group.name,
                           })
                         }

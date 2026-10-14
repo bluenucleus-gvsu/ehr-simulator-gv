@@ -5,6 +5,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import { getUsersGroupId } from '@/actions/users';
 import { useParams } from 'next/navigation';
 import { Database } from '../../database.types';
+import { SESSION_STATUS, normalizeSessionStatus } from '@/utils/sessionStatus';
 
 const supabase = createBrowserClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -74,11 +75,12 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
       setGroupId(sessionData.group_id);
     }
 
-    const normalizedStatus = (sessionData.status ?? "").toLowerCase();
+    const normalizedStatus = normalizeSessionStatus(sessionData.status);
     const hasStarted =
       Boolean(sessionData.started_at) ||
-      normalizedStatus === "in progress" ||
-      normalizedStatus === "completed";
+      normalizedStatus === SESSION_STATUS.InProgress ||
+      normalizedStatus === SESSION_STATUS.Completed ||
+      normalizedStatus === SESSION_STATUS.Archived;
 
     setIsPresim(!hasStarted);
     setCurrentPhase(Number(sessionData.current_phase));

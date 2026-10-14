@@ -1,90 +1,52 @@
-export type SimulationAvailability = "not_available" | "presim" | "active" | "completed";
+import { SESSION_STATUS, normalizeSessionStatus } from "@/utils/sessionStatus";
 
-export interface AssignedSimulationLifecycleInput {
-  simTime?: string | null;
-  presimTime?: string | null;
-  /** `case_sessions.status` from the database (e.g. assigned, in progress). */
-  sessionStatus?: string | null;
-  now?: Date;
+export type CaseSessionAvailability =
+  | "upcoming"   // assigned, pre-sim window not open yet
+  | "presim"     // assigned, pre-sim window open (view-only chart)
+  | "active"     // in progress, or assigned with sim time reached (active sim is enterable)
+  | "completed"  // terminal
+  | "archived";  // terminal
+
+export const ARCHIVE_WINDOW_HOURS = 24;
+const ARCHIVE_WINDOW_MS = ARCHIVE_WINDOW_HOURS * 60 * 60 * 1000;
+
+export function isPastArchiveWindow(simTime: string | null | undefined, now?: Date): boolean {
+  if (!simTime) return false;
+  const simMs = new Date(simTime).getTime();
+  if (!Number.isFinite(simMs)) return false;
+  return (now ?? new Date()).getTime() > simMs + ARCHIVE_WINDOW_MS;
 }
 
-export interface AssignedSimulationLifecycle {
-  availability: SimulationAvailability;
-  simDate: Date | null;
-  presimDate: Date | null;
-  isPastScheduled: boolean;
-}
+export function getCaseSessionAvailability(
+  simTime: string | null | undefined,
+  presimTime: string | null | undefined,
+  status: string | null | undefined,
+  now?: Date
+): CaseSessionAvailability {
+  const nowMs = (now ?? new Date()).getTime();
+  const simMs = simTime ? new Date(simTime).getTime() : null;
+  const presimMs = presimTime ? new Date(presimTime).getTime() : null;
+  const sessionStatus = normalizeSessionStatus(status);
 
-/** After scheduled sim start, students may still join as "active" for this long. */
-const POST_SIM_JOIN_WINDOW_MS = 48 * 60 * 60 * 1000;
-
-export function getAssignedSimulationLifecycle(input: AssignedSimulationLifecycleInput): AssignedSimulationLifecycle {
-  const now = input.now ?? new Date();
-  const simDate = input.simTime ? new Date(input.simTime) : null;
-  const presimDate = input.presimTime ? new Date(input.presimTime) : null;
-  const sessionStatus = input.sessionStatus?.trim().toLowerCase() ?? null;
-
-  const simMs = simDate && Number.isFinite(simDate.getTime()) ? simDate.getTime() : null;
-  const profileWindowEndMs = simMs != null ? simMs + POST_SIM_JOIN_WINDOW_MS : null;
-  const isPastJoinWindow = profileWindowEndMs != null && now.getTime() > profileWindowEndMs;
-
-  if (sessionStatus === "completed" || sessionStatus === "archived") {
-    return {
-      availability: "completed",
-      simDate,
-      presimDate,
-      isPastScheduled: Boolean(simDate && simDate < now),
-    };
+  // Completed: staff has explicity marked as completed.
+  if (sessionStatus === SESSION_STATUS.Completed) {
+    return "completed";
+  }
+  // Archived: admin have explicitly marked case_session as archived or > ARCHIVE_WINDOW_HOURS have past since sim_time.
+  if (sessionStatus === SESSION_STATUS.Archived) {
+    return "archived";
   }
 
-  if (isPastJoinWindow) {
-    if (sessionStatus === "in progress") {
-      return {
-        availability: "completed",
-        simDate,
-        presimDate,
-        isPastScheduled: true,
-      };
-    }
-    return {
-      availability: "not_available",
-      simDate,
-      presimDate,
-      isPastScheduled: true,
-    };
+  // Active: in progress, or an assigned session whose sim time has arrived.
+  if (sessionStatus === SESSION_STATUS.InProgress || (simMs != null && simMs <= nowMs)) {
+    return "active";
   }
 
-  if (sessionStatus === "in progress") {
-    return {
-      availability: "active",
-      simDate,
-      presimDate,
-      isPastScheduled: Boolean(simDate && simDate < now),
-    };
+  // Pre-sim: an assigned session whose view-only window has opened.
+  if (presimMs != null && presimMs <= nowMs) {
+    return "presim";
   }
 
-  if (simDate && simDate <= now) {
-    return {
-      availability: "active",
-      simDate,
-      presimDate,
-      isPastScheduled: true,
-    };
-  }
-
-  if (presimDate && presimDate <= now) {
-    return {
-      availability: "presim",
-      simDate,
-      presimDate,
-      isPastScheduled: false,
-    };
-  }
-
-  return {
-    availability: "not_available",
-    simDate,
-    presimDate,
-    isPastScheduled: Boolean(simDate && simDate < now),
-  };
+  // Upcoming: assigned, pre-sim window not open yet.
+  return "upcoming";
 }

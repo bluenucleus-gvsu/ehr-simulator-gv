@@ -4,11 +4,11 @@ import { createClient, PostgrestError } from "@supabase/supabase-js";
 import { Database } from "../../database.types";
 import { revalidatePath } from "next/cache";
 import { caseMeetsMinimumRequirements } from "@/lib/caseMinimumRequirements";
-
-export type SectionAssignment = Database['public']['Tables']['section_assignments']['Row'];
-export type SectionAssignmentInsert = Database['public']['Tables']['section_assignments']['Insert'];
-export type SimCase = Database['public']['Tables']['cases']['Row']
-export type CaseSessionUpsert = Database['public']['Tables']['case_sessions']['Insert']
+import {
+  SESSION_STATUS,
+  resolveAssignmentStatus,
+} from "@/utils/sessionStatus";
+import type { SectionAssignmentInsert, SectionAssignmentRow } from "@/types/db";
 
 export type ActionResponse<T = null> = {
   success: boolean;
@@ -16,6 +16,29 @@ export type ActionResponse<T = null> = {
   data?: T | null;
   error?: PostgrestError;
 };
+
+export type TerminalAssignmentStatus =
+  | typeof SESSION_STATUS.Completed
+  | typeof SESSION_STATUS.Archived;
+
+export interface SimAssignment {
+  id: string;
+  simTime: string | null;
+  presimTime: string | null;
+  caseId: string | null;
+  caseName: string;
+  caseDescription: string;
+  caseDiagnosis: string;
+  sectionId: string;
+  sectionName: string;
+  terminalStatus: TerminalAssignmentStatus | null;
+}
+
+export interface CourseSection {
+  id: string;
+  name: string;
+  meetingTime: string | null;
+}
 
 export async function getAllSimCases(options?: { usableOnly?: boolean }) {
   const supabase = createClient<Database>(
@@ -28,7 +51,7 @@ export async function getAllSimCases(options?: { usableOnly?: boolean }) {
     .select("*")
 
   if (error) {
-    const result: ActionResponse = {
+    const result = {
       success: false,
       message: 'Failed to retrieve Sim Cases',
       error,
@@ -72,7 +95,7 @@ export async function getSimCaseById(id: string) {
 }
 
 
-export async function getCaseByCourseId() {
+export async function getAllCases() {
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -81,7 +104,6 @@ export async function getCaseByCourseId() {
   const { data, error } = await supabase
     .from("cases")
     .select("*")
-  // .eq("course_id", id) // Commented out to retrieve all cases for assignment. 
 
   if (error) {
     const result = {
@@ -100,7 +122,13 @@ export async function getCaseByCourseId() {
   };
 }
 
-export async function getSectionCaseAssignments(courseId: string) {
+function getTerminalStatus(sessions: { id: string; status: string | null; }[]): TerminalAssignmentStatus | null {
+  return resolveAssignmentStatus(sessions.map((session) => session.status));
+}
+
+export async function getSectionCaseAssignments(
+  courseId: string,
+): Promise<ActionResponse<{ sections: CourseSection[]; assignments: SimAssignment[] }>> {
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -118,9 +146,7 @@ export async function getSectionCaseAssignments(courseId: string) {
         presim_time,
         case_sessions (
           id,
-          status,
-          started_at,
-          completed_at
+          status
         ),
         cases!section_assignments_case_id_fkey (
           id,
@@ -133,58 +159,46 @@ export async function getSectionCaseAssignments(courseId: string) {
     .eq('course_id', courseId);
 
   if (error) {
-    const result = {
+    return {
       success: false,
       message: 'Failed to retrieve Sim Case paired with this course.',
       error,
       data: null
     };
-    return result
   }
 
-  // explicitly get TS to recognize cases as object, not array
-  const cleanData = data?.map((item) => {
-    const cleanedAssignments = item.section_assignments.map(assignment => {
-      const assignmentSessions = Array.isArray((assignment as { case_sessions?: unknown[] }).case_sessions)
-        ? ((assignment as { case_sessions?: unknown[] }).case_sessions as Array<{
-          id: string;
-          status: string | null;
-          started_at: string | null;
-          completed_at: string | null;
-        }>)
-        : [];
-      const selectedSession =
-        assignmentSessions.find((session) => session.status === 'in progress') ??
-        assignmentSessions.find((session) => session.status === 'assigned') ??
-        assignmentSessions.find((session) => session.status === 'unassigned') ??
-        assignmentSessions[0] ??
-        null;
-      const _caseData = Array.isArray(assignment.cases)
-        ? assignment.cases[0]
-        : assignment.cases;
+  const sections: CourseSection[] = [];
+  const assignments: SimAssignment[] = [];
 
-      return {
-        ...assignment,
-        cases: _caseData,
-        session_id: selectedSession?.id ?? null,
-        session_status: selectedSession?.status ?? null,
-      };
-    });
+  for (const section of (data ?? [])) {
+    sections.push({ id: section.id, name: section.name, meetingTime: section.meeting_time });
 
-    return {
-      ...item,
-      section_assignments: cleanedAssignments
-    };
-  });
+    for (const assignment of section.section_assignments ?? []) {
+      const sessions = assignment.case_sessions ?? [];
+      const caseRecord = assignment.cases;
+      assignments.push({
+        id: assignment.id,
+        simTime: assignment.sim_time,
+        presimTime: assignment.presim_time,
+        caseId: caseRecord?.id ?? null,
+        caseName: caseRecord?.name ?? "Unknown Case",
+        caseDescription: caseRecord?.description ?? "",
+        caseDiagnosis: caseRecord?.admitting_diagnosis ?? "",
+        sectionId: section.id,
+        sectionName: section.name,
+        terminalStatus: getTerminalStatus(sessions),
+      });
+    }
+  }
 
   return {
     success: true,
     message: 'Successfully retrieved Sim Assignment for this section.',
-    data: cleanData,
+    data: { sections, assignments },
   }
 }
 
-export async function createSectionCaseAssignment(payload: SectionAssignmentInsert): Promise<ActionResponse<SectionAssignment>> {
+export async function createSectionCaseAssignment(payload: SectionAssignmentInsert): Promise<ActionResponse<SectionAssignmentRow>> {
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -263,113 +277,10 @@ export async function deleteSectionCaseAssignment(id: string): Promise<ActionRes
   };
 }
 
-export async function getCourseCaseAssignments() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
-  const { data, error } = await supabase
-    .from('cases')
-    .select(`
-      id,
-      name,
-      description, 
-      admitting_diagnosis,
-      first_name,
-      last_name,
-      age,
-      course_cases (
-        id,
-        course_id,
-        courses (
-          id,
-          name,
-          code
-        )
-      )
-    `);
-
-  if (error) {
-    return {
-      success: false,
-      message: 'Failed to retrieve sim cases.',
-      error,
-      data: null
-    };
-  }
-
-  const assignments = data?.filter(caseMeetsMinimumRequirements).flatMap((caseItem) => {
-    // Handle unassigned cases (Left Join equivalent)
-    if (!caseItem.course_cases || caseItem.course_cases.length === 0) {
-      return [{
-        id: null, // No assignment ID because it's not in course_cases
-        courseId: null,
-        caseId: caseItem.id,
-        courseName: null,
-        courseCode: null,
-        caseName: caseItem.name,
-        description: caseItem.description,
-        diagnosis: caseItem.admitting_diagnosis
-      }];
-    }
-
-    // Handle cases assigned to one or more courses
-    return caseItem.course_cases.map((assignment) => {
-      const course = Array.isArray(assignment.courses)
-        ? assignment.courses[0]
-        : assignment.courses;
-
-      return {
-        id: assignment.id, // The course_cases ID
-        courseId: assignment.course_id,
-        caseId: caseItem.id,
-        courseName: course?.name,
-        courseCode: course?.code,
-        caseName: caseItem.name,
-        description: caseItem.description,
-        diagnosis: caseItem.admitting_diagnosis
-      };
-    });
-  }) ?? [];
-
-  return {
-    success: true,
-    message: 'Successfully retrieved sim cases.',
-    data: assignments,
-  };
-}
-
-export async function updateCaseSession(session: CaseSessionUpsert) {
-  const supabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
-  const { error } = await supabase
-    .from('case_sessions')
-    .upsert(session);
-
-  if (error) {
-    return {
-      success: false,
-      message: 'Failed to update session data.',
-      error,
-      data: null
-    };
-  }
-
-  return {
-    success: true,
-    message: 'Session data updated.',
-    data: session,
-  };
-}
-
 // extracts type of data from ActionResponse for use in frontend
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ExtractData<T extends (...args: any) => Promise<ActionResponse<any>>> =
   NonNullable<Awaited<ReturnType<T>>['data']>;
 
 export type SectionSimulationsData = ExtractData<typeof getSectionCaseAssignments>;
-export type CasesData = ExtractData<typeof getCaseByCourseId>;
+export type CasesData = ExtractData<typeof getAllCases>;

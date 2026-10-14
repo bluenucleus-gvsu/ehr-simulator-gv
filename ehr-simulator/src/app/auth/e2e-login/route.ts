@@ -10,8 +10,9 @@ const E2E_LOGIN_EMAILS = new Set([
 
 export async function POST(request: NextRequest) {
   if (
-    process.env.NODE_ENV === "production" ||
-    process.env.NEXT_PUBLIC_VERCEL_ENV === "production"
+    (process.env.NODE_ENV === "production" ||
+      process.env.NEXT_PUBLIC_VERCEL_ENV === "production") &&
+    process.env.ENABLE_E2E_LOGIN !== "1"
   ) {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
   }

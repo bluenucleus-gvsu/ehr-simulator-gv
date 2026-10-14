@@ -1,24 +1,18 @@
 "use server"
 
 import { createClient } from "@supabase/supabase-js";
-import { Tables, TablesInsert } from "../../database.types";
 import { ActionResponse } from "./cases";
 import { revalidatePath } from "next/cache";
+import type {
+  CourseInsert,
+  CourseRow,
+  GroupInsert,
+  GroupMembersInsert,
+  SectionInsert,
+  SectionRow,
+} from "@/types/db";
 
-export type Course = Tables<"courses">
-export type CourseInsert = TablesInsert<"courses">
-export type Section = Tables<"sections">
-export type SectionInsert = TablesInsert<"sections">
-export type Group = Tables<"groups">
-export type GroupInsert = TablesInsert<"groups">
-export type GroupMembers = Tables<"group_members">
-export type GroupMembersInsert = TablesInsert<"group_members">
-export type FacultySection = Tables<"faculty_section">
-export type FacultySectionInsert = TablesInsert<"faculty_section">
-export type User = Tables<"users">
-export type UserInsert = TablesInsert<"users">
-
-export async function getAllCourses(): Promise<ActionResponse<Course[] | null>> {
+export async function getAllCourses(): Promise<ActionResponse<CourseRow[] | null>> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -45,7 +39,7 @@ export async function getAllCourses(): Promise<ActionResponse<Course[] | null>> 
   }
 }
 
-export async function getCourseById(id: string): Promise<ActionResponse<Course | null>> {
+export async function getCourseById(id: string): Promise<ActionResponse<CourseRow | null>> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -105,7 +99,7 @@ export async function getSectionsByCourseId(id: string) {
 }
 
 
-export async function createCourse(course: CourseInsert): Promise<ActionResponse<Course>> {
+export async function createCourse(course: CourseInsert): Promise<ActionResponse<CourseRow>> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -124,7 +118,7 @@ export async function createCourse(course: CourseInsert): Promise<ActionResponse
   return { success: true, message: "Course created successfully.", data };
 }
 
-export async function updateCourse(course: CourseInsert): Promise<ActionResponse<Course>> {
+export async function updateCourse(course: CourseInsert): Promise<ActionResponse<CourseRow>> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -148,7 +142,7 @@ export async function updateCourse(course: CourseInsert): Promise<ActionResponse
   };
 }
 
-export async function createSection(section: SectionInsert): Promise<ActionResponse<Section>> {
+export async function createSection(section: SectionInsert): Promise<ActionResponse<SectionRow>> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!

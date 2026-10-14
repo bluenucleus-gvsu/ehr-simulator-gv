@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calendar, Users, UserRoundX } from "lucide-react";
 import { format } from "date-fns";
-import type { SimAssignment } from "./simAssignmentTypes";
+import type { SimAssignment } from "@/actions/cases";
 
 
 interface SimulationsTableProps {
@@ -31,7 +31,7 @@ export function SimAssignmentTable({
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50 hover:bg-gray-50">
-                <TableHead className="w-[180px]">Date</TableHead>
+                <TableHead className="w-45">Date</TableHead>
                 <TableHead>Simulation Name</TableHead>
                 <TableHead>Section</TableHead>
                 <TableHead>{actionLabel}</TableHead>
@@ -43,7 +43,7 @@ export function SimAssignmentTable({
                   <TableCell>
                     <div className="font-medium flex items-center gap-2 text-gray-600">
                       <Calendar size={14} />
-                      <p>{format(new Date(assignment.simTime), dateFormat)}</p>
+                      <p>{assignment.simTime ? format(new Date(assignment.simTime), dateFormat) : "TBD"}</p>
                     </div>
                   </TableCell>
 

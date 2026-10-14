@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import CourseListItem from "./CourseListItem";
-import { Course } from "@/actions/courses";
+import type { CourseRow } from "@/types/db";
 
 interface CoursesClientProps {
-  courses: Course[];
+  courses: CourseRow[];
 }
 
 export default function CoursesClient({ courses }: CoursesClientProps) {

@@ -1,18 +1,19 @@
 "use server";
 
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "../../../database.types";
 import { createServerSupabase } from "@/utils/supabase/server";
+import { createServiceSupabase } from "@/utils/supabase/service";
+import { SESSION_STATUS, isTerminalSessionStatus, normalizeSessionStatus } from "@/utils/sessionStatus";
 
 const PRESIM_WRITE_MESSAGE =
-  "Documentation is view-only in pre-simulation. Enter the active simulation from your profile to make changes.";
+  "Documentation is view-only in pre-sim mode.";
+
+const TERMINAL_WRITE_MESSAGE = "This simulation has ended and is read-only.";
 
 function sessionHasStarted(status: string | null, startedAt: string | null): boolean {
-  const normalized = (status ?? "").toLowerCase();
+  const normalized = normalizeSessionStatus(status);
   return (
     Boolean(startedAt) ||
-    normalized === "in progress" ||
-    normalized === "completed"
+    normalized === SESSION_STATUS.InProgress
   );
 }
 
@@ -32,10 +33,7 @@ export async function assertStudentActiveSessionWrite(
     return { allowed: false, message: "You must be signed in to save simulation data." };
   }
 
-  const serviceSupabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
+  const serviceSupabase = createServiceSupabase();
 
   const { data: profile } = await serviceSupabase
     .from("users")
@@ -56,6 +54,10 @@ export async function assertStudentActiveSessionWrite(
 
   if (error || !session) {
     return { allowed: false, message: "Could not verify simulation session." };
+  }
+
+  if (isTerminalSessionStatus(session.status)) {
+    return { allowed: false, message: TERMINAL_WRITE_MESSAGE };
   }
 
   if (!sessionHasStarted(session.status, session.started_at)) {

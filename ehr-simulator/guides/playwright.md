@@ -3,7 +3,11 @@
 How Playwright tests authenticate and load, and how to write new e2e tests.
 
 ## How tests load
-1. **webServer** — Playwright starts `npm run dev` on :3000 (or reuses a running server).
+1. **webServer** — Playwright builds the app (`npm run build`) and starts a production server
+    on :3100 (or reuses a running server on :3100). The e2e login route is enabled by the
+    `ENABLE_E2E_LOGIN=1` env var set in the webServer command; it stays disabled in normal
+    production deployments. Running e2e against a production build avoids dev-server
+    (Turbopack) instability and bottlenecks under parallel browser load.
 2. **globalSetup** (`playwright/global-setup.ts`) — provisions the three users (student, faculty, and admin)
 3. **setup project** (`__tests__/e2e/auth.setup.e2e.ts`) — one `setup()` test per role that authenticates
     each user.
@@ -53,7 +57,8 @@ Extend `ROLE_ACCOUNTS` in `playwright/helpers/auth.ts` — the setup project aut
 
 ## Troubleshooting
 - **`storageState` file missing** → run the `setup` project (it's a dependency of `chromium`).
-- **`/auth/e2e-login` returns 404** → the app is running with `NODE_ENV=production` (use `npm run dev`).
+- **`/auth/e2e-login` returns 404** → the server was started without `ENABLE_E2E_LOGIN=1`
+    (the e2e webServer command sets it automatically).
 - **Returns 403** → email not in the allowlist.
 - **Install required browser binaries** → run `npx playwright install` (installs all default browsers) or
    `npx playwright install firefox webkit` (installs specific engines).

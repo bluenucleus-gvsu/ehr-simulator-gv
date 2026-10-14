@@ -1,6 +1,6 @@
 // app/[role]/[sectionId]/page.tsx
 import SimulationGroupsView from "@/app/faculty/[id]/[sectionAssignmentId]/components/SimulationGroupsView"
-import { getSectionSimulationDetails } from "@/app/faculty/lib/facultyData";
+import { getSectionSimulationDetails } from "@/actions/faculty";
 
 export default async function SimulationPage({
     params,

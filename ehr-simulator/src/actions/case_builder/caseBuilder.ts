@@ -22,7 +22,7 @@ import type { ClinicalNote } from "@/app/simulation/[caseId]/[sessionId]/chart/n
 import type { OrderType } from "@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData";
 import { FlexSheetData } from "@/lib/flexSheet/flexSheetTypes";
 import type { LabTableData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
-import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient";
+import { createStaffServiceClient } from "@/utils/supabase/staffAccess";
 import { assertValidSaveRequest } from "@/lib/caseBuilder/validation";
 import { FlexSheetSection } from "@/lib/flexSheet/flexSheetSections";
 import { updateTableTemplate } from "./updateTableTemplate";
@@ -47,7 +47,7 @@ type TableSavePayload<T> = {
 
 export async function saveCaseData({ payload, section, caseId }: SaveCaseArgs) {
   assertValidSaveRequest(section, payload, caseId);
-  const supabase = await createCaseBuilderAdminClient();
+  const supabase = await createStaffServiceClient(["admin"]);
 
   if (section === CaseSection.DEMOGRAPHICS) {
     return await upsertCaseDemographics(supabase, payload, caseId)
