@@ -45,7 +45,7 @@ export async function submitStudentNote(note: EditableStudentNoteUpsert): Promis
 
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SECRET_KEY!
   );
 
   const { data, error } = await supabase
@@ -105,7 +105,7 @@ export async function submitStudentNote(note: EditableStudentNoteUpsert): Promis
 export async function getAllClinicalDocuments(caseId: string, sessionId: string): Promise<ActionResponse<ClinicalDocumentView[]>> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SECRET_KEY!
   )
 
   sessionId = resolvePreviewSessionId(sessionId);
@@ -184,7 +184,7 @@ export async function getAllClinicalDocuments(caseId: string, sessionId: string)
 export async function getAllMedications() {
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SECRET_KEY!
   )
 
   const { data, error } = await supabase
@@ -214,7 +214,7 @@ export async function getAllMedications() {
 export async function getMedicationOrders(caseId: string) {
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SECRET_KEY!
   )
 
   const { data, error } = await supabase
@@ -258,7 +258,7 @@ export async function getMedicationOrders(caseId: string) {
 export async function getMedicationAdministrations(caseId: string, sessionId: string) {
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SECRET_KEY!
   )
 
   sessionId = resolvePreviewSessionId(sessionId);
@@ -287,7 +287,7 @@ export async function getMedicationAdministrations(caseId: string, sessionId: st
 export async function getMedia(caseId: string) {
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SECRET_KEY!
   )
 
   const { data, error } = await supabase
@@ -329,7 +329,7 @@ export async function submitMedicationAdministrations(
 
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SECRET_KEY!
   );
   const { data, error } = await supabase
     .from('student_medication_administrations')
@@ -364,7 +364,7 @@ export async function submitMedicationAdministrations(
 export async function getAllDocumentationData(caseId: string, sessionId: string) {
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SECRET_KEY!
   );
 
   sessionId = resolvePreviewSessionId(sessionId);
@@ -404,7 +404,7 @@ export async function upsertDocumentationRows(payload: StudentDatabaseDocumentat
 
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SECRET_KEY!
   );
 
   const { data, error } = await supabase
@@ -437,7 +437,7 @@ type SessionTransitionResult = {
 function createServiceSupabase() {
   return createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SECRET_KEY!
   );
 }
 
@@ -574,7 +574,7 @@ export async function getCurrentPhases(
 
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SECRET_KEY!
   );
 
   const { data, error } = await supabase
@@ -606,7 +606,7 @@ export async function updateCurrentPhase(updatedPhase: number, sessionId: string
   // Establish Connection
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SECRET_KEY!
   );
 
   // Update based on sessionId

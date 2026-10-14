@@ -34,7 +34,7 @@ export async function assertStudentActiveSessionWrite(
 
   const serviceSupabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    process.env.SUPABASE_SECRET_KEY!,
   );
 
   const { data: profile } = await serviceSupabase
