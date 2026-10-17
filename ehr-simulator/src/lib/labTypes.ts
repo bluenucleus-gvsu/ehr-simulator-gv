@@ -1,44 +1,51 @@
 import { LabTableData } from '@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData';
 import { Database } from "../../database.types";
+import { LabResultsRow } from '@/actions/case_builder/getCase';
+import { type SimReleaseItem } from '@/lib/faculty/itemRelease';
 
 export type LabResultInsert = Database['public']['Tables']['lab_results']['Insert'];
 
+export type LabColumn = Pick<
+  LabResultsRow,
+  "id" | "time_offset" | "is_in_presim" | "phase" | "label"
+>;
+
+export function toSimReleaseItem(column: LabColumn): SimReleaseItem {
+  return {
+    id: column.id,
+    phase: column.phase,
+    isInPresim: column.is_in_presim,
+  };
+}
+
 type LabFormPayload = {
   data: LabTableData[]
-  timePoints: number[]
-  timePointsInPreSim: Set<number>
+  columns: LabColumn[]
 }
 
 type TransformedLabsPayload = {
   labResults: LabResultInsert[]
 }
 
-export function timeColumnCell(row: Record<string | number | symbol, unknown>, offset: number): unknown {
-  const fromNum = row[offset];
-  if (fromNum !== undefined && fromNum !== null) return fromNum;
-  const fromStr = row[String(offset)];
-  if (fromStr !== undefined && fromStr !== null) return fromStr;
-  return undefined;
-}
-
 export function transformLabTableToSchema(
   caseId: string,
   payload: LabFormPayload
 ): TransformedLabsPayload {
-  const { data, timePoints, timePointsInPreSim } = payload
+  const { data, columns } = payload
 
-  const labResults: LabResultInsert[] = timePoints.map((timePoint) => {
+  const labResults: LabResultInsert[] = columns.map((column) => {
     const baseRow: LabResultInsert = {
       case_id: caseId,
-      time_offset: timePoint,
-      is_in_presim: timePointsInPreSim.has(timePoint),
+      time_offset: column.time_offset,
+      is_in_presim: column.is_in_presim,
+      phase: column.phase,
+      label: column.label?.trim() || null,
     }
 
     for (const row of data) {
       if (row.rowType !== "results") continue
 
-      const cellValue = row[timePoint]
-
+      const cellValue = row[column.id];
       const columnName = row.id;
 
       if (columnName) {
@@ -47,10 +54,8 @@ export function transformLabTableToSchema(
           cellValue === "" || cellValue == null ? null : String(cellValue);
       }
     }
-
     return baseRow
   })
-
   return {
     labResults,
   }

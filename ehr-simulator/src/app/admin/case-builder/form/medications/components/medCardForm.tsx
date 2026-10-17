@@ -64,6 +64,7 @@ const MedCardForm = ({
               id={`${index}-presim-check`}
               checked={!orderData.visibleInPresim}
               onCheckedChange={(checked) => onOrderChange(index, 'visibleInPresim', !checked)}
+              disabled={(orderData.phase ?? 1) > 1}
               className="bg-white"
             />
             <Label htmlFor={`${index}-presim-check`}>Excluded from Pre-Sim</Label>
@@ -180,6 +181,11 @@ const MedCardForm = ({
               className="bg-white sm:text-xs md:text-xs"
             />
           </div>
+          {(orderData.phase ?? 1) > 1 && (
+            <p className="col-span-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-1">
+              Faculty-released: hidden from students until released during sim
+            </p>
+          )}
         </div>
       </div>
     </div>

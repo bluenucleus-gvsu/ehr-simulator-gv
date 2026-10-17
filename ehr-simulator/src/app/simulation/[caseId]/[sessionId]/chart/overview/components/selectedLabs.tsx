@@ -8,8 +8,10 @@ import { AlertTriangle } from "lucide-react"
 import { useMemo } from "react"
 import { labTemplate } from "../../labs/components/labsData"
 import { buildLabRowsFromBundle } from "../../labs/components/labsFromBundle"
+import { toSimReleaseItem } from "@/lib/labTypes"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
 import { useSimSessionContext } from "@/context/SimSessionContext"
+import { isVisibleInSim, resolveDisplayOffset, displayOffsetFor } from "@/lib/faculty/itemRelease"
 
 const HIGHLIGHTED_LABS = [
   "sodium",
@@ -23,20 +25,32 @@ const HIGHLIGHTED_LABS = [
 
 export function SelectedLabs() {
   const { caseBundle } = useSimulationCase()
-  const { simStartTime, isPresim } = useSimSessionContext()
-  const startTime = simStartTime ?? Date.now();
+  const { simStartTime, isPresim, releasedItems, isAdminPreview } = useSimSessionContext()
+  const startTime = useMemo(() => simStartTime ?? Date.now(), [simStartTime])
 
-  const { filteredData, labTimesMostRecentFirst } = useMemo(() => {
-    const { rows, timePointsInPresim, timePoints } = buildLabRowsFromBundle(caseBundle?.labResults || [], labTemplate)
+  const { filteredData, visibleColumns } = useMemo(() => {
+    const { rows, columns } = buildLabRowsFromBundle(caseBundle?.labResults || [], labTemplate)
 
-    const targetTimePoints = isPresim ? timePointsInPresim : timePoints;
-    const labTimesMostRecentFirst = [...targetTimePoints].sort((a, b) => b - a)
+    const releasedIds = releasedItems.lab_result_releases
+    const releasedSet = new Set(releasedIds.keys())
+    const visible = columns
+      .filter(column => isVisibleInSim(toSimReleaseItem(column), Boolean(isPresim), releasedSet))
+      .map(column => ({
+        column,
+        displayOffset: resolveDisplayOffset(
+          displayOffsetFor(column.phase, column.time_offset),
+          releasedIds.get(column.id),
+          startTime,
+        ) ?? 0,
+        stagedPreviewPhase: isAdminPreview && column.phase > 1 ? column.phase : null,
+      }))
+      .sort((a, b) => b.displayOffset - a.displayOffset)
 
     return {
       filteredData: rows.filter(row => (row.rowType === "results" && row.id) && HIGHLIGHTED_LABS.includes(row.id)),
-      labTimesMostRecentFirst,
+      visibleColumns: visible,
     }
-  }, [caseBundle, isPresim])
+  }, [caseBundle, isPresim, releasedItems, startTime, isAdminPreview])
 
 
   const selectedLabData = filteredData.map(row => {
@@ -44,16 +58,17 @@ export function SelectedLabs() {
       field: row.field,
       dateKey: 0,
       value: '',
+      stagedPreviewPhase: null as number | null,
       normalRange: row.normalRange,
       criticalRange: row.criticalRange
     }
 
-    for (let i = 0; i < labTimesMostRecentFirst.length; i++) {
-      const timestampKey = labTimesMostRecentFirst[i];
-      const valueAtTime = row[timestampKey];
+    for (const { column, displayOffset, stagedPreviewPhase } of visibleColumns) {
+      const valueAtTime = row[column.id];
       if (valueAtTime) {
         selectedLab.value = valueAtTime as string;
-        selectedLab.dateKey = timestampKey;
+        selectedLab.dateKey = displayOffset;
+        selectedLab.stagedPreviewPhase = stagedPreviewPhase;
         break;
       }
     }
@@ -73,9 +88,11 @@ export function SelectedLabs() {
         {selectedLabData.map(labData => {
           if (!labData) return null
 
-          const timeLabel = formatTimeFromOffset(labData.dateKey, startTime)
-          if (!timeLabel) return null
-          const { date: displayDate, time: displayTime } = timeLabel
+          const timeLabel = labData.stagedPreviewPhase
+            ? null
+            : formatTimeFromOffset(labData.dateKey, startTime)
+          if (!timeLabel && !labData.stagedPreviewPhase) return null
+          const { date: displayDate, time: displayTime } = timeLabel ?? { date: "", time: "" }
 
           const normalRange = labData.normalRange
           const criticalRange = labData.criticalRange
@@ -88,8 +105,16 @@ export function SelectedLabs() {
           return (
             <div key={labData.field} className="grid grid-cols-2 rounded-md">
               <div className="p-1 rounded-t-lg col-span-2 border bg-sky-200 border-sky-200 flex justify-center items-center gap-4">
-                <h2 className="text-xs text-neutral-800 overflow-hidden">{displayDate}</h2>
-                <h1 className="text-xs text-neutral-800 font-medium overflow-hidden">{displayTime}</h1>
+                {labData.stagedPreviewPhase ? (
+                  <h1 className="text-xs text-neutral-800 font-medium overflow-hidden">
+                    Phase {labData.stagedPreviewPhase}
+                  </h1>
+                ) : (
+                  <>
+                    <h2 className="text-xs text-neutral-800 overflow-hidden">{displayDate}</h2>
+                    <h1 className="text-xs text-neutral-800 font-medium overflow-hidden">{displayTime}</h1>
+                  </>
+                )}
               </div>
               <p className="p-1 text-xs rounded-bl-lg border-l border-r border-b border-sky-200 overflow-hidden">{labData.field}</p>
               <div className="flex justify-center p-1 text-center text-xs rounded-br-lg border-r border-b border-sky-200">

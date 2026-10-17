@@ -16,7 +16,7 @@ import { useSimSessionContext } from "@/context/SimSessionContext";
 import { useStudentSimulationEditAccess } from "@/utils/studentSimulationEditAccess";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
-import { isVisibleForSimulationPhase } from "@/lib/simulationPhaseVisibility";
+import { isVisibleInSim, resolveDisplayOffset, displayOffsetFor } from "@/lib/faculty/itemRelease";
 
 export interface NoteViewProps {
   isError: boolean;
@@ -32,33 +32,47 @@ const NoteView = ({
   sessionId
 }: NoteViewProps) => {
   const { caseBundle } = useSimulationCase();
-  const { simStartTime, userName, userId, groupId, isPresim, currentPhase, loading } = useSimSessionContext();
+  const { simStartTime, userName, userId, groupId, isPresim, releasedItems, loading, isAdminPreview } = useSimSessionContext();
   const { canEdit } = useStudentSimulationEditAccess();
   const [filteredSpecialties, setFilteredSpecialties] = useState<string[]>([]);
   const fallbackCaseNotes = (caseBundle?.clinicalDocuments ?? []) as ClinicalDocumentView[];
   const sourceNotes = clinicalDocuments.length > 0 ? clinicalDocuments : fallbackCaseNotes;
+  const releasedNotes = releasedItems.clinical_document_releases;
+
   const visibleNotes = useMemo(() => {
     return sourceNotes.filter((note) =>
-      isVisibleForSimulationPhase({
-        isPresim: Boolean(isPresim),
-        isVisibleInPresim: note.is_in_presim,
-        releasePhase: note.phase,
-        currentPhase,
-      }),
+      isVisibleInSim(
+        { id: note.id, phase: note.phase ?? 1, isInPresim: note.is_in_presim },
+        Boolean(isPresim),
+        new Set(releasedNotes.keys()),
+      ),
     );
-  }, [sourceNotes, isPresim, currentPhase]);
+  }, [sourceNotes, isPresim, releasedNotes]);
 
   const specialties = useMemo(() => {
     return [...new Set(visibleNotes.map((note) => note.specialty))];
   }, [visibleNotes]);
 
-  const filteredNotesData = useMemo(() => {
-    const sortedNotes = [...visibleNotes].sort((a, b) => b.time_offset - a.time_offset);
+  // Order notes based on their time_offset or release timestamp
+  const sortedNotesData = useMemo(() => {
+    const sortedNotes = [...visibleNotes].sort((a, b) => {
+      const aOffset = resolveDisplayOffset(
+        displayOffsetFor(a.phase ?? 1, a.time_offset),
+        releasedNotes.get(a.id),
+        simStartTime,
+      );
+      const bOffset = resolveDisplayOffset(
+        displayOffsetFor(b.phase ?? 1, b.time_offset),
+        releasedNotes.get(b.id),
+        simStartTime,
+      );
+      return bOffset - aOffset;
+    });
 
     return filteredSpecialties.length > 0
       ? sortedNotes.filter((note) => filteredSpecialties.includes(note.specialty))
       : sortedNotes;
-  }, [visibleNotes, filteredSpecialties]);
+  }, [visibleNotes, filteredSpecialties, releasedNotes, simStartTime]);
 
   const handleFilterChange = (specialty: string, checked: boolean | "indeterminate") => {
     setFilteredSpecialties(prev => {
@@ -185,12 +199,22 @@ const NoteView = ({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto rounded-t-lg border bg-gray-100 p-2 inset-shadow-sm">
-        {filteredNotesData.length === 0 ? (
+        {sortedNotesData.length === 0 ? (
           <p className="text-center text-gray-500 mt-10">No notes found.</p>
         ) : (
-          filteredNotesData.map((note, index) => {
+          sortedNotesData.map((note, index) => {
             return (
-              <NoteDisplay key={index} startTime={simStartTime} note={note} />
+              <NoteDisplay
+                key={note.id ?? index}
+                startTime={simStartTime}
+                note={note}
+                phase={isAdminPreview && (note.phase ?? 1) > 1 ? note.phase ?? 1 : undefined}
+                displayOffset={resolveDisplayOffset(
+                  displayOffsetFor(note.phase ?? 1, note.time_offset),
+                  releasedNotes.get(note.id),
+                  simStartTime,
+                )}
+              />
             )
           })
         )}

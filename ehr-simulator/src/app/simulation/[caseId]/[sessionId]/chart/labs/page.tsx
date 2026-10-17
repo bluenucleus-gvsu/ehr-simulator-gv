@@ -18,32 +18,40 @@ import { type LabTableData, labTemplate, getResultStatus, LabSeverityLevel, } fr
 import { buildLabRowsFromBundle } from "./components/labsFromBundle";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
 import { useSimSessionContext } from "@/context/SimSessionContext";
+import { isVisibleInSim, resolveDisplayOffset, displayOffsetFor } from "@/lib/faculty/itemRelease";
+import { LabColumn, toSimReleaseItem } from "@/lib/labTypes";
 
 const columnHelper = createColumnHelper<LabTableData>();
 
 function LabPage() {
   const { caseBundle } = useSimulationCase();
-  const { isPresim } = useSimSessionContext();
-  const [simStartTime] = useState(new Date().getTime());
+  const { isPresim, simStartTime, releasedItems, isAdminPreview } = useSimSessionContext();
   const [labTableData, setLabTableData] = useState<LabTableData[]>([]);
-  const [timePoints, setTimePoints] = useState<number[]>([]);
+  const [visibleColumns, setVisibleColumns] = useState<{ column: LabColumn; displayOffset: number }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
-    const {
-      rows,
-      timePoints: dbTimePoints,
-      timePointsInPresim
-    } = buildLabRowsFromBundle(caseBundle?.labResults ?? [], labTemplate);
+    const { rows, columns } = buildLabRowsFromBundle(caseBundle?.labResults ?? [], labTemplate);
 
     setLabTableData(rows);
 
-    const targetTimePoints = isPresim ? timePointsInPresim : dbTimePoints;
-    setTimePoints(targetTimePoints);
+    const releasedIds = releasedItems.lab_result_releases;
+    const releasedSet = new Set(releasedIds.keys());
+    const visible = columns
+      .map(column => {
+        const item = toSimReleaseItem(column);
+        const displayOffset = isVisibleInSim(item, Boolean(isPresim), releasedSet)
+          ? resolveDisplayOffset(displayOffsetFor(column.phase, column.time_offset), releasedIds.get(column.id), simStartTime)
+          : null;
+        return { column, displayOffset };
+      })
+      .filter((entry): entry is { column: LabColumn; displayOffset: number } => entry.displayOffset !== null)
+      .sort((a, b) => a.displayOffset - b.displayOffset);
 
+    setVisibleColumns(visible);
     setIsLoading(false);
-  }, [caseBundle, isPresim]);
+  }, [caseBundle, isPresim, simStartTime, releasedItems]);
 
 
   const columns = useMemo(() => [
@@ -98,18 +106,25 @@ function LabPage() {
       }
     }),
 
-    // Dynamic Time Columns
-    ...timePoints.map(timePoint => {
-      const displayData = formatTimeFromOffset(timePoint, simStartTime);
+    // Dynamic Lab Columns
+    ...visibleColumns.map(({ column, displayOffset }) => {
+      const isFacultyReleased = isAdminPreview && column.phase > 1;
+      const displayData = isFacultyReleased ? null : formatTimeFromOffset(displayOffset, simStartTime);
       const displayDate = displayData?.date || "";
       const displayTime = displayData?.time || "";
 
-      return columnHelper.accessor(row => row[timePoint], {
-        id: String(timePoint),
+      return columnHelper.accessor(row => row[column.id], {
+        id: column.id,
         header: () => (
           <div className="flex flex-col justify-center items-center">
-            <h2 className="my-1 text-neutral-500 text-xs font-light">{displayDate}</h2>
-            <p className="mb-1 text-sm">{displayTime}</p>
+            {isFacultyReleased ? (
+              <h2 className="my-1 text-neutral-500 text-xs font-light">Phase {column.phase}</h2>
+            ) : (
+              <>
+                <h2 className="my-1 text-neutral-500 text-xs font-light">{displayDate}</h2>
+                <p className="mb-1 text-sm">{displayTime}</p>
+              </>
+            )}
           </div>
         ),
         cell: ({ row, column, getValue }) => {
@@ -135,7 +150,7 @@ function LabPage() {
       })
     })
   ],
-    [timePoints, simStartTime]
+    [visibleColumns, simStartTime, isAdminPreview]
   );
 
   const ptTable = useReactTable({

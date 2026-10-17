@@ -1,18 +1,20 @@
 "use client"
 
+import { useMemo } from "react"
 import OrdersTable from "./components/ordersTable"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
 import { useSimSessionContext } from "@/context/SimSessionContext"
-import { isVisibleForSimulationPhase } from "@/lib/simulationPhaseVisibility"
+import { isVisibleInSim } from "@/lib/faculty/itemRelease"
 
 type DbOrder = {
+  id?: string | null;
   category?: string | null;
   title?: string | null;
   details?: string | null;
   status?: string | null;
   provider?: string | null;
   is_important?: boolean | null;
-  is_in_presim?: boolean | null;
+  is_in_presim?: boolean;
   phase?: number | null;
 }
 
@@ -26,6 +28,7 @@ type OrderRow = {
 
 /** `medication_orders` rows from case bundle (may include joined `medications`). */
 type BundleMedOrder = {
+  id?: string | null;
   dose?: number | null;
   frequency?: string | null;
   priority?: string | null;
@@ -33,7 +36,7 @@ type BundleMedOrder = {
   instructions?: string | null;
   ordering_provider?: string | null;
   infusion_rate?: number | null;
-  is_in_presim?: boolean | null;
+  is_in_presim?: boolean;
   phase?: number | null;
   medications?: {
     generic_name?: string | null;
@@ -86,14 +89,24 @@ const createHeaderNames = (title: string) => ({
 
 const OrdersPage = () => {
   const { caseBundle } = useSimulationCase();
-  const { isPresim, currentPhase } = useSimSessionContext();
+  const { isPresim, releasedItems } = useSimSessionContext();
   const dbOrders = (caseBundle?.orders ?? []) as DbOrder[];
+  const releasedOrders = releasedItems.order_releases;
+  const releasedMedOrders = releasedItems.medication_order_releases;
+  const releasedOrderIds = useMemo(
+    () => new Set(releasedOrders.keys()),
+    [releasedOrders],
+  );
+  const releasedMedOrderIds = useMemo(
+    () => new Set(releasedMedOrders.keys()),
+    [releasedMedOrders],
+  );
 
   const normalizeOrder = (order: DbOrder): OrderRow => ({
-    title: order.title ?? "N/A",
-    details: order.details ?? "N/A",
-    status: order.status ?? "N/A",
-    orderingProvider: order.provider ?? "N/A",
+    title: order.title ?? "",
+    details: order.details ?? "",
+    status: order.status ?? "",
+    orderingProvider: order.provider ?? "",
     isImportant: Boolean(order.is_important),
   });
 
@@ -101,12 +114,11 @@ const OrdersPage = () => {
     const lookup = new Set(categoryNames.map((name) => name.toLowerCase()));
     return dbOrders
       .filter((order) =>
-        isVisibleForSimulationPhase({
-          isPresim: Boolean(isPresim),
-          isVisibleInPresim: order.is_in_presim,
-          releasePhase: order.phase,
-          currentPhase,
-        }),
+        isVisibleInSim(
+          { id: order.id ?? "", phase: order.phase ?? 1, isInPresim: order.is_in_presim },
+          Boolean(isPresim),
+          releasedOrderIds,
+        ),
       )
       .filter((order) => lookup.has((order.category ?? "").toLowerCase()))
       .map(normalizeOrder);
@@ -117,18 +129,15 @@ const OrdersPage = () => {
   const dietData = filterByCategory(["Diet", "Nutrition"]);
   const laboratoryData = filterByCategory(["Laboratory", "Lab", "Labs"]);
   const consultData = filterByCategory(["Consult"]);
-  const medicationDataFromClinicalOrders = filterByCategory(["Medication", "Medications"]);
-  const medicationDataFromMedOrders = ((caseBundle?.medicationOrders ?? []) as BundleMedOrder[])
+  const medicationData = ((caseBundle?.medicationOrders ?? []) as BundleMedOrder[])
     .filter((order) =>
-      isVisibleForSimulationPhase({
-        isPresim: Boolean(isPresim),
-        isVisibleInPresim: order.is_in_presim,
-        releasePhase: order.phase,
-        currentPhase,
-      }),
+      isVisibleInSim(
+        { id: order.id ?? "", phase: order.phase ?? 1, isInPresim: order.is_in_presim },
+        Boolean(isPresim),
+        releasedMedOrderIds,
+      ),
     )
     .map(orderRowFromMedicationOrder);
-  const medicationData = [...medicationDataFromClinicalOrders, ...medicationDataFromMedOrders];
 
   const orderColumns = ["details", "status", "orderingProvider"]
 
@@ -136,11 +145,21 @@ const OrdersPage = () => {
     <div className="flex h-full min-h-0 w-full flex-col gap-4 overflow-hidden bg-gray-100 px-2 pt-4">
       <div className="flex min-h-0 flex-1 w-full flex-col gap-4 overflow-y-auto rounded-tl-lg border border-gray-300 px-2 py-3 inset-shadow-sm">
         <OrdersTable color="bg-blue-300" columnNames={orderColumns} headerNames={createHeaderNames("Nursing")} data={nursingData} />
-        <OrdersTable color="bg-lime-200" columnNames={orderColumns} headerNames={createHeaderNames("Respiratory")} data={respiratoryData} />
-        <OrdersTable color="bg-emerald-200" columnNames={orderColumns} headerNames={createHeaderNames("Diet")} data={dietData} />
-        <OrdersTable color="bg-red-300" columnNames={orderColumns} headerNames={createHeaderNames("Medications")} data={medicationData} />
-        <OrdersTable color="bg-fuchsia-200" columnNames={orderColumns} headerNames={createHeaderNames("Laboratory")} data={laboratoryData} />
-        <OrdersTable color="bg-yellow-200" columnNames={orderColumns} headerNames={createHeaderNames("Consults")} data={consultData} />
+        {respiratoryData.length > 0 && (
+          <OrdersTable color="bg-lime-200" columnNames={orderColumns} headerNames={createHeaderNames("Respiratory")} data={respiratoryData} />
+        )}
+        {dietData.length > 0 && (
+          <OrdersTable color="bg-emerald-200" columnNames={orderColumns} headerNames={createHeaderNames("Diet")} data={dietData} />
+        )}
+        {medicationData.length > 0 && (
+          <OrdersTable color="bg-red-300" columnNames={orderColumns} headerNames={createHeaderNames("Medications")} data={medicationData} />
+        )}
+        {laboratoryData.length > 0 && (
+          <OrdersTable color="bg-fuchsia-200" columnNames={orderColumns} headerNames={createHeaderNames("Laboratory")} data={laboratoryData} />
+        )}
+        {consultData.length > 0 && (
+          <OrdersTable color="bg-yellow-200" columnNames={orderColumns} headerNames={createHeaderNames("Consults")} data={consultData} />
+        )}
       </div>
     </div>
   )

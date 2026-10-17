@@ -1,6 +1,7 @@
 
 'use client'
 
+import { useMemo } from "react"
 import { Tooltip } from "@/components/ui/tooltip"
 import { Card, CardContent } from "@/components/ui/card"
 import { Info } from "lucide-react"
@@ -8,7 +9,7 @@ import { TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui
 import StyledTitle from "./styledTitle"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
 import { useSimSessionContext } from "@/context/SimSessionContext"
-import { isVisibleForSimulationPhase } from "@/lib/simulationPhaseVisibility"
+import { isVisibleInSim } from "@/lib/faculty/itemRelease"
 import { DatabaseOrder } from "@/actions/case_builder/getCase"
 import { OrderType } from "../../orders/components/orderData"
 
@@ -16,16 +17,19 @@ const ORDER_CATEGORIES: OrderType["category"][] = ["Nursing", "Respiratory", "La
 
 const RecurringOrders = () => {
   const { caseBundle } = useSimulationCase()
-  const { isPresim, currentPhase } = useSimSessionContext()
+  const { isPresim, releasedItems } = useSimSessionContext()
   const orders = (caseBundle?.orders ?? []) as DatabaseOrder[]
+  const releasedOrderIds = useMemo(
+    () => new Set(releasedItems.order_releases.keys()),
+    [releasedItems],
+  )
   const important = orders.filter((order) =>
     order.is_important &&
-    isVisibleForSimulationPhase({
-      isPresim: Boolean(isPresim),
-      isVisibleInPresim: order.is_in_presim,
-      releasePhase: order.phase,
-      currentPhase,
-    }),
+    isVisibleInSim(
+      { id: order.id ?? "", phase: order.phase ?? 1, isInPresim: order.is_in_presim },
+      Boolean(isPresim),
+      releasedOrderIds,
+    ),
   )
 
   if (important.length === 0) {

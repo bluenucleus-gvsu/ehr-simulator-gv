@@ -3,7 +3,19 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { getUsersGroupId } from '@/actions/users';
+import { getSessionItemReleases } from '@/actions/faculty';
+import {
+  PREVIEW_SESSION_ID,
+  RELEASABLE_ITEMS,
+  applyReleaseDelete,
+  applyReleaseInsert,
+  buildPreviewReleasedItems,
+  createEmptyReleasedItemsMap,
+  toReleasedItemsMap,
+  type ReleasedItemsMap,
+} from '@/lib/faculty/itemRelease';
 import { useParams } from 'next/navigation';
+import { useSimulationCase } from '@/context/SimulationCaseContext';
 import { Database } from '../../database.types';
 
 const supabase = createBrowserClient<Database>(
@@ -13,7 +25,7 @@ const supabase = createBrowserClient<Database>(
 
 type SessionRealtimeRow = Pick<
   Database["public"]["Tables"]["case_sessions"]["Row"],
-  "current_phase" | "group_id" | "started_at" | "status"
+  "group_id" | "started_at" | "status"
 >;
 
 export interface SimSessionContextType {
@@ -24,11 +36,12 @@ export interface SimSessionContextType {
   simStartTime: number | null;
   groupId: string | null;
   isPresim: boolean | null;
-  currentPhase: number;
+  isAdminPreview: boolean;
+  releasedItems: ReleasedItemsMap;
+  releasedItemsAtLoad: ReleasedItemsMap;
   hasUnsavedCharting: boolean | null;
   handleUnsavedCharting: (chartingStatus: boolean) => void;
   handlePresimStatusChange: () => void;
-  handlePhaseChange: (phase: number) => void;
 }
 
 const SimContext = createContext<SimSessionContextType>({
@@ -39,12 +52,12 @@ const SimContext = createContext<SimSessionContextType>({
   loading: true,
   simStartTime: null,
   isPresim: true,
-  currentPhase: 1,
+  isAdminPreview: false,
+  releasedItems: createEmptyReleasedItemsMap(),
+  releasedItemsAtLoad: createEmptyReleasedItemsMap(),
   hasUnsavedCharting: false,
   handleUnsavedCharting: () => { },
   handlePresimStatusChange: () => null,
-  handlePhaseChange: () => null,
-
 });
 
 export function SimSessionProvider({ children }: { children: React.ReactNode }) {
@@ -55,18 +68,21 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
   const [loading, setLoading] = useState<boolean>(true);
   const [simStartTime, setSimStartTime] = useState<number | null>(null);
   const [isPresim, setIsPresim] = useState<boolean | null>(true);
-  const [currentPhase, setCurrentPhase] = useState<number>(1);
+  const [isAdminPreview, setIsAdminPreview] = useState<boolean>(false);
+  const [releasedItems, setReleasedItems] = useState<ReleasedItemsMap>(createEmptyReleasedItemsMap());
+  const [releasedItemsAtLoad, setReleasedItemsAtLoad] = useState<ReleasedItemsMap>(createEmptyReleasedItemsMap());
   const [hasUnsavedCharting, setHasUnsavedCharting] = useState<boolean | null>(false);
 
 
   const params = useParams();
   const sessionId = params?.sessionId as string;
+  const { caseBundle } = useSimulationCase();
+  const isPreviewSession = sessionId === PREVIEW_SESSION_ID;
 
   const applySessionState = (sessionData: SessionRealtimeRow | null) => {
     if (!sessionData) {
       setSimStartTime(Date.now());
       setIsPresim(true);
-      setCurrentPhase(1);
       return;
     }
 
@@ -81,7 +97,6 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
       normalizedStatus === "completed";
 
     setIsPresim(!hasStarted);
-    setCurrentPhase(Number(sessionData.current_phase));
 
     if (hasStarted) {
       const startedMs = sessionData.started_at
@@ -113,10 +128,10 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
         }
       }
 
-      if (sessionId) {
+      if (sessionId && !isPreviewSession) {
         const { data: sessionData, error } = await supabase
           .from("case_sessions")
-          .select("started_at, status, group_id, current_phase")
+          .select("started_at, status, group_id")
           .eq("id", sessionId)
           .maybeSingle();
 
@@ -126,22 +141,43 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
         } else {
           applySessionState(null);
         }
+
+        const releasesResult = await getSessionItemReleases(sessionId);
+        if (releasesResult.success && releasesResult.data) {
+          const map = toReleasedItemsMap(releasesResult.data);
+          setReleasedItems(map);
+          setReleasedItemsAtLoad(map);
+        } else {
+          const empty = createEmptyReleasedItemsMap();
+          setReleasedItems(empty);
+          setReleasedItemsAtLoad(empty);
+        }
       } else {
         applySessionState(null);
+        if (nextUserRole === "admin" && isPreviewSession) {
+          const previewMap = buildPreviewReleasedItems(caseBundle, Date.now());
+          setReleasedItems(previewMap);
+          setReleasedItemsAtLoad(previewMap);
+        } else {
+          const empty = createEmptyReleasedItemsMap();
+          setReleasedItems(empty);
+          setReleasedItemsAtLoad(empty);
+        }
       }
 
       setUserName(nextUserName);
       setUserRole(nextUserRole);
       setGroupId(nextGroupId);
+      setIsAdminPreview(nextUserRole === "admin" && isPreviewSession);
       setLoading(false);
     }
     loadSimData();
-  }, [sessionId]);
+  }, [sessionId, isPreviewSession, caseBundle]);
 
   useEffect(() => {
-    if (!sessionId) return;
+    if (!sessionId || isPreviewSession) return;
 
-    const channel = supabase
+    let channel = supabase
       .channel(`case-session-${sessionId}`)
       .on(
         "postgres_changes",
@@ -154,13 +190,46 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
         (payload) => {
           applySessionState(payload.new as SessionRealtimeRow);
         },
-      )
-      .subscribe();
+      );
+    Object.values(RELEASABLE_ITEMS).forEach(({ releaseTable: table }) => {
+      channel = channel
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table,
+            filter: `session_id=eq.${sessionId}`,
+          },
+          (payload) => {
+            const row = payload.new as { item_id: string; released_at: string };
+            if (!row?.item_id) return;
+            setReleasedItems(prev => applyReleaseInsert(prev, table, row.item_id, row.released_at));
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "DELETE",
+            schema: "public",
+            table,
+            filter: `session_id=eq.${sessionId}`,
+          },
+          (payload) => {
+            const row = payload.old as { item_id?: string };
+            const itemId = row?.item_id;
+            if (!itemId) return;
+            setReleasedItems(prev => applyReleaseDelete(prev, table, itemId));
+          },
+        );
+    });
+
+    channel = channel.subscribe();
 
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [sessionId]);
+  }, [sessionId, isPreviewSession]);
 
   const handleUnsavedCharting = (chartingStatus: boolean) => {
     setHasUnsavedCharting(chartingStatus);
@@ -168,10 +237,6 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
 
   const handlePresimStatusChange = () => {
     setIsPresim(prev => !prev);
-  }
-
-  const handlePhaseChange = (phase: number) => {
-    setCurrentPhase(phase);
   }
 
   const value = {
@@ -182,11 +247,12 @@ export function SimSessionProvider({ children }: { children: React.ReactNode }) 
     simStartTime,
     groupId,
     isPresim,
-    currentPhase,
+    isAdminPreview,
+    releasedItems,
+    releasedItemsAtLoad,
     hasUnsavedCharting,
     handleUnsavedCharting,
-    handlePresimStatusChange,
-    handlePhaseChange
+    handlePresimStatusChange
   }
 
   return <SimContext.Provider value={value}>{children}</SimContext.Provider>

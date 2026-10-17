@@ -1,13 +1,31 @@
 "use client";
 
-import { type LabResultInsert } from "@/lib/labTypes";
+import { type LabColumn, type LabResultInsert } from "@/lib/labTypes";
 import type { LabTableData } from "./labsData";
+import { LabResultsRow } from "@/actions/case_builder/getCase";
 
-type DbLabResult = {
-  id?: string | null;
-  time_offset?: number | null;
-  [key: string]: unknown;
-};
+type DbLabResult = Partial<LabResultsRow>;
+
+export function buildLabColumnsFromBundle(
+  labResults: DbLabResult[],
+): LabColumn[] {
+  const sorted = [...labResults].sort((a, b) => {
+    const aOffset = a.time_offset;
+    const bOffset = b.time_offset;
+    if (aOffset == null && bOffset == null) return 0;
+    if (aOffset == null) return 1;
+    if (bOffset == null) return -1;
+    return aOffset - bOffset;
+  });
+
+  return sorted.map((lab, index) => ({
+    id: lab.id ?? `lab-col-${index}`,
+    time_offset: typeof lab.time_offset === "number" ? lab.time_offset : null,
+    is_in_presim: Boolean(lab.is_in_presim),
+    phase: Math.max(1, Number(lab.phase ?? 1)),
+    label: typeof lab.label === "string" && lab.label.trim() ? lab.label : null,
+  }));
+}
 
 function toDisplayValue(value: unknown): string {
   if (value == null || value === "") return "";
@@ -23,30 +41,13 @@ function hasRenderableValue(value: unknown): boolean {
 export function buildLabRowsFromBundle(
   labResults: DbLabResult[],
   template: LabTableData[],
-): { rows: LabTableData[]; timePoints: number[], timePointsInPresim: number[] } {
+): { rows: LabTableData[]; columns: LabColumn[] } {
+  const columns = buildLabColumnsFromBundle(labResults);
 
-  const timePoints = Array.from(
-    new Set(
-      labResults
-        .map((row) => row.time_offset)
-        .filter((offset): offset is number => typeof offset === "number"),
-    ),
-  ).sort((a, b) => a - b);
-
-  const timePointsInPresim = Array.from(new Set(
-    labResults
-      .filter((row) => Boolean(row?.is_in_presim))
-      .map((row) => Number(row.time_offset))
-  )).sort((a, b) => a - b);;
-
-  const labByOffset = new Map<number, DbLabResult>();
-  const labOffsetById = new Map<string, number>();
+  const labById = new Map<string, DbLabResult>();
   for (const lab of labResults) {
-    if (typeof lab.time_offset === "number") {
-      labByOffset.set(lab.time_offset, lab);
-    }
-    if (lab.id && typeof lab.time_offset === "number") {
-      labOffsetById.set(lab.id, lab.time_offset);
+    if (lab.id) {
+      labById.set(lab.id, lab);
     }
   }
 
@@ -63,12 +64,13 @@ export function buildLabRowsFromBundle(
       };
 
       if (templateRow.rowType === "results") {
-        const dbRow = templateRow.id as keyof LabResultInsert | undefined;
-        for (const offset of timePoints) {
-          const source = labByOffset.get(offset);
-
-          const value = dbRow ? source?.[dbRow as string] : undefined;
-          nextRow[offset] = toDisplayValue(value);
+        const dbColumn = templateRow.id as keyof LabResultInsert | undefined;
+        for (const column of columns) {
+          const source = labById.get(column.id);
+          const value = dbColumn
+            ? (source as Record<string, unknown> | undefined)?.[dbColumn as string]
+            : undefined;
+          nextRow[column.id] = toDisplayValue(value);
         }
       }
 
@@ -76,8 +78,8 @@ export function buildLabRowsFromBundle(
     })
     .filter((row) => {
       if (!row.hideable) return true;
-      return timePoints.some((offset) => hasRenderableValue(row[offset]));
+      return columns.some((column) => hasRenderableValue(row[column.id]));
     });
 
-  return { rows, timePoints, timePointsInPresim };
+  return { rows, columns };
 }

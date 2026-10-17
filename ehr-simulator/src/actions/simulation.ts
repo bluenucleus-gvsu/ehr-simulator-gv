@@ -6,6 +6,7 @@ import { ActionResponse, ExtractData } from "./cases";
 import { UUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { assertStudentActiveSessionWrite } from "@/actions/simulation/assertStudentActiveSessionWrite";
+import { PREVIEW_SESSION_ID } from "@/lib/faculty/itemRelease";
 
 export type EditableStudentNoteUpsert = Database['public']['Tables']['editable_clinical_documents']['Insert'];
 export type EditableStudentNote = Database['public']['Tables']['editable_clinical_documents']['Row'];
@@ -29,13 +30,13 @@ export type ClinicalDocumentView = {
   category: string,
   specialty: string,
   author: string,
-  time_offset: number,
+  time_offset: number | null,
   doc_text: string
   source_type: string
 }
 
 const resolvePreviewSessionId = (id: string) =>
-  id === "preview" ? "00000000-0000-0000-0000-000000000000" : id;
+  id === PREVIEW_SESSION_ID ? "00000000-0000-0000-0000-000000000000" : id;
 
 export async function submitStudentNote(note: EditableStudentNoteUpsert): Promise<ActionResponse<EditableStudentNote | ClinicalDocument>> {
   const writeGuard = await assertStudentActiveSessionWrite(note.case_session_id);
@@ -557,81 +558,3 @@ export async function expireSession(sessionId: string): Promise<SessionTransitio
     return { success: false, error };
   }
 }
-
-export async function getCurrentPhases(
-  groups: Array<{ id: string; caseSessionId?: string | null }>,
-  fallbackSessionId?: string
-) {
-  const sessionIds = [...new Set(
-    groups
-      .map(g => g.caseSessionId ?? fallbackSessionId)
-      .filter((id): id is string => Boolean(id))
-  )];
-
-  if (sessionIds.length === 0) {
-    return { success: false, message: "Failed to fetch phases, no session Ids", data: null };
-  }
-
-  const supabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
-  const { data, error } = await supabase
-    .from("case_sessions")
-    .select("id, current_phase")
-    .in("id", sessionIds);
-
-  if (error) {
-    return { success: false, message: "Failed to fetch phases", error, data: null };
-  }
-
-  const groupPhaseMap: Record<string, number> = {};
-
-  groups.forEach(group => {
-    const sessionId = group.caseSessionId ?? fallbackSessionId;
-    const session = data?.find(s => s.id === sessionId);
-    if (session) {
-      groupPhaseMap[group.id] = session.current_phase ?? 1;
-    }
-  });
-
-  return { success: true, data: groupPhaseMap };
-}
-
-export async function updateCurrentPhase(updatedPhase: number, sessionId: string) {
-  // Function used to updated the current_phase in case_sessions table
-  // Used in faculty/components/FacultyCoursesView.tsx
-
-  // Establish Connection
-  const supabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
-  // Update based on sessionId
-  const { error } = await supabase
-    .from("case_sessions")
-    .update({
-      current_phase: updatedPhase
-    })
-    .eq("id", sessionId)
-
-  // Return error 
-  if (error) {
-    return {
-      success: false,
-      message: "Failed to update current_phase.",
-      error,
-      data: null
-    };
-  }
-
-  // Return successful 
-  return {
-    success: true,
-    message: `current_phase updated:${sessionId}`,
-    data: null,
-  }
-}
-

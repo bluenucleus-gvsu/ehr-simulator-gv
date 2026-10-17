@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildLabRowsFromBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsFromBundle";
+import { type LabColumn } from "@/lib/labTypes";
 import {
   labTemplate,
   type LabTableData,
@@ -16,73 +17,81 @@ function rowById(rows: LabTableData[], id: string): LabTableData {
 }
 
 describe("buildLabRowsFromBundle", () => {
-  it("sorts and dedupes time offsets in ascending order", () => {
-    const { timePoints } = buildLabRowsFromBundle(
+  it("orders columns by time offset with live columns last", () => {
+    const { columns } = buildLabRowsFromBundle(
       [
-        { id: "lab-a", time_offset: 30 },
-        { id: "lab-b", time_offset: 0 },
-        { id: "lab-c", time_offset: 30 },
+        { id: "lab-live", time_offset: null, is_in_presim: false, phase: 1 },
+        { id: "lab-a", time_offset: 30, is_in_presim: false, phase: 1 },
+        { id: "lab-b", time_offset: 0, is_in_presim: false, phase: 1 },
       ],
       labTemplate,
     );
 
-    expect(timePoints).toEqual([0, 30]);
+    expect(columns.map((column: LabColumn) => column.id)).toEqual(["lab-b", "lab-a", "lab-live"]);
+    expect(columns[2]?.time_offset).toBeNull();
   });
 
-  it("keeps only time points that are included in presim", () => {
-    const { timePointsInPresim } = buildLabRowsFromBundle(
+  it("keeps multiple live columns as distinct columns", () => {
+    const { columns } = buildLabRowsFromBundle(
       [
-        { id: "lab-a", time_offset: 0, is_in_presim: true },
-        { id: "lab-b", time_offset: -90, is_in_presim: false },
-        { id: "lab-c", time_offset: -30, is_in_presim: true },
-        { id: "lab-d", time_offset: 30, is_in_presim: false },
+        { id: "lab-live-1", time_offset: null, is_in_presim: false, phase: 1 },
+        { id: "lab-live-2", time_offset: null, is_in_presim: false, phase: 2 },
       ],
       labTemplate,
     );
 
-    expect(timePointsInPresim).toEqual([-30, 0]);
+    expect(columns).toHaveLength(2);
+    expect(columns.map((column) => column.id)).toEqual(["lab-live-1", "lab-live-2"]);
   });
 
-  it("maps column values onto template rows at each time offset", () => {
+  it("carries presim and phase tags on each column", () => {
+    const { columns } = buildLabRowsFromBundle(
+      [
+        { id: "lab-a", time_offset: 0, is_in_presim: true, phase: 2 },
+        { id: "lab-b", time_offset: -90, is_in_presim: false, phase: 1 },
+        { id: "lab-c", time_offset: null, is_in_presim: false, phase: 3 },
+      ],
+      labTemplate,
+    );
+
+    expect(columns[0]).toMatchObject({ id: "lab-b", time_offset: -90, is_in_presim: false, phase: 1 });
+    expect(columns[1]).toMatchObject({ id: "lab-a", time_offset: 0, is_in_presim: true, phase: 2 });
+    expect(columns[2]).toMatchObject({ id: "lab-c", time_offset: null, is_in_presim: false, phase: 3 });
+  });
+
+  it("Attaches labels, blanking whitespace-only ones", () => {
+    const { columns } = buildLabRowsFromBundle(
+      [
+        { id: "lab-a", time_offset: null, is_in_presim: false, phase: 2, label: "BMP — repeat draw" },
+        { id: "lab-b", time_offset: null, is_in_presim: false, phase: 2, label: "   " },
+        { id: "lab-c", time_offset: null, is_in_presim: false, phase: 3, label: null },
+      ],
+      labTemplate,
+    );
+
+    expect(columns[0]?.label).toBe("BMP — repeat draw");
+    expect(columns[1]?.label).toBeNull();
+    expect(columns[2]?.label).toBeNull();
+  });
+
+  it("maps column values onto template rows by column id", () => {
     const { rows } = buildLabRowsFromBundle(
       [
-        { id: "lab-1", time_offset: 0, sodium: "145", potassium: "4.2" },
-        { id: "lab-2", time_offset: 30, sodium: "140", potassium: "5.6" },
+        { id: "lab-1", time_offset: 0, is_in_presim: false, phase: 1, sodium: "145", potassium: "4.2" },
+        { id: "lab-2", time_offset: 30, is_in_presim: false, phase: 1, sodium: "140", potassium: "5.6" },
       ],
       labTemplate,
     );
 
-    expect(rowById(rows, "sodium")[0]).toBe("145");
-    expect(rowById(rows, "sodium")[30]).toBe("140");
-    expect(rowById(rows, "potassium")[0]).toBe("4.2");
-    expect(rowById(rows, "potassium")[30]).toBe("5.6");
-  });
-
-  it("coerces numeric and blank database values to strings", () => {
-    const { rows } = buildLabRowsFromBundle(
-      [{ id: "lab-1", time_offset: 0, sodium: 145, potassium: null }],
-      labTemplate,
-    );
-
-    expect(rowById(rows, "sodium")[0]).toBe("145");
-    expect(rowById(rows, "potassium")[0]).toBe("");
-  });
-
-  it("keeps the last row when two rows share a time offset", () => {
-    const { rows } = buildLabRowsFromBundle(
-      [
-        { id: "lab-1", time_offset: 0, sodium: "145" },
-        { id: "lab-2", time_offset: 0, sodium: "150" },
-      ],
-      labTemplate,
-    );
-
-    expect(rowById(rows, "sodium")[0]).toBe("150");
+    expect(rowById(rows, "sodium")["lab-1"]).toBe("145");
+    expect(rowById(rows, "sodium")["lab-2"]).toBe("140");
+    expect(rowById(rows, "potassium")["lab-1"]).toBe("4.2");
+    expect(rowById(rows, "potassium")["lab-2"]).toBe("5.6");
   });
 
   it("preserves template metadata on the processed rows", () => {
     const { rows } = buildLabRowsFromBundle(
-      [{ id: "lab-1", time_offset: 0, potassium: "4.2" }],
+      [{ id: "lab-1", time_offset: 0, is_in_presim: false, phase: 1, potassium: "4.2" }],
       labTemplate,
     );
 

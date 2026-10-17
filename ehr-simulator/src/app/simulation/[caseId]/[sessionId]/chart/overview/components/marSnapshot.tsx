@@ -4,6 +4,8 @@ import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import StyledTitle from "./styledTitle";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
+import { useSimSessionContext } from "@/context/SimSessionContext";
+import { isVisibleInSim } from "@/lib/faculty/itemRelease";
 import {
   buildMarFromCaseBundle,
   countDueAdministrations,
@@ -12,18 +14,35 @@ import {
 
 const MarSnapshot = () => {
   const { caseBundle } = useSimulationCase();
+  const { isPresim, releasedItems } = useSimSessionContext();
 
   const { counts, dueCount, medLines } = useMemo(() => {
     const model = buildMarFromCaseBundle(caseBundle ?? null);
-    const counts = countMarOrdersByCategory(model.medicationOrders);
-    const dueCount = countDueAdministrations(model.administrations);
-    const medLines = model.medicationOrders.map((order) => {
+    const releasedMedOrderIds = new Set(releasedItems.medication_order_releases.keys());
+
+    // Same release rules as the MAR tab; administrations cascade from their
+    // parent order.
+    const visibleOrders = model.medicationOrders.filter((order) =>
+      isVisibleInSim(
+        { id: order.id, phase: order.phase ?? 1, isInPresim: order.visibleInPresim },
+        Boolean(isPresim),
+        releasedMedOrderIds,
+      ),
+    );
+    const visibleOrderIds = new Set(visibleOrders.map((order) => order.id));
+    const visibleAdministrations = model.administrations.filter((admin) =>
+      visibleOrderIds.has(admin.medicationOrderId),
+    );
+
+    const counts = countMarOrdersByCategory(visibleOrders);
+    const dueCount = countDueAdministrations(visibleAdministrations);
+    const medLines = visibleOrders.map((order) => {
       const med = model.medsById[order.medicationId];
       const name = med?.genericName?.trim() || order.medicationId;
       return { id: order.id, name };
     });
     return { counts, dueCount, medLines };
-  }, [caseBundle]);
+  }, [caseBundle, isPresim, releasedItems]);
 
   return (
     <Card className="relative col-span-1 pt-2 overflow-hidden h-fit gap-3">

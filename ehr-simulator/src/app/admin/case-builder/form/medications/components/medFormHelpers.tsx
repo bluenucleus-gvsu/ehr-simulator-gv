@@ -1,5 +1,5 @@
 import { AllMedicationTypes, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData"
-import { isSlidingScaleInsulin, pluralize } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers"
+import { isSlidingScaleInsulin } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers"
 import { Separator } from "@/components/ui/separator"
 
 export const renderMedFormTitle = (medication: AllMedicationTypes) => {
@@ -51,7 +51,6 @@ export const renderMedFormDetails = (
   order: Partial<MedicationOrder>
 ) => {
   // Helper to safely get values or return an empty string/default
-  const orderedUnits = order.dose ? order.dose / medication.strength : 0;
   const freq = order.frequency || "___"; // Placeholder if not set
   const indic = order.indication || "___";
   const priority = order.priority || "___"
@@ -61,10 +60,6 @@ export const renderMedFormDetails = (
       return (
         <div className="flex gap-2 h-5">
           <span className="text-nowrap">{medication.route}</span>
-          <Separator className="bg-gray-300" orientation="vertical" />
-          <span className="text-nowrap">
-            {orderedUnits} {pluralize(orderedUnits, medication.dispenseUnit)}
-          </span>
           <Separator className="bg-gray-300" orientation="vertical" />
           <span className="text-nowrap">{freq}</span>
           <Separator className="bg-gray-300" orientation="vertical" />
@@ -76,14 +71,9 @@ export const renderMedFormDetails = (
 
     case "IV":
       const rate = order.infusionRate || 0;
-      const doseText = medication.isVariableDose ? 'Variable Dose' : `${orderedUnits} ${pluralize(orderedUnits, medication.dispenseUnit)}`
       return (
         <div className="flex gap-2 h-5">
           <span className="text-nowrap">{medication.route}</span>
-          <Separator className="bg-gray-300" orientation="vertical" />
-          <span className="text-nowrap">
-            {doseText}
-          </span>
           {/* Only show rate if it's relevant (unit exists and rate is set) */}
           {medication.infusionRateUnit && rate > 0 && (
             <>
@@ -124,10 +114,6 @@ export const renderMedFormDetails = (
           <div className="flex gap-2 h-5">
             <span className="text-nowrap">{medication.route}</span>
             <Separator className="bg-gray-300" orientation="vertical" />
-            <span className="text-nowrap">
-              {orderedUnits} {pluralize(orderedUnits, medication.dispenseUnit)}
-            </span>
-            <Separator className="bg-gray-300" orientation="vertical" />
             <span className="text-nowrap">{freq}</span>
             <Separator className="bg-gray-300" orientation="vertical" />
             <span className="text-nowrap">{priority}</span>
@@ -142,10 +128,6 @@ export const renderMedFormDetails = (
       return (
         <div className="flex gap-2 h-5">
           <span className="text-nowrap">{medication.route}</span>
-          <Separator className="bg-gray-300" orientation="vertical" />
-          <span className="text-nowrap">
-            {orderedUnits} {pluralize(orderedUnits, medication.dispenseUnit)}
-          </span>
           <Separator className="bg-gray-300" orientation="vertical" />
           <span className="text-nowrap">{freq}</span>
           <Separator className="bg-gray-300" orientation="vertical" />

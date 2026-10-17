@@ -5,7 +5,7 @@ import { labTemplate } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/co
 import { medOrderFormStateFromCaseBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marFromBundle";
 import { defaultDemographicData, defaultHistoryData } from "@/context/FormContext";
 import type { DemographicFormData, FormBlob } from "@/utils/form";
-import { intakeOutputBlocksFromCaseRow } from "@/utils/form";
+import { createDefaultLabColumn, intakeOutputBlocksFromCaseRow } from "@/utils/form";
 import { buildTableTemplate } from "@/lib/flexSheet/flexSheetTemplate";
 
 function text(row: CaseBundleRow, key: string): string {
@@ -92,30 +92,37 @@ export function caseBundleToFormBlob(bundle: CaseBundle): FormBlob {
         }))
         .filter((row: { relation: string; condition: string }) => row.relation && row.condition),
     },
-    notes: (bundle.clinicalDocuments ?? []).map((note) => ({
-      title: `${text(note, "category") || "Progress"} Note`,
-      author: text(note, "author"),
-      specialty: text(note, "specialty"),
-      timeOffset: Number(note.time_offset ?? 0),
-      excludedFromPresim: !Boolean(note.is_in_presim),
-      content: text(note, "doc_text") || "<p></p>",
-      phase: Math.max(1, Number(note.phase ?? 1)),
-    })),
-    orders: (bundle.orders ?? []).map((order) => ({
-      category: text(order, "category") as FormBlob["orders"][number]["category"],
-      title: text(order, "title"),
-      details: text(order, "details"),
-      status: text(order, "status") || "Active",
-      orderingProvider: text(order, "provider"),
-      important: Boolean(order.is_important),
-      visibleInPresim: Boolean(order.is_in_presim),
-      phase: Math.max(1, Number(order.phase ?? 1)),
-    })),
+    notes: (bundle.clinicalDocuments ?? []).map((note) => {
+      const phase = Math.max(1, Number(note.phase ?? 1));
+      const isStaged = phase > 1 || note.time_offset == null;
+      return {
+        title: `${text(note, "category") || "Progress"} Note`,
+        author: text(note, "author"),
+        specialty: text(note, "specialty"),
+        timeOffset: isStaged ? null : Number(note.time_offset),
+        excludedFromPresim: !Boolean(note.is_in_presim),
+        content: text(note, "doc_text") || "<p></p>",
+        phase,
+        label: text(note, "label") || null,
+      };
+    }),
+    orders: (bundle.orders ?? []).map((order) => {
+      const phase = Math.max(1, Number(order.phase ?? 1));
+      return {
+        category: text(order, "category") as FormBlob["orders"][number]["category"],
+        title: text(order, "title"),
+        details: text(order, "details"),
+        status: text(order, "status") || "Active",
+        orderingProvider: text(order, "provider"),
+        important: Boolean(order.is_important),
+        visibleInPresim: phase > 1 ? false : Boolean(order.is_in_presim),
+        phase,
+      };
+    }),
     tableTemplate: caseRow.flexsheet_sections ?? [],
     labs: {
       data: hydratedLabs.rows,
-      timePoints: hydratedLabs.timePoints.length ? hydratedLabs.timePoints : [0],
-      timePointsInPreSim: new Set(hydratedLabs.timePointsInPresim),
+      columns: hydratedLabs.columns.length ? hydratedLabs.columns : [createDefaultLabColumn()],
     },
     charting: {
       data: hydratedCharting.rows,
