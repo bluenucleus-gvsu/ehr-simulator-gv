@@ -12,19 +12,23 @@ export async function updateMedications(
   payload: { orders: MedicationOrder[]; administrations: MedAdministrationInstance[] },
   caseId: string,
 ) {
-  const orders = payload.orders.map((order) => ({
-    id: order.id,
-    medication_id: order.medicationId,
-    dose: Number(order.dose) || 0,
-    frequency: order.frequency,
-    priority: order.priority,
-    instructions: order.instructions?.trim() || null,
-    indication: order.indication?.trim() || null,
-    ordering_provider: order.orderingProvider?.trim() || null,
-    infusion_rate: normalizeOptionalNumericInput(order.infusionRate),
-    is_in_presim: Boolean(order.visibleInPresim),
-    phase: Number(order.phase ?? 1),
-  }));
+  const orders = payload.orders.map((order) => {
+    const phase = Number(order.phase ?? 1);
+    return {
+      id: order.id,
+      medication_id: order.medicationId,
+      dose: Number(order.dose) || 0,
+      frequency: order.frequency,
+      priority: order.priority,
+      instructions: order.instructions?.trim() || null,
+      indication: order.indication?.trim() || null,
+      ordering_provider: order.orderingProvider?.trim() || null,
+      infusion_rate: normalizeOptionalNumericInput(order.infusionRate),
+      is_in_presim: phase > 1 ? false : Boolean(order.visibleInPresim),
+      phase,
+      label: order.label?.trim() || null,
+    };
+  });
   const administrations = payload.administrations.map((administration) => ({
     medication_order_id: administration.medicationOrderId,
     administrator: administration.administratorId?.trim() || "System",

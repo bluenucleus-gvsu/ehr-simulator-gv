@@ -14,7 +14,7 @@ export interface CaseBundle {
   familyHistory: CaseBundleRow[]
   clinicalDocuments: CaseBundleRow[]
   orders: DatabaseOrder[]
-  labResults: DatabaseLabRow[]
+  labResults: LabResultsRow[]
   imagingReports: ImagingReportRow[]
   microbiologyReports: MicrobiologyReportRow[]
   documentationResults: DatabaseDocumentation[]
@@ -58,7 +58,7 @@ export type CaseBundleRow = Record<string, unknown> & {
   reporter?: string | null;
 };
 
-export type DatabaseLabRow = Database['public']['Tables']['lab_results']['Row'];
+export type LabResultsRow = Database['public']['Tables']['lab_results']['Row'];
 export type ImagingReportRow = CaseBundleRow & { is_critical?: boolean | null };
 export type MicrobiologyReportRow = CaseBundleRow & { is_critical?: boolean | string | null };
 
@@ -143,7 +143,7 @@ export async function getCaseBundle(
       .from("lab_results")
       .select("*")
       .eq("case_id", caseId)
-      .order("time_offset", { ascending: true }),
+      .order("time_offset", { ascending: true, nullsFirst: false }),
 
     supabase
       .from("imaging_reports")

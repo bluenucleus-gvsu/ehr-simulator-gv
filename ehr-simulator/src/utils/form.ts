@@ -1,4 +1,5 @@
 import { LabTableData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
+import { LabColumn } from "@/lib/labTypes";
 import { AllMedicationTypes, MedAdministrationInstance, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
 import { ClinicalNote } from "@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData";
 import { OrderType } from "@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData";
@@ -55,6 +56,11 @@ export interface TableFormData<T> {
   timePointsInPreSim: Set<number>;
 }
 
+export interface LabTableFormData {
+  data: LabTableData[];
+  columns: LabColumn[];
+}
+
 export interface ChartingFormData {
   data: FlexSheetData[];
   timePoints: number[];
@@ -85,7 +91,7 @@ export interface FormBlob {
   notes: ClinicalNote[];
   orders: OrderType[];
   tableTemplate: FlexSheetSection[];
-  labs: TableFormData<LabTableData>;
+  labs: LabTableFormData;
   charting: TableFormData<FlexSheetData>;
   intakeOutput: IntakeOutputFormData[];
   medOrders: MedOrderFormData;
@@ -93,7 +99,7 @@ export interface FormBlob {
   media: MediaImageData[];
 }
 
-export type CompleteFormType = DemographicFormData | HistoryFormData | ClinicalNote[] | OrderType[] | TableFormData<FlexSheetData | LabTableData> | IntakeOutputFormData[] | FlexSheetSection[] | MedOrderFormData | MedAdministrationInstance[] | MediaImageData[]
+export type CompleteFormType = DemographicFormData | HistoryFormData | ClinicalNote[] | OrderType[] | TableFormData<FlexSheetData> | LabTableFormData | IntakeOutputFormData[] | FlexSheetSection[] | MedOrderFormData | MedAdministrationInstance[] | MediaImageData[]
 
 export const formatTimeOffset = (minuteOffset: number) => {
   const minutesInDay = 1440;
@@ -105,6 +111,16 @@ export const formatTimeOffset = (minuteOffset: number) => {
   const minutes = remainingMinutesAfterDays % minutesInHour;
 
   return { days, hours, minutes };
+}
+
+export function createDefaultLabColumn(phase = 1): LabColumn {
+  return {
+    id: crypto.randomUUID(),
+    time_offset: null,
+    is_in_presim: false,
+    phase,
+    label: null,
+  };
 }
 
 export const nursingAlerts = [

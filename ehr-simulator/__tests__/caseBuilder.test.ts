@@ -70,12 +70,78 @@ describe("case-builder runtime validation", () => {
       .toThrow(/Case ID must be a UUID/);
   });
 
-  it("rejects duplicate table offsets", () => {
+  it("rejects duplicate lab column offsets", () => {
     expect(() => assertValidSaveRequest(CaseSection.LABS, {
       data: [],
-      timePoints: [0, 0],
-      timePointsInPreSim: [],
+      columns: [
+        { id: "col-a", time_offset: 0, is_in_presim: false, phase: 1 },
+        { id: "col-b", time_offset: 0, is_in_presim: false, phase: 1 },
+      ],
     }, caseId)).toThrow(/duplicate time offsets/);
+  });
+
+  it("rejects lab columns with missing ids or invalid phases", () => {
+    expect(() => assertValidSaveRequest(CaseSection.LABS, {
+      data: [],
+      columns: [
+        { time_offset: 0, is_in_presim: false, phase: 1 },
+      ],
+    }, caseId)).toThrow(/columns\[0\].id is required/);
+    expect(() => assertValidSaveRequest(CaseSection.LABS, {
+      data: [],
+      columns: [
+        { id: "col-a", time_offset: 0, is_in_presim: false, phase: 0 },
+      ],
+    }, caseId)).toThrow(/phase must be a whole number/);
+    expect(() => assertValidSaveRequest(CaseSection.LABS, {
+      data: [],
+      columns: [
+        { id: "col-a", time_offset: 0, is_in_presim: false, phase: 11 },
+      ],
+    }, caseId)).toThrow(/phase must be a whole number/);
+    expect(() => assertValidSaveRequest(CaseSection.LABS, {
+      data: [],
+      columns: [
+        { id: "col-a", time_offset: 0, is_in_presim: false, phase: 1.5 },
+      ],
+    }, caseId)).toThrow(/phase must be a whole number/);
+  });
+
+  it("allows multiple live-release lab columns and rejects a live column with an offset", () => {
+    expect(() => assertValidSaveRequest(CaseSection.LABS, {
+      data: [],
+      columns: [
+        { id: "col-a", time_offset: null, is_in_presim: false, phase: 2 },
+        { id: "col-b", time_offset: null, is_in_presim: false, phase: 3 },
+      ],
+    }, caseId)).not.toThrow();
+    expect(() => assertValidSaveRequest(CaseSection.LABS, {
+      data: [],
+      columns: [
+        { id: "col-a", time_offset: 30, is_in_presim: false, phase: 1 },
+      ],
+    }, caseId)).not.toThrow();
+  });
+
+  it("rejects release-live lab columns on phase 1 and staged columns with offsets", () => {
+    expect(() => assertValidSaveRequest(CaseSection.LABS, {
+      data: [],
+      columns: [
+        { id: "col-a", time_offset: null, is_in_presim: false, phase: 1 },
+      ],
+    }, caseId)).toThrow(/Phase 1 items must have a time offset/);
+    expect(() => assertValidSaveRequest(CaseSection.LABS, {
+      data: [],
+      columns: [
+        { id: "col-a", time_offset: 30, is_in_presim: false, phase: 2 },
+      ],
+    }, caseId)).toThrow(/cannot have a time offset/);
+    expect(() => assertValidSaveRequest(CaseSection.LABS, {
+      data: [],
+      columns: [
+        { id: "col-a", time_offset: null, is_in_presim: true, phase: 2 },
+      ],
+    }, caseId)).toThrow(/pre-sim/);
   });
 
   it("accepts database UUID medication identities and linked administrations", () => {

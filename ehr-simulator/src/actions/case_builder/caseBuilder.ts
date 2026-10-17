@@ -5,7 +5,7 @@ import { upsertCaseDemographics } from "@/actions/case_builder/upsertCaseDemogra
 import { updatePatientHistory } from "@/actions/case_builder/updatePatientHistory";
 import { updateClinicalDocuments } from "@/actions/case_builder/updateClinicalDocuments";
 import { updateOrders } from "@/actions/case_builder/updateOrders";
-import { updateLabs } from "@/actions/case_builder/updateLabs";
+import { updateLabs, type LabSavePayload } from "@/actions/case_builder/updateLabs";
 import { updateDocumentationResults } from "@/actions/case_builder/updateDocumentationResults";
 import { updateMedications } from "@/actions/case_builder/updateMedications";
 import { updateMedia } from "@/actions/case_builder/updateMedia"
@@ -21,7 +21,6 @@ import type {
 import type { ClinicalNote } from "@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData";
 import type { OrderType } from "@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData";
 import { FlexSheetData } from "@/lib/flexSheet/flexSheetTypes";
-import type { LabTableData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
 import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient";
 import { assertValidSaveRequest } from "@/lib/caseBuilder/validation";
 import { FlexSheetSection } from "@/lib/flexSheet/flexSheetSections";
@@ -33,7 +32,7 @@ type SaveCaseArgs =
   | { section: typeof CaseSection.CLINICAL_DOCUMENTS; payload: ClinicalNote[]; caseId?: string | null }
   | { section: typeof CaseSection.ORDERS; payload: OrderType[]; caseId?: string | null }
   | { section: typeof CaseSection.TABLE_TEMPLATE; payload: FlexSheetSection[]; caseId?: string | null }
-  | { section: typeof CaseSection.LABS; payload: TableSavePayload<LabTableData>; caseId?: string | null }
+  | { section: typeof CaseSection.LABS; payload: LabSavePayload; caseId?: string | null }
   | { section: typeof CaseSection.DOCUMENTATION; payload: TableSavePayload<FlexSheetData>; caseId?: string | null }
   | { section: typeof CaseSection.INTAKE_OUTPUT; payload: IntakeOutputFormData[]; caseId?: string | null }
   | { section: typeof CaseSection.MEDICATION_ORDERS; payload: { orders: MedicationOrder[]; administrations: MedAdministrationInstance[] }; caseId?: string | null }

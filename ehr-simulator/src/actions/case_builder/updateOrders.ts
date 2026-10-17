@@ -9,16 +9,19 @@ export async function updateOrders(
   caseId: string,
 ) {
 
-  const rows = orders.map((order) => ({
-    category: order.category,
-    title: order.title,
-    details: order.details,
-    status: order.status,
-    provider: order.orderingProvider,
-    is_important: order.important,
-    is_in_presim: order.visibleInPresim,
-    phase: Number(order.phase ?? 1),
-  }));
+  const rows = orders.map((order) => {
+    const phase = Number(order.phase ?? 1);
+    return {
+      category: order.category,
+      title: order.title,
+      details: order.details,
+      status: order.status,
+      provider: order.orderingProvider,
+      is_important: order.important,
+      is_in_presim: phase > 1 ? false : order.visibleInPresim,
+      phase,
+    };
+  });
 
   const { error } = await supabase.rpc("case_builder_replace_orders", {
     p_case_id: caseId,

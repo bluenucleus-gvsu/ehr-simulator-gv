@@ -79,6 +79,7 @@ export interface MedicationOrder {
   dose: number | null,
   visibleInPresim: boolean
   phase?: number
+  label?: string | null
 }
 
 export type AdministrationStatus = 'Given' | 'Held' | 'Missed' | 'Refused' | 'Due'

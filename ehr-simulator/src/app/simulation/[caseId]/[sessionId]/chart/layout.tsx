@@ -7,7 +7,7 @@ import type { CaseBundle } from "@/actions/case_builder/getCase";
 import { SidebarProvider } from "@/components/ui/sidebar"
 import FlexSheetSidebar from "./charting/components/flexSheetSidebar"
 import { SimulationCaseProvider } from "@/context/SimulationCaseContext"
-import PhaseUpdateDialog from "@/app/simulation/[caseId]/[sessionId]/chart/components/phaseUpdateDialog"
+import ReleaseUpdateDialog from "@/app/simulation/[caseId]/[sessionId]/chart/components/releaseUpdateDialog"
 
 type ChartLayoutProps = {
   children: React.ReactNode;
@@ -25,7 +25,7 @@ const ChartLayout = async ({ children, params }: ChartLayoutProps) => {
     <SimulationCaseProvider routeContext={awaitedParams} caseBundle={serverCaseBundle}>
       <SidebarProvider defaultOpen={false}>
         <SimSessionProvider>
-          <PhaseUpdateDialog />
+          <ReleaseUpdateDialog />
           <Toaster position="top-right" />
           <div className="h-screen w-full overflow-hidden flex flex-col [--header-height:calc(--spacing(16))]">
             <Header />

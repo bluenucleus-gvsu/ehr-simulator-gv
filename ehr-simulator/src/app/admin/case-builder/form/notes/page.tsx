@@ -34,20 +34,18 @@ import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 export default function NotesForm() {
   const { onDataChange, noteData, demographicData, caseId } = useFormContext()
   const [notes, setNotes] = useState<ClinicalNote[]>(noteData);
-
-  // individual note data
   const [category, setCategory] = useState<string>("");
   const [specialty, setSpecialty] = useState<string>("");
   const [author, setAuthor] = useState<string>("");
   const [isSoap, setIsSoap] = useState<boolean>(true);
   const [excludeFromPresim, setExcludeFromPresim] = useState<boolean>(false)
   const [noteContent, setNoteContent] = useState<string>(soapTemplateNote);
-  const [phase, setPhase] = useState(1);
-
-  // Time Offset
+  const [label, setLabel] = useState<string>("");
   const [days, setDays] = useState<number | ''>('');
   const [hours, setHours] = useState<number | ''>('');
   const [minutes, setMinutes] = useState<number | ''>('');
+  const [phase, setPhase] = useState(1);
+  const phases = Array.from({ length: Math.max(1, demographicData.phaseCount) }, (_, i) => i + 1);
 
   const canAddNote = Boolean(specialty && author && category && noteContent);
 
@@ -65,6 +63,19 @@ export default function NotesForm() {
     setNoteContent(template);
   };
 
+  const handlePhaseChange = (value: number) => {
+    const nextPhase = Math.min(demographicData.phaseCount, Math.max(1, value || 1));
+    setPhase(nextPhase);
+    if (nextPhase > 1) {
+      setExcludeFromPresim(true);
+      setDays('');
+      setHours('');
+      setMinutes('');
+    } else if (nextPhase === 1) {
+      setExcludeFromPresim(false);
+    }
+  };
+
   const clearForm = () => {
     setCategory("");
     setNoteContent(isSoap ? soapTemplateNote : '<p></p>');
@@ -72,10 +83,14 @@ export default function NotesForm() {
     setHours('');
     setMinutes('');
     setPhase(1);
+    setExcludeFromPresim(false);
+    setLabel("");
   };
 
   const createNote = () => {
-    const timeOffset = -1 * (((Number(days) || 0) * 1440) + ((Number(hours) || 0) * 60) + (Number(minutes) || 0));
+    const timeOffset = phase > 1
+      ? null
+      : -1 * (((Number(days) || 0) * 1440) + ((Number(hours) || 0) * 60) + (Number(minutes) || 0));
 
     const newNote = {
       title: category ? `${category} Note` : "Progress Note",
@@ -85,6 +100,7 @@ export default function NotesForm() {
       content: noteContent,
       excludedFromPresim: excludeFromPresim,
       phase,
+      label: phase > 1 ? label.trim() || null : null,
     };
     setNotes(prev => [newNote, ...prev]);
     clearForm();
@@ -109,7 +125,7 @@ export default function NotesForm() {
     router.push(caseBuilderPath("/admin/case-builder/form/orders", caseId));
   }
 
-  const sortedNotes = [...notes].sort((a, b) => b.timeOffset - a.timeOffset)
+  const sortedNotes = [...notes].sort((a, b) => (b.timeOffset ?? b.phase ?? 1) - (a.timeOffset ?? a.phase ?? 1))
 
   return (
     <FormShell
@@ -127,14 +143,14 @@ export default function NotesForm() {
         <div className="grid grid-cols-1 2xl:grid-cols-12 gap-6 h-full max-w-7xl mx-auto pb-20">
           <div className="lg:col-span-7 space-y-6">
             <Card className="border-slate-200 shadow-sm pt-0">
-              <CardHeader className="bg-slate-50 border-b border-slate-200 pt-4 !pb-2 rounded-t-xl">
+              <CardHeader className="bg-slate-50 border-b border-slate-200 pt-4 pb-2! rounded-t-xl">
                 <CardTitle className="text-lg flex items-center justify-between">
-                  <span className="flex items-center gap-2"><FileText className="w-4 h-4 text-blue-600" /> New Entry</span>
+                  <span className="flex items-center gap-2"><FileText className="w-4 h-4 text-blue-600" />New Entry</span>
                 </CardTitle>
               </CardHeader>
 
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 gap-4">
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 items-center">
                   <div className="space-y-2">
                     <Label>Specialty</Label>
                     <Select value={specialty} onValueChange={setSpecialty}>
@@ -162,11 +178,42 @@ export default function NotesForm() {
                       </SelectContent>
                     </Select>
                   </div>
-
-                </div>
-
-                {/* Author & Time Row */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-2">
+                  {phase === 1 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Label>Time Before Sim</Label>
+                        <InfoTooltip content="How long before the simulation start time was this note written?">
+                          <Info size={16} color="var(--muted-foreground)" />
+                        </InfoTooltip>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Input value={days} onChange={e => { if (Number(e.target.value) <= 99999999) setDays(Number(e.target.value)) }} className="pr-8 bg-white" />
+                          <span className="absolute right-3 top-2.5 text-xs text-slate-400">d</span>
+                        </div>
+                        <div className="relative flex-1">
+                          <Input value={hours} onChange={e => { if (Number(e.target.value) <= 99999999) setHours(Number(e.target.value)) }} className="pr-8 bg-white" />
+                          <span className="absolute right-3 top-2.5 text-xs text-slate-400">h</span>
+                        </div>
+                        <div className="relative flex-1">
+                          <Input value={minutes} onChange={e => { if (Number(e.target.value) <= 99999999) setMinutes(Number(e.target.value)) }} className="pr-8 bg-white" />
+                          <span className="absolute right-3 top-2.5 text-xs text-slate-400">m</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {phase > 1 && (
+                    <div className="space-y-2">
+                      <Label>Label for Faculty</Label>
+                      <Input
+                        value={label}
+                        onChange={e => setLabel(e.target.value)}
+                        maxLength={80}
+                        className="bg-white"
+                        placeholder="e.g. Blood consent form"
+                      />
+                    </div>
+                  )}
                   <div className="space-y-2">
                     <Label>Author</Label>
                     <div className="relative">
@@ -179,51 +226,39 @@ export default function NotesForm() {
                       />
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Label>Time Before Sim</Label>
-                      <InfoTooltip content="How long before the simulation start time was this note written?">
-                        <Info size={16} color="var(--muted-foreground)" />
-                      </InfoTooltip>
+                  <div className="col-span-2 flex gap-8">
+                    <div className="flex gap-2 items-center">
+                      <Checkbox
+                        id="presim"
+                        checked={excludeFromPresim}
+                        onCheckedChange={handleCheckedChange}
+                        disabled={phase > 1}
+                      />
+                      <Label className="cursor-pointer" htmlFor="presim">Exclude from Pre-Sim</Label>
                     </div>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Input value={days} onChange={e => { if (Number(e.target.value) <= 99999999) setDays(Number(e.target.value)) }} className="pr-8 bg-white" />
-                        <span className="absolute right-3 top-2.5 text-xs text-slate-400">d</span>
-                      </div>
-                      <div className="relative flex-1">
-                        <Input value={hours} onChange={e => { if (Number(e.target.value) <= 99999999) setHours(Number(e.target.value)) }} className="pr-8 bg-white" />
-                        <span className="absolute right-3 top-2.5 text-xs text-slate-400">h</span>
-                      </div>
-                      <div className="relative flex-1">
-                        <Input value={minutes} onChange={e => { if (Number(e.target.value) <= 99999999) setMinutes(Number(e.target.value)) }} className="pr-8 bg-white" />
-                        <span className="absolute right-3 top-2.5 text-xs text-slate-400">m</span>
-                      </div>
+                    <div className="flex items-center gap-2 text-sm font-normal">
+                      <Switch id="soap-mode" checked={isSoap} onCheckedChange={handleSoapToggle} className="border border-slate-300" />
+                      <Label htmlFor="soap-mode">SOAP Format</Label>
                     </div>
-                  </div>
-                  <div className="flex w-full gap-2">
-                    <Checkbox checked={excludeFromPresim} onCheckedChange={handleCheckedChange} />
-                    <Label>Exclude from Pre-Sim</Label>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm font-normal">
-                    <Switch id="soap-mode" checked={isSoap} onCheckedChange={handleSoapToggle} className="border border-slate-300" />
-                    <Label htmlFor="soap-mode">SOAP Format</Label>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="note-phase">Release phase</Label>
-                    <Input
-                      id="note-phase"
-                      type="number"
-                      min={1}
-                      max={demographicData.phaseCount}
-                      value={phase}
-                      onChange={(event) => setPhase(Math.min(
-                        demographicData.phaseCount,
-                        Math.max(1, Number(event.target.value) || 1),
-                      ))}
-                      className="bg-white"
-                    />
+                    <div className="space-y-2">
+                      <Label>Relase Phase</Label>
+                      <Select
+                        value={String(phase)}
+                        onValueChange={(value) => handlePhaseChange(Number(value))}
+                      >
+                        <SelectTrigger className="bg-white">
+                          <SelectValue />
+                          <ChevronDown />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {phases.map((phase) => (
+                            <SelectItem key={phase} value={String(phase)}>
+                              {phase}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
 

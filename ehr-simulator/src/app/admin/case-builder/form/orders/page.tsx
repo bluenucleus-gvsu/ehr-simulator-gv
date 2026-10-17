@@ -11,7 +11,7 @@ import {
   AlertCircle,
   ChevronDown,
   Utensils,
-  Pill
+  Pill,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -76,6 +76,7 @@ export default function OrdersForm() {
   const [important, setImportant] = useState(false)
   const [excludeFromPresim, setExcludeFromPresim] = useState<boolean>(false)
   const [phase, setPhase] = useState(1)
+  const phases = Array.from({ length: Math.max(1, demographicData.phaseCount) }, (_, i) => i + 1);
 
   const canAddOrder = [category, title, provider].every((value) => value.trim() !== "");
 
@@ -85,6 +86,7 @@ export default function OrdersForm() {
     setStatus("Active")
     setImportant(false)
     setPhase(1)
+    setExcludeFromPresim(false)
   }
 
   const createOrder = () => {
@@ -129,6 +131,16 @@ export default function OrdersForm() {
     setImportant(check)
   }
 
+  const handlePhaseChange = (value: number) => {
+    const nextPhase = Math.min(demographicData.phaseCount, Math.max(1, value || 1));
+    setPhase(nextPhase);
+    if (nextPhase > 1) {
+      setExcludeFromPresim(true);
+    } else if (nextPhase === 1) {
+      setExcludeFromPresim(false);
+    }
+  };
+
   return (
     <FormShell
       title="Order Entry"
@@ -151,7 +163,7 @@ export default function OrdersForm() {
               </CardHeader>
 
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label>Category <span className="text-red-500">*</span></Label>
                     <Select value={category} onValueChange={setCategory}>
@@ -185,18 +197,19 @@ export default function OrdersForm() {
                       className="bg-white"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label>Order Title <span className="text-red-500">*</span></Label>
+                    <Input
+                      value={title}
+                      onChange={e => setTitle(e.target.value)}
+                      placeholder="e.g. Insert Peripheral IV"
+                      className="bg-white font-medium"
+                    />
+                  </div>
                 </div>
 
                 {/* Title */}
-                <div className="space-y-2">
-                  <Label>Order Title <span className="text-red-500">*</span></Label>
-                  <Input
-                    value={title}
-                    onChange={e => setTitle(e.target.value)}
-                    placeholder="e.g. Insert Peripheral IV"
-                    className="bg-white font-medium"
-                  />
-                </div>
+
 
                 <div className="space-y-2">
                   <Label>Instructions / Details</Label>
@@ -224,24 +237,33 @@ export default function OrdersForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="order-phase">Release phase</Label>
-                    <Input
-                      id="order-phase"
-                      type="number"
-                      min={1}
-                      max={demographicData.phaseCount}
-                      value={phase}
-                      onChange={(event) => setPhase(Math.min(
-                        demographicData.phaseCount,
-                        Math.max(1, Number(event.target.value) || 1),
-                      ))}
-                      className="bg-white"
-                    />
+                    <Label>Relase Phase</Label>
+                    <Select
+                      value={String(phase)}
+                      onValueChange={(value) => handlePhaseChange(Number(value))}
+                    >
+                      <SelectTrigger className="bg-white">
+                        <SelectValue />
+                        <ChevronDown />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {phases.map((phase) => (
+                          <SelectItem key={phase} value={String(phase)}>
+                            {phase}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="border rounded-lg" >
                     <div className="flex items-center gap-2 p-2 w-fit">
-                      <Checkbox id="presim" checked={excludeFromPresim} onCheckedChange={handlePresimCheckbox} />
+                      <Checkbox
+                        id="presim"
+                        checked={excludeFromPresim}
+                        onCheckedChange={handlePresimCheckbox}
+                        disabled={phase > 1}
+                      />
                       <Label htmlFor="presim" className="text-sm font-normal cursor-pointer">Exclude from Pre-Sim</Label>
                     </div>
                     <div className="flex items-center gap-2 p-2 h-fit w-fit">
@@ -369,7 +391,6 @@ export default function OrdersForm() {
             </div>
           </div>
         </div>
-        {/* </div> */}
       </div>
     </FormShell>
   )
