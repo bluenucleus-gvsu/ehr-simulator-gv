@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "@/components/ui/card";
-import { Upload, AlertCircleIcon, CheckCircle2Icon, X } from "lucide-react";
-import { User } from "lucide-react";
+import { Upload, AlertCircleIcon, CheckCircle2Icon, X,User } from "lucide-react";
 import { toast } from "sonner";
 import { Student } from "../types";
 
@@ -60,7 +59,7 @@ export default function AddStudent({ onAddStudent, onImportStudents, onClearStud
       const values = splitLine(line).map((v) => v.replace(/"/g, "").trim());
       const cell = (idx: number) => (idx === -1 ? "" : values[idx] ?? "");
 
-      const email = emailIdx !== -1 ? cell(emailIdx) : `${cell(usernameIdx)}@mail.gvsu.edu`;
+      const email = emailIdx !== -1 ? cell(emailIdx) : `${cell(usernameIdx)}@${process.env.NEXT_PUBLIC_STUDENT_EMAIL_DOMAIN}`;
       const fullName = fullNameIdx !== -1 ? cell(fullNameIdx) : `${cell(firstIdx)} ${cell(lastIdx)}`.trim();
 
       return {
@@ -126,7 +125,7 @@ export default function AddStudent({ onAddStudent, onImportStudents, onClearStud
 
     const newStudent: Student = {
       id: crypto.randomUUID(),
-      email: `${cleanUsername}@mail.gvsu.edu`,
+      email: `${cleanUsername}@${process.env.NEXT_PUBLIC_STUDENT_EMAIL_DOMAIN}`,
       full_name: `${cleanFirst} ${cleanLast}`,
       role: "student",
       status: null,

@@ -19,7 +19,7 @@ const Header = () => {
   const modeClasses = isPreSimMode
     ? "border-violet-200/80 bg-violet-500 text-white shadow-violet-900/30"
     : "border-emerald-200/80 bg-emerald-500 text-white shadow-emerald-900/30";
-  const medReferenceTool = 'https://online-lexi-com.ezproxy.gvsu.edu/lco/action/home';
+  const medReferenceTool = process.env.NEXT_PUBLIC_MED_REFERENCE_URL;
 
   useEffect(() => {
     const onFullscreenChange = () => {
