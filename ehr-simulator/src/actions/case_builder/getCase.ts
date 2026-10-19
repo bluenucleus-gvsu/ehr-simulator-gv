@@ -3,17 +3,21 @@
 import { createClient } from "@supabase/supabase-js";
 import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient";
 import { assertUuid } from "@/lib/caseBuilder/validation";
+import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
+import { DatabaseDocumentation } from "../simulation";
+import { FlexSheetSection } from "@/lib/flexSheet/flexSheetSections";
+import { Database } from "../../../database.types";
 
 export interface CaseBundle {
   caseRow: CaseRow
   safetyAlerts: CaseBundleRow[]
   familyHistory: CaseBundleRow[]
   clinicalDocuments: CaseBundleRow[]
-  orders: CaseBundleRow[]
-  labResults: CaseBundleRow[]
+  orders: DatabaseOrder[]
+  labResults: DatabaseLabRow[]
   imagingReports: ImagingReportRow[]
   microbiologyReports: MicrobiologyReportRow[]
-  documentationResults: CaseBundleRow[]
+  documentationResults: DatabaseDocumentation[]
   medicationAdministrations: CaseBundleRow[]
   caseImages: CaseBundleRow[]
   /** Structured med orders + joined medication rows (when present in DB). */
@@ -21,17 +25,17 @@ export interface CaseBundle {
 }
 
 type NamedLookup = { id?: string | null; name?: string | null };
+export type DatabaseOrder = Database['public']['Tables']['orders']['Row'];
 
-export type CaseRow = Record<string, unknown> & {
-  id?: string | null;
-  first_name?: string | null;
-  last_name?: string | null;
-  age?: number | null;
-  code_status?: string | null;
-  attending_provider?: string | null;
+export type CaseRow = Database['public']['Tables']['cases']['Row'] & {
   isolation_precautions?: NamedLookup | null;
   relationship_status?: NamedLookup | null;
+<<<<<<< HEAD
   case_photo_url?: string | null;
+=======
+  case_specialty: CaseSpecialty;
+  flexsheet_sections: FlexSheetSection[] | null;
+>>>>>>> 3af4c335735a93bf650346a8497d0e46adac4c49
 };
 
 export type CaseBundleRow = Record<string, unknown> & {
@@ -58,6 +62,7 @@ export type CaseBundleRow = Record<string, unknown> & {
   reporter?: string | null;
 };
 
+export type DatabaseLabRow = Database['public']['Tables']['lab_results']['Row'];
 export type ImagingReportRow = CaseBundleRow & { is_critical?: boolean | null };
 export type MicrobiologyReportRow = CaseBundleRow & { is_critical?: boolean | string | null };
 
@@ -231,11 +236,11 @@ export async function getCaseBundle(
     safetyAlerts: (safetyAlertsRes.data ?? []) as CaseBundleRow[],
     familyHistory: (familyHistoryRes.data ?? []) as CaseBundleRow[],
     clinicalDocuments: (clinicalDocumentsRes.data ?? []) as CaseBundleRow[],
-    orders: (ordersRes.data ?? []) as CaseBundleRow[],
-    labResults: (labResultsRes.data ?? []) as CaseBundleRow[],
+    orders: (ordersRes.data ?? []) as DatabaseOrder[],
+    labResults: (labResultsRes.data ?? []),
     imagingReports: (imagingReportsRes.data ?? []) as ImagingReportRow[],
     microbiologyReports: (microbiologyReportsRes.data ?? []) as MicrobiologyReportRow[],
-    documentationResults: (documentationResultsRes.data ?? []) as CaseBundleRow[],
+    documentationResults: (documentationResultsRes.data ?? []) as DatabaseDocumentation[],
     medicationAdministrations: (medicationAdministrationsRes.data ?? []) as CaseBundleRow[],
     caseImages: (caseImagesRes.data ?? []) as CaseBundleRow[],
     medicationOrders: medicationOrders as CaseBundleRow[],

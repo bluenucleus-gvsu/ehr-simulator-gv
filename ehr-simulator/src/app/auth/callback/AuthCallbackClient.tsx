@@ -2,48 +2,37 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
 import type { Session } from '@supabase/supabase-js'
 import { emailIsDevAdminAllowlist } from '@/lib/devAdminEmails'
+import { getUserRole } from '@/actions/users'
+import { createBrowserSupabase } from '@/utils/supabase/client'
 
 export default function AuthCallbackPage() {
   const router = useRouter()
 
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      // use ANON key for browser client
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const supabase = createBrowserSupabase()
 
     let isActive = true
     let redirectScheduled = false
     let redirectTimer: ReturnType<typeof setTimeout> | null = null
 
-    const getRoleForUser = async (userId: string, fallbackRole?: string) => {
+    const getRoleForUser = async (userId: string): Promise<string | undefined> => {
       try {
-        const { data: profile, error } = await supabase.from('users').select('role').eq('id', userId).single()
-        if (!error && profile?.role) return profile.role as string
+        const role = await getUserRole(userId)
+        if (role) return role
       } catch {
       }
-      return fallbackRole || undefined
+      return undefined
     }
 
     const redirectForSession = async (session: Session) => {
-      const fallbackRole = session.user.user_metadata?.role as string | undefined
-      const role = await getRoleForUser(session.user.id, fallbackRole)
+      const role = await getRoleForUser(session.user.id)
 
       if (!isActive) return
 
       const devBypass = emailIsDevAdminAllowlist(session.user.email ?? undefined)
       const resolvedRole = devBypass ? 'admin' : role
-
-      if (resolvedRole) {
-        try {
-          window.localStorage.setItem('role', resolvedRole)
-        } catch {
-        }
-      }
 
       const destination =
         resolvedRole === 'admin'

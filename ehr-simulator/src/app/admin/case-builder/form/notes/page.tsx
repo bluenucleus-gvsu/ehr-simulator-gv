@@ -28,7 +28,7 @@ import TextEditor from "@/components/textEditor";
 import { soapTemplateNote } from "@/utils/form";
 import { FormShell } from "../../components/formShell";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
-import { CaseSection } from "@/lib/saveCase";
+import { CaseSection } from "@/lib/caseSections";
 import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 
 export default function NotesForm() {
@@ -93,12 +93,12 @@ export default function NotesForm() {
   const router = useRouter();
 
   const goBack = () => {
-    onDataChange("notes", notes);
+    onDataChange(CaseSection.CLINICAL_DOCUMENTS, notes);
     router.push(caseBuilderPath("/admin/case-builder/form/history", caseId));
   }
 
   const handleSubmit = async () => {
-    onDataChange("notes", notes);
+    onDataChange(CaseSection.CLINICAL_DOCUMENTS, notes);
 
     await saveCaseData({
       payload: notes,
@@ -114,7 +114,7 @@ export default function NotesForm() {
   return (
     <FormShell
       title="Clinical Documentation"
-      stepDescription="Step 3 of 10: Add all relevant notes"
+      stepDescription="Add all relevant notes"
       icon={<FilePlus className="text-slate-400" />}
       onSubmit={handleSubmit}
       goBack={goBack}

@@ -7,7 +7,7 @@ interface TooltipProps {
   size: number;
 }
 
-const FormTooltip = ({ color, tip, size}: TooltipProps) => {
+const FormTooltip = ({ color, tip, size }: TooltipProps) => {
 
   return (
     <TooltipProvider>
@@ -16,7 +16,7 @@ const FormTooltip = ({ color, tip, size}: TooltipProps) => {
           <Info size={size} color={color} />
         </TooltipTrigger>
         <TooltipContent className="w-fit">
-          <p className="max-w-120  text-wrap">{tip}</p>
+          <p className="max-w-120 text-wrap">{tip}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

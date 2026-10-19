@@ -1,14 +1,10 @@
 import { getAllSimCases } from "@/actions/cases";
-import CasesClient from "./casesClient";
+import CasesClient from "../components/casesClient";
 
 
 
 export default async function CasesPage() {
   const caseData = await getAllSimCases();
-  // const [courseResults, caseAssignmentResults] = await Promise.all([
-  //   getAllCourses(),
-  //   getCourseCaseAssignments()
-  // ]);
 
   if (!caseData.success || !caseData.data) {
     return (

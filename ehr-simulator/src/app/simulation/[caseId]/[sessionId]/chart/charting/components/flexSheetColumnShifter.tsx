@@ -1,12 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { ChevronsLeft, ChevronsRight, Undo2 } from "lucide-react";
-import { formatTimeFromOffset } from "../components/flexSheetHelpers";
+import { formatTimeFromOffset } from "@/lib/flexSheet/flexSheetHelpers";
 
 interface ColumnShiftControlProps {
   columns: number[];
   columnOffset: number;
   tableWidth: number;
-  onColumnShift: (offset: number | string) => void;
+  onColumnShift: (offset: number | "reset") => void;
   simStartTime: number | null;
 }
 

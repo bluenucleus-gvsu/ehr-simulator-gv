@@ -1,5 +1,5 @@
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { getPinnedStyles } from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/flexSheetHelpers";
+import { getPinnedStyles } from "@/lib/flexSheet/flexSheetHelpers";
 import { flexRender } from "@tanstack/react-table"
 import { Table as TableInstance } from "@tanstack/react-table"
 
