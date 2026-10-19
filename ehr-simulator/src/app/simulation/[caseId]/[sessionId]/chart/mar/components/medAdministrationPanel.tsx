@@ -74,7 +74,7 @@ const MedAdministrationPanel = ({
     }
     return order.dose < administeredDose
   })
-  const medReferenceTool = 'https://online-lexi-com.ezproxy.gvsu.edu/lco/action/home';
+  const medReferenceTool = process.env.NEXT_PUBLIC_MED_REFERENCE_URL;
 
 
   const mustConfirmPatient = isPresim === false;
