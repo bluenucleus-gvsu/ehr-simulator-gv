@@ -42,5 +42,5 @@ jobs:
         with:
           name: supabase-backup-${{ env.TIMESTAMP }}
           path: backups/
-          retention-days: 90 # Free plan is 90 days
+          retention-days: 30 # Free plan is up to 90 days
           if-no-files-found: error
