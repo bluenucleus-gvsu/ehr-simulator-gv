@@ -23,7 +23,7 @@ function populatedCount(rows: Record<string | number, unknown>[], offset: number
   return rows.filter((row) => hasValue(row[offset])).length;
 }
 
-function Phase({ value }: { value?: number }) {
+function Phase({ value }: Readonly<{ value?: number }>) {
   return <span className="rounded-full bg-violet-50 px-2 py-0.5 text-xs text-violet-700">Phase {value ?? 1}</span>;
 }
 
@@ -64,7 +64,7 @@ export default function FormReview() {
         <div className="mx-auto max-w-6xl space-y-5 pb-20">
           <Card>
             <CardHeader className="border-b text-lg font-semibold">Patient and scenario</CardHeader>
-            <CardContent className="grid gap-3 pt-4 sm:grid-cols-2 lg:grid-cols-3">
+            <CardContent className={`grid gap-3 pt-4 sm:grid-cols-2 ${demographicData.casePhotoUrl ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
               <p><strong>Name:</strong> {demographicData.firstName} {demographicData.lastName}</p>
               <p><strong>Age / DOB:</strong> {demographicData.age || "None"}</p>
               <p><strong>Diagnosis:</strong> {demographicData.admittingDiagnosis || "None"}</p>
@@ -75,6 +75,15 @@ export default function FormReview() {
               <p><strong>Language:</strong> {demographicData.language || "None"}{demographicData.needsInterpreter ? " (interpreter required)" : ""}</p>
               <p><strong>Emergency contact:</strong> {demographicData.contact || "None"}</p>
               <p className="sm:col-span-2 lg:col-span-3"><strong>Summary:</strong> {demographicData.summary}</p>
+              {demographicData.casePhotoUrl && (
+                <div className="row-span-4 flex aspect-square w-full items-center justify-center overflow-hidden rounded-md border bg-slate-50 lg:col-start-4 lg:row-start-1">
+                  <img
+                    src={demographicData.casePhotoUrl}
+                    alt="Patient profile"
+                    className="h-full w-full object-contain"
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
 

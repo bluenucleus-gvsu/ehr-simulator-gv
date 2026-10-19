@@ -12,10 +12,10 @@ import { updateMedia } from "@/actions/case_builder/updateMedia"
 import { updateCaseIntakeOutput } from "@/actions/case_builder/updateCaseIntakeOutput";
 
 import { MedAdministrationInstance, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
-import type { IntakeOutputFormData } from "@/utils/form";
 import type {
   DemographicFormData,
   HistoryFormData,
+  IntakeOutputFormData,
   MediaImageData,
 } from "@/utils/form";
 import type { ClinicalNote } from "@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData";
@@ -62,8 +62,11 @@ export async function saveCaseData({ payload, section, caseId }: SaveCaseArgs) {
       return await updateClinicalDocuments(supabase, payload, caseId);
     case CaseSection.ORDERS:
       return await updateOrders(supabase, payload, caseId);
+<<<<<<< HEAD
+=======
     case CaseSection.TABLE_TEMPLATE:
       return await updateTableTemplate(supabase, payload, caseId);
+>>>>>>> 3af4c335735a93bf650346a8497d0e46adac4c49
     case CaseSection.LABS:
       return await updateLabs(supabase, payload, caseId);
     case CaseSection.DOCUMENTATION:

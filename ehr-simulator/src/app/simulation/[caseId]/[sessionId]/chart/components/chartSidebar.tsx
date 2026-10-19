@@ -104,9 +104,23 @@ export default function ChartSidebar() {
   }
 
   return (
+<<<<<<< HEAD
+    <div className="w-64 h-full min-h-0 flex flex-col justify-start items-center bg-gray-200 border-r border-gray-300 p-2 flex-shrink-0">
+      <span className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-gray-100 p-1 shadow-md">
+        {caseBundle.caseRow.case_photo_url ? (
+          <img
+            src={caseBundle.caseRow.case_photo_url}
+            alt="Patient profile"
+            className="h-full flex-1 w-full rounded-full bg-white object-cover"
+          />
+        ) : (
+          <CircleUserRound size={100} strokeWidth={0.8} color="oklch(38% 0.189 293.745)" className="rounded-full bg-white" />
+        )}
+=======
     <div className="w-64 h-full min-h-0 flex flex-col justify-start items-center bg-gray-200 border-r border-gray-300 p-2 shrink-0">
       <span className="rounded-full p-1 bg-gray-100 shadow-md">
         <CircleUserRound size={100} strokeWidth={0.8} color="oklch(38% 0.189 293.745)" className="rounded-full bg-white" />
+>>>>>>> 3af4c335735a93bf650346a8497d0e46adac4c49
       </span>
       <div className="flex flex-col items-center">
         <h1 className="text-purple-900 text-lg font-medium tracking-tight">{fullName}</h1>

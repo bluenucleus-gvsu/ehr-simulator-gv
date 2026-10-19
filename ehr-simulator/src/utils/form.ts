@@ -29,6 +29,7 @@ export interface DemographicFormData {
   contactRelationship: string;
   contactPhone: string;
   phaseCount: number;
+  casePhotoUrl?: string;
   caseSpecialty: CaseSpecialty;
 }
 

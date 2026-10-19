@@ -30,8 +30,12 @@ export type DatabaseOrder = Database['public']['Tables']['orders']['Row'];
 export type CaseRow = Database['public']['Tables']['cases']['Row'] & {
   isolation_precautions?: NamedLookup | null;
   relationship_status?: NamedLookup | null;
+<<<<<<< HEAD
+  case_photo_url?: string | null;
+=======
   case_specialty: CaseSpecialty;
   flexsheet_sections: FlexSheetSection[] | null;
+>>>>>>> 3af4c335735a93bf650346a8497d0e46adac4c49
 };
 
 export type CaseBundleRow = Record<string, unknown> & {
