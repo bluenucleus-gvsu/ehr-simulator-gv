@@ -63,6 +63,34 @@ function validateTablePayload(value: unknown, label: string): void {
   }
 }
 
+function validateLabPayload(value: unknown, label: string): void {
+  const payload = record(value, label);
+  array(payload.data, `${label}.data`);
+  const columns = array(payload.columns, `${label}.columns`);
+  const fixedOffsets = new Set<number>();
+  columns.forEach((columnValue, index) => {
+    const column = record(columnValue, `${label}.columns[${index}]`);
+    requiredString(column.id, `${label}.columns[${index}].id`);
+    const columnLabel = `${label}.columns[${index}]`;
+    const phase = assertPhase(column.phase, `${columnLabel}.phase`);
+    if (column.is_in_presim === true && phase > 1) {
+      fail(`${columnLabel} cannot be in pre-sim when marked as faculty-release.`);
+    }
+    if (column.time_offset === null || column.time_offset === undefined) {
+      if (phase === 1) {
+        fail(`${columnLabel} has no time offset; Phase 1 items must have a time offset.`);
+      }
+      return;
+    }
+    if (phase > 1) {
+      fail(`${columnLabel} is faculty-released (phase > 1) and cannot have a time offset.`);
+    }
+    const offset = finiteNumber(column.time_offset, `${columnLabel}.time_offset`);
+    if (fixedOffsets.has(offset)) fail(`${label} contains duplicate time offsets.`);
+    fixedOffsets.add(offset);
+  });
+}
+
 export function assertValidSaveRequest(
   section: CaseSectionValue,
   payloadValue: unknown,
@@ -95,8 +123,17 @@ export function assertValidSaveRequest(
         const note = record(noteValue, `notes[${index}]`);
         requiredString(note.author, `notes[${index}].author`);
         requiredString(note.content, `notes[${index}].content`);
-        finiteNumber(note.timeOffset, `notes[${index}].timeOffset`);
-        assertPhase(note.phase, `notes[${index}].phase`);
+        const phase = assertPhase(note.phase, `notes[${index}].phase`);
+        if (note.timeOffset === null || note.timeOffset === undefined) {
+          if (phase === 1) {
+            fail(`notes[${index}] has no time offset; Phase 1 notes must have a time offset.`);
+          }
+        } else {
+          if (phase > 1) {
+            fail(`notes[${index}] is staged (phase > 1) and cannot carry a time offset.`);
+          }
+          finiteNumber(note.timeOffset, `notes[${index}].timeOffset`);
+        }
       });
       return;
     case CaseSection.ORDERS:
@@ -104,14 +141,17 @@ export function assertValidSaveRequest(
         const order = record(orderValue, `orders[${index}]`);
         requiredString(order.title, `orders[${index}].title`);
         requiredString(order.category, `orders[${index}].category`);
-        assertPhase(order.phase, `orders[${index}].phase`);
+        const phase = assertPhase(order.phase, `orders[${index}].phase`);
+        if (phase > 1 && order.visibleInPresim === true) {
+          fail(`orders[${index}] cannot be in pre-sim when marked as faculty-release.`);
+        }
       });
       return;
     case CaseSection.TABLE_TEMPLATE:
       assertValidValue(array(payloadValue, "tableTemplate"), 'tableTemplate', FlexSheetSection)
       return
     case CaseSection.LABS:
-      validateTablePayload(payloadValue, "labs");
+      validateLabPayload(payloadValue, "labs");
       return;
     case CaseSection.DOCUMENTATION:
       validateTablePayload(payloadValue, "charting");
@@ -134,7 +174,10 @@ export function assertValidSaveRequest(
         assertUuid(order.medicationId, `medications.orders[${index}].medicationId`);
         requiredString(order.frequency, `medications.orders[${index}].frequency`);
         requiredString(order.priority, `medications.orders[${index}].priority`);
-        assertPhase(order.phase, `medications.orders[${index}].phase`);
+        const phase = assertPhase(order.phase, `medications.orders[${index}].phase`);
+        if (phase > 1 && order.is_in_presim === true) {
+          fail(`medications.orders[${index}] cannot be in pre-sim when set for faculty-release.`);
+        }
         orderIds.add(order.id);
       });
       array(payload.administrations, "medications.administrations").forEach((adminValue, index) => {

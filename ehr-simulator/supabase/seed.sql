@@ -125,7 +125,8 @@ INSERT INTO public.cases (
   code_status, 
   admitting_diagnosis,
   age,
-  case_specialty
+  case_specialty,
+  phase_count
 ) 
 VALUES
   (
@@ -137,7 +138,8 @@ VALUES
     'Full', 
     'Acute CHF Exacerbation',
     73,
-    'med_surg'
+    'med_surg',
+    3
   ),
   (
     'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d', 
@@ -148,7 +150,8 @@ VALUES
     'Full', 
     'Acute Pancreatitis',
     62,
-    'med_surg'
+    'med_surg',
+    1
   ),
   (
     'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d', 
@@ -159,7 +162,8 @@ VALUES
     'DNR',       
     'Community Acquired Pneumonia',
     54,
-    'med_surg'
+    'med_surg',
+    1
   ),
   (
     '5a6b7c8d-9e0f-1a2b-3c4d-5e6f7a8b9c0d', 
@@ -170,7 +174,8 @@ VALUES
     'Full', 
     'Diabetic Ketoacidosis (DKA)',
     29,
-    'med_surg'
+    'med_surg',
+    1
   );
 
 INSERT INTO public.section_assignments (section_id, case_id, sim_time, presim_time) 
@@ -240,6 +245,20 @@ VALUES (
   -150, 
   '<p>3</p>'
 );
+
+INSERT INTO clinical_documents (case_id, is_in_presim, phase, label, category, specialty, author, time_offset, doc_text)
+VALUES
+  ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', TRUE, 1, null, 'Admission', 'Internal Medicine', 'Dr. Aris Thorne', -60, '<p>Admission note: patient resting comfortably,baseline vitals stable.</p>'),
+  ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', FALSE, 1, null, 'Progress', 'Nursing', 'Nurse Jamie Lee', 0, '<p>Sim start: patient reports mild dyspnea on exertion. O2 started at 2L NC.</p>'),
+  ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', FALSE, 2, 'Cardiology consult', 'Consult', 'Cardiology', 'Dr. Sarah Chen', NULL, '<p>Cardiology consult: recommend echo and daily BNP. Continue current plan.</p>'),
+  ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', FALSE, 3, 'Rapid response', 'Rapid Response', 'Internal Medicine', 'Dr. Aris Thorne', NULL, '<p>Rapid response called for acute desaturation. Patient transferred to ICU.</p>');
+
+INSERT INTO lab_results (case_id, time_offset, is_in_presim, phase, label, sodium, potassium)
+VALUES
+  ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', -60, TRUE, 1, null, '138', '4.1'),
+  ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', 0, FALSE, 1, null, '136', '4.3'),
+  ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', NULL, FALSE, 2, 'BMP after Lasix', '133', '4.8'),
+  ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', NULL, FALSE, 3, 'BMP after fluids', '127', '5.6');
 
 
 INSERT INTO medication_orders (
@@ -522,6 +541,120 @@ VALUES
     FALSE
   );
 
+-- Wallace Peterson staged med orders (phase > 1, hidden until faculty release).
+-- Baseline med orders above default to phase 1 and render automatically.
+INSERT INTO medication_orders (
+  case_id,
+  medication_id,
+  dose,
+  frequency,
+  priority,
+  instructions,
+  indication,
+  ordering_provider,
+  infusion_rate,
+  is_in_presim,
+  phase,
+  label
+)
+VALUES
+  (
+    'e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d',
+    (SELECT id FROM medications WHERE generic_name = 'furosemide' LIMIT 1),
+    40,
+    'ONCE',
+    'NOW',
+    'Give with the repeat BMP draw.',
+    'Fluid overload',
+    'Dr. Gregory House',
+    NULL,
+    FALSE,
+    2,
+    'Furosemide — 1h post-diuresis'
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d',
+    (SELECT id FROM medications WHERE generic_name = 'ceftriaxone' AND route = 'IV' LIMIT 1),
+    1,
+    'Q12H',
+    'Routine',
+    'Started after ICU transfer.',
+    'Hospital-acquired infection',
+    'Dr. Gregory House',
+    NULL,
+    FALSE,
+    3,
+    'Ceftriaxone — ICU transfer'
+  );
+
+INSERT INTO orders (
+  case_id,
+  category,
+  title,
+  details,
+  status,
+  provider,
+  is_important,
+  is_in_presim,
+  phase
+)
+VALUES
+  (
+    'e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d',
+    'Nursing',
+    'Daily weights',
+    'Weigh patient every morning before breakfast.',
+    'Active',
+    'Dr. Gregory House',
+    FALSE,
+    TRUE,
+    1
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d',
+    'Diet',
+    'Cardiac diet',
+    'Low sodium, fluid restriction 1.5L/day.',
+    'Active',
+    'Dr. Gregory House',
+    FALSE,
+    TRUE,
+    1
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d',
+    'Nursing',
+    'Strict I&O',
+    'Record all intake and output hourly.',
+    'Active',
+    'Dr. Gregory House',
+    TRUE,
+    FALSE,
+    2
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d',
+    'Respiratory',
+    'O2 titration protocol',
+    'Titrate O2 to keep SpO2 92-96%.',
+    'Active',
+    'Dr. Gregory House',
+    FALSE,
+    FALSE,
+    2
+  ),
+  (
+    'e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d',
+    'Consult',
+    'ICU transfer evaluation',
+    'Evaluate for step-up to telemetry/ICU after rapid response.',
+    'Active',
+    'Dr. Gregory House',
+    TRUE,
+    FALSE,
+    3
+  );
+
 INSERT INTO medication_administrations (
   case_id,
   medication_order_id,
@@ -690,7 +823,7 @@ INSERT INTO "public"."clinical_documents" ("id", "case_id", "is_in_presim", "cat
 	('a44db1fc-cf42-4c17-a55f-5fe54fb7e532', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 'Progress', 'Internal Medicine', 'Dr. Adler', 2880, '<h2><u>Subjective</u></h2><p>Patient presented with 3 days of nausea, vomiting, and diarrhea following return from cruise. Reports dizziness, fatigue, and poor oral intake.</p><h2><u>Objective</u></h2><ul class="list-disc ml-6"><li><p>Vitals: T 37.2°C, HR 88, BP 118/72, RR 18, SpO₂ 97% RA</p></li><li><p>Dry mucous membranes, skin tenting noted.</p></li><li><p>Alert and oriented ×3.</p></li><li><p>Abdomen soft, slightly tender, hyperactive bowel sounds.</p></li><li><p>Na⁺ 125 mEq/L, K⁺ 3.7 mEq/L</p></li><li><p>BUN 25 mg/dL, Creatinine 1.1 mg/dL</p></li><li><p>WBC 11,000/µL</p></li><li><p>Lactic acid 1.3 mmol/L</p></li></ul><h2><u>Assessment</u></h2><p>&nbsp;Hyponatremia likely secondary to fluid losses. Mild dehydration. Hemodynamically stable.</p><h2><u>Plan</u></h2><ul class="list-disc ml-6"><li><p>Start NS 75 mL/hr.</p></li><li><p>Advance diet as tolerated.</p></li><li><p>Monitor electrolytes every AM.</p></li><li><p>Fall precautions for dizziness.</p></li><li><p>PT/OT evaluation due to weakness.</p></li></ul><p></p>', '2026-03-19 20:40:02.736559+00'),
 	('191cb1f2-e8d4-4fa3-aba2-96eb53a36509', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', true, 'Admission', 'Emergency Medicine', 'Dr. Chen', 3000, '<p>Chief Complaint: “Vomiting and diarrhea for several days, feeling dizzy.”</p><p>History of Present Illness: 72-year-old male presenting after returning from a cruise 3 days ago. Reports persistent nausea, vomiting, and watery diarrhea since returning home. States he has been unable to tolerate solid food and has had minimal oral intake. Reports dizziness when standing and significant fatigue. Denies chest pain or shortness of breath. No blood in stool. Stool pathogen studies pending.</p><p>Past Medical History: Hypertension, GERD</p><p>Medications:</p><p>Lisinopril 10 mg daily</p><p>Omeprazole 20 mg daily</p><p></p><p>Allergies: No known drug allergies</p><p>Physical Examination:</p><p>General: Appears fatigued, mildly dehydrated</p><p>Neuro: Alert and oriented ×3</p><p>HEENT: Dry mucous membranes</p><p>Cardiac: Regular rate and rhythm</p><p>Respiratory: Clear breath sounds bilaterally</p><p>Abdomen: Soft, mild diffuse tenderness, hyperactive bowel sounds</p><p>Skin: Warm, decreased turgor</p><p></p><p>ED Vital Signs:</p><p>T: 37.6°C, HR: 90, BP: 116/70, RR: 18, SpO₂: 96% RA</p><p></p><p>ED Laboratory Results:</p><p>Na⁺ 125 mEq/L</p><p>K⁺ 3.7 mEq/L</p><p>Cl⁻ 94 mEq/L</p><p>BUN 25 mg/dL</p><p>Creatinine 1.1 mg/dL</p><p>WBC 11,000 /µL</p><p>Lactic acid 1.3 mmol/L</p><p></p><p>ED Treatment Provided:1 L Normal Saline IV bolus. Ondansetron 4 mg IV for nausea. Basic metabolic panel and CBC obtained. Patient monitored for several hours.</p><p>Assessment:</p><p>Hyponatremia and dehydration likely secondary to gastrointestinal illness. Patient stable but symptomatic with dizziness and electrolyte imbalance.</p><p></p><p>Plan:</p><p>Admit to medical-surgical floor for IV fluids, electrolyte monitoring, and observation.</p>', '2026-03-19 20:40:02.736559+00');
 
-INSERT INTO "public"."lab_results" ("id", "case_id", "time_offset", "is_in_presim", "sodium", "potassium", "chloride", "bun", "creatinine", "glucose", "co2", "calcium", "lactate", "rbc", "wbc", "platelets", "hemoglobin", "hematocrit", "mcv", "mch", "mchc", "troponin", "ckmb", "myoglobin", "ast", "alt", "alp", "total_bilirubin", "albumin", "ammonia", "pco2", "po2", "hco3", "specific_gravity", "urine_ph", "protein", "urine_glucose", "ketones", "leukocyte_esterase", "nitrites", "blood", "pt", "ptt", "crp", "esr", "tsh", "free_t3", "free_t4", "total_cholesterol", "hdl_cholesterol", "ldl_cholesterol", "triglycerides", "magnesium", "phosphate", "amylase", "lipase", "created_at") VALUES
+INSERT INTO "public"."lab_results" ("id", "case_id", "time_offset", "is_in_presim", "sodium", "potassium", "chloride", "bun", "creatinine", "glucose", "art_pco2", "calcium", "lactate", "rbc", "wbc", "platelets", "hemoglobin", "hematocrit", "mcv", "mch", "mchc", "troponin", "ckmb", "myoglobin", "ast", "alt", "alp", "total_bilirubin", "albumin", "ammonia", "ven_pco2", "art_po2", "hco3", "specific_gravity", "urine_ph", "urine_protein", "urine_glucose", "ketones", "leukocyte_esterase", "nitrites", "urine_blood", "pt", "ptt", "crp", "esr", "tsh", "free_t3", "free_t4", "total_cholesterol", "hdl_cholesterol", "ldl_cholesterol", "triglycerides", "magnesium", "phosphate", "amylase", "lipase", "created_at") VALUES
   ('112ff01d-b6d4-444c-b0da-a1b2da55d3f4', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', -1440, true, '129', '3.6', '95', '28', '1.2', '118', null, null, null, null, '13.5', '210', '15', '45', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-03-19 21:05:12.560184+00'), 
   ('38bfebf6-0e38-4174-bd1c-f77dc31000ff', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', -2880, true, '125', '3.7', '94', '25', '1.1', '108', '94', '9.1', '1.3', '6.2', '11', '220', '15.2', '46', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '1.03', '6', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '1.8', '3.2', null, null, '2026-03-19 21:05:12.560184+00'), 
   ('ca69c267-a116-48a6-b5e3-5185dd8ea22c', '2e66e8e8-8052-4561-bfb6-f59f3b4ac0fc', -120, true, '126', '3.5', '93', '32', '1.4', '130', null, null, '2.4', null, '18.5', '200', '14.8', '44', null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, '2026-03-19 21:05:12.560184+00');

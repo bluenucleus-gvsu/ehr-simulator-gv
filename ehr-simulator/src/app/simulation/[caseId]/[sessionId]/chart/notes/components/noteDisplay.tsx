@@ -12,15 +12,16 @@ import {
   User,
   Clock,
   Stethoscope,
-  ClipboardList
+  ClipboardList,
+  Send
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { addMinutes, format } from "date-fns"
 import DOMPurify from "dompurify"
 import { ClinicalDocumentView } from "@/actions/simulation"
 
-const displayDate = (startTime: number | null, offset: number) => {
-  if (!startTime) {
+const displayDate = (startTime: number | null, offset: number | null) => {
+  if (!startTime || offset === null) {
     return 'Unknown'
   }
   return format(addMinutes(startTime, offset), "Pp")
@@ -39,11 +40,12 @@ function noteDisplayTitle(note: ClinicalDocumentView): string {
 interface NoteDisplayProps {
   note: ClinicalDocumentView;
   startTime: number | null;
+  displayOffset?: number | null;
+  phase?: number;
 }
 
-export default function NoteDisplay({ note, startTime }: NoteDisplayProps) {
+export default function NoteDisplay({ note, startTime, displayOffset, phase }: NoteDisplayProps) {
   const [isOpen, setIsOpen] = useState(false);
-  // const sanitizedContent = DOMPurify.sanitize(note.doc_text)
 
   // Determine icon based on note type
   const NoteIcon = (note.specialty === "Nursing" || note.specialty === "Student") ? Stethoscope : ClipboardList;
@@ -83,8 +85,19 @@ export default function NoteDisplay({ note, startTime }: NoteDisplayProps) {
 
         <div className="flex items-center justify-between w-full sm:w-auto gap-4 pl-[3.25rem] sm:pl-0">
           <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
-            <Clock size={12} className="text-slate-400" />
-            {displayDate(startTime, note.time_offset)}
+            {phase
+              ? (
+                <>
+                  <Send size={12} />
+                  <span>Faculty Released: Phase {phase}</span>
+                </>
+              )
+              : (
+                <>
+                  <Clock size={12} />
+                  {displayDate(startTime, displayOffset ?? note.time_offset)}
+                </>
+              )}
           </div>
 
           <CollapsibleTrigger asChild>

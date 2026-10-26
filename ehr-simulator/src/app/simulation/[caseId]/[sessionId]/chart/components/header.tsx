@@ -11,7 +11,7 @@ import ChartTabs from "./chartTabs";
 
 const Header = () => {
   const [isFullscreen, setIsFullScreen] = useState(false)
-  const { userId, userRole, isPresim, loading, currentPhase, handlePhaseChange, handlePresimStatusChange } = useSimSessionContext();
+  const { userId, userRole, isPresim, loading, handlePresimStatusChange } = useSimSessionContext();
   const router = useRouter()
   const isPreSimMode = isPresim ?? true;
   const modeLabel = isPreSimMode ? "PRE-SIM" : "ACTIVE SIM";
@@ -75,11 +75,8 @@ const Header = () => {
         <div className="flex pr-8 gap-4">
           {userRole === "admin" &&
             <AdminSimControl
-              currentPhase={currentPhase}
               isPresim={isPreSimMode}
               onPresimChange={handlePresimStatusChange}
-              onPhaseChange={handlePhaseChange}
-
             />
           }
           {medReferenceTool && (

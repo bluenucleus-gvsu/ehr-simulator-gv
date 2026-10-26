@@ -22,7 +22,7 @@ import { DatabaseMedAdministration, StudentMedicationAdministration, submitMedic
 import { useSimSessionContext } from '@/context/SimSessionContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useStudentSimulationEditAccess } from '@/utils/studentSimulationEditAccess';
-import { isVisibleForSimulationPhase } from '@/lib/simulationPhaseVisibility';
+import { isVisibleInSim } from '@/lib/faculty/itemRelease';
 import { useSimulationScanner } from '@/hooks/useSimulationScanner';
 import ScanWristbandAlert from './scanWristbandAlert';
 
@@ -49,7 +49,7 @@ export default function MarView({
 }: MarViewData) {
   const router = useRouter();
   // context
-  const { userId, groupId, isPresim, userName, simStartTime, loading, currentPhase } = useSimSessionContext();
+  const { userId, groupId, isPresim, userName, simStartTime, loading, releasedItems } = useSimSessionContext();
   const { canEdit } = useStudentSimulationEditAccess();
   const patientWristband = String(caseId)
   // med data
@@ -90,16 +90,19 @@ export default function MarView({
     }, {} as { [id: string]: AllMedicationTypes });
   }, [medications]);
 
-  const releasedMedicationOrders = useMemo(() => {
+  // Med orders gate on the release log; administrations cascade from their
+  // parent order (visible iff the order is visible).
+  const visibleMedicationOrders = useMemo(() => {
+    const releasedMedOrderIds = new Set(releasedItems.medication_order_releases.keys());
     return medicationOrders.filter((order) =>
-      isVisibleForSimulationPhase({
-        isPresim: Boolean(isPresim),
-        isVisibleInPresim: order.visibleInPresim,
-        releasePhase: order.phase,
-        currentPhase,
-      }),
+      isVisibleInSim(
+        { id: order.id, phase: order.phase ?? 1, isInPresim: order.visibleInPresim },
+        Boolean(isPresim),
+        releasedMedOrderIds,
+      ),
     );
-  }, [medicationOrders, isPresim, currentPhase]);
+  }, [medicationOrders, isPresim, releasedItems]);
+  const releasedMedicationOrders = visibleMedicationOrders;
 
   const handleScan = (symbol: string) => {
     // Patient wristband scan is 39 chars, if scans are failing due to excessive length 
@@ -326,23 +329,19 @@ export default function MarView({
   }
 
   const groupedAdministrationsByOrder = useMemo(() => {
-    const visibleAdministrations = medicationAdministrations.filter((admin) =>
-      isVisibleForSimulationPhase({
-        isPresim: Boolean(isPresim),
-        isVisibleInPresim: admin.is_in_presim,
-        releasePhase: admin.phase,
-        currentPhase,
-      }),
-    );
+    const visibleOrderIds = new Set(visibleMedicationOrders.map((order) => order.id));
 
-    return visibleAdministrations.reduce((acc, admin) => {
-      if (!acc[admin.medication_order_id || 'no_associated_order']) {
-        acc[admin.medication_order_id || 'no_associated_order'] = [];
+    return medicationAdministrations.reduce((acc, admin) => {
+      // Administrations cascade from the parent med order — no independent gate.
+      const orderId = admin.medication_order_id || 'no_associated_order';
+      if (!visibleOrderIds.has(orderId)) return acc;
+      if (!acc[orderId]) {
+        acc[orderId] = [];
       }
-      acc[admin.medication_order_id || 'no_associated_order'].push(admin)
+      acc[orderId].push(admin)
       return acc
     }, {} as { [orderId: string]: DatabaseMedAdministration[] })
-  }, [medicationAdministrations, isPresim, currentPhase]);
+  }, [medicationAdministrations, visibleMedicationOrders]);
 
   const filteredMedOrders = useMemo(() => {
     return releasedMedicationOrders.filter((order) => {
@@ -521,8 +520,6 @@ export default function MarView({
               sessionStart={anchorDate}
               isHighlightableColumn={timeColumnOffset === 0}
               elapsedSimMinutes={elapsedMinutes}
-              isPresim={isPresim ?? false}
-              currentPhase={currentPhase}
             />
           )
         })}

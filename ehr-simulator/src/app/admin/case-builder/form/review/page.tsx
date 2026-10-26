@@ -19,11 +19,14 @@ function hasValue(value: unknown): boolean {
   return true;
 }
 
-function populatedCount(rows: Record<string | number, unknown>[], offset: number): number {
-  return rows.filter((row) => hasValue(row[offset])).length;
+function populatedCount(rows: Record<string | number, unknown>[], columnId: string | number): number {
+  return rows.filter((row) => hasValue(row[columnId])).length;
 }
 
-function Phase({ value }: { value?: number }) {
+function Phase({ value, facultyRelease }: { value?: number; facultyRelease?: boolean }) {
+  if (facultyRelease) {
+    return <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700">Phase {value ?? 1} • Faculty Release</span>;
+  }
   return <span className="rounded-full bg-violet-50 px-2 py-0.5 text-xs text-violet-700">Phase {value ?? 1}</span>;
 }
 
@@ -97,8 +100,14 @@ export default function FormReview() {
               <CardContent className="space-y-3 pt-4">
                 {noteData.length === 0 ? <p className="text-slate-500">No notes.</p> : noteData.map((note, index) => (
                   <div key={`${note.title}-${index}`} className="rounded-lg border p-3 text-sm">
-                    <div className="flex items-center justify-between gap-2"><strong>{note.title}</strong><Phase value={note.phase} /></div>
-                    <p className="text-slate-600">{note.author} · {note.specialty} · {note.timeOffset} min</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <strong>{note.title}</strong>
+                      <Phase value={note.phase} facultyRelease={(note.phase ?? 1) > 1} />
+                    </div>
+                    <p className="text-slate-600">
+                      {note.author} · {note.specialty} · {note.timeOffset == null ? "Release Live" : `${note.timeOffset} min`}
+                      {note.label ? ` · Label: ${note.label}` : ""}
+                    </p>
                   </div>
                 ))}
               </CardContent>
@@ -108,7 +117,10 @@ export default function FormReview() {
               <CardContent className="space-y-3 pt-4">
                 {orderData.length === 0 ? <p className="text-slate-500">No orders.</p> : orderData.map((order, index) => (
                   <div key={`${order.title}-${index}`} className="rounded-lg border p-3 text-sm">
-                    <div className="flex items-center justify-between gap-2"><strong>{order.title}</strong><Phase value={order.phase} /></div>
+                    <div className="flex items-center justify-between gap-2">
+                      <strong>{order.title}</strong>
+                      <Phase value={order.phase} facultyRelease={(order.phase ?? 1) > 1} />
+                    </div>
                     <p className="text-slate-600">{order.category} · {order.status} · {order.orderingProvider}</p>
                   </div>
                 ))}
@@ -120,9 +132,16 @@ export default function FormReview() {
             <Card>
               <CardHeader className="border-b text-lg font-semibold">Labs and reports</CardHeader>
               <CardContent className="space-y-2 pt-4">
-                {labData.timePoints.map((offset) => (
-                  <p key={offset}><strong>{offset} min:</strong> {populatedCount(labData.data as unknown as Record<string | number, unknown>[], offset)} populated results/reports{labData.timePointsInPreSim.has(offset) ? " · Pre-Sim" : ""}</p>
-                ))}
+                {labData.columns.map((column) => {
+                  const facultyReleased = column.phase > 1 || column.time_offset === null;
+                  return (
+                    <p key={column.id}>
+                      <strong>{column.label ?? (facultyReleased ? "Faculty-Released" : `${column.time_offset} min`)}:</strong>{" "}
+                      {populatedCount(labData.data as unknown as Record<string | number, unknown>[], column.id)} populated results/reports
+                      {column.is_in_presim ? " · Pre-Sim" : facultyReleased ? " · Faculty-Released" : ` · Phase ${column.phase}`}
+                    </p>
+                  );
+                })}
               </CardContent>
             </Card>
             <Card>
@@ -149,7 +168,10 @@ export default function FormReview() {
                 {medOrderData.createdOrders.length === 0 ? <p className="text-slate-500">No medication orders.</p> : medOrderData.createdOrders.map((order) => {
                   const medication = medOrderData.selectedMeds.find((item) => item.id === order.medicationId);
                   return <div key={order.id} className="rounded-lg border p-3 text-sm">
-                    <div className="flex items-center justify-between gap-2"><strong>{medication?.genericName ?? "Unknown medication"}</strong><Phase value={order.phase} /></div>
+                    <div className="flex items-center justify-between gap-2">
+                      <strong>{medication?.genericName ?? "Unknown medication"}</strong>
+                      <Phase value={order.phase} facultyRelease={(order.phase ?? 1) > 1} />
+                    </div>
                     <p className="text-slate-600">{order.dose ?? "Variable"} {medication?.strengthUnit} · {order.frequency} · {order.priority}</p>
                   </div>;
                 })}

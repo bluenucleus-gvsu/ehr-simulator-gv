@@ -140,7 +140,7 @@ const OrdersTable = <T extends Record<string, string | boolean | undefined>>({
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
+                No orders.
               </TableCell>
             </TableRow>
           )}

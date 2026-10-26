@@ -355,6 +355,45 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_document_releases: {
+        Row: {
+          id: string
+          item_id: string
+          released_at: string
+          released_by: string | null
+          session_id: string
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          released_at?: string
+          released_by?: string | null
+          session_id: string
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          released_at?: string
+          released_by?: string | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_document_releases_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "clinical_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinical_document_releases_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "case_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clinical_documents: {
         Row: {
           author: string
@@ -364,9 +403,10 @@ export type Database = {
           doc_text: string
           id: string
           is_in_presim: boolean
+          label: string | null
           phase: number
           specialty: string
-          time_offset: number
+          time_offset: number | null
         }
         Insert: {
           author: string
@@ -376,9 +416,10 @@ export type Database = {
           doc_text: string
           id?: string
           is_in_presim?: boolean
+          label?: string | null
           phase?: number
           specialty: string
-          time_offset: number
+          time_offset?: number | null
         }
         Update: {
           author?: string
@@ -388,9 +429,10 @@ export type Database = {
           doc_text?: string
           id?: string
           is_in_presim?: boolean
+          label?: string | null
           phase?: number
           specialty?: string
-          time_offset?: number
+          time_offset?: number | null
         }
         Relationships: [
           {
@@ -1553,6 +1595,45 @@ export type Database = {
         }
         Relationships: []
       }
+      lab_result_releases: {
+        Row: {
+          id: string
+          item_id: string
+          released_at: string
+          released_by: string | null
+          session_id: string
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          released_at?: string
+          released_by?: string | null
+          session_id: string
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          released_at?: string
+          released_by?: string | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lab_result_releases_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "lab_results"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lab_result_releases_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "case_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lab_results: {
         Row: {
           albumin: string | null
@@ -1591,6 +1672,7 @@ export type Database = {
           inr: string | null
           is_in_presim: boolean
           ketones: string | null
+          label: string | null
           lactate: string | null
           ldl_cholesterol: string | null
           leukocyte_esterase: string | null
@@ -1604,6 +1686,7 @@ export type Database = {
           myoglobin: string | null
           neutrophils: string | null
           nitrites: string | null
+          phase: number
           phosphate: string | null
           platelets: string | null
           potassium: string | null
@@ -1614,7 +1697,7 @@ export type Database = {
           rh_factor: string | null
           sodium: string | null
           specific_gravity: string | null
-          time_offset: number
+          time_offset: number | null
           total_bilirubin: string | null
           total_cholesterol: string | null
           total_co2: string | null
@@ -1668,6 +1751,7 @@ export type Database = {
           inr?: string | null
           is_in_presim?: boolean
           ketones?: string | null
+          label?: string | null
           lactate?: string | null
           ldl_cholesterol?: string | null
           leukocyte_esterase?: string | null
@@ -1681,6 +1765,7 @@ export type Database = {
           myoglobin?: string | null
           neutrophils?: string | null
           nitrites?: string | null
+          phase?: number
           phosphate?: string | null
           platelets?: string | null
           potassium?: string | null
@@ -1691,7 +1776,7 @@ export type Database = {
           rh_factor?: string | null
           sodium?: string | null
           specific_gravity?: string | null
-          time_offset: number
+          time_offset?: number | null
           total_bilirubin?: string | null
           total_cholesterol?: string | null
           total_co2?: string | null
@@ -1745,6 +1830,7 @@ export type Database = {
           inr?: string | null
           is_in_presim?: boolean
           ketones?: string | null
+          label?: string | null
           lactate?: string | null
           ldl_cholesterol?: string | null
           leukocyte_esterase?: string | null
@@ -1758,6 +1844,7 @@ export type Database = {
           myoglobin?: string | null
           neutrophils?: string | null
           nitrites?: string | null
+          phase?: number
           phosphate?: string | null
           platelets?: string | null
           potassium?: string | null
@@ -1768,7 +1855,7 @@ export type Database = {
           rh_factor?: string | null
           sodium?: string | null
           specific_gravity?: string | null
-          time_offset?: number
+          time_offset?: number | null
           total_bilirubin?: string | null
           total_cholesterol?: string | null
           total_co2?: string | null
@@ -1855,6 +1942,45 @@ export type Database = {
           },
         ]
       }
+      medication_order_releases: {
+        Row: {
+          id: string
+          item_id: string
+          released_at: string
+          released_by: string | null
+          session_id: string
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          released_at?: string
+          released_by?: string | null
+          session_id: string
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          released_at?: string
+          released_by?: string | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medication_order_releases_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "medication_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medication_order_releases_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "case_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medication_orders: {
         Row: {
           case_id: string
@@ -1865,6 +1991,7 @@ export type Database = {
           infusion_rate: number | null
           instructions: string | null
           is_in_presim: boolean
+          label: string | null
           medication_id: string
           ordering_provider: string | null
           phase: number
@@ -1879,6 +2006,7 @@ export type Database = {
           infusion_rate?: number | null
           instructions?: string | null
           is_in_presim?: boolean
+          label?: string | null
           medication_id: string
           ordering_provider?: string | null
           phase?: number
@@ -1893,6 +2021,7 @@ export type Database = {
           infusion_rate?: number | null
           instructions?: string | null
           is_in_presim?: boolean
+          label?: string | null
           medication_id?: string
           ordering_provider?: string | null
           phase?: number
@@ -2033,6 +2162,45 @@ export type Database = {
             columns: ["lab_id"]
             isOneToOne: false
             referencedRelation: "lab_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_releases: {
+        Row: {
+          id: string
+          item_id: string
+          released_at: string
+          released_by: string | null
+          session_id: string
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          released_at?: string
+          released_by?: string | null
+          session_id: string
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          released_at?: string
+          released_by?: string | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_releases_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_releases_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "case_sessions"
             referencedColumns: ["id"]
           },
         ]

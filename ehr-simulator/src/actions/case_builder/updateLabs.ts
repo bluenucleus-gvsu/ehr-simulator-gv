@@ -1,13 +1,12 @@
 "use server"
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { transformLabTableToSchema } from "@/lib/labTypes";
+import { transformLabTableToSchema, type LabColumn } from "@/lib/labTypes";
 import type { LabTableData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData";
 
-type LabSavePayload = {
+export type LabSavePayload = {
   data: LabTableData[];
-  timePoints: number[];
-  timePointsInPreSim: number[];
+  columns: LabColumn[];
 };
 
 export async function updateLabs(
@@ -17,8 +16,7 @@ export async function updateLabs(
 ) {
   const transformed = transformLabTableToSchema(caseId, {
     data: payload.data ?? [],
-    timePoints: payload.timePoints ?? [],
-    timePointsInPreSim: new Set(payload.timePointsInPreSim ?? []),
+    columns: payload.columns ?? [],
   });
   const { error } = await supabase.rpc("case_builder_replace_labs", {
     p_case_id: caseId,

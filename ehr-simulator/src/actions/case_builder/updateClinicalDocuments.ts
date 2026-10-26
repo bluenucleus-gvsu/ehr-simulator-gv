@@ -20,11 +20,12 @@ type ClinicalNoteInput = {
   category?: string;
   author: string;
   specialty: string;
-  timeOffset: number;
+  timeOffset: number | null;
   content: string;
   excludedFromPresim?: boolean;
   docType?: "soap" | "free_text";
   phase?: number;
+  label?: string | null;
 };
 
 const VALID_CATEGORIES: ClinicalDocCategoryType[] = [
@@ -61,15 +62,20 @@ export async function updateClinicalDocuments(
   caseId: string
 ) {
   if (!caseId) throw new Error("Case ID is required");
-  const rows = notes.map((note) => ({
-    is_in_presim: !note.excludedFromPresim,
-    category: normalizeCategory(note),
-    specialty: note.specialty?.trim(),
-    author: note.author?.trim() || "Unknown",
-    time_offset: Number(note.timeOffset) || 0,
-    doc_text: note.content ?? "<p></p>",
-    phase: Number(note.phase ?? 1),
-  }));
+  const rows = notes.map((note) => {
+    const phase = Number(note.phase ?? 1);
+    return {
+      is_in_presim: !note.excludedFromPresim,
+      category: normalizeCategory(note),
+      specialty: note.specialty?.trim(),
+      author: note.author?.trim() || "Unknown",
+      // Faculty-release notes should not have a time_offset
+      time_offset: phase > 1 ? null : Number(note.timeOffset ?? 0),
+      doc_text: note.content ?? "<p></p>",
+      phase,
+      label: note.label?.trim() || null,
+    };
+  });
 
   const { error } = await supabase.rpc("case_builder_replace_clinical_documents", {
     p_case_id: caseId,

@@ -4,7 +4,6 @@ import type { AllMedicationTypes, MedicationOrder } from "./marData.jsx"
 // import { Checkbox } from "@/components/ui/checkbox";
 import { findLastAdminTime, renderMedCardDetails, renderMedTitleRow } from "./marHelpers";
 import { DatabaseMedAdministration } from "@/actions/simulation";
-import { isVisibleForSimulationPhase } from "@/lib/simulationPhaseVisibility";
 
 interface MedCardProps {
   medication: AllMedicationTypes;
@@ -15,8 +14,6 @@ interface MedCardProps {
   isHighlightableColumn: boolean;
   /** Minutes since `sessionStart` for the live simulation clock (wall-clock “now” in sim). */
   elapsedSimMinutes: number;
-  isPresim: boolean;
-  currentPhase: number;
 }
 
 const MedCard = ({
@@ -27,22 +24,15 @@ const MedCard = ({
   sessionStart,
   isHighlightableColumn,
   elapsedSimMinutes,
-  isPresim,
-  currentPhase,
 }: MedCardProps) => {
 
   const simNow = addMinutes(sessionStart, elapsedSimMinutes);
 
 
+  // Administrations cascade from the parent med order (already gated by the
+  // MAR view) — the only per-admin filter here is Due-suppression after a
+  // successful student administration.
   const visibleAdministrations = administrations.filter(currentAdmin => {
-    if (!isVisibleForSimulationPhase({
-      isPresim,
-      isVisibleInPresim: currentAdmin.is_in_presim,
-      releasePhase: currentAdmin.phase,
-      currentPhase,
-    })) {
-      return false;
-    }
     if (currentAdmin.status !== "Due") return true;
 
     const successfullAdministration = administrations.some(otherAdmin => {

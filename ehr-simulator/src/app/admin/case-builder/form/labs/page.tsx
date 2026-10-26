@@ -6,13 +6,14 @@ import { useMemo, useState } from "react";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { TooltipContent } from "@radix-ui/react-tooltip";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
-import { TestTube2 } from "lucide-react";
+import { Radio, TestTube2 } from "lucide-react";
 import { AddTableColumn } from "./components/addTimeCol";
+import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useFormContext } from "@/context/FormContext";
-import { useTimePoints } from "../../components/useFormTableOffsets";
+import { useLabColumns } from "../../components/useFormTableOffsets";
 import { FormShell } from "../../components/formShell";
-import { TableFormHeader } from "../../components/tableFormHeader";
+import { LabColumnFormHeader } from "./components/labColumnFormHeader";
 import { FormTable } from "../../components/FormTable";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/caseSections";
@@ -21,37 +22,27 @@ import { LabTableInputCell } from "./components/labTableInputCell";
 
 const columnHelper = createColumnHelper<LabTableData>();
 
-function ensureNumberSet(input: unknown): Set<number> {
-  if (input instanceof Set) return input;
-  if (Array.isArray(input)) {
-    return new Set(
-      input
-        .map((v) => Number(v))
-        .filter((v) => Number.isFinite(v)),
-    );
-  }
-  return new Set<number>();
-}
-
 function LabForm() {
-  const { onDataChange, labData, caseId } = useFormContext()
+  const { onDataChange, labData, caseId, demographicData } = useFormContext()
   const [labTableData, setLabTableData] = useState<LabTableData[]>(labData.data);
+  const phaseCount = Math.max(1, Number(demographicData.phaseCount ?? 1));
 
   const {
-    timePoints,
-    timePointsInPresim,
-    togglePresimInclusion,
-    addTimePoint,
-    removeTimePoint
-  } = useTimePoints(labData.timePoints, ensureNumberSet(labData.timePointsInPreSim))
+    columns,
+    addTimeOffsetColumn,
+    addFacultyReleaseColumn,
+    removeColumn,
+    togglePresim,
+    setPhase,
+    setLabel
+  } = useLabColumns(labData.columns, phaseCount)
 
   const router = useRouter()
 
   const goBack = () => {
     onDataChange(CaseSection.LABS, {
       data: labTableData,
-      timePoints: timePoints,
-      timePointsInPreSim: timePointsInPresim,
+      columns,
     });
     router.push(caseBuilderPath("/admin/case-builder/form/table-template", caseId));
   }
@@ -59,15 +50,13 @@ function LabForm() {
   const handleSubmit = async () => {
     onDataChange(CaseSection.LABS, {
       data: labTableData,
-      timePoints: timePoints,
-      timePointsInPreSim: timePointsInPresim,
+      columns,
     });
 
     await saveCaseData({
       payload: {
         data: labTableData,
-        timePoints,
-        timePointsInPreSim: Array.from(timePointsInPresim),
+        columns,
       },
       section: CaseSection.LABS,
       caseId: caseId
@@ -75,7 +64,7 @@ function LabForm() {
 
     router.push(caseBuilderPath('/admin/case-builder/form/charting', caseId))
   }
-  const columns = useMemo(
+  const columns_ = useMemo(
     () => [
       // first column has unique formatting
       columnHelper.accessor("field", {
@@ -135,21 +124,23 @@ function LabForm() {
       ),
 
       // map out remaining columns
-      ...timePoints.map(timePoint => {
+      ...columns.map(column => {
         return (
-          columnHelper.accessor(row => row[timePoint], {
-            id: String(timePoint),
+          columnHelper.accessor(row => row[column.id], {
+            id: column.id,
             header: () => {
               return (
-                <TableFormHeader
-                  timePoint={timePoint}
-                  isInPresim={timePointsInPresim.has(timePoint)}
-                  onRemove={removeTimePoint}
-                  onTogglePresim={togglePresimInclusion}
+                <LabColumnFormHeader
+                  column={column}
+                  phaseCount={phaseCount}
+                  onRemove={removeColumn}
+                  onTogglePresim={togglePresim}
+                  onPhaseChange={setPhase}
+                  onLabelChange={setLabel}
                 />
               )
             },
-            cell: ({ row, column, getValue, table }) => {
+            cell: ({ row, column: cellColumn, getValue, table }) => {
               const rowType = row.original.rowType
               switch (rowType) {
                 case 'results':
@@ -157,9 +148,9 @@ function LabForm() {
                     <LabTableInputCell
                       row={row}
                       getValue={getValue}
-                      column={column}
+                      column={cellColumn}
                       table={table}
-                      visibleInPresim={timePointsInPresim.has(timePoint)}
+                      visibleInPresim={column.is_in_presim}
                     />
                   );
               }
@@ -169,12 +160,12 @@ function LabForm() {
       )
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [timePoints, timePointsInPresim]
+    [columns, phaseCount]
   );
 
   const ptTable = useReactTable({
     data: labTableData,
-    columns,
+    columns: columns_,
     enablePinning: true,
     initialState: {
       columnPinning: {
@@ -214,7 +205,16 @@ function LabForm() {
     >
       <div className="bg-slate-50/50 flex-1 flex flex-col min-h-0 px-6 pt-4">
         <div className="h-12 px-4 w-full flex justify-start gap-12 mb-3 items-end">
-          <AddTableColumn handleColumnAdd={addTimePoint} />
+          <AddTableColumn handleColumnAdd={addTimeOffsetColumn} />
+          <Button
+            type="button"
+            variant="outline"
+            className="text-sm"
+            onClick={() => addFacultyReleaseColumn()}
+          >
+            <Radio />
+            Add Faculty-Released Column
+          </Button>
           <div className="flex items-end gap-2">
             <div className="space-y-1.5">
               <p className="w-fit items-center  px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-50 text-yellow-600 border border-yellow-300 uppercase tracking-wide">

@@ -100,6 +100,16 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
             }
             return order;
           }
+          if (field === 'phase') {
+            const nextPhase = Math.max(1, Number(value) || 1);
+            if (nextPhase > 1) {
+              return { ...order, phase: nextPhase, visibleInPresim: false };
+            }
+            return { ...order, phase: nextPhase };
+          }
+          if (field === 'visibleInPresim' && (order.phase ?? 1) > 1) {
+            return order;
+          }
           return { ...order, [field]: value };
         }
         return order;
