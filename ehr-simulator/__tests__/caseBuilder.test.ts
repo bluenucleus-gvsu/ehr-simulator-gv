@@ -12,6 +12,7 @@ import {
 } from "@/lib/caseBuilder/medicationPayload";
 import type { MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
 import { caseMeetsMinimumRequirements } from "@/lib/caseMinimumRequirements";
+import { createDefaultLabColumn } from "@/utils/form";
 
 const caseId = "11111111-1111-4111-8111-111111111111";
 const orderId = "22222222-2222-4222-8222-222222222222";
@@ -175,6 +176,28 @@ describe("case-builder runtime validation", () => {
 
   it("allows an empty media array so all media can be removed", () => {
     expect(() => assertValidSaveRequest(CaseSection.MEDIA, [], caseId)).not.toThrow();
+  });
+});
+
+describe("createDefaultLabColumn", () => {
+  it("seeds Phase 1 columns with a time offset of 0 so the default payload validates", () => {
+    const column = createDefaultLabColumn();
+    expect(column.time_offset).toBe(0);
+    expect(column.phase).toBe(1);
+    expect(() => assertValidSaveRequest(CaseSection.LABS, {
+      data: [],
+      columns: [column],
+    }, caseId)).not.toThrow();
+  });
+
+  it("seeds faculty-released columns without a time offset", () => {
+    const column = createDefaultLabColumn(2);
+    expect(column.time_offset).toBeNull();
+    expect(column.phase).toBe(2);
+    expect(() => assertValidSaveRequest(CaseSection.LABS, {
+      data: [],
+      columns: [column],
+    }, caseId)).not.toThrow();
   });
 });
 
