@@ -1,0 +1,15 @@
+name: Supabase Keepalive
+on:
+  schedule:
+    - cron: "0 12 */3 * *"   # every 3 days
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query Supabase
+        run: |
+          curl -fsS --retry 3 \
+            "${{ secrets.SUPABASE_DB_URL }}/rest/v1/keep_alive?select=id&limit=1" \
+            -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}"
