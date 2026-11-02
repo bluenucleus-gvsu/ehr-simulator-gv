@@ -1,12 +1,17 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  Dialog as PreviewDialog,
+  DialogContent as PreviewDialogContent,
+  DialogHeader as PreviewDialogHeader,
+  DialogTitle as PreviewDialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -31,11 +36,15 @@ interface ReleasePanelProps {
   phaseCount: number;
 }
 
+type ReleasedSortField = "name" | "time";
+type SortDirection = "asc" | "desc";
+
 const TYPE_LABELS: Record<ReleasableItemType, string> = {
   lab_result: "Lab panel",
   clinical_document: "Note",
   order: "Clinical order",
   medication_order: "Med order",
+  media: "Media item",
 };
 
 function itemDisplayName(
@@ -57,17 +66,36 @@ function groupByPhase<T extends { phase: number }>(items: T[]): Map<number, T[]>
   return grouped;
 }
 
+function fallbackIndices<T extends { id: string; type: ReleasableItemType }>(
+  items: T[],
+): Map<string, number> {
+  const counts = new Map<ReleasableItemType, number>();
+  const sortedItems = [...items].sort(
+    (a, b) => a.type.localeCompare(b.type) || a.id.localeCompare(b.id),
+  );
+  return new Map(sortedItems.map((item) => {
+    const index = (counts.get(item.type) ?? 0) + 1;
+    counts.set(item.type, index);
+    return [item.id, index];
+  }));
+}
+
 export default function ReleasePanelDialog({
   open,
   onOpenChange,
   groupName,
   sessionId,
   phaseCount,
-}: ReleasePanelProps) {
+}: Readonly<ReleasePanelProps>) {
   const [loading, setLoading] = useState(false);
   const [working, setWorking] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [panelData, setPanelData] = useState<ReleasePanelData | null>(null);
+  const [releasedSortField, setReleasedSortField] = useState<ReleasedSortField>("time");
+  const [releasedSortDirection, setReleasedSortDirection] = useState<SortDirection>("desc");
+  const [previewItem, setPreviewItem] = useState<
+    Pick<ReleasePendingItem, "label" | "previewUrl"> | null
+  >(null);
 
   const loadPanelData = useCallback(async () => {
     setLoading(true);
@@ -84,7 +112,7 @@ export default function ReleasePanelDialog({
 
   useEffect(() => {
     if (open) {
-      void loadPanelData();
+      void Promise.resolve().then(loadPanelData);
     }
   }, [open, loadPanelData]);
 
@@ -93,12 +121,17 @@ export default function ReleasePanelDialog({
       setPanelData(null);
       setError("");
       setWorking(null);
+      setPreviewItem(null);
     }
     onOpenChange(nextOpen);
   };
 
   const pendingByPhase = useMemo(
     () => groupByPhase(panelData?.pending ?? []),
+    [panelData],
+  );
+  const itemFallbackIndices = useMemo(
+    () => fallbackIndices([...(panelData?.pending ?? []), ...(panelData?.released ?? [])]),
     [panelData],
   );
   const phases = useMemo(
@@ -142,10 +175,20 @@ export default function ReleasePanelDialog({
     await loadPanelData();
   };
 
-  const releasedEntries = panelData?.released ?? [];
+  const releasedEntries = useMemo(
+    () => [...(panelData?.released ?? [])].sort((a, b) => {
+      const comparison = releasedSortField === "name"
+        ? itemDisplayName(a.label, a.type, itemFallbackIndices.get(a.id) ?? 1)
+          .localeCompare(itemDisplayName(b.label, b.type, itemFallbackIndices.get(b.id) ?? 1))
+        : Date.parse(a.releasedAt) - Date.parse(b.releasedAt);
+      return releasedSortDirection === "asc" ? comparison : -comparison;
+    }),
+    [itemFallbackIndices, panelData, releasedSortDirection, releasedSortField],
+  );
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-6xl max-h-[90vh] overflow-y-auto gap-6">
         <DialogHeader>
           <DialogTitle>Release Content – {groupName}</DialogTitle>
@@ -166,7 +209,7 @@ export default function ReleasePanelDialog({
         {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
         {!loading && !error && (
-          <div className="flex gap-4">
+          <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
             {phases.map((phase) => {
               const phaseItems = pendingByPhase.get(phase) ?? [];
 
@@ -176,12 +219,16 @@ export default function ReleasePanelDialog({
               });
 
               const summary = [...byType.entries()]
-                .map(([type, count]) => `${count} ${TYPE_LABELS[type] ?? type}${count === 1 ? "" : "s"}`)
+                .map(([type, count]) => {
+                  const label = TYPE_LABELS[type] ?? type;
+                  if (type === "media") return `${count} Media ${count === 1 ? "item" : "items"}`;
+                  return `${count} ${label}${count === 1 ? "" : "s"}`;
+                })
                 .join(", ");
 
               return (
-                <Card key={phase} data-testid={`release-phase-card-${phase}`} className="flex-1 grid grid-cols-[2fr_1fr] gap-x-4 gap-y-2 p-3 space-y-2">
-                  <div className="pb-2">
+                <Card key={phase} data-testid={`release-phase-card-${phase}`} className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] content-start gap-x-3 gap-y-2 self-start p-3">
+                  <div className="min-w-0 pb-2">
                     <p className="font-semibold text-slate-800">Phase {phase}</p>
                     <p className="text-sm text-slate-500">{summary}</p>
                   </div>
@@ -208,38 +255,51 @@ export default function ReleasePanelDialog({
                   {phaseItems.length === 0 ? (
                     <p className="col-span-2 text-center text-sm text-slate-400">No items to release</p>
                   ) : (
-                    phaseItems.map((item, itemIndex) => {
-                      const fallbackIndex = phaseItems
-                        .slice(0, itemIndex + 1)
-                        .filter((other) => other.type === item.type).length;
+                    phaseItems.map((item) => {
                       const displayName = itemDisplayName(
                         item.label,
                         item.type,
-                        fallbackIndex,
+                        itemFallbackIndices.get(item.id) ?? 1,
                       );
                       return (
-                        <Fragment key={item.id}>
-                          <span className="text-sm text-slate-600 line-clamp-2">
+                        <div
+                          key={`${item.type}-${item.id}`}
+                          className="col-span-2 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 border-t border-slate-100 pt-2"
+                        >
+                          <span className="min-w-0 text-sm text-slate-600 line-clamp-2">
                             {displayName}
                           </span>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="text-sm h-6 ml-2 shrink-0"
-                        data-testid={`release-item-${displayName}`}
-                        disabled={working !== null}
-                        onClick={() =>
-                          releaseItems(
-                            [item],
-                            `item-${item.id}`,
-                            `${displayName} released to ${groupName}.`,
-                          )
-                        }
-                      >
-                            {working === `item-${item.id}` ? "Releasing…" : "Release"}
-                          </Button>
-                        </Fragment>
+                          <div className="flex items-center justify-end gap-1">
+                            {item.type === "media" && item.previewUrl && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="link"
+                                className="h-6 px-1 text-sm"
+                                onClick={() => setPreviewItem(item)}
+                              >
+                                Preview
+                              </Button>
+                            )}
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              className="text-sm h-6 ml-2 shrink-0"
+                              data-testid={`release-item-${displayName}`}
+                              disabled={working !== null}
+                              onClick={() =>
+                                releaseItems(
+                                  [item],
+                                  `item-${item.id}`,
+                                  `${displayName} released to ${groupName}.`,
+                                )
+                              }
+                            >
+                              {working === `item-${item.id}` ? "Releasing…" : "Release"}
+                            </Button>
+                          </div>
+                        </div>
                       );
                     }))}
                 </Card>
@@ -248,32 +308,83 @@ export default function ReleasePanelDialog({
           </div>
         )}
 
+        {!loading && !error && releasedEntries.length > 0 && (
+          <div role="separator" aria-orientation="horizontal" className="border-t border-slate-200" />
+        )}
+
         {releasedEntries.length > 0 && (
-          <Card className="rounded-lg w-fit p-3">
-            <div className="flex items-center justify-between gap-10">
+          <Card className="w-full rounded-lg p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="font-semibold text-slate-800" data-testid="released-items-heading">
                 Items released to {groupName}
                 <span className="ml-2 text-slate-600 font-normal">({releasedEntries.length})</span>
               </p>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="text-xs"
-                disabled={working !== null}
-                onClick={() => unreleaseItems(releasedEntries, "unrelease-all")}
-              >
-                <RotateCcw className="size-3.5 mr-1" />
-                {working === "unrelease-all" ? "Removing…" : "Un-release all"}
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-slate-500">Sort:</span>
+                <div className="flex items-center gap-1" aria-label="Sort released items by">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={releasedSortField === "name" ? "secondary" : "outline"}
+                    className="h-7 px-2 text-xs"
+                    aria-pressed={releasedSortField === "name"}
+                    onClick={() => setReleasedSortField("name")}
+                  >
+                    Name
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={releasedSortField === "time" ? "secondary" : "outline"}
+                    className="h-7 px-2 text-xs"
+                    aria-pressed={releasedSortField === "time"}
+                    onClick={() => setReleasedSortField("time")}
+                  >
+                    Release time
+                  </Button>
+                </div>
+                <div className="flex items-center gap-1" aria-label="Released item sort direction">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={releasedSortDirection === "asc" ? "secondary" : "outline"}
+                    className="h-7 px-2 text-xs"
+                    aria-label="Sort ascending"
+                    aria-pressed={releasedSortDirection === "asc"}
+                    onClick={() => setReleasedSortDirection("asc")}
+                  >
+                    Asc
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={releasedSortDirection === "desc" ? "secondary" : "outline"}
+                    className="h-7 px-2 text-xs"
+                    aria-label="Sort descending"
+                    aria-pressed={releasedSortDirection === "desc"}
+                    onClick={() => setReleasedSortDirection("desc")}
+                  >
+                    Desc
+                  </Button>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="text-xs"
+                  disabled={working !== null}
+                  onClick={() => unreleaseItems(releasedEntries, "unrelease-all")}
+                >
+                  <RotateCcw className="size-3.5 mr-1" />
+                  {working === "unrelease-all" ? "Removing…" : "Un-release all"}
+                </Button>
+              </div>
             </div>
-            <ul className="divide-y divide-slate-200 max-h-60 overflow-y-auto">
-              {releasedEntries.map((entry, entryIndex) => {
-                const fallbackIndex = releasedEntries
-                  .slice(0, entryIndex + 1)
-                  .filter((other) => other.type === entry.type).length;
+            <ul className="grid max-h-60 grid-cols-1 gap-x-6 overflow-y-auto md:grid-cols-2 xl:grid-cols-3">
+              {releasedEntries.map((entry) => {
+                const fallbackIndex = itemFallbackIndices.get(entry.id) ?? 1;
                 return (
-                  <li key={`${entry.type}-${entry.id}`} className="flex items-center justify-between py-2">
+                  <li key={`${entry.type}-${entry.id}`} className="flex min-w-0 items-center justify-between gap-2 border-t border-slate-100 px-2 py-3">
                     <div className="min-w-0">
                       <span className="text-sm text-slate-600 truncate">
                         {itemDisplayName(entry.label, entry.type, fallbackIndex)}
@@ -285,17 +396,30 @@ export default function ReleasePanelDialog({
                         })}
                       </span>
                     </div>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="text-xs h-6 ml-2 shrink-0"
-                      data-testid={`unrelease-item-${itemDisplayName(entry.label, entry.type, fallbackIndex)}`}
-                      disabled={working !== null}
-                      onClick={() => unreleaseItems([entry], `un-${entry.id}`)}
-                    >
-                      {working === `un-${entry.id}` ? "Removing…" : "Un-release"}
-                    </Button>
+                    <div className="ml-2 flex shrink-0 items-center gap-1">
+                      {entry.type === "media" && entry.previewUrl && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="link"
+                          className="h-6 px-1 text-sm"
+                          onClick={() => setPreviewItem(entry)}
+                        >
+                          Preview
+                        </Button>
+                      )}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-6"
+                        data-testid={`unrelease-item-${itemDisplayName(entry.label, entry.type, fallbackIndex)}`}
+                        disabled={working !== null}
+                        onClick={() => unreleaseItems([entry], `un-${entry.id}`)}
+                      >
+                        {working === `un-${entry.id}` ? "Removing…" : "Un-release"}
+                      </Button>
+                    </div>
                   </li>
                 );
               })}
@@ -303,6 +427,29 @@ export default function ReleasePanelDialog({
           </Card>
         )}
       </DialogContent>
-    </Dialog>
+      </Dialog>
+      <PreviewDialog
+        open={previewItem !== null}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) setPreviewItem(null);
+        }}
+      >
+        <PreviewDialogContent className="max-h-[90vh] w-[calc(100%-2rem)] max-w-5xl overflow-y-auto">
+          <PreviewDialogHeader>
+            <PreviewDialogTitle>Media preview</PreviewDialogTitle>
+          </PreviewDialogHeader>
+          {previewItem?.previewUrl && (
+            <Image
+              src={previewItem.previewUrl}
+              alt={previewItem.label || "Preview of media item"}
+              width={1200}
+              height={900}
+              unoptimized
+              className="mx-auto max-h-[75vh] max-w-full object-contain"
+            />
+          )}
+        </PreviewDialogContent>
+      </PreviewDialog>
+    </>
   );
 }

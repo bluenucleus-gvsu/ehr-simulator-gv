@@ -38,6 +38,12 @@ export const RELEASABLE_ITEMS = {
     itemTable: "medication_orders",
     labelColumn: "label",
   },
+  media: {
+    bundleKey: "caseImages",
+    releaseTable: "case_image_releases",
+    itemTable: "case_images",
+    labelColumn: null,
+  },
 } as const;
 
 export const PREVIEW_SESSION_ID = "preview";

@@ -1,4 +1,3 @@
-import { getMedia } from "@/actions/simulation";
 import MediaView from "./components/mediaView";
 
 interface PageProps {
@@ -9,17 +8,8 @@ interface PageProps {
 }
 
 const media = async ({ params }: PageProps) => {
-    const { caseId } = await params;
-    const images = await getMedia(caseId)
-
-
-    return(
-        <MediaView
-        isError = {false}
-        isLoading={false}
-        images={images.data || []}
-        />
-    )
+  const { caseId, sessionId } = await params;
+  return <MediaView caseId={caseId} sessionId={sessionId} />;
 }
 
 export default media;

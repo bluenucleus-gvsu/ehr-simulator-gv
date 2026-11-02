@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { BellRing, ClipboardList, FileText, Pill, TestTube2 } from "lucide-react";
+import { BellRing, ClipboardList, FileText, Image, Pill, TestTube2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,6 +28,7 @@ const tabHrefByKey: Record<ReleaseUpdateSectionKey, string> = {
   orders: "orders",
   notes: "notes",
   mar: "mar",
+  media: "media",
 };
 
 const sectionIconByKey: Record<ReleaseUpdateSectionKey, typeof ClipboardList> = {
@@ -35,6 +36,7 @@ const sectionIconByKey: Record<ReleaseUpdateSectionKey, typeof ClipboardList> = 
   orders: ClipboardList,
   notes: FileText,
   mar: Pill,
+  media: Image,
 };
 
 const NOTIFY_DEBOUNCE_MS = 2000;
