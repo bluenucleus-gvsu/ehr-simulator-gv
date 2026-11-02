@@ -6,11 +6,14 @@ export interface AssignedCase {
   id: string;
   case_id: string;
   session_id: string | null;
-  /** From `case_sessions.status` for the group's open session. */
+  // sessionStatus belongs a single case_session and is not representative of all case_sessions
+  // within a section. This will need to be refractored.
   session_status?: string | null;
   name: string | null;
   sim_time: string | null;
   presim_time: string | null;
+  started_at?: string | null;
+  canJoin?: boolean;
   groupMembers: string[];
 }
 
@@ -22,21 +25,12 @@ export interface CompletedCase {
   teamMembers: string[];
 }
 
-export interface ExpiredCase {
-  id: string;
-  name: string | null;
-  expired_at: string | null;
-  feedback: string | null;
-  teamMembers: string[];
-}
-
 export interface Course {
   id: string;
   name: string | null;
   code: string | null;
   assigned: AssignedCase[];
   completed: CompletedCase[];
-  expired: ExpiredCase[];
 }
 
 export interface UserCoursesData {
@@ -57,7 +51,6 @@ export async function getUserCourses(userId: string): Promise<UserCoursesData> {
         ...c,
         assigned: (c.assigned ?? []).map((a) => ({ ...a, groupMembers: a.groupMembers ?? [] })),
         completed: (c.completed ?? []).map((s) => ({ ...s, teamMembers: s.teamMembers ?? [] })),
-        expired: (c.expired ?? []).map((s) => ({ ...s, teamMembers: s.teamMembers ?? [] })),
       }));
 
     return {

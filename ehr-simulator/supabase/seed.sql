@@ -4,27 +4,27 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, se
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated, service_role;
 GRANT SELECT ON all_documentation_results TO anon, authenticated, service_role;
 
-INSERT INTO public.courses (id, name, code, active)
+INSERT INTO public.courses (id, name, code, active, semester, start_date, end_date)
 VALUES 
-  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d', 'Medical Surgical Nursing I', 'NUR 320', TRUE),
-  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5e', 'Medical Surgical Nursing II', 'NUR 420', TRUE),
-  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5f', 'Obstetrical Nursing', 'NUR 360', TRUE),
-  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c6a', 'Mental Health Nursing', 'NUR 380', TRUE)
+  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d', 'Medical Surgical Nursing I', 'NUR 320', TRUE, 'Winter 2026', '2026-01-12', '2026-04-25'),
+  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5e', 'Medical Surgical Nursing II', 'NUR 420', TRUE, 'Winter 2026', '2026-01-12', '2026-04-25'),
+  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5f', 'Obstetrical Nursing', 'NUR 360', TRUE, 'Winter 2026', '2026-01-12', '2026-04-25'),
+  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c6a', 'Mental Health Nursing', 'NUR 380', TRUE, 'Winter 2026', '2026-01-12', '2026-04-25')
 ON CONFLICT DO NOTHING;
 
-INSERT INTO public.sections (id, course_id, name, meeting_time)
+INSERT INTO public.sections (id, course_id, name)
 VALUES 
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e', 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d', 'Section 1', '2026-02-05 12:00:00+00'),
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6f', 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d', 'Section 2', '2026-02-05 15:00:00+00'),
+  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e', 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d', 'Section 1'),
+  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6f', 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d', 'Section 2'),
 
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7a', 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5e', 'Section 1', '2026-02-05 12:00:00+00'),
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7b', 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5e', 'Section 2', '2026-02-05 15:00:00+00'),
+  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7a', 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5e', 'Section 1'),
+  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7b', 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5e', 'Section 2'),
 
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7c', 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5f', 'Section 1', '2026-02-05 12:00:00+00'),
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7d', 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5f', 'Section 2', '2026-02-05 15:00:00+00'),
+  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7c', 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5f', 'Section 1'),
+  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7d', 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5f', 'Section 2'),
   
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7e', 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c6a', 'Section 1', '2026-02-05 12:00:00+00'),
-  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7f', 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c6a', 'Section 2', '2026-02-05 15:00:00+00')
+  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7e', 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c6a', 'Section 1'),
+  ('b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d7f', 'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c6a', 'Section 2')
 ON CONFLICT DO NOTHING;
 
 INSERT INTO public.groups (id, section_id, name)
@@ -106,10 +106,10 @@ VALUES ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9b', 'c3d4e5f6-a7b8-4c5d-0e1f-2a3b4c5
        ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9e', 'd4e5f6a7-b8c9-4d5e-1f2a-3b4c5d6e7f2a', true),
        ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9d', 'd4e5f6a7-b8c9-4d5e-1f2a-3b4c5d6e7f2a', true),
 
-       ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9b', 'c3d4e5f6-a7b8-4c5d-0e1f-2a3b4c5d6e2b', true),
-       ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9c', 'c3d4e5f6-a7b8-4c5d-0e1f-2a3b4c5d6e2b', true),
-       ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9e', 'd4e5f6a7-b8c9-4d5e-1f2a-3b4c5d6e7f2c', true),
-       ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9d', 'd4e5f6a7-b8c9-4d5e-1f2a-3b4c5d6e7f2c', true),
+      --  ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9b', 'c3d4e5f6-a7b8-4c5d-0e1f-2a3b4c5d6e2b', true),
+      --  ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9c', 'c3d4e5f6-a7b8-4c5d-0e1f-2a3b4c5d6e2b', true),
+      --  ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9e', 'd4e5f6a7-b8c9-4d5e-1f2a-3b4c5d6e7f2c', true),
+      --  ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9d', 'd4e5f6a7-b8c9-4d5e-1f2a-3b4c5d6e7f2c', true),
 
        ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9c', 'c3d4e5f6-a7b8-4c5d-0e1f-2a3b4c5d6e2d', true),
        ('e5f6a7b8-c9d0-4e5f-2a3b-4c5d6e7f8a9b', 'c3d4e5f6-a7b8-4c5d-0e1f-2a3b4c5d6e2d', true),
@@ -257,7 +257,12 @@ INSERT INTO lab_results (case_id, time_offset, is_in_presim, phase, label, sodiu
 VALUES
   ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', -60, TRUE, 1, null, '138', '4.1'),
   ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', 0, FALSE, 1, null, '136', '4.3'),
+  ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', NULL, FALSE, 2, 'Phase 2 BMP', '134', '4.6'),
+  ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', NULL, FALSE, 2, null, '131', '4.9'),
   ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', NULL, FALSE, 2, 'BMP after Lasix', '133', '4.8'),
+  ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', NULL, FALSE, 2, null, '132', '5.0'),
+  ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', NULL, FALSE, 3, null, '129', '5.1'),
+  ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', NULL, FALSE, 3, null, '128', '5.4'),
   ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', NULL, FALSE, 3, 'BMP after fluids', '127', '5.6');
 
 
@@ -835,6 +840,3 @@ UPDATE public.cases
     'psychosocial', 'heent', 'neuro', 'integument', 'cardiac', 'respiratory', 'wound',
     'gi', 'musculoskeletal', 'genitourinary', 'iv_1', 'nursing_care', 'ciwa'
   ]::public.flexsheet_section_type[];
-
-
-

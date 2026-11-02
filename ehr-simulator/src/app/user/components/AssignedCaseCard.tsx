@@ -14,6 +14,8 @@ type AssignedCaseCardProps = {
   name?: string | null;
   simTime?: string | null;
   presimTime?: string | null;
+  /** False when the viewer was moved out of the session's group — they can see the started sim but not continue it. */
+  canJoin?: boolean;
   groupMembers?: string[];
 };
 
@@ -25,6 +27,7 @@ export default function AssignedCaseCard({
   name,
   simTime,
   presimTime,
+  canJoin = true,
   groupMembers = [],
 }: AssignedCaseCardProps) {
   const router = useRouter();
@@ -80,6 +83,9 @@ export default function AssignedCaseCard({
         ) : isCompletedPhase ? (
           <div className="text-xs font-medium text-slate-600">Mode: Simulation ended</div>
         ) : null}
+        {!canJoin && (isActivePhase || isPresimPhase) ? (
+          <div className="text-xs text-muted-foreground">{"This session is no longer available to your group"}</div>
+        ) : null}
       </div>
 
       <div className="ml-4 flex items-center gap-2">
@@ -87,15 +93,16 @@ export default function AssignedCaseCard({
           <button
             className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
             onClick={() => handleRoute('chart/overview', true)}
-            disabled={isStarting}
+            disabled={isStarting || !canJoin}
             aria-label={`Start simulation ${name ?? id}`}
           >
             {isStarting ? "Loading..." : "Enter Active Simulation"}
           </button>
         ) : isPresimPhase ? (
           <button
-            className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
+            className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
             onClick={() => handleRoute('chart/overview', false)}
+            disabled={!canJoin}
             aria-label={`View pre-sim chart for ${name ?? id}`}
           >
             Enter Pre-Sim Mode

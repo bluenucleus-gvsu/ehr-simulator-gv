@@ -1,7 +1,7 @@
 "use client"
 import React from "react"
 import { GripVertical } from "lucide-react"
-import { Student } from "../types"
+import { Student } from "./courseForm"
 import { cn } from "@/lib/utils"
 
 interface StudentBlockProps {
@@ -27,17 +27,16 @@ export const StudentBlock = ({
 }: StudentBlockProps) => {
   return (
     <div
-      key={student.email}
       draggable={draggable}
       onDragStart={(e) => onDragStart?.(e, student, fromGroup ?? "", fromSection ?? "")}
       onDragEnd={() => onDragEnd?.()}
       className={cn(
-        `flex items-center gap-2 p-2 bg-slate-50 rounded border border-slate-200 hover:bg-slate-100 cursor-move transition-all select-none`,
+        `flex items-center gap-2 p-2 bg-white rounded border border-slate-200 hover:bg-slate-100 cursor-move transition-all select-none`,
         isDimmed ? "opacity-40" : "",
         className
       )}
     >
-      <GripVertical className="size-4 text-slate-400 flex-shrink-0" />
+      <GripVertical className="size-4 text-slate-400 shrink-0" />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-slate-900 truncate">
           {student.full_name ?? "Unknown"}

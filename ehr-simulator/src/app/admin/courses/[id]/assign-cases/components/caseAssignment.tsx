@@ -11,14 +11,14 @@ import {
 import { Select, SelectContent, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SelectGroup } from "@radix-ui/react-select";
 import { ChevronDown, Loader2, Plus } from "lucide-react";
-import { format } from "date-fns";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Label } from "@/components/ui/label";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CasesData, createSectionCaseAssignment, deleteSectionCaseAssignment, SectionAssignmentInsert, SectionSimulationsData } from "@/actions/cases";
 import { toast } from "sonner";
 
-interface CaseAssignmentProps {
+interface CaseAssignmentDialogProps {
   sections: SectionSimulationsData
   cases: CasesData
   isEditMode: boolean
@@ -31,7 +31,8 @@ interface CaseAssignmentProps {
   }
 }
 
-const CaseAssignment = ({ sections, cases, isEditMode, existing_id, initialData }: CaseAssignmentProps) => {
+const CaseAssignmentDialog = ({ sections, cases, isEditMode, existing_id, initialData }: CaseAssignmentDialogProps) => {
+  const router = useRouter();
   const [selectedCaseId, setSelectedCaseId] = useState<string>(initialData?.caseId || '');
   const [selectedSectionId, setSelectedSectionId] = useState<string>(initialData?.sectionId || '');
   const [presimDate, setPresimDate] = useState(
@@ -75,9 +76,10 @@ const CaseAssignment = ({ sections, cases, isEditMode, existing_id, initialData 
     setIsOpen(false);
     setIsSubmitting(false);
     handleOpenChange(false);
+    router.refresh();
   }
 
-  const handleDeleteAssignment = async (id: string) => {
+  const handleDeleteAssignment = async (id: string[]) => {
     setIsSubmitting(true);
     const result = await deleteSectionCaseAssignment(id);
 
@@ -87,8 +89,10 @@ const CaseAssignment = ({ sections, cases, isEditMode, existing_id, initialData 
       return;
     }
 
+    toast.success(result.message);
     setIsOpen(false);
     setIsSubmitting(false);
+    router.refresh();
   }
 
   return (
@@ -96,11 +100,18 @@ const CaseAssignment = ({ sections, cases, isEditMode, existing_id, initialData 
       <DialogTrigger asChild>
         {isEditMode ?
           (
-            <Button variant="ghost" size="sm" className=" text-blue-600 hover:text-blue-700 hover:underline hover:bg-transparent">
+            <Button
+              variant="ghost"
+              size="sm"
+              className=" text-blue-600 hover:text-blue-700 hover:underline hover:bg-transparent"
+            >
               Manage
             </Button>
           ) : (
-            <Button className="bg-blue-700 hover:bg-blue-800 gap-2 shadow">
+            <Button
+              className="border-blue-500 text-blue-700 hover:text-blue-700"
+              variant="outline"
+            >
               <Plus />
               Assign Case
             </Button>
@@ -134,17 +145,9 @@ const CaseAssignment = ({ sections, cases, isEditMode, existing_id, initialData 
                   {
                     sections.length > 0 && (
                       sections.map((section, index) => {
-                        if (!section.meeting_time) {
-                          return (
-                            <SelectItem key={`${index}`} value={section.id}>
-                              {section.name}
-                            </SelectItem>
-                          )
-                        }
-                        const displayTime = format(section.meeting_time, 'p')
                         return (
                           <SelectItem key={`${index}`} value={section.id}>
-                            {section.name} - {displayTime}
+                            {section.name}
                           </SelectItem>
                         )
                       }
@@ -222,7 +225,7 @@ const CaseAssignment = ({ sections, cases, isEditMode, existing_id, initialData 
               <Button
                 variant='destructive'
                 className="flex-1"
-                onClick={() => handleDeleteAssignment(existing_id)}
+                onClick={() => handleDeleteAssignment([existing_id])}
               >
                 Delete Case Assignment
               </Button>
@@ -235,4 +238,4 @@ const CaseAssignment = ({ sections, cases, isEditMode, existing_id, initialData 
   )
 };
 
-export default CaseAssignment;
+export default CaseAssignmentDialog;

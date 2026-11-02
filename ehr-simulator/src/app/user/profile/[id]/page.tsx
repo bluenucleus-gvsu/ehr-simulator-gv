@@ -61,9 +61,6 @@ export default async function ProfilePage({ params }: Readonly<{ params: Promise
         completed: dedupedCompleted.toSorted(
           (a, b) => compareSimTimesLatestFirst(a.completed_at, b.completed_at)
         ),
-        expired: c.expired.toSorted(
-          (a, b) => compareSimTimesLatestFirst(a.expired_at, b.expired_at)
-        ),
       };
     });
   const filteredActive = partitionCourses(activeCourses);
@@ -107,6 +104,7 @@ export default async function ProfilePage({ params }: Readonly<{ params: Promise
                                 name={a.name}
                                 simTime={a.sim_time}
                                 presimTime={a.presim_time}
+                                canJoin={a.canJoin ?? true}
                                 groupMembers={a.groupMembers}
                               />
                             </li>
@@ -139,28 +137,6 @@ export default async function ProfilePage({ params }: Readonly<{ params: Promise
                     </div>
                   </details>
 
-                  <details className="bg-slate-50 p-2 rounded mt-2">
-                    <summary className="cursor-pointer font-medium">Expired Cases</summary>
-                    <div className="mt-2">
-                      {course.expired.length === 0 ? (
-                        <div className="text-sm text-muted-foreground">No expired cases.</div>
-                      ) : (
-                        <ul className="list-disc pl-5 space-y-1">
-                          {course.expired.map((s, idx) => (
-                            <li key={`${course.id}:${s.id}:${s.expired_at ?? "na"}:${idx}`} className="text-sm">
-                              <CompletedCaseCard
-                                id={s.id}
-                                name={s.name}
-                                groupMembers={s.teamMembers}
-                                date={s.expired_at}
-                                feedback={s.feedback ?? "Marked as expired."}
-                              />
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  </details>
                 </li>
               ))}
             </ul>
@@ -194,29 +170,6 @@ export default async function ProfilePage({ params }: Readonly<{ params: Promise
                                 groupMembers={s.teamMembers}
                                 date={s.completed_at}
                                 feedback={s.feedback}
-                              />
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  </details>
-
-                  <details className="bg-slate-50 p-2 rounded mt-2">
-                    <summary className="cursor-pointer font-medium">Expired Cases</summary>
-                    <div className="mt-2">
-                      {course.expired.length === 0 ? (
-                        <div className="text-sm text-muted-foreground">No expired cases.</div>
-                      ) : (
-                        <ul className="list-disc pl-5 space-y-1">
-                          {course.expired.map((s, idx) => (
-                            <li key={`${course.id}:${s.id}:${s.expired_at ?? "na"}:${idx}`} className="text-sm">
-                              <CompletedCaseCard
-                                id={s.id}
-                                name={s.name}
-                                groupMembers={s.teamMembers}
-                                date={s.expired_at}
-                                feedback={s.feedback ?? "Marked as expired."}
                               />
                             </li>
                           ))}
