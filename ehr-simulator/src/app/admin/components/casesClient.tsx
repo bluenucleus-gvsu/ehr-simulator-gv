@@ -18,19 +18,19 @@ interface CaseClientProps {
 function filterCases(
   cases: SimCase[],
   filterText: string,
-  specialty: CaseSpecialty | ''
+  specialty: CaseSpecialty | 'all'
 ) {
   return cases.filter((item) => {
     const matchesName = filterText === "" || item.name.toLowerCase().includes(filterText.toLowerCase());
-    const matchesSpecialty = specialty === item.case_specialty || specialty === '';
+    const matchesSpecialty = specialty === item.case_specialty || specialty === 'all';
 
     return matchesName && matchesSpecialty
   });
 }
 
-export default function CasesClient({ cases }: CaseClientProps) {
+export default function CasesClient({ cases }: Readonly<CaseClientProps>) {
   const [filterText, setFilterText] = useState('');
-  const [specialty, setSpecialty] = useState<CaseSpecialty | ''>('');
+  const [specialty, setSpecialty] = useState<CaseSpecialty | 'all'>('all');
 
   const handleFilterTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilterText(e.target.value);
@@ -63,7 +63,7 @@ export default function CasesClient({ cases }: CaseClientProps) {
         </InputGroup>
         <Select
           required
-          onValueChange={(value) => setSpecialty(value as CaseSpecialty)}
+          onValueChange={(value) => setSpecialty(value as CaseSpecialty | 'all')}
           value={specialty}
         >
           <SelectTrigger
@@ -74,10 +74,10 @@ export default function CasesClient({ cases }: CaseClientProps) {
             <ChevronDown />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem key={'none'} value=''>All Specialties</SelectItem>
-            {Object.entries(caseSpecialtyLabels).map(([value, label], i) => {
+            <SelectItem key="all" value="all">All Specialties</SelectItem>
+            {Object.entries(caseSpecialtyLabels).map(([value, label]) => {
               return (
-                <SelectItem key={i} value={value}>{label}</SelectItem>
+                <SelectItem key={value} value={value}>{label}</SelectItem>
               )
             })}
           </SelectContent>
