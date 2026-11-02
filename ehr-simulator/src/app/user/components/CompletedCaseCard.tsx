@@ -37,7 +37,7 @@ export default function CompletedCaseCard({ id, name, groupMembers = [], date, f
           <div className="flex justify-between items-start">
             <div>
               <div className="font-medium">Feedback</div>
-              <div className="text-sm text-muted-foreground mt-1">{feedback ?? "No feedback available (dummy)"}</div>
+              <div className="text-sm text-muted-foreground mt-1">{feedback ?? "No feedback available"}</div>
             </div>
             <button className="text-sm text-slate-500 ml-4" onClick={() => setOpen(false)} aria-label="Close feedback">
               Close

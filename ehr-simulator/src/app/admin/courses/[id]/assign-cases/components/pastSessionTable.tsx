@@ -3,26 +3,32 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Calendar, Users, UserRoundX } from "lucide-react";
 import { format } from "date-fns";
 import type { SimAssignment } from "./simAssignmentTypes";
+import { Checkbox } from "@/components/ui/checkbox";
+import { CheckedState } from "@radix-ui/react-checkbox";
+import { cn } from "@/lib/utils";
 
 
-interface SimulationsTableProps {
+interface PastSessionTableProps {
   assignments: SimAssignment[];
-  emptyMessage: string;
-  actionLabel?: string;
-  dateFormat?: string;
-  showDiagnosis: boolean;
-
-  renderAction: (assignment: SimAssignment) => React.ReactNode;
+  selectedAssignments: string[];
+  onCheck: (id: string, isChecked: CheckedState) => void;
 }
 
-export function SimAssignmentTable({
+const STATUS_BADGE: Record<
+  string,
+  { label: string; className: string }
+> = {
+  completed: { label: "Completed", className: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300" },
+  archived: { label: "Archived", className: "bg-muted text-muted-foreground" },
+  assigned: { label: "Assigned", className: "bg-muted text-muted-foreground" },
+  "in progress": { label: "In-Progress", className: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300" },
+}
+
+export function PastSessionTable({
   assignments,
-  emptyMessage,
-  actionLabel = "Actions",
-  dateFormat = "Pp",
-  showDiagnosis,
-  renderAction,
-}: SimulationsTableProps) {
+  selectedAssignments,
+  onCheck,
+}: PastSessionTableProps) {
 
   return (
     <Card className="p-0 overflow-hidden">
@@ -31,48 +37,46 @@ export function SimAssignmentTable({
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50 hover:bg-gray-50">
-                <TableHead className="w-[180px]">Date</TableHead>
+                <TableHead className="w-10"></TableHead>
+                <TableHead className="w-50">Date</TableHead>
                 <TableHead>Simulation Name</TableHead>
                 <TableHead>Section</TableHead>
-                <TableHead>{actionLabel}</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {assignments.map((assignment) => (
                 <TableRow key={assignment.id} className="hover:bg-transparent">
                   <TableCell>
+                    <Checkbox
+                      onCheckedChange={(checked) => onCheck(assignment.id, checked)}
+                      checked={selectedAssignments.includes(assignment.id)}
+                    />
+                  </TableCell>
+                  <TableCell>
                     <div className="font-medium flex items-center gap-2 text-gray-600">
                       <Calendar size={14} />
-                      <p>{format(new Date(assignment.simTime), dateFormat)}</p>
+                      <p>{format(new Date(assignment.simTime), "P")}</p>
                     </div>
                   </TableCell>
-
-                  {/* Name Column */}
                   <TableCell className="font-semibold text-gray-900">
                     {assignment.caseName}
-                    {showDiagnosis && assignment.caseDiagnosis && (
-                      <span className="font-normal text-gray-500"> ({assignment.caseDiagnosis})</span>
-                    )}
                   </TableCell>
-
-                  {/* Section Column */}
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Users size={14} className="text-gray-400" />
                       {assignment.sectionName}
                     </div>
                   </TableCell>
-
-                  {/* Dynamic Action Column */}
                   <TableCell>
-                    {renderAction(assignment)}
+                    <StatusBadge status={assignment.sessionStatus ?? ''} />
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         ) : (
-          <EmptyState message={emptyMessage} />
+          <EmptyState message="No past scheduled simulations found." />
         )}
       </CardContent>
     </Card>
@@ -88,4 +92,13 @@ function EmptyState({ message }: { message: string }) {
       <p className="text-sm text-gray-400 font-medium">{message}</p>
     </div>
   );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const badge = STATUS_BADGE[status] ?? { label: status || "—", className: "bg-muted text-muted-foreground" }
+  return (
+    <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", badge.className)}>
+      {badge.label}
+    </span>
+  )
 }

@@ -24,8 +24,6 @@ export async function getFacultyCourses(): Promise<Course[]> {
     .select(`
       id,
       name,
-      meeting_time,
-      semester,
       course:courses (id, code, name, active),
       section_assignments (
         id,
@@ -44,7 +42,10 @@ export async function getFacultyCourses(): Promise<Course[]> {
           student:student_id (id, full_name, email)
         )
       )
-    `);
+    `)
+    .eq('active', true)
+    .eq('groups.active', true)
+    .eq('groups.group_members.active', true);
 
   if (error) {
     console.error("Failed to fetch faculty courses:", error);
@@ -75,23 +76,26 @@ export async function getFacultyCourses(): Promise<Course[]> {
         [caseRecord?.first_name, caseRecord?.last_name].filter(Boolean).join(" ") ||
         "Untitled Simulation";
 
-      // A group only belongs to this simulation if it has a case_session under this assignment
+      // A group only belongs to this simulation if it has a case_session under
+      // this assignment. Sessions whose group is soft-deleted are absent from
+      // the active-group list (groupById) and are skipped here.
       const groupRows: Group[] = (assignment.case_sessions ?? [])
         .filter((session: any) => session.group_id && session.id)
-        .map((session: any) => {
+        .flatMap((session: any) => {
           const group = groupById.get(session.group_id);
-          return {
+          if (!group) return [];
+          return [{
             id: session.group_id,
-            name: group?.name ?? "Unknown Group",
+            name: group.name,
             caseSessionId: session.id,
             currentPhase: session.current_phase ?? 1,
-            members: (group?.group_members ?? [])
+            members: (group.group_members ?? [])
               .map((member: any) => ({
                 id: member.student?.id ?? member.id,
                 name: getStudentName(member.student),
               }))
               .filter((member: any) => member.id),
-          };
+          }];
         });
 
       return {
@@ -140,8 +144,6 @@ export async function getSectionSimulationDetails(sectionAssignmentId: string) {
       section:sections (
         id,
         name,
-        meeting_time,
-        semester,
         course:courses (id, code, name, active)
       ),
       cases (
@@ -166,6 +168,9 @@ export async function getSectionSimulationDetails(sectionAssignmentId: string) {
         )
       )
     `)
+    .eq("section.active", true)
+    .eq("case_sessions.group.active", true)
+    .eq("case_sessions.group.group_members.active", true)
     .eq("id", sectionAssignmentId)
     .single();
 
