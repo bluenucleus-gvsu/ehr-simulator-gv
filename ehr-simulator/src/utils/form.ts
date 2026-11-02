@@ -81,6 +81,8 @@ export interface MedOrderFormData {
 export interface MediaImageData {
   id: string;
   previewUrl: string;
+  phase: number;
+  isInPresim: boolean;
   file?: File;
   storagePath?: string;
 }

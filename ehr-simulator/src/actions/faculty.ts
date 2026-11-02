@@ -16,6 +16,7 @@ export type ReleasePendingItem = {
   id: string;
   phase: number;
   label: string | null;
+  previewUrl?: string | null;
 };
 
 export type ReleasedItem = {
@@ -23,6 +24,7 @@ export type ReleasedItem = {
   id: string;
   releasedAt: string;
   label: string | null;
+  previewUrl?: string | null;
 };
 
 export type ReleasePanelData = {
@@ -223,8 +225,9 @@ export async function getReleasePanelData(
       const releasedIds = new Set(releases.map((entry) => entry.itemId));
 
       if (releasedIds.size > 0) {
-        const labelSelect =
-          target.labelColumn === "title" ? "id, title" : "id, label";
+        const labelSelect = target.labelColumn
+          ? target.labelColumn === "title" ? "id, title" : "id, label"
+          : "id, preview_url";
         const { data: itemRows, error: itemError } = await supabase
           .from(target.itemTable)
           .select(labelSelect)
@@ -238,24 +241,26 @@ export async function getReleasePanelData(
           };
         }
 
-        const labelById = new Map(
-          (itemRows ?? []).map((row) => [
-            row.id,
-            normalizeLabel((row as Record<string, unknown>)[target.labelColumn]),
-          ]),
-        );
+        const rowById = new Map((itemRows ?? []).map((row) => [row.id, row as Record<string, unknown>]));
         releases.forEach((entry) => {
+          const row = rowById.get(entry.itemId);
           released.push({
             type,
             id: entry.itemId,
             releasedAt: entry.releasedAt,
-            label: labelById.get(entry.itemId) ?? null,
+            label: target.labelColumn && row
+              ? normalizeLabel(row[target.labelColumn])
+              : null,
+            ...(type === "media" && row
+              ? { previewUrl: normalizeLabel(row.preview_url) }
+              : {}),
           });
         });
       }
 
-      const pendingSelect =
-        target.labelColumn === "title" ? "id, phase, title" : "id, phase, label";
+      const pendingSelect = target.labelColumn
+        ? target.labelColumn === "title" ? "id, phase, title" : "id, phase, label"
+        : "id, phase, preview_url";
       const { data: pendingRows, error: pendingError } = await supabase
         .from(target.itemTable)
         .select(pendingSelect)
@@ -277,7 +282,8 @@ export async function getReleasePanelData(
           type,
           id: String(row.id),
           phase: Math.max(1, Number(row.phase ?? 1)),
-          label: normalizeLabel(row[target.labelColumn]),
+          label: target.labelColumn ? normalizeLabel(row[target.labelColumn]) : null,
+          ...(type === "media" ? { previewUrl: normalizeLabel(row.preview_url) } : {}),
         });
       });
     }

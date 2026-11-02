@@ -7,6 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useFormContext } from "@/context/FormContext";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/caseSections";
@@ -16,9 +25,10 @@ import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 
 const MediaForm = () => {
   const router = useRouter();
-  const { caseId, mediaData, onDataChange } = useFormContext();
+  const { caseId, mediaData, demographicData, onDataChange } = useFormContext();
   const [images, setImages] = useState<MediaImageData[]>(mediaData);
   const MAX_SIZE_MB = 10
+  const phases = Array.from({ length: Math.max(1, demographicData.phaseCount) }, (_, index) => index + 1);
 
   const updateImages = (nextImages: MediaImageData[]) => {
     setImages(nextImages);
@@ -65,6 +75,8 @@ const MediaForm = () => {
       id: crypto.randomUUID(),
       previewUrl: URL.createObjectURL(file),
       file,
+      phase: 1,
+      isInPresim: true,
     }));
 
     updateImages([...images, ...newImages]);
@@ -77,6 +89,10 @@ const MediaForm = () => {
 
     updateImages(images.filter((img) => img.id !== id));
     toast.success("Removed image.")
+  };
+
+  const updateImage = (id: string, values: Partial<MediaImageData>) => {
+    updateImages(images.map((image) => image.id === id ? { ...image, ...values } : image));
   };
 
   return (
@@ -114,20 +130,60 @@ const MediaForm = () => {
 
                 {images.length > 0 && (
                   <div className="grid grid-cols-2 gap-4 pt-2">
-                    {images.map((img, idx) => (
-                      <div key={idx} className="relative group aspect-square border rounded-lg overflow-hidden bg-slate-100">
-                        <img
-                          src={img.previewUrl}
-                          alt="Case media"
-                          className="w-full h-full object-contain"
-                        />
-                        <Button
-                          type="button"
-                          onClick={() => removeImage(img.id)}
-                          className="absolute top-1 right-1 bg-rose-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
+                    {images.map((img) => (
+                      <div key={img.id} className="space-y-3 rounded-lg border bg-white p-3">
+                        <div className="relative aspect-square overflow-hidden rounded-lg bg-slate-100">
+                          <img
+                            src={img.previewUrl}
+                            alt="Case media"
+                            className="h-full w-full object-contain"
+                          />
+                          <Button
+                            type="button"
+                            aria-label="Remove image"
+                            onClick={() => removeImage(img.id)}
+                            className="absolute right-1 top-1 rounded-full bg-rose-500 p-1 text-white"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor={`media-phase-${img.id}`}>Release phase</Label>
+                          <Select
+                            value={String(img.phase ?? 1)}
+                            onValueChange={(value) => {
+                              const phase = Number(value);
+                              updateImage(img.id, {
+                                phase,
+                                isInPresim: phase > 1 ? false : img.isInPresim,
+                              });
+                            }}
+                          >
+                            <SelectTrigger id={`media-phase-${img.id}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {phases.map((phase) => (
+                                <SelectItem key={phase} value={String(phase)}>
+                                  Phase {phase}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              id={`media-presim-${img.id}`}
+                              checked={!img.isInPresim}
+                              disabled={(img.phase ?? 1) > 1}
+                              onCheckedChange={(checked) =>
+                                updateImage(img.id, { isInPresim: !checked })
+                              }
+                            />
+                            <Label htmlFor={`media-presim-${img.id}`} className="text-sm font-normal">
+                              Exclude from Pre-Sim
+                            </Label>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>

@@ -6,6 +6,8 @@ type MediaImagePayload = {
   previewUrl?: string | null;
   file?: File | null;
   storagePath?: string | null;
+  phase?: number;
+  isInPresim?: boolean;
 } | string;
 
 export async function updateMedia(
@@ -27,7 +29,12 @@ export async function updateMedia(
   if (existingError) throw new Error(existingError.message);
 
   const uploadedPaths: string[] = [];
-  const rows: { preview_url: string; file_path: string | null }[] = [];
+  const rows: {
+    preview_url: string;
+    file_path: string | null;
+    phase: number;
+    is_in_presim: boolean;
+  }[] = [];
 
   try {
     for (const image of images) {
@@ -48,7 +55,12 @@ export async function updateMedia(
       }
 
       if (!previewUrl) throw new Error("Every image must have a file or preview URL.");
-      rows.push({ preview_url: previewUrl, file_path: filePath });
+      rows.push({
+        preview_url: previewUrl,
+        file_path: filePath,
+        phase: image.phase ?? 1,
+        is_in_presim: image.isInPresim ?? true,
+      });
     }
 
     const { error } = await supabase.rpc("case_builder_replace_media", {
@@ -78,6 +90,8 @@ export async function updateMedia(
     data: rows.map((row) => ({
       id: row.file_path ?? row.preview_url,
       previewUrl: row.preview_url,
+      phase: row.phase,
+      isInPresim: row.is_in_presim,
       storagePath: row.file_path ?? undefined,
     })),
   };
