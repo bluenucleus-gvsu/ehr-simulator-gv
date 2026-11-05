@@ -22,8 +22,8 @@ import { type AllMedicationTypes, type MedicationOrder } from "./marData";
 import MedAdminCard from "./medAdminCard";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge"
-import { PatientStatusBadge } from "./marHelpers"
 import { DatabaseMedAdministration, StudentMedicationAdministration } from "@/actions/simulation"
+import { PatientStatusBadge } from "./scannedStatusBadge"
 
 type NewAdministrationData = Record<string, StudentMedicationAdministration>;
 
@@ -45,8 +45,6 @@ interface MedAdministrationProps {
   isPresim: boolean;
   elapsedMinutes: number;
 }
-
-
 
 const MedAdministrationPanel = ({
   readOnly = false,
@@ -113,10 +111,10 @@ const MedAdministrationPanel = ({
 
       <DialogContent
         onOpenAutoFocus={(e) => e.preventDefault()}
-        className="flex flex-col md:max-w-3xl xl:max-w-4xl max-w-5xl h-[90vh] p-0 gap-0 overflow-hidden bg-white border-slate-200"
+        className="flex flex-col md:max-w-3xl xl:max-w-6xl max-w-8xl h-[90vh] p-0 gap-0 overflow-hidden bg-white border-slate-200"
       >
 
-        <DialogHeader className="px-6 py-4 bg-gray-100 border-b border-gray-300 flex-shrink-0 shadow-[0_2px_4px_-1px_rgba(0,0,0,0.1)]">
+        <DialogHeader className="px-6 py-4 bg-gray-100 border-b border-gray-300 shrink-0 shadow-[0_2px_4px_-1px_rgba(0,0,0,0.1)]">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pr-6">
             <DialogTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
               <div className="p-2 bg-blue-200 rounded-lg text-blue-700">
@@ -124,10 +122,7 @@ const MedAdministrationPanel = ({
               </div>
               Medication Administration
             </DialogTitle>
-
             <PatientStatusBadge isScanned={isScanned} />
-
-
           </div>
         </DialogHeader>
 
@@ -175,7 +170,7 @@ const MedAdministrationPanel = ({
           </div>
         </div>
 
-        <DialogFooter className=" w-full px-6 py-4 bg-gray-100 border-t border-gray-200  flex-shrink-0 sm:justify-between gap-4 shadow-[0_-2px_15px_-6px_rgba(0,0,0,0.1)]">
+        <DialogFooter className=" w-full px-6 py-4 bg-gray-100 border-t border-gray-200 shrink-0 sm:justify-between gap-4 shadow-[0_-2px_15px_-6px_rgba(0,0,0,0.1)]">
           {medReferenceTool ? (
             <a
               href={medReferenceTool}
@@ -188,10 +183,7 @@ const MedAdministrationPanel = ({
             </a>
           ) : (
             <p></p>
-          )
-
-          }
-
+          )}
           <div className="flex gap-3 justify-between">
             <DialogClose asChild>
               <Button variant="outline" className="flex-1 sm:flex-none text-gray-700">
@@ -201,7 +193,7 @@ const MedAdministrationPanel = ({
             <Button
               disabled={!canSign}
               onClick={handleSubmit}
-              className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm min-w-[120px]"
+              className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm min-w-30"
               title={
                 readOnly
                   ? "Documentation is view-only in simulation"

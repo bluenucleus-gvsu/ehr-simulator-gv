@@ -14,7 +14,8 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { AllMedicationTypes, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
-import { renderMedCardDetails, renderMedTitleRow } from "./marHelpers";
+import { MedCardDetailRow, } from "./medCardDetailRow";
+import { MedCardTitle } from "./medCardTitle";
 
 interface MultiMedPopoverProps {
   isOpen: boolean;
@@ -59,10 +60,10 @@ export function MultiMedPopover({
               <div className="flex justify-between w-full items-start mb-2">
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
-                    {renderMedTitleRow(medication, order)}
+                    {MedCardTitle(medication, order)}
                   </div>
                   <div className="flex items-center gap-1 text-xs ml-2 text-slate-600">
-                    {renderMedCardDetails(medication, order)}
+                    {MedCardDetailRow(medication, order)}
                   </div>
                 </div>
                 <div className="text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
