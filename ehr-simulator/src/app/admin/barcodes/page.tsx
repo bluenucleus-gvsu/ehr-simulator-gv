@@ -1,7 +1,7 @@
 import { getAllMedications } from "@/actions/simulation"
 import BardcodeGenerator from "./barcodeGenerator"
 import { getAllSimCases } from "@/actions/cases";
-import { mapDatabaseMedToFrontend } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers";
+import { mapDatabaseMedToFrontend } from "@/lib/medications";
 
 const Formulary = async () => {
   const [medResponse, caseReponse] = await Promise.all([
