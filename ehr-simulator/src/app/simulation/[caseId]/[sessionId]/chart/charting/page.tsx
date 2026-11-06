@@ -1,4 +1,4 @@
-import { getAllDocumentationData } from "@/actions/simulation"
+import { getAllDocumentationData } from "@/actions/simulation/getAllDocumentationData"
 import { FlexSheetView } from "./components/flexSheetView";
 
 interface FlexSheetProps {

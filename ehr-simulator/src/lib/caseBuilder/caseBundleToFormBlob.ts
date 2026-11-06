@@ -6,7 +6,7 @@ import { medOrderFormStateFromCaseBundle } from "@/app/simulation/[caseId]/[sess
 import { defaultDemographicData, defaultHistoryData } from "@/context/FormContext";
 import type { DemographicFormData, FormBlob } from "@/utils/form";
 import { createDefaultLabColumn, intakeOutputBlocksFromCaseRow } from "@/utils/form";
-import { buildTableTemplate } from "@/lib/flexSheet/flexSheetTemplate";
+import { buildTableTemplate, CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
 
 function text(row: CaseBundleRow, key: string): string {
   const value = row[key];
@@ -57,6 +57,8 @@ function demographicsFromCaseRow(caseRow: CaseBundleRow): DemographicFormData {
     contactRelationship: text(caseRow, "emergency_contact_relationship"),
     contactPhone: text(caseRow, "emergency_contact_phone"),
     phaseCount: Math.max(1, Number(caseRow.phase_count ?? 1)),
+    caseSpecialty: (Object.values(CaseSpecialty) as string[]).includes(text(caseRow, "case_specialty"))
+      ? (text(caseRow, "case_specialty") as CaseSpecialty) : CaseSpecialty.MED_SURG,
   };
 }
 

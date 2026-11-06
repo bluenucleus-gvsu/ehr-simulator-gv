@@ -4,19 +4,19 @@ import { useFlexSheetInitialization } from "@/hooks/useFlexSheetInitialization";
 import { buildTableTemplate } from "@/lib/flexSheet/flexSheetTemplate";
 import { FlexSheetSection } from "@/lib/flexSheet/flexSheetSections";
 import type { CaseBundle } from "@/actions/case_builder/getCase";
-import type { DatabaseDocumentation } from "@/actions/simulation";
+import { DocumentationRow } from "@/actions/simulation/getAllDocumentationData";
 
 function bundleWithSections(sections: FlexSheetSection[]): CaseBundle {
   return { caseRow: { flexsheet_sections: sections } } as unknown as CaseBundle;
 }
 
-function doc(overrides: Record<string, unknown> = {}): DatabaseDocumentation {
-  return { time_offset: 0, is_in_presim: false, ...overrides } as DatabaseDocumentation;
+function doc(overrides: Record<string, unknown> = {}): DocumentationRow {
+  return { time_offset: 0, is_in_presim: false, ...overrides } as DocumentationRow;
 }
 
 function render(
   sections: FlexSheetSection[],
-  documentation: DatabaseDocumentation[] = [],
+  documentation: DocumentationRow[] = [],
   caseBundle: CaseBundle | null = null,
 ) {
   const bundle = caseBundle ?? bundleWithSections(sections);

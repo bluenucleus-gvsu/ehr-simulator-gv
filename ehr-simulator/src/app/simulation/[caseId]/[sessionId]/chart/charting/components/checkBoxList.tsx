@@ -70,9 +70,9 @@ const CheckBoxList: React.FC<CheckBoxListProps> = ({
 
   return (
     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-      <PopoverTrigger asChild className='h-6'>
-        <button className="flex items-center text-center w-full pl-2 text-xs hover:bg-gray-50">
-          {displayLabels || ""}
+      <PopoverTrigger asChild className='h-6 w-full'>
+        <button className="flex w-full items-center pl-2 text-left text-xs hover:bg-gray-50">
+          <span className='truncate'>{displayLabels || ""}</span>
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-full bg-white p-0 m-0 shadow-md shadow-black/30 border rounded-xl overflow-hidden">
