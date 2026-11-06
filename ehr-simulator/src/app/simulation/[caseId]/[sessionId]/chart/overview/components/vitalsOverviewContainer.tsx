@@ -1,5 +1,5 @@
 'use server'
-import { getAllDocumentationData } from "@/actions/simulation";
+import { getAllDocumentationData } from "@/actions/simulation/getAllDocumentationData";
 import { VitalsOverview } from "./vitalsOverview";
 
 interface VitalsOverviewContainerProps {

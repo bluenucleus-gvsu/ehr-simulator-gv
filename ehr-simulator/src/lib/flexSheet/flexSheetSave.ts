@@ -1,4 +1,4 @@
-import { StudentDatabaseDocumentation, upsertDocumentationRows } from "@/actions/simulation";
+import { StudentDocumentationInsert, upsertDocumentationRows } from "@/actions/simulation";
 import { FlexSheetData } from "./flexSheetTypes";
 
 export function coerceValueForSave(
@@ -30,7 +30,7 @@ export async function saveFlexSheetData({
   const dirtyTimeOffsets = Array.from(dirtyColumns);
 
   const payload = dirtyTimeOffsets.map((timeOffset) => {
-    const dbRecord: StudentDatabaseDocumentation = {
+    const dbRecord: StudentDocumentationInsert = {
       case_id: caseId,
       case_session_id: sessionId,
       user_id: userId,

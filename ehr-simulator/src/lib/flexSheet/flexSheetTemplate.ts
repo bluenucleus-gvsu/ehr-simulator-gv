@@ -11,14 +11,20 @@ export const CaseSpecialty = {
 export type CaseSpecialty = Database['public']['Enums']['case_specialty_type'];
 
 export function buildTableTemplate(selections: Set<FlexSheetSection>) {
+  // The ordering of sections in this array is intentional; it determines 
+  // the FlexSheet layout. Do not change unless you understand the nursing 
+  // implications of your decision.
   const allTableSections = [
     FlexSheetSection.VITALS,
     FlexSheetSection.INPUT,
     FlexSheetSection.OUTPUT,
+    FlexSheetSection.QBL,
     FlexSheetSection.BASE_PAIN,
     FlexSheetSection.FACES_PAIN,
     FlexSheetSection.GENERAL_APPEARANCE,
     FlexSheetSection.PSYCHOSOCIAL,
+    FlexSheetSection.REPRODUCTIVE,
+    FlexSheetSection.FETAL,
     FlexSheetSection.HEENT,
     FlexSheetSection.NEURO,
     FlexSheetSection.INTEGUMENT,

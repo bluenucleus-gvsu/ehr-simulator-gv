@@ -1,7 +1,7 @@
 import { Column } from "@tanstack/react-table";
 import { addMinutes, format } from "date-fns";
 import { FlexSheetData, FlexSheetPayload } from "@/lib/flexSheet/flexSheetTypes";
-import { DatabaseDocumentationInsert } from "@/actions/simulation";
+import { CaseDocumentationInsert } from "@/actions/simulation";
 import { coerceValueForSave } from "./flexSheetSave";
 
 const BP_THRESHOLDS = {
@@ -113,11 +113,11 @@ export const getLastPageOffset = (totalItems: number, width: number) => {
 export function transformFlexSheetPayloadToSchema(
   caseId: string,
   payload: FlexSheetPayload,
-): DatabaseDocumentationInsert[] {
+): CaseDocumentationInsert[] {
   const { data, timePoints, timePointsInPreSim } = payload;
 
   return timePoints.map((timePoint) => {
-    const baseRow: DatabaseDocumentationInsert = {
+    const baseRow: CaseDocumentationInsert = {
       case_id: caseId,
       is_in_presim: timePointsInPreSim.has(timePoint),
       time_offset: timePoint,
