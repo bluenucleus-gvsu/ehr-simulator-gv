@@ -24,10 +24,10 @@ import { formatTimeFromOffset } from "@/lib/flexSheet/flexSheetHelpers"
 import { buildChartingRowsFromBundle } from "@/lib/flexSheet/flexSheetRowGenerator"
 import { useSimSessionContext } from "@/context/SimSessionContext"
 import { buildOverviewTemplate } from "@/lib/flexSheet/flexSheetTemplate"
-import { DatabaseDocumentation } from "@/actions/simulation"
+import { DocumentationRow } from "@/actions/simulation/getAllDocumentationData";
 
 interface VitalsOverviewProps {
-  dbDocumentation: DatabaseDocumentation[];
+  dbDocumentation: DocumentationRow[];
 }
 
 function mostRecentVitals(

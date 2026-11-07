@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { buildChartingRowsFromBundle, mergeTemplateWithExistingRows } from "@/lib/flexSheet/flexSheetRowGenerator";
-import type { DatabaseDocumentation } from "@/actions/simulation";
 import type { FlexSheetData } from "@/lib/flexSheet/flexSheetTypes";
+import { DocumentationRow } from "@/actions/simulation/getAllDocumentationData";
 
-function doc(overrides: Record<string, unknown> = {}): DatabaseDocumentation {
+function doc(overrides: Record<string, unknown> = {}): DocumentationRow {
   return {
     time_offset: 0,
     is_in_presim: false,
     ...overrides,
-  } as DatabaseDocumentation;
+  } as DocumentationRow;
 }
 
 function templateRow(id: string, overrides: Partial<FlexSheetData> = {}): FlexSheetData {

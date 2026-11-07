@@ -41,6 +41,11 @@ export const RELEASABLE_ITEMS = {
 } as const;
 
 export const PREVIEW_SESSION_ID = "preview";
+
+// The preview session has no real database row, so it resolves to a sentinel
+// UUID that will never match actual session data.
+export const resolvePreviewSessionId = (id: string) =>
+  id === PREVIEW_SESSION_ID ? "00000000-0000-0000-0000-000000000000" : id;
 export const PREVIEW_STAGED_OFFSET_STEP_MIN = 5;
 
 export function isVisibleInSim(

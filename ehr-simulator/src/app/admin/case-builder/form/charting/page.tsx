@@ -17,7 +17,7 @@ import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/caseSections";
 import CheckBoxList from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/checkBoxList";
 import { caseBuilderPath } from "@/lib/caseBuilder/routes";
-import { specialtyDefaultSections } from "@/lib/caseBuilder/defaultTableTemplates";
+import { resolveInitialSections } from "@/lib/caseBuilder/defaultTableTemplates";
 import { mergeTemplateWithExistingRows } from "@/lib/flexSheet/flexSheetRowGenerator";
 import { buildTableTemplate } from "@/lib/flexSheet/flexSheetTemplate";
 
@@ -40,9 +40,7 @@ function ChartingForm() {
   const { onDataChange, chartingData: initialChartingData, demographicData, tableTemplateData, caseId } = useFormContext();
 
   const [chartingData, setChartingData] = useState<FlexSheetData[]>(() => {
-    const effectiveSections = tableTemplateData.length > 0
-      ? tableTemplateData
-      : specialtyDefaultSections[demographicData.caseSpecialty];
+    const effectiveSections = resolveInitialSections(tableTemplateData, demographicData.caseSpecialty);
     return mergeTemplateWithExistingRows(
       buildTableTemplate(new Set(effectiveSections)),
       initialChartingData.data,

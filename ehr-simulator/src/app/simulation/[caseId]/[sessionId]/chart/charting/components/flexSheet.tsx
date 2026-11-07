@@ -10,7 +10,6 @@ import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { toast } from "sonner";
 import FlexSheetColumnShifter from "./flexSheetColumnShifter";
 import { ImagingData, LabCellValue } from "../../labs/components/labsData";
-import { DatabaseDocumentation } from "@/actions/simulation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
 import { getPinnedStyles } from "@/lib/flexSheet/flexSheetHelpers";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
@@ -21,6 +20,7 @@ import { focusColumnOffset, useFlexSheetPagination } from "@/hooks/useFlexSheetP
 import { useFlexSheetDerivedData } from "@/hooks/useFlexSheetDerivedData";
 import { saveFlexSheetData } from "@/lib/flexSheet/flexSheetSave";
 import { useFlexSheetColumns } from "@/hooks/useFlexSheetColumns";
+import { DocumentationRow } from "@/actions/simulation/getAllDocumentationData";
 
 declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
@@ -32,7 +32,7 @@ declare module '@tanstack/react-table' {
 }
 
 export interface FlexSheetProps {
-  documentation: DatabaseDocumentation[];
+  documentation: DocumentationRow[];
   caseId: string;
   sessionId: string;
 }
@@ -151,7 +151,7 @@ export function FlexSheet({ documentation, caseId, sessionId }: FlexSheetProps) 
           />
         </div>
         <div className="flex min-h-0 w-full flex-1 flex-col overflow-auto rounded-md border border-gray-200">
-          <Table className="w-full rounded-md">
+          <Table className="w-full table-fixed min-w-4xl rounded-md">
             <TableHeader className=" bg-gray-50">
               {ptTable.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
@@ -174,7 +174,7 @@ export function FlexSheet({ documentation, caseId, sessionId }: FlexSheetProps) 
                     <TableCell
                       key={cell.id}
                       style={getPinnedStyles(cell.column)}
-                      className={`p-0 min-w-24 text-gray-800 border-separate border-gray-200 border-b ${row.original.rowType === "titleRow" ? "bg-lime-50" : "bg-white border-r border-separate"}`}
+                      className={`p-0 min-w-24 overflow-hidden text-gray-800 border-separate border-gray-200 border-b ${row.original.rowType === "titleRow" ? "bg-lime-50" : "bg-white border-r border-separate"}`}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>

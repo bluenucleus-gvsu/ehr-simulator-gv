@@ -1,6 +1,6 @@
 "use client";
 
-import { DatabaseDocumentation } from "@/actions/simulation";
+import { DocumentationRow } from "@/actions/simulation/getAllDocumentationData";
 import { FlexSheetData } from "@/lib/flexSheet/flexSheetTypes";
 
 function asCellString(value: unknown): string {
@@ -8,20 +8,20 @@ function asCellString(value: unknown): string {
   return String(value);
 }
 
-// Allow for string matching between IDs of DatabaseDocumentation row and FlexSheetTemplate row 
-function getField(row: DatabaseDocumentation | undefined, key: string): unknown {
+// Allow for string matching between IDs of DocumentationRow row and FlexSheetTemplate row 
+function getField(row: DocumentationRow | undefined, key: string): unknown {
   return row ? (row as unknown as Record<string, unknown>)[key] : undefined;
 }
 
 export function buildChartingRowsFromBundle(
-  documentationResults: DatabaseDocumentation[] | null | undefined,
+  documentationResults: DocumentationRow[] | null | undefined,
   template: FlexSheetData[],
 ): { rows: FlexSheetData[]; timeOffsets: number[]; timeOffsetsInPreSim: Set<number>; } {
 
   const docs = documentationResults ?? [];
   const timeOffsetsSet = new Set<number>();
   const timeOffsetsInPreSim = new Set<number>();
-  const docByOffset = new Map<number, DatabaseDocumentation>();
+  const docByOffset = new Map<number, DocumentationRow>();
 
   for (const row of docs) {
     if (typeof row.time_offset === "number") {

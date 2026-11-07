@@ -13,7 +13,7 @@ import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 import { FormShell } from "../../components/formShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FlexSheetSection } from "@/lib/flexSheet/flexSheetSections";
-import { flexSheetSectionNameMap, specialtyDefaultSections } from "@/lib/caseBuilder/defaultTableTemplates";
+import { flexSheetSectionNameMap, resolveInitialSections, specialtyDefaultSections } from "@/lib/caseBuilder/defaultTableTemplates";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
@@ -24,9 +24,9 @@ const TableTemplateForm = () => {
   const router = useRouter();
 
   const { onDataChange, tableTemplateData, demographicData, caseId } = useFormContext();
-  const defaultSpecialtySections = specialtyDefaultSections[demographicData.caseSpecialty];
-  const tableTemplate = tableTemplateData.length === 0 ? defaultSpecialtySections : tableTemplateData
-  const [updatedTemplate, setUpdatedTemplate] = useState<Set<FlexSheetSection>>(new Set(tableTemplate));
+  const [updatedTemplate, setUpdatedTemplate] = useState<Set<FlexSheetSection>>(
+    () => new Set(resolveInitialSections(tableTemplateData, demographicData.caseSpecialty))
+  );
 
   const handleCheckBoxChange = (checked: CheckedState, value: FlexSheetSection) => {
     setUpdatedTemplate(prev => {
@@ -58,7 +58,7 @@ const TableTemplateForm = () => {
 
   return (
     <FormShell
-      title="Table Templates"
+      title="FlexSheet Template"
       stepDescription="Customize the FlexSheet charting table."
       icon={<TableConfig className="text-slate-400" />}
       onSubmit={saveAndContinue}

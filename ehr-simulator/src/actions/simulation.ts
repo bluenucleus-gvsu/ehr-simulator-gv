@@ -6,20 +6,17 @@ import { ActionResponse, ExtractData } from "./cases";
 import { UUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { assertStudentActiveSessionWrite } from "@/actions/simulation/assertStudentActiveSessionWrite";
-import { PREVIEW_SESSION_ID } from "@/lib/faculty/itemRelease";
+import { resolvePreviewSessionId } from "@/lib/faculty/itemRelease";
 
 export type EditableStudentNoteUpsert = Database['public']['Tables']['editable_clinical_documents']['Insert'];
 export type EditableStudentNote = Database['public']['Tables']['editable_clinical_documents']['Row'];
 export type ClinicalDocument = Database['public']['Tables']['clinical_documents']['Row'];
 export type DatabaseMedicationOrder = Database['public']['Tables']['medication_orders'];
 export type DatabaseMedAdministration = Database['public']['Views']['all_medication_administrations']['Row'];
-export type DatabaseDocumentationInsert = Database['public']['Tables']['documentation_results']['Insert'];
-
+export type CaseDocumentationInsert = Database['public']['Tables']['documentation_results']['Insert'];
 export type StudentMedicationAdministration = Database['public']['Tables']['student_medication_administrations']['Insert'];
 export type StudentMedicationAdministrationRow = Database['public']['Tables']['student_medication_administrations']['Row'];
-export type DatabaseDocumentation = Database['public']['Views']['all_documentation_results']['Row'];
-
-export type StudentDatabaseDocumentation = Database['public']['Tables']['editable_documentation_results']['Insert'];
+export type StudentDocumentationInsert = Database['public']['Tables']['editable_documentation_results']['Insert'];
 
 export type ClinicalDocumentView = {
   id: UUID,
@@ -34,9 +31,6 @@ export type ClinicalDocumentView = {
   doc_text: string
   source_type: string
 }
-
-const resolvePreviewSessionId = (id: string) =>
-  id === PREVIEW_SESSION_ID ? "00000000-0000-0000-0000-000000000000" : id;
 
 export async function submitStudentNote(note: EditableStudentNoteUpsert): Promise<ActionResponse<EditableStudentNote | ClinicalDocument>> {
   const writeGuard = await assertStudentActiveSessionWrite(note.case_session_id);
@@ -362,39 +356,7 @@ export async function submitMedicationAdministrations(
   }
 }
 
-export async function getAllDocumentationData(caseId: string, sessionId: string) {
-  const supabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
-  sessionId = resolvePreviewSessionId(sessionId);
-
-  const { data, error } = await supabase
-    .from('all_documentation_results')
-    .select('*')
-    .eq('case_id', caseId)
-    .or(`case_session_id.eq.${sessionId},case_session_id.is.null`);
-
-
-
-  if (error) {
-    return {
-      success: false,
-      message: 'Failed to retrieve documentation results.',
-      error
-    }
-  }
-  return {
-    success: true,
-    data,
-    message: 'Successfully retrieved documentation results.'
-  }
-
-}
-
-
-export async function upsertDocumentationRows(payload: StudentDatabaseDocumentation[]) {
+export async function upsertDocumentationRows(payload: StudentDocumentationInsert[]) {
   const sessionId = payload[0]?.case_session_id;
   if (sessionId) {
     const writeGuard = await assertStudentActiveSessionWrite(sessionId);
