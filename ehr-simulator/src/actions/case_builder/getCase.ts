@@ -5,15 +5,16 @@ import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient
 import { assertUuid } from "@/lib/caseBuilder/validation";
 import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
 import { FlexSheetSection } from "@/lib/flexSheet/flexSheetSections";
-import { Database } from "../../../database.types";
 import { DocumentationRow } from "../simulation/getAllDocumentationData";
+import type { Database } from "../../../database.types";
+import type { Order } from "@/lib/orders";
 
 export interface CaseBundle {
   caseRow: CaseRow
   safetyAlerts: CaseBundleRow[]
   familyHistory: CaseBundleRow[]
   clinicalDocuments: CaseBundleRow[]
-  orders: DatabaseOrder[]
+  orders: Order[]
   labResults: LabResultsRow[]
   imagingReports: ImagingReportRow[]
   microbiologyReports: MicrobiologyReportRow[]
@@ -25,7 +26,6 @@ export interface CaseBundle {
 }
 
 type NamedLookup = { id?: string | null; name?: string | null };
-export type DatabaseOrder = Database['public']['Tables']['orders']['Row'];
 
 export type CaseRow = Database['public']['Tables']['cases']['Row'] & {
   isolation_precautions?: NamedLookup | null;
@@ -232,7 +232,7 @@ export async function getCaseBundle(
     safetyAlerts: (safetyAlertsRes.data ?? []) as CaseBundleRow[],
     familyHistory: (familyHistoryRes.data ?? []) as CaseBundleRow[],
     clinicalDocuments: (clinicalDocumentsRes.data ?? []) as CaseBundleRow[],
-    orders: (ordersRes.data ?? []) as DatabaseOrder[],
+    orders: (ordersRes.data ?? []),
     labResults: (labResultsRes.data ?? []),
     imagingReports: (imagingReportsRes.data ?? []) as ImagingReportRow[],
     microbiologyReports: (microbiologyReportsRes.data ?? []) as MicrobiologyReportRow[],

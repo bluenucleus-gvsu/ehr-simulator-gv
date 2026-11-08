@@ -28,6 +28,8 @@ export const flexSheetSectionNameMap: Partial<Record<FlexSheetSection, string>> 
   [FlexSheetSection.CIWA]: 'CIWA-Ar Scale',
   [FlexSheetSection.MORSE]: 'Morse Fall Scale',
   [FlexSheetSection.PAINAD]: 'PAINAD Scale',
+  [FlexSheetSection.PHQ9]: "PHQ-9 Scale",
+  [FlexSheetSection.CSSRS]: "C-SSRS Scale"
 };
 
 const defaultMedSurgSections = [
@@ -81,6 +83,8 @@ const defaultMentalHealthSections = [
   FlexSheetSection.NEURO,
   FlexSheetSection.INTEGUMENT,
   FlexSheetSection.NURSING_CARE,
+  FlexSheetSection.PHQ9,
+  FlexSheetSection.CSSRS
 ]
 
 const defaultPublicHealthSections = [

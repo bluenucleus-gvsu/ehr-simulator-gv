@@ -10,15 +10,12 @@ import StyledTitle from "./styledTitle"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
 import { useSimSessionContext } from "@/context/SimSessionContext"
 import { isVisibleInSim } from "@/lib/faculty/itemRelease"
-import { DatabaseOrder } from "@/actions/case_builder/getCase"
-import { OrderType } from "../../orders/components/orderData"
-
-const ORDER_CATEGORIES: OrderType["category"][] = ["Nursing", "Respiratory", "Laboratory", "Consult", "Diet", "Medication"]
+import { ORDER_CATEGORIES, Order } from "@/lib/orders"
 
 const RecurringOrders = () => {
   const { caseBundle } = useSimulationCase()
   const { isPresim, releasedItems } = useSimSessionContext()
-  const orders = (caseBundle?.orders ?? []) as DatabaseOrder[]
+  const orders: Order[] = caseBundle?.orders ?? []
   const releasedOrderIds = useMemo(
     () => new Set(releasedItems.order_releases.keys()),
     [releasedItems],

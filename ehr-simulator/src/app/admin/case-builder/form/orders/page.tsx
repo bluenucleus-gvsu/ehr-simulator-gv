@@ -11,7 +11,7 @@ import {
   AlertCircle,
   ChevronDown,
   Utensils,
-  Pill,
+  Scan,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -28,7 +28,7 @@ import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { OrderType } from "@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData"
+import { statusColor, ORDER_CATEGORIES, OrderCategory, OrderFormRow } from "@/lib/orders";
 import { useFormContext } from "@/context/FormContext"
 import { FormShell } from "../../components/formShell"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -36,7 +36,8 @@ import { saveCaseData } from "@/actions/case_builder/caseBuilder"
 import { CaseSection } from "@/lib/caseSections"
 import { caseBuilderPath } from "@/lib/caseBuilder/routes"
 
-const categories: OrderType["category"][] = ["Nursing", "Respiratory", "Laboratory", "Consult", "Diet", "Medication"]
+// Medications orders are not created here, exclude from source list
+const categories: OrderCategory[] = ORDER_CATEGORIES.filter(c => c !== "Medication")
 
 const getCategoryIcon = (cat: string | undefined) => {
   switch (cat) {
@@ -45,7 +46,7 @@ const getCategoryIcon = (cat: string | undefined) => {
     case "Laboratory": return <FlaskConical className="w-4 h-4" />;
     case "Consult": return <UserRound className="w-4 h-4" />;
     case "Diet": return <Utensils className="w-4 h-4" />;
-    case "Medication": return <Pill className="w-4 h-4" />;
+    case "Imaging": return <Scan className="w-4 h-4" />;
     default: return <ClipboardList className="w-4 h-4" />;
   }
 }
@@ -57,7 +58,7 @@ const getCategoryColor = (cat: string | undefined) => {
     case "Laboratory": return "bg-purple-100 text-purple-700 border-purple-200";
     case "Consult": return "bg-orange-100 text-orange-700 border-orange-200";
     case "Diet": return "bg-lime-100 text-lime-700 border-lime-200";
-    case "Medication": return "bg-red-100 text-red-700 border-red-200";
+    case "Imaging": return "bg-rose-100 text-rose-700 border-rose-200";
     default: return "bg-slate-100 text-slate-700 border-slate-200";
   }
 }
@@ -65,9 +66,7 @@ const getCategoryColor = (cat: string | undefined) => {
 export default function OrdersForm() {
   const router = useRouter();
   const { onDataChange, orderData, demographicData, caseId } = useFormContext();
-
-  const [orders, setOrders] = useState<OrderType[]>(orderData);
-
+  const [orders, setOrders] = useState<OrderFormRow[]>(orderData);
   const [category, setCategory] = useState<string>("");
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
@@ -91,13 +90,13 @@ export default function OrdersForm() {
 
   const createOrder = () => {
     setOrders([...orders, {
-      category: category as OrderType["category"],
+      category: category as OrderCategory,
       title,
       details,
-      status: status as OrderType["status"],
-      orderingProvider: provider,
-      important,
-      visibleInPresim: !excludeFromPresim,
+      status,
+      provider,
+      is_important: important,
+      is_in_presim: phase > 1 ? false : !excludeFromPresim,
       phase,
     }])
     clearForm();
@@ -153,7 +152,7 @@ export default function OrdersForm() {
       continueButtonTooltip="Proceed to Next Page"
       backButtonTooltip="Return to Previous Page"
     >
-      <div className="flex flex-col h-screen w-full bg-slate-50/50">
+      <div className="flex flex-col h-screen w-full bg-slate-50/50 pb-16">
         <div className="flex-1 grid grid-cols-1 2xl:grid-cols-12 gap-6 h-full w-full overflow-y-auto pt-6 pb-30 px-8 lg:px-12 mx-auto">
           <div className="lg:col-span-5 space-y-6">
             <Card className="border-slate-200 shadow-sm h-fit pt-0">
@@ -209,8 +208,6 @@ export default function OrdersForm() {
                 </div>
 
                 {/* Title */}
-
-
                 <div className="space-y-2">
                   <Label>Instructions / Details</Label>
                   <Textarea
@@ -232,6 +229,8 @@ export default function OrdersForm() {
                       <SelectContent>
                         <SelectItem value="Active">Active</SelectItem>
                         <SelectItem value="Held">Held</SelectItem>
+                        <SelectItem value="Completed">Completed</SelectItem>
+                        <SelectItem value="Discontinued">Discontinued</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -335,12 +334,12 @@ export default function OrdersForm() {
 
                             <div className="md:col-span-2 p-2 pl-6 flex flex-col justify-center border-b md:border-b-0 md:border-r border-slate-200">
                               <h4 className="font-medium text-xs text-slate-900 leading-tight">{order.title}</h4>
-                              {order.important && (
+                              {order.is_important && (
                                 <span className="inline-flex w-fit items-center mt-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-50 text-yellow-600 border border-red-100 uppercase tracking-wide">
                                   Important
                                 </span>
                               )}
-                              {order.visibleInPresim ? (
+                              {order.is_in_presim ? (
                                 <span className="inline-flex w-fit items-center mt-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-lime-50 text-lime-600 border border-lime-100 uppercase tracking-wide">
                                   In Pre-Sim
                                 </span>
@@ -361,7 +360,7 @@ export default function OrdersForm() {
                             <div className="md:col-span-2 p-2 flex items-center justify-center md:border-r">
                               <div className="flex items-center  gap-2">
                                 <span className="text-xs font-medium text-slate-700">{order.status}</span>
-                                <span className={`w-2 h-2 rounded-full ring-2 ring-white shadow-sm ${order.status === 'Active' ? 'bg-green-500' : 'bg-amber-400'}`} />
+                                <span className={`w-2 h-2 rounded-full ring-2 ring-white shadow-sm ${statusColor(order.status)}`} />
                               </div>
                             </div>
 
@@ -369,8 +368,8 @@ export default function OrdersForm() {
                               {
 
                               }
-                              <span className="text-xs text-slate-500 font-medium text-wrap" title={order.orderingProvider}>
-                                {order.orderingProvider}
+                              <span className="text-xs text-slate-500 font-medium text-wrap" title={order.provider}>
+                                {order.provider}
                               </span>
                               <button
                                 type="button"

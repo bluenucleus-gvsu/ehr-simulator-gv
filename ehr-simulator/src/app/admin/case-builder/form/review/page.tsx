@@ -121,7 +121,7 @@ export default function FormReview() {
                       <strong>{order.title}</strong>
                       <Phase value={order.phase} facultyRelease={(order.phase ?? 1) > 1} />
                     </div>
-                    <p className="text-slate-600">{order.category} · {order.status} · {order.orderingProvider}</p>
+                    <p className="text-slate-600">{order.category} · {order.status} · {order.provider}</p>
                   </div>
                 ))}
               </CardContent>

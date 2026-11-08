@@ -19,7 +19,7 @@ import type {
   MediaImageData,
 } from "@/utils/form";
 import type { ClinicalNote } from "@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData";
-import type { OrderType } from "@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData";
+import type { OrderFormRow } from "@/lib/orders";
 import { FlexSheetData } from "@/lib/flexSheet/flexSheetTypes";
 import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient";
 import { assertValidSaveRequest } from "@/lib/caseBuilder/validation";
@@ -30,7 +30,7 @@ type SaveCaseArgs =
   | { section: typeof CaseSection.DEMOGRAPHICS; payload: DemographicFormData; caseId?: string | null }
   | { section: typeof CaseSection.HISTORY; payload: HistoryFormData; caseId?: string | null }
   | { section: typeof CaseSection.CLINICAL_DOCUMENTS; payload: ClinicalNote[]; caseId?: string | null }
-  | { section: typeof CaseSection.ORDERS; payload: OrderType[]; caseId?: string | null }
+  | { section: typeof CaseSection.ORDERS; payload: OrderFormRow[]; caseId?: string | null }
   | { section: typeof CaseSection.TABLE_TEMPLATE; payload: FlexSheetSection[]; caseId?: string | null }
   | { section: typeof CaseSection.LABS; payload: LabSavePayload; caseId?: string | null }
   | { section: typeof CaseSection.DOCUMENTATION; payload: TableSavePayload<FlexSheetData>; caseId?: string | null }
