@@ -5,48 +5,16 @@ import OrdersTable from "./components/ordersTable"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
 import { useSimSessionContext } from "@/context/SimSessionContext"
 import { isVisibleInSim } from "@/lib/faculty/itemRelease"
+import { BundleMedOrder, Order, OrderTitleColumn, OrderTitleRow } from "@/lib/orders"
 
-type DbOrder = {
-  id?: string | null;
-  category?: string | null;
-  title?: string | null;
-  details?: string | null;
-  status?: string | null;
-  provider?: string | null;
-  is_important?: boolean | null;
-  is_in_presim?: boolean;
-  phase?: number | null;
-}
+const createHeaderNames = (title: string) => ({
+  title,
+  details: "Details",
+  status: "Status",
+  provider: "Ordering Provider",
+});
 
-type OrderRow = {
-  title: string;
-  details: string;
-  status: string;
-  orderingProvider: string;
-  isImportant: boolean;
-}
-
-/** `medication_orders` rows from case bundle (may include joined `medications`). */
-type BundleMedOrder = {
-  id?: string | null;
-  dose?: number | null;
-  frequency?: string | null;
-  priority?: string | null;
-  indication?: string | null;
-  instructions?: string | null;
-  ordering_provider?: string | null;
-  infusion_rate?: number | null;
-  is_in_presim?: boolean;
-  phase?: number | null;
-  medications?: {
-    generic_name?: string | null;
-    brand_name?: string | null;
-    strength?: number | null;
-    strength_unit?: string | null;
-  } | null;
-};
-
-function orderRowFromMedicationOrder(row: BundleMedOrder): OrderRow {
+function orderRowFromMedicationOrder(row: BundleMedOrder): OrderTitleRow {
   const med = row.medications;
   const generic = (med?.generic_name ?? "").trim() || "Medication";
   const brand = (med?.brand_name ?? "").trim();
@@ -75,22 +43,14 @@ function orderRowFromMedicationOrder(row: BundleMedOrder): OrderRow {
     title,
     details,
     status,
-    orderingProvider: (row.ordering_provider ?? "").trim() || "N/A",
-    isImportant: priority === "STAT" || priority === "NOW",
+    provider: (row.ordering_provider ?? "").trim() || "N/A",
   };
 }
-
-const createHeaderNames = (title: string) => ({
-  title,
-  details: "Details",
-  status: "Status",
-  orderingProvider: "Ordering Provider",
-});
 
 const OrdersPage = () => {
   const { caseBundle } = useSimulationCase();
   const { isPresim, releasedItems } = useSimSessionContext();
-  const dbOrders = (caseBundle?.orders ?? []) as DbOrder[];
+  const dbOrders: Order[] = caseBundle?.orders ?? [];
   const releasedOrders = releasedItems.order_releases;
   const releasedMedOrders = releasedItems.medication_order_releases;
   const releasedOrderIds = useMemo(
@@ -102,32 +62,24 @@ const OrdersPage = () => {
     [releasedMedOrders],
   );
 
-  const normalizeOrder = (order: DbOrder): OrderRow => ({
-    title: order.title ?? "",
-    details: order.details ?? "",
-    status: order.status ?? "",
-    orderingProvider: order.provider ?? "",
-    isImportant: Boolean(order.is_important),
-  });
-
   const filterByCategory = (categoryNames: string[]) => {
     const lookup = new Set(categoryNames.map((name) => name.toLowerCase()));
     return dbOrders
       .filter((order) =>
         isVisibleInSim(
-          { id: order.id ?? "", phase: order.phase ?? 1, isInPresim: order.is_in_presim },
+          { id: order.id, phase: order.phase, isInPresim: order.is_in_presim },
           Boolean(isPresim),
           releasedOrderIds,
         ),
       )
-      .filter((order) => lookup.has((order.category ?? "").toLowerCase()))
-      .map(normalizeOrder);
+      .filter((order) => lookup.has(order.category.toLowerCase()));
   };
 
   const nursingData = filterByCategory(["Nursing"]);
   const respiratoryData = filterByCategory(["Respiratory"]);
   const dietData = filterByCategory(["Diet", "Nutrition"]);
   const laboratoryData = filterByCategory(["Laboratory", "Lab", "Labs"]);
+  const imagingData = filterByCategory(["Imaging"]);
   const consultData = filterByCategory(["Consult"]);
   const medicationData = ((caseBundle?.medicationOrders ?? []) as BundleMedOrder[])
     .filter((order) =>
@@ -139,7 +91,7 @@ const OrdersPage = () => {
     )
     .map(orderRowFromMedicationOrder);
 
-  const orderColumns = ["details", "status", "orderingProvider"]
+  const orderColumns: OrderTitleColumn[] = ["details", "status", "provider"]
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-4 overflow-hidden bg-gray-100 px-2 pt-4">
@@ -147,6 +99,9 @@ const OrdersPage = () => {
         <OrdersTable color="bg-blue-300" columnNames={orderColumns} headerNames={createHeaderNames("Nursing")} data={nursingData} />
         {respiratoryData.length > 0 && (
           <OrdersTable color="bg-lime-200" columnNames={orderColumns} headerNames={createHeaderNames("Respiratory")} data={respiratoryData} />
+        )}
+        {imagingData.length > 0 && (
+          <OrdersTable color="bg-rose-200" columnNames={orderColumns} headerNames={createHeaderNames("Imaging")} data={imagingData} />
         )}
         {dietData.length > 0 && (
           <OrdersTable color="bg-emerald-200" columnNames={orderColumns} headerNames={createHeaderNames("Diet")} data={dietData} />

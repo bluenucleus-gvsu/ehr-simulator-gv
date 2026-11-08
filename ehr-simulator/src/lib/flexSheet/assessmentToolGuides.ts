@@ -302,6 +302,103 @@ export const painadAssessmentGuide: AssessmentToolGuide =
   ]
 }
 
+const phq9ScoringOptions = [
+  { rating: "0", description: "Not at all" },
+  { rating: "1", description: "Several days" },
+  { rating: "2", description: "More than half the days" },
+  { rating: "3", description: "Nearly every day" }
+]
+
+export const pqrsAssessmentGuide: AssessmentToolGuide =
+{
+  id: FlexSheetSection.PHQ9,
+  name: "PHQ-9",
+  categories: [
+    {
+      name: "1. Little interest or pleasure in doing things",
+      scoringOptions: phq9ScoringOptions
+    },
+    {
+      name: "2. Feeling down, depressed, or hopeless",
+      scoringOptions: phq9ScoringOptions
+    },
+    {
+      name: "3. Trouble falling or staying asleep, or sleeping too much",
+      scoringOptions: phq9ScoringOptions
+    },
+    {
+      name: "4. Feeling tired or having little energy",
+      scoringOptions: phq9ScoringOptions
+    },
+    {
+      name: "5. Poor appetite or overeating",
+      scoringOptions: phq9ScoringOptions
+    },
+    {
+      name: "6. Feeling bad about yourself – or that you are a failure or have let yourself or your family down",
+      scoringOptions: phq9ScoringOptions
+    },
+    {
+      name: "7. Trouble concentrating on things, such as reading the newspaper or watching television ",
+      scoringOptions: phq9ScoringOptions
+    },
+    {
+      name: "8. Moving or speaking so slowly that other people could have noticed, or being so fidgety or restless that you have been moving around a lot more than usual",
+      scoringOptions: phq9ScoringOptions
+    },
+    {
+      name: "9. Thoughts that you would be better off dead or of hurting yourself in some way",
+      scoringOptions: phq9ScoringOptions
+    },
+  ],
+  maxScore: "27",
+  interpretations: [
+    { result: "None-minimal", range: "0-4", description: "" },
+    { result: "Mild", range: "5-9", description: "" },
+    { result: "Moderate", range: "10-14", description: "" },
+    { result: "Moderately Severe", range: "15-19", description: "" },
+    { result: "Severe", range: "20-27", description: "" },
+  ]
+}
+
+export const cssrsAssessmentGuide: AssessmentToolGuide =
+{
+  id: FlexSheetSection.PHQ9,
+  name: "C-SSRS",
+  categories: [
+    {
+      name: "1. Have you wished you were dead or wished you could go to sleep and not wake up?",
+      scoringOptions: []
+    },
+    {
+      name: "2. Have you actually had any thoughts of killing yourself?",
+      scoringOptions: [
+        { rating: "If YES to 2, ask questions 3, 4, 5, and 6.", description: "" },
+        { rating: " If NO to 2, go directly to question 6.", description: "" }
+      ]
+    },
+    {
+      name: "3. Have you been thinking about how you might do this",
+      scoringOptions: []
+    },
+    {
+      name: "4. Have you had these thoughts and had some intention of acting on them?",
+      scoringOptions: []
+    },
+    {
+      name: "5. Have you started to work out or worked out the details of how to kill yourself",
+      scoringOptions: []
+    },
+    {
+      name: "6. Have you ever done anything, started to do anything, or prepared to do anything to end your life?",
+      scoringOptions: [
+        { rating: "If YES, ask:", description: "Was this within the past three months?" }
+      ]
+    }
+  ]
+}
+
+//Have you w ished you w ere dead or w ished you could go to sleep and not w ake up?
 export type AssessmentToolGuides = Partial<Record<FlexSheetSection, AssessmentToolGuide>>;
 
 export const assessmentToolGuides: AssessmentToolGuides = {
@@ -309,6 +406,8 @@ export const assessmentToolGuides: AssessmentToolGuides = {
   [FlexSheetSection.CIWA]: ciwaAssessmentGuide,
   [FlexSheetSection.MORSE]: morseAssessmentGuide,
   [FlexSheetSection.PAINAD]: painadAssessmentGuide,
+  [FlexSheetSection.PHQ9]: pqrsAssessmentGuide,
+  [FlexSheetSection.CSSRS]: cssrsAssessmentGuide
 };
 
 
