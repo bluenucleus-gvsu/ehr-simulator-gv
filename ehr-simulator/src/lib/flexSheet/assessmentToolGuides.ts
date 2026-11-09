@@ -398,7 +398,6 @@ export const cssrsAssessmentGuide: AssessmentToolGuide =
   ]
 }
 
-//Have you w ished you w ere dead or w ished you could go to sleep and not w ake up?
 export type AssessmentToolGuides = Partial<Record<FlexSheetSection, AssessmentToolGuide>>;
 
 export const assessmentToolGuides: AssessmentToolGuides = {
