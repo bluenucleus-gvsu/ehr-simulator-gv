@@ -5,7 +5,7 @@ import { CaseDocumentationInsert } from "@/actions/simulation";
 import { coerceValueForSave } from "./flexSheetSave";
 
 const BP_THRESHOLDS = {
-  diastolic: { low: 60, high: 120 },
+  diastolic: { low: 50, high: 120 },
   systolic: { low: 90, high: 180 }
 }
 

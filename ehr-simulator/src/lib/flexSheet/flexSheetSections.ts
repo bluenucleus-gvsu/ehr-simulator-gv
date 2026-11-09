@@ -64,13 +64,13 @@ export const vitalSignOverviewRows: readonly FlexSheetData[] = [
     id: "temp",
     field: "Temp (°C)",
     componentType: "input",
-    normalRange: { low: 36.6, high: 38 }
+    normalRange: { low: 36, high: 38 }
   },
   {
     id: "spo2",
     field: "SpO2 (%)",
     componentType: "input",
-    normalRange: { low: 95, high: 100 }
+    normalRange: { low: 90, high: 100 }
   },
   {
     id: "weight_kg",
@@ -155,7 +155,7 @@ export const vitalSignRows: readonly FlexSheetData[] = [
     id: "temp",
     field: "Temp (°C)",
     componentType: "input",
-    normalRange: { low: 36.6, high: 38 }
+    normalRange: { low: 36, high: 38 }
   },
   {
     id: "temp_source",
@@ -175,7 +175,7 @@ export const vitalSignRows: readonly FlexSheetData[] = [
     id: "spo2",
     field: "SpO2 (%)",
     componentType: "input",
-    normalRange: { low: 95, high: 100 }
+    normalRange: { low: 90, high: 100 }
   },
   {
     id: "oxygen_device",

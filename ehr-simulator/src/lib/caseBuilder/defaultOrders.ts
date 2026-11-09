@@ -92,7 +92,7 @@ export const defaultOrders: OrderFormRow[] = [
     phase: 1,
   },
   {
-    category: "Nursing",
+    category: "Diet",
     title: "General Diet",
     status: "Active",
     details: "No Restrictions",
