@@ -8,15 +8,21 @@ import { DatabaseDocumentation } from "../simulation";
 import { FlexSheetSection } from "@/lib/flexSheet/flexSheetSections";
 import { Database } from "../../../database.types";
 
+export type DatabaseOrder = Database['public']['Tables']['orders']['Row'];
+export type DatabaseLabRow = Database['public']['Tables']['lab_results']['Row'];
+export type CaseRow = Database['public']['Tables']['cases']['Row'] & {
+  isolation_precautions?: NamedLookup | null;
+  relationship_status?: NamedLookup | null;
+  case_specialty: CaseSpecialty;
+  flexsheet_sections: FlexSheetSection[] | null;
+};
 export interface CaseBundle {
   caseRow: CaseRow
   safetyAlerts: CaseBundleRow[]
   familyHistory: CaseBundleRow[]
   clinicalDocuments: CaseBundleRow[]
   orders: DatabaseOrder[]
-  labResults: LabResultsRow[]
-  imagingReports: ImagingReportRow[]
-  microbiologyReports: MicrobiologyReportRow[]
+  labResults: DatabaseLabRow[]
   documentationResults: DatabaseDocumentation[]
   medicationAdministrations: CaseBundleRow[]
   caseImages: CaseBundleRow[]
@@ -25,14 +31,6 @@ export interface CaseBundle {
 }
 
 type NamedLookup = { id?: string | null; name?: string | null };
-export type DatabaseOrder = Database['public']['Tables']['orders']['Row'];
-
-export type CaseRow = Database['public']['Tables']['cases']['Row'] & {
-  isolation_precautions?: NamedLookup | null;
-  relationship_status?: NamedLookup | null;
-  case_specialty: CaseSpecialty;
-  flexsheet_sections: FlexSheetSection[] | null;
-};
 
 export type CaseBundleRow = Record<string, unknown> & {
   id?: string | null;
@@ -43,24 +41,7 @@ export type CaseBundleRow = Record<string, unknown> & {
   condition?: string | null;
   relationship?: NamedLookup | null;
   safety_alert?: NamedLookup | null;
-  lab_id?: string | null;
-  name?: string | null;
-  technique?: string | null;
-  findings?: unknown;
-  impressions?: string[] | null;
-  sample_type?: string | null;
-  appearance?: string | null;
-  microscopy?: string | null;
-  location?: string | null;
-  culture_results?: string | null;
-  sensitivity?: string | null;
-  comments?: string | null;
-  reporter?: string | null;
 };
-
-export type LabResultsRow = Database['public']['Tables']['lab_results']['Row'];
-export type ImagingReportRow = CaseBundleRow & { is_critical?: boolean | null };
-export type MicrobiologyReportRow = CaseBundleRow & { is_critical?: boolean | string | null };
 
 export async function getCaseBuilderMedications() {
   const supabase = await createCaseBuilderAdminClient();
@@ -93,8 +74,6 @@ export async function getCaseBundle(
     clinicalDocumentsRes,
     ordersRes,
     labResultsRes,
-    imagingReportsRes,
-    microbiologyReportsRes,
     documentationResultsRes,
     medicationAdministrationsRes,
     medicationOrdersRes,
@@ -146,18 +125,6 @@ export async function getCaseBundle(
       .order("time_offset", { ascending: true, nullsFirst: false }),
 
     supabase
-      .from("imaging_reports")
-      .select("*")
-      .eq("case_id", caseId)
-      .order("created_at", { ascending: true }),
-
-    supabase
-      .from("microbiology_reports")
-      .select("*")
-      .eq("case_id", caseId)
-      .order("created_at", { ascending: true }),
-
-    supabase
       .from("documentation_results")
       .select("*")
       .eq("case_id", caseId)
@@ -192,8 +159,6 @@ export async function getCaseBundle(
     clinicalDocumentsRes.error,
     ordersRes.error,
     labResultsRes.error,
-    imagingReportsRes.error,
-    microbiologyReportsRes.error,
     documentationResultsRes.error,
     medicationAdministrationsRes.error,
     medicationOrdersRes.error,
@@ -234,8 +199,6 @@ export async function getCaseBundle(
     clinicalDocuments: (clinicalDocumentsRes.data ?? []) as CaseBundleRow[],
     orders: (ordersRes.data ?? []) as DatabaseOrder[],
     labResults: (labResultsRes.data ?? []),
-    imagingReports: (imagingReportsRes.data ?? []) as ImagingReportRow[],
-    microbiologyReports: (microbiologyReportsRes.data ?? []) as MicrobiologyReportRow[],
     documentationResults: (documentationResultsRes.data ?? []) as DatabaseDocumentation[],
     medicationAdministrations: (medicationAdministrationsRes.data ?? []) as CaseBundleRow[],
     caseImages: (caseImagesRes.data ?? []) as CaseBundleRow[],
