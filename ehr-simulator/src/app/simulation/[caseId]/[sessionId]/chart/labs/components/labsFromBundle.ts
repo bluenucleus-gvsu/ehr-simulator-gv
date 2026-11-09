@@ -2,9 +2,9 @@
 
 import { type LabColumn, type LabResultInsert } from "@/lib/labTypes";
 import type { LabTableData } from "./labsData";
-import { LabResultsRow } from "@/actions/case_builder/getCase";
+import { DatabaseLabRow } from "@/actions/case_builder/getCase";
 
-type DbLabResult = Partial<LabResultsRow>;
+type DbLabResult = Partial<DatabaseLabRow>;
 
 export function buildLabColumnsFromBundle(
   labResults: DbLabResult[],
