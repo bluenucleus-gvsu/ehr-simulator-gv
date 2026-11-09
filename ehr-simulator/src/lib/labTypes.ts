@@ -1,12 +1,12 @@
 import { LabTableData } from '@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData';
 import { Database } from "../../database.types";
-import { LabResultsRow } from '@/actions/case_builder/getCase';
 import { type SimReleaseItem } from '@/lib/faculty/itemRelease';
+import { DatabaseLabRow } from '@/actions/case_builder/getCase';
 
 export type LabResultInsert = Database['public']['Tables']['lab_results']['Insert'];
 
 export type LabColumn = Pick<
-  LabResultsRow,
+  DatabaseLabRow,
   "id" | "time_offset" | "is_in_presim" | "phase" | "label"
 >;
 

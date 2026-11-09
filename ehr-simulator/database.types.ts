@@ -435,32 +435,6 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"imaging_reports": {
-                  Row: {
-                    "case_id": string,"created_at": string,"findings": NonNullable<Json>,"id": string,"impressions": (string)[],"is_critical": boolean,"lab_id": string,"name": string,"technique": string
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "case_id": string,"created_at"?: string,"findings"?: NonNullable<Json>,"id"?: string,"impressions"?: (string)[],"is_critical"?: boolean,"lab_id": string,"name": string,"technique": string
-                  }
-                  Update: {
-                    "case_id"?: string,"created_at"?: string,"findings"?: NonNullable<Json>,"id"?: string,"impressions"?: (string)[],"is_critical"?: boolean,"lab_id"?: string,"name"?: string,"technique"?: string
-                  }
-                  Relationships: [
-                    {
-      foreignKeyName: "imaging_reports_case_id_fkey"
-      columns: ["case_id"]
-isOneToOne: false
-      referencedRelation: "cases"
-      referencedColumns: ["id"]
-    },{
-      foreignKeyName: "imaging_reports_lab_id_fkey"
-      columns: ["lab_id"]
-isOneToOne: false
-      referencedRelation: "lab_results"
-      referencedColumns: ["id"]
-    }
-                  ]
                 },"isolation_precautions": {
                   Row: {
                     "created_at": string,"id": string,"is_active": boolean,"name": string
@@ -616,32 +590,6 @@ isOneToOne: false
       columns: ["dispense_unit_id"]
 isOneToOne: false
       referencedRelation: "dispense_units"
-      referencedColumns: ["id"]
-    }
-                  ]
-                },"microbiology_reports": {
-                  Row: {
-                    "appearance": string,"case_id": string,"comments": string,"created_at": string,"culture_results": string,"id": string,"is_critical": string | null,"lab_id": string,"location": string | null,"microscopy": string,"name": string,"reporter": string,"sample_type": string,"sensitivity": string
-                  }
-                  ComputedFields: never
-                  Insert: {
-                    "appearance": string,"case_id": string,"comments": string,"created_at"?: string,"culture_results": string,"id"?: string,"is_critical"?: string | null,"lab_id": string,"location"?: string | null,"microscopy": string,"name": string,"reporter": string,"sample_type": string,"sensitivity": string
-                  }
-                  Update: {
-                    "appearance"?: string,"case_id"?: string,"comments"?: string,"created_at"?: string,"culture_results"?: string,"id"?: string,"is_critical"?: string | null,"lab_id"?: string,"location"?: string | null,"microscopy"?: string,"name"?: string,"reporter"?: string,"sample_type"?: string,"sensitivity"?: string
-                  }
-                  Relationships: [
-                    {
-      foreignKeyName: "microbiology_reports_case_id_fkey"
-      columns: ["case_id"]
-isOneToOne: false
-      referencedRelation: "cases"
-      referencedColumns: ["id"]
-    },{
-      foreignKeyName: "microbiology_reports_lab_id_fkey"
-      columns: ["lab_id"]
-isOneToOne: false
-      referencedRelation: "lab_results"
       referencedColumns: ["id"]
     }
                   ]
