@@ -105,7 +105,7 @@ export default function CourseDetails ({
                         <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                        {Array.from({ length: Math.max(20, sectionCount) }, (_, index) => index + 1).map(count => (
+                        {Array.from({ length: Math.max(8, sectionCount) }, (_, index) => index + 1).map(count => (
                             <SelectItem key={count} value={String(count)}>{count}</SelectItem>
                         ))}
                         </SelectContent>

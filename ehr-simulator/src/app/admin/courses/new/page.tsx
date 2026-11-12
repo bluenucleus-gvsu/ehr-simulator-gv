@@ -8,8 +8,7 @@ import {
   Minus,
   Loader2,
   Shuffle,
-  RefreshCcw,
-  Copy,
+  RefreshCcw
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -23,17 +22,9 @@ import { getAllFacultyUsers, getAllAdminUsers, provisionStudents, getUsersByEmai
 import { createCourse, createSection, createGroup, createGroupMembers } from "@/actions/courses"
 import AddStudent from "./components/AddStudent"
 import UnassignDialog from "./components/UnassignDialog"
-import StudentBlock from "./components/StudentBlock"
 import CourseDetails from "./components/CourseDetails"
 import { toast } from "sonner"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import UnassignListDialog from "./components/UnassignedListDialog"
 
 interface SectionState {
   groups: SectionGroups
@@ -62,9 +53,7 @@ function makeSection(index: number): SectionData {
 }
 
 function isSameStudent(first: Student, second: Student): boolean {
-  return first.email && second.email
-    ? first.email === second.email
-    : first === second
+  return first.id === second.id;
 }
 
 export default function CreateCoursePage() {
@@ -98,7 +87,7 @@ export default function CreateCoursePage() {
 
     // Changed to check the global state
     if (unassignedStudents.length > 0){
-      toast.error(`${unassignedStudents.length} student${unassignedStudents.length === 1 ? "" : "s"} remain unassigned. Use Randomly Assign before submitting.`);
+      toast.error(`${unassignedStudents.length} student${unassignedStudents.length === 1 ? "" : "s"} remain unassigned.`);
       setTriggerSubmit(false)
       setIsPending(false)
       return;
@@ -180,21 +169,6 @@ export default function CreateCoursePage() {
     setTriggerSubmit(true)
   }
 
-  const handleCopyStudentName = async (name: string | null) => {
-    if (!name) {
-      toast.error("This student does not have a name to copy.")
-      return
-    }
-
-    try {
-      await navigator.clipboard.writeText(name)
-      toast.success(`Copied ${name}.`)
-    } catch (error) {
-      console.error("Failed to copy student name:", error)
-      toast.error("Could not copy the student name.")
-    }
-  }
-
   const handleImportStudents = (students: Student[]) => {
     setAllStudents(students)
     setUnassignedStudents(students)
@@ -221,13 +195,6 @@ export default function CreateCoursePage() {
       })
       return next
     })
-  }
-
-  const handleAddSection = () => {
-    const newIndex = sections.length
-    const newName = makeSectionName(newIndex)
-    setSections(prev => [...prev, makeSection(newIndex)])
-    setSectionStates(prev => ({ ...prev, [newName]: makeSectionState() }))
   }
 
   const handleSectionCountChange = (count: number) => {
@@ -287,6 +254,11 @@ export default function CreateCoursePage() {
     if (orphanedStudents.length > 0) {
       setUnassignedStudents(prev => [...prev, ...orphanedStudents])
     }
+  }
+
+  const handleAddSection = () => {
+    if (sections.length >= 8) return
+    handleSectionCountChange(sections.length + 1)
   }
 
   const handleRemoveSection = () => {
@@ -536,70 +508,9 @@ export default function CreateCoursePage() {
           <p className="text-xs text-slate-500 mt-1">Define course and section details</p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className={`cursor-pointer h-9 ${
-                  unassignedStudents.length > 0
-                    ? "border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                }`}
-                aria-label={`${unassignedStudents.length} unassigned students. Click to view the list.`}
-              >
-                Unassigned
-                <Badge
-                  variant="secondary"
-                  className={`ml-1 ${
-                    unassignedStudents.length > 0
-                      ? "bg-slate-200 text-slate-700"
-                      : "bg-emerald-100 text-emerald-700"
-                  }`}
-                >
-                  {unassignedStudents.length}
-                </Badge>
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Unassigned Students ({unassignedStudents.length})</DialogTitle>
-                <DialogDescription>
-                  Students in this list have not been assigned to a group.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="max-h-[60vh] space-y-2 overflow-y-auto">
-                {unassignedStudents.length === 0 ? (
-                  <p className="py-6 text-center text-sm text-slate-500">
-                    All students are assigned.
-                  </p>
-                ) : (
-                  [...unassignedStudents]
-                    .sort((a, b) => (a.full_name ?? "").localeCompare(b.full_name ?? ""))
-                    .map((student, index) => (
-                      <div
-                        key={student.email ?? `${student.full_name ?? "student"}-${index}`}
-                        className="flex items-center gap-2"
-                      >
-                        <StudentBlock student={student} className="min-w-0 flex-1" />
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 flex-shrink-0 p-0"
-                          aria-label={`Copy ${student.full_name ?? "student"} name`}
-                          title="Copy name"
-                          disabled={!student.full_name}
-                          onClick={() => handleCopyStudentName(student.full_name)}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
+          <UnassignListDialog
+            unassignedStudents={unassignedStudents}
+          />
           <Button className="cursor-pointer" variant="secondary" onClick={() => router.push("/admin/courses")}>
             <ArrowLeft /> Cancel
           </Button>
