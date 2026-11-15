@@ -257,7 +257,12 @@ INSERT INTO lab_results (case_id, time_offset, is_in_presim, phase, label, sodiu
 VALUES
   ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', -60, TRUE, 1, null, '138', '4.1'),
   ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', 0, FALSE, 1, null, '136', '4.3'),
+  ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', NULL, FALSE, 2, 'Phase 2 BMP', '134', '4.6'),
   ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', NULL, FALSE, 2, 'BMP after Lasix', '133', '4.8'),
+  ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', NULL, FALSE, 2, 'BMP — 2h post-Lasix', '131', '5.0'),
+  ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', NULL, FALSE, 2, 'BMP — 4h post-Lasix', '132', '4.9'),
+  ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', NULL, FALSE, 3, 'BMP — ICU admission', '129', '5.4'),
+  ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', NULL, FALSE, 3, 'BMP — post-resuscitation', '128', '5.5'),
   ('e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', NULL, FALSE, 3, 'BMP after fluids', '127', '5.6');
 
 

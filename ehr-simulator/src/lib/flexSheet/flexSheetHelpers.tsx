@@ -74,6 +74,20 @@ export const formatTimeFromOffset = (offsetMinutes: number, nowTimestamp: number
   return { time, date };
 };
 
+export function getVisibleSubsetIds(fieldSelections: Record<string, string[]>): Set<string> {
+  const combinedSet = new Set<string>();
+  Object.values(fieldSelections).forEach((selectedIdsArray) => {
+    selectedIdsArray.forEach((id) => {
+      if (id !== "WDL") combinedSet.add(id);
+    });
+  });
+  return combinedSet;
+}
+
+export function isRowVisible(row: FlexSheetData, visibleSubsetIds: Set<string>): boolean {
+  return !row.hideable || visibleSubsetIds.has(row.id);
+}
+
 export function calculateColTotal(
   toolName: string,
   toolId: string,

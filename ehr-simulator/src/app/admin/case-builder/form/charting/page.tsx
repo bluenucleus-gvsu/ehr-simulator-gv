@@ -20,6 +20,7 @@ import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 import { specialtyDefaultSections } from "@/lib/caseBuilder/defaultTableTemplates";
 import { mergeTemplateWithExistingRows } from "@/lib/flexSheet/flexSheetRowGenerator";
 import { buildTableTemplate } from "@/lib/flexSheet/flexSheetTemplate";
+import { getVisibleSubsetIds, isRowVisible } from "@/lib/flexSheet/flexSheetHelpers";
 
 
 const columnHelper = createColumnHelper<FlexSheetData>();
@@ -57,6 +58,28 @@ function ChartingForm() {
     removeTimePoint,
     togglePresimInclusion
   } = useTimePoints(initialChartingData.timePoints, ensureNumberSet(initialChartingData.timePointsInPreSim))
+
+  const fieldSelections = useMemo(() => {
+    const selections: Record<string, string[]> = {};
+    chartingData.forEach((row) => {
+      if (row.componentType !== "checkboxlist") return;
+      timePoints.forEach((time) => {
+        const val = row[time];
+        const selected = Array.isArray(val)
+          ? val.filter((v): v is string => typeof v === "string")
+          : (typeof val === "string" && val.length > 0 ? val.split(",") : []);
+        if (selected.length > 0) {
+          selections[`${row.id}-${time}`] = selected;
+        }
+      });
+    });
+    return selections;
+  }, [chartingData, timePoints]);
+
+  const visibleRows = useMemo(
+    () => chartingData.filter((row) => isRowVisible(row, getVisibleSubsetIds(fieldSelections))),
+    [chartingData, fieldSelections]
+  );
 
   const router = useRouter()
 
@@ -199,7 +222,7 @@ function ChartingForm() {
   );
 
   const ptTable = useReactTable({
-    data: chartingData,
+    data: visibleRows,
     columns,
     enablePinning: true,
     initialState: {
@@ -209,11 +232,16 @@ function ChartingForm() {
     },
     meta: {
       updateData: (rowIndex, columnId, value) => {
+        const rowId = visibleRows[rowIndex]?.id;
+        if (!rowId) return;
+        const realIndex = chartingData.findIndex((row) => row.id === rowId);
+        if (realIndex === -1) return;
+
         setChartingData(old =>
           old.map((row, index) => {
-            if (index === rowIndex) {
+            if (index === realIndex) {
               const updatedRow = {
-                ...old[rowIndex]!,
+                ...old[realIndex]!,
                 [columnId]: value,
               };
 

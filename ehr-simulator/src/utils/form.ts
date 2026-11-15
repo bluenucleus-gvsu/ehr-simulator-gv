@@ -116,7 +116,7 @@ export const formatTimeOffset = (minuteOffset: number) => {
 export function createDefaultLabColumn(phase = 1): LabColumn {
   return {
     id: crypto.randomUUID(),
-    time_offset: null,
+    time_offset: phase === 1 ? 0 : null,
     is_in_presim: false,
     phase,
     label: null,

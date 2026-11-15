@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { calculateColTotal } from "@/lib/flexSheet/flexSheetHelpers";
+import { calculateColTotal, getVisibleSubsetIds, isRowVisible } from "@/lib/flexSheet/flexSheetHelpers";
 import { FlexSheetData } from "@/lib/flexSheet/flexSheetTypes";
 
 export function useFlexSheetDerivedData(
@@ -7,15 +7,10 @@ export function useFlexSheetDerivedData(
   fieldSelections: Record<string, string[]>,
   timeOffsets: number[]
 ) {
-  const visibleSubsetIds = useMemo(() => {
-    const combinedSet = new Set<string>();
-    Object.values(fieldSelections).forEach((selectedIdsArray) => {
-      selectedIdsArray.forEach((id) => {
-        if (id !== "WDL") combinedSet.add(id);
-      });
-    });
-    return combinedSet;
-  }, [fieldSelections]);
+  const visibleSubsetIds = useMemo(
+    () => getVisibleSubsetIds(fieldSelections),
+    [fieldSelections]
+  );
 
   const filteredData = useMemo(() => {
     const groupedByTool: Record<string, FlexSheetData[]> = {};
@@ -30,7 +25,7 @@ export function useFlexSheetDerivedData(
     const newFilteredData: FlexSheetData[] = [];
 
     data.forEach((row) => {
-      const isVisible = !row.hideable || visibleSubsetIds.has(row.id);
+      const isVisible = isRowVisible(row, visibleSubsetIds);
 
       if (isVisible) {
         newFilteredData.push(row);
