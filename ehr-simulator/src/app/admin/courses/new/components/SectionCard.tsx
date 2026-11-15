@@ -288,7 +288,7 @@ export const SectionCard = ({
               <div className="flex-1 min-w-0">
                 {Object.keys(groups).length === 0 ? (
                   <div className="flex items-center justify-center h-24 w-full border-2 border-dashed border-slate-200 rounded-lg">
-                    <p className="text-sm text-slate-400 text-center px-4">No groups yet — click "Randomly Assign" or "Add Group"</p>
+                    <p className="text-sm text-slate-400 text-center px-4">No groups yet — click Randomly Assign or Add Group</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-3">

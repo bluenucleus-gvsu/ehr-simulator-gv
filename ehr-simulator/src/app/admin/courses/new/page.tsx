@@ -79,94 +79,81 @@ export default function CreateCoursePage() {
     [makeSectionName(0)]: makeSectionState(),
   })
   const [isPending, setIsPending] = useState(false)
-  const [triggerSubmit, setTriggerSubmit] = useState(false)
 
-  // Runs after React commits the loading UI to the DOM
-  useEffect(() => {
-    if (!triggerSubmit) return
+  const handleSubmit = async () => {
+    if(isPending) return;
 
-    // Changed to check the global state
     if (unassignedStudents.length > 0){
       toast.error(`${unassignedStudents.length} student${unassignedStudents.length === 1 ? "" : "s"} remain unassigned.`);
-      setTriggerSubmit(false)
-      setIsPending(false)
       return;
     }
-    
-    setTriggerSubmit(false)
 
-    const run = async () => {
-      try {
-        if (allStudents.length > 0) {
-          await provisionStudents(allStudents)
-        }
-
-        const provisionedUsers = await getUsersByEmails(allStudents.map(s => s.email).filter((email): email is string => email != null))
-        const emailToUserId = Object.fromEntries(
-          provisionedUsers.map(u => [u.email, u.id])
-        )
-
-        const courseResponse = await createCourse({ active: true, code: courseCode, name: courseName })
-        if (!courseResponse.success || !courseResponse.data) return
-        const courseId = courseResponse.data.id
-
-        const sectionResults = await Promise.all(
-          sections.map((section) =>
-            createSection({
-              course_id: courseId,
-              name: section.name,
-              start_date: section.start_date,
-              end_date: section.end_date,
-              meeting_time: section.meeting_time,
-              semester: semester,
-            })
-          )
-        )
-
-        for (let i = 0; i < sections.length; i++) {
-          const sectionResult = sectionResults[i]
-          if (!sectionResult.success || !sectionResult.data) continue
-
-          const sectionId = sectionResult.data.id
-          const sectionName = sections[i].name
-          const groups = sectionStates[sectionName]?.groups ?? {}
-
-          await Promise.all(
-            Object.entries(groups).map(async ([groupName, students]) => {
-              const groupResponse = await createGroup({ name: groupName, section_id: sectionId })
-              if (!groupResponse.success || !groupResponse.data) return
-
-              const groupId = groupResponse.data.id
-
-              await Promise.all(
-                students
-                  .filter((student): student is Student & { email: string } => student.email != null)
-                  .map((student) => {
-                    const studentId = emailToUserId[student.email]
-                    if (!studentId) {
-                      console.error("No user ID found for student:", student.email)
-                      return
-                    }
-                    return createGroupMembers({ group_id: groupId, student_id: studentId, active: true })
-                  })
-              )
-            })
-          )
-        }
-
-        router.push("/admin/courses")
-      } finally {
-        setIsPending(false)
+    setIsPending(true);
+      
+    try {
+      if (allStudents.length > 0) {
+        await provisionStudents(allStudents)
       }
+
+      const provisionedUsers = await getUsersByEmails(allStudents.map(s => s.email).filter((email): email is string => email != null))
+      const emailToUserId = Object.fromEntries(
+        provisionedUsers.map(u => [u.email, u.id])
+      )
+
+      const courseResponse = await createCourse({ active: true, code: courseCode, name: courseName })
+      if (!courseResponse.success || !courseResponse.data) return
+      const courseId = courseResponse.data.id
+
+      const sectionResults = await Promise.all(
+        sections.map((section) =>
+          createSection({
+            course_id: courseId,
+            name: section.name,
+            start_date: section.start_date,
+            end_date: section.end_date,
+            meeting_time: section.meeting_time,
+            semester: semester,
+          })
+        )
+      )
+
+      for (let i = 0; i < sections.length; i++) {
+        const sectionResult = sectionResults[i]
+        if (!sectionResult.success || !sectionResult.data) continue
+
+        const sectionId = sectionResult.data.id
+        const sectionName = sections[i].name
+        const groups = sectionStates[sectionName]?.groups ?? {}
+
+        await Promise.all(
+          Object.entries(groups).map(async ([groupName, students]) => {
+            const groupResponse = await createGroup({ name: groupName, section_id: sectionId })
+            if (!groupResponse.success || !groupResponse.data) return
+
+            const groupId = groupResponse.data.id
+
+            await Promise.all(
+              students
+                .filter((student): student is Student & { email: string } => student.email != null)
+                .map((student) => {
+                  const studentId = emailToUserId[student.email]
+                  if (!studentId) {
+                    console.error("No user ID found for student:", student.email)
+                    return
+                  }
+                  return createGroupMembers({ group_id: groupId, student_id: studentId, active: true })
+                })
+            )
+          })
+        )
+      }
+
+      router.push("/admin/courses")
+    } 
+    finally {
+        setIsPending(false)
+
     }
-
-    run()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [triggerSubmit])
-
-  const handleSubmit = () => {
-    setIsPending(true)
-    setTriggerSubmit(true)
   }
 
   const handleImportStudents = (students: Student[]) => {
