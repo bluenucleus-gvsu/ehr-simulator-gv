@@ -8,39 +8,39 @@ import {
   Minus,
   Loader2,
   Shuffle,
-  RefreshCcw,
+  RefreshCcw
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
-import { useState, useRef, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Student, FacultyMember, SectionData } from "./types"
 import { SectionCard, SectionGroups, generateGroupNames } from "./components/SectionCard"
 
 import { getAllFacultyUsers, getAllAdminUsers, provisionStudents, getUsersByEmails } from "@/actions/users"
 import { createCourse, createSection, createGroup, createGroupMembers } from "@/actions/courses"
-import StudentBlock from "./components/StudentBlock"
 import AddStudent from "./components/AddStudent"
 import UnassignDialog from "./components/UnassignDialog"
 import CourseDetails from "./components/CourseDetails"
 import { toast } from "sonner"
+import UnassignListDialog from "./components/UnassignedListDialog"
 
 interface SectionState {
   groups: SectionGroups
-  groupSize: number
   groupFacultyLeads: Record<string, string>
 }
-
-const DEFAULT_GROUP_SIZE = 4
 
 /** "Section 01", "Section 02", etc. — single source of truth for section names */
 function makeSectionName(index: number): string {
   return `Section ${String(index + 1).padStart(2, "0")}`
 }
 
-function makeSectionState(): SectionState {
-  return { groups: {}, groupSize: DEFAULT_GROUP_SIZE, groupFacultyLeads: {} }
+function makeSectionState(groupCount = 1): SectionState {
+  const groups = Object.fromEntries(
+    generateGroupNames(groupCount).map(name => [name, [] as Student[]])
+  )
+  return { groups, groupFacultyLeads: {} }
 }
 
 function makeSection(index: number): SectionData {
@@ -52,9 +52,12 @@ function makeSection(index: number): SectionData {
   }
 }
 
+function isSameStudent(first: Student, second: Student): boolean {
+  return first.id === second.id;
+}
+
 export default function CreateCoursePage() {
   const router = useRouter()
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const [adminUsers, setAdminUsers] = useState<FacultyMember[]>([])
   const [facultyUsers, setFacultyUsers] = useState<FacultyMember[]>([])
@@ -75,100 +78,82 @@ export default function CreateCoursePage() {
   const [sectionStates, setSectionStates] = useState<Record<string, SectionState>>({
     [makeSectionName(0)]: makeSectionState(),
   })
-  const [globalGroupSize, setGlobalGroupSize] = useState(DEFAULT_GROUP_SIZE)
-
   const [isPending, setIsPending] = useState(false)
-  const [triggerSubmit, setTriggerSubmit] = useState(false)
 
-  const [draggedStudent, setDraggedStudent] = useState<{ student: Student, fromGroup: string, fromSection: string} | null>(null)
-  const [dragOverGroup, setDragOverGroup] = useState<string | null>(null)
+  const handleSubmit = async () => {
+    if(isPending) return;
 
-  // Runs after React commits the loading UI to the DOM
-  useEffect(() => {
-    if (!triggerSubmit) return
-
-    // Changed to check the global state
     if (unassignedStudents.length > 0){
-      toast.error("All students must be assigned to a section.");
-      setTriggerSubmit(false)
-      setIsPending(false)
+      toast.error(`${unassignedStudents.length} student${unassignedStudents.length === 1 ? "" : "s"} remain unassigned.`);
       return;
     }
-    
-    setTriggerSubmit(false)
 
-    const run = async () => {
-      try {
-        if (allStudents.length > 0) {
-          await provisionStudents(allStudents)
-        }
-
-        const provisionedUsers = await getUsersByEmails(allStudents.map(s => s.email).filter((email): email is string => email != null))
-        const emailToUserId = Object.fromEntries(
-          provisionedUsers.map(u => [u.email, u.id])
-        )
-
-        const courseResponse = await createCourse({ active: true, code: courseCode, name: courseName })
-        if (!courseResponse.success || !courseResponse.data) return
-        const courseId = courseResponse.data.id
-
-        const sectionResults = await Promise.all(
-          sections.map((section) =>
-            createSection({
-              course_id: courseId,
-              name: section.name,
-              start_date: section.start_date,
-              end_date: section.end_date,
-              meeting_time: section.meeting_time,
-              semester: semester,
-            })
-          )
-        )
-
-        for (let i = 0; i < sections.length; i++) {
-          const sectionResult = sectionResults[i]
-          if (!sectionResult.success || !sectionResult.data) continue
-
-          const sectionId = sectionResult.data.id
-          const sectionName = sections[i].name
-          const groups = sectionStates[sectionName]?.groups ?? {}
-
-          await Promise.all(
-            Object.entries(groups).map(async ([groupName, students]) => {
-              const groupResponse = await createGroup({ name: groupName, section_id: sectionId })
-              if (!groupResponse.success || !groupResponse.data) return
-
-              const groupId = groupResponse.data.id
-
-              await Promise.all(
-                students
-                  .filter((student): student is Student & { email: string } => student.email != null)
-                  .map((student) => {
-                    const studentId = emailToUserId[student.email]
-                    if (!studentId) {
-                      console.error("No user ID found for student:", student.email)
-                      return
-                    }
-                    return createGroupMembers({ group_id: groupId, student_id: studentId, active: true })
-                  })
-              )
-            })
-          )
-        }
-
-        router.push("/admin/courses")
-      } finally {
-        setIsPending(false)
+    setIsPending(true);
+      
+    try {
+      if (allStudents.length > 0) {
+        await provisionStudents(allStudents)
       }
+
+      const provisionedUsers = await getUsersByEmails(allStudents.map(s => s.email).filter((email): email is string => email != null))
+      const emailToUserId = Object.fromEntries(
+        provisionedUsers.map(u => [u.email, u.id])
+      )
+
+      const courseResponse = await createCourse({ active: true, code: courseCode, name: courseName })
+      if (!courseResponse.success || !courseResponse.data) return
+      const courseId = courseResponse.data.id
+
+      const sectionResults = await Promise.all(
+        sections.map((section) =>
+          createSection({
+            course_id: courseId,
+            name: section.name,
+            start_date: section.start_date,
+            end_date: section.end_date,
+            meeting_time: section.meeting_time,
+            semester: semester,
+          })
+        )
+      )
+
+      for (let i = 0; i < sections.length; i++) {
+        const sectionResult = sectionResults[i]
+        if (!sectionResult.success || !sectionResult.data) continue
+
+        const sectionId = sectionResult.data.id
+        const sectionName = sections[i].name
+        const groups = sectionStates[sectionName]?.groups ?? {}
+
+        await Promise.all(
+          Object.entries(groups).map(async ([groupName, students]) => {
+            const groupResponse = await createGroup({ name: groupName, section_id: sectionId })
+            if (!groupResponse.success || !groupResponse.data) return
+
+            const groupId = groupResponse.data.id
+
+            await Promise.all(
+              students
+                .filter((student): student is Student & { email: string } => student.email != null)
+                .map((student) => {
+                  const studentId = emailToUserId[student.email]
+                  if (!studentId) {
+                    console.error("No user ID found for student:", student.email)
+                    return
+                  }
+                  return createGroupMembers({ group_id: groupId, student_id: studentId, active: true })
+                })
+            )
+          })
+        )
+      }
+
+      router.push("/admin/courses")
+    } 
+    finally {
+        setIsPending(false)
+
     }
-
-    run()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [triggerSubmit])
-
-  const handleSubmit = () => {
-    setIsPending(true)
-    setTriggerSubmit(true)
   }
 
   const handleImportStudents = (students: Student[]) => {
@@ -186,29 +171,86 @@ export default function CreateCoursePage() {
     setUnassignedStudents([])
     setSectionStates(prev => {
       const next = { ...prev }
-      Object.keys(next).forEach(name => { next[name] = makeSectionState() })
+      Object.keys(next).forEach(name => {
+        next[name] = {
+          ...next[name],
+          groups: Object.fromEntries(
+            Object.keys(next[name].groups).map(groupName => [groupName, []])
+          ),
+          groupFacultyLeads: {},
+        }
+      })
       return next
     })
   }
 
+  const handleSectionCountChange = (count: number) => {
+    if (count < sections.length) {
+      const removedSections = sections.slice(count)
+      const orphanedStudents = removedSections.flatMap(section =>
+        Object.values(sectionStates[section.name]?.groups ?? {}).flat()
+      )
+      if (orphanedStudents.length > 0) {
+        setUnassignedStudents(prev => [...prev, ...orphanedStudents])
+      }
+      setSections(prev => prev.slice(0, count))
+      return
+    }
+
+    const newSections = Array.from(
+      { length: count - sections.length },
+      (_, index) => makeSection(sections.length + index)
+    )
+    setSections(prev => [...prev, ...newSections])
+    setSectionStates(prev => ({
+      ...prev,
+      ...Object.fromEntries(
+        newSections.map(section => [section.name, makeSectionState()])
+      ),
+    }))
+  }
+
+  const handleGroupCountChange = (sectionName: string, count: number) => {
+    const orphanedStudents: Student[] = []
+    const state = sectionStates[sectionName]
+    if (!state) return
+
+    const existingGroups = Object.entries(state.groups)
+      .sort(([a], [b]) => a.localeCompare(b))
+    const retainedGroups = existingGroups.slice(0, count)
+    existingGroups.slice(count).forEach(([, students]) => orphanedStudents.push(...students))
+
+    const groups = Object.fromEntries(retainedGroups)
+    generateGroupNames(count).forEach(name => {
+      if (Object.keys(groups).length < count && groups[name] === undefined) {
+        groups[name] = []
+      }
+    })
+
+    const retainedGroupNames = new Set(Object.keys(groups))
+    const groupFacultyLeads = Object.fromEntries(
+      Object.entries(state.groupFacultyLeads)
+        .filter(([groupName]) => retainedGroupNames.has(groupName))
+    )
+
+    setSectionStates(prev => ({
+      ...prev,
+      [sectionName]: { ...prev[sectionName], groups, groupFacultyLeads },
+    }))
+
+    if (orphanedStudents.length > 0) {
+      setUnassignedStudents(prev => [...prev, ...orphanedStudents])
+    }
+  }
+
   const handleAddSection = () => {
-    const newIndex = sections.length
-    const newName = makeSectionName(newIndex)
-    setSections(prev => [...prev, makeSection(newIndex)])
-    setSectionStates(prev => ({ ...prev, [newName]: makeSectionState() }))
+    if (sections.length >= 8) return
+    handleSectionCountChange(sections.length + 1)
   }
 
   const handleRemoveSection = () => {
     if (sections.length <= 1) return
-    const removedName = sections[sections.length - 1].name
-    const removedState = sectionStates[removedName]
-
-    const orphanedStudents = Object.values(removedState?.groups || {}).flat()
-    if (orphanedStudents.length > 0) {
-      setUnassignedStudents(prev => [...prev, ...orphanedStudents])
-    }
-    
-    setSections(prev => prev.slice(0, -1))
+    handleSectionCountChange(sections.length - 1)
   }
 
   const handleSectionDataChange = (name: string, field: keyof SectionData, value: string | null) => {
@@ -218,32 +260,33 @@ export default function CreateCoursePage() {
   const handleRandomAssign = () => {
     if (allStudents.length === 0) return
 
+    const eligibleSectionNames = sections
+      .filter(section => Object.keys(sectionStates[section.name]?.groups ?? {}).length > 0)
+      .map(section => section.name)
+    if (eligibleSectionNames.length === 0) {
+      toast.error("Add at least one group before randomly assigning students.")
+      return
+    }
+
     const shuffled = [...allStudents].sort(() => Math.random() - 0.5)
-    const sectionNames = sections.map((section) => section.name)
 
     const sectionAssignments: Record<string, Student[]> = Object.fromEntries(
-      sectionNames.map((sectionName) => [sectionName, [] as Student[]])
+      eligibleSectionNames.map((sectionName) => [sectionName, [] as Student[]])
     )
 
     // Distribute them evenly to sections
     shuffled.forEach((student, index) => {
-      const targetSection = sectionNames[index % sectionNames.length]
+      const targetSection = eligibleSectionNames[index % eligibleSectionNames.length]
       sectionAssignments[targetSection].push(student)
     })
 
     setSectionStates(prev => {
       const nextStates = Object.fromEntries(
-        sectionNames.map((sectionName) => {
+        sections.map(({ name: sectionName }) => {
           const state = prev[sectionName]
           const assignedStudents = sectionAssignments[sectionName] ?? []
 
-          if (assignedStudents.length === 0) {
-            return [sectionName, { ...state, groups: {}, groupFacultyLeads: {} }]
-          }
-
-          const groupSize = Math.max(1, globalGroupSize)
-          const numGroups = Math.max(1, Math.ceil(assignedStudents.length / groupSize))
-          const names = generateGroupNames(numGroups)
+          const names = Object.keys(state.groups)
           const newGroups: SectionGroups = {}
 
           names.forEach((name) => {
@@ -251,7 +294,7 @@ export default function CreateCoursePage() {
           })
 
           assignedStudents.forEach((student, i) => {
-            newGroups[names[i % numGroups]].push(student)
+            newGroups[names[i % names.length]].push(student)
           })
 
           return [sectionName, { ...state, groups: newGroups, groupFacultyLeads: {} }]
@@ -271,7 +314,11 @@ export default function CreateCoursePage() {
     
     setSectionStates(prev => ({ 
       ...prev, 
-      [sectionName]: { ...prev[sectionName], groups: {} } 
+      [sectionName]: {
+        ...prev[sectionName],
+        groups: Object.fromEntries(Object.keys(prev[sectionName].groups).map(name => [name, []])),
+        groupFacultyLeads: {},
+      }
     }))
   }
 
@@ -280,7 +327,11 @@ export default function CreateCoursePage() {
     setSectionStates(prev => {
       const next = { ...prev }
       Object.keys(next).forEach(name => {
-        next[name] = { ...next[name], groups: {} }
+        next[name] = {
+          ...next[name],
+          groups: Object.fromEntries(Object.keys(next[name].groups).map(groupName => [groupName, []])),
+          groupFacultyLeads: {},
+        }
       })
       return next
     })
@@ -348,6 +399,50 @@ export default function CreateCoursePage() {
     }))
   }
 
+  const handleAssignStudent = (sectionName: string, groupName: string, student: Student) => {
+    setSectionStates(prev => {
+      const sectionState = prev[sectionName]
+      if (!sectionState || !sectionState.groups[groupName]) return prev
+      if (sectionState.groups[groupName].some(existing => isSameStudent(existing, student))) return prev
+
+      return {
+        ...prev,
+        [sectionName]: {
+          ...sectionState,
+          groups: {
+            ...sectionState.groups,
+            [groupName]: [...sectionState.groups[groupName], student],
+          },
+        },
+      }
+    })
+    setUnassignedStudents(prev => prev.filter(unassigned => !isSameStudent(unassigned, student)))
+  }
+
+  const handleUnassignStudent = (sectionName: string, groupName: string, student: Student) => {
+    setSectionStates(prev => {
+      const sectionState = prev[sectionName]
+      if (!sectionState) return prev
+
+      return {
+        ...prev,
+        [sectionName]: {
+          ...sectionState,
+          groups: {
+            ...sectionState.groups,
+            [groupName]: (sectionState.groups[groupName] ?? [])
+              .filter(assignedStudent => !isSameStudent(assignedStudent, student)),
+          },
+        },
+      }
+    })
+    setUnassignedStudents(prev =>
+      prev.some(unassigned => isSameStudent(unassigned, student))
+        ? prev
+        : [...prev, student]
+    )
+  }
+
   const handleMoveGroup = (fromSectionId: string, groupName: string, toSectionId: string) => {
     setSectionStates(prev => {
       const from = prev[fromSectionId]
@@ -383,102 +478,6 @@ export default function CreateCoursePage() {
     })
   }
 
-  const handleDragStart = (e: React.DragEvent, student: Student, fromGroup?: string, fromSection?: string) => {
-    if (fromGroup && fromSection) {
-      setDraggedStudent({ student, fromGroup, fromSection })
-      e.dataTransfer.effectAllowed = "move"
-    }
-  }
-
-  const handleDragEnd = () => {
-    setDraggedStudent(null)
-    setDragOverGroup(null)
-  }
-
-  const handleDragOver = (e: React.DragEvent, sectionName: string, groupName: string) => {
-    e.preventDefault()
-    setDragOverGroup(`${sectionName}::${groupName}`)
-  }
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setDragOverGroup(null)
-    }
-  }
-
-  const handleDrop = (e: React.DragEvent, toGroup: string, toSection: string) => {
-    e.preventDefault()
-    if (!draggedStudent) return
-
-    const { student, fromGroup, fromSection } = draggedStudent
-
-    if (fromGroup === toGroup && fromSection === toSection) {
-      setDraggedStudent(null)
-      setDragOverGroup(null)
-      return
-    }
-
-    const isComingFromUnassigned = fromGroup === "__unassigned__"
-    const isGoingToUnassigned = toGroup === "__unassigned__"
-
-    if (!isComingFromUnassigned || !isGoingToUnassigned) {
-      setSectionStates(prev => {
-        let nextState = { ...prev }
-
-        if (!isComingFromUnassigned && nextState[fromSection]) {
-          const originState = nextState[fromSection]
-          nextState[fromSection] = {
-            ...originState,
-            groups: {
-              ...originState.groups,
-              [fromGroup]: (originState.groups[fromGroup] ?? []).filter(s => s.email !== student.email)
-            }
-          }
-        }
-
-        if (!isGoingToUnassigned && nextState[toSection]) {
-          const destState = nextState[toSection]
-          nextState[toSection] = {
-            ...destState,
-            groups: {
-              ...destState.groups,
-              [toGroup]: [...(destState.groups[toGroup] ?? []), student]
-            }
-          }
-        }
-
-        return nextState
-      })
-    }
-    if (isComingFromUnassigned) {
-      setUnassignedStudents(prev => prev.filter(s => s.email !== student.email))
-    }
-    if (isGoingToUnassigned) {
-      setUnassignedStudents(prev => [...prev, student])
-    }
-
-    setDraggedStudent(null)
-    setDragOverGroup(null)
-  }
-
-  const handleContainerDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    const container = scrollContainerRef.current
-    if (!container) return
-
-    const scrollThreshold = 50 // pixels from the edge to trigger scroll
-    const scrollSpeed = 10     // pixels to scroll per frame
-
-    const rect = container.getBoundingClientRect()
-    const mouseY = e.clientY
-
-    if (rect.bottom - mouseY < scrollThreshold) {
-      container.scrollTop += scrollSpeed
-    }
-    else if (mouseY - rect.top < scrollThreshold) {
-      container.scrollTop -= scrollSpeed
-    }
-  }
-
   return (
     <div className="flex flex-col w-full min-h-screen bg-slate-50/50">
       {isPending && (
@@ -495,7 +494,10 @@ export default function CreateCoursePage() {
           </h1>
           <p className="text-xs text-slate-500 mt-1">Define course and section details</p>
         </div>
-        <div className="flex gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <UnassignListDialog
+            unassignedStudents={unassignedStudents}
+          />
           <Button className="cursor-pointer" variant="secondary" onClick={() => router.push("/admin/courses")}>
             <ArrowLeft /> Cancel
           </Button>
@@ -522,6 +524,8 @@ export default function CreateCoursePage() {
             setCourseCode={setCourseCode}
             semester={semester}
             setSemester={setSemester}
+            sectionCount={sections.length}
+            setSectionCount={handleSectionCountChange}
           />
 
           <Card className="pt-4">
@@ -538,7 +542,7 @@ export default function CreateCoursePage() {
               <div className="flex items-center gap-2 flex-wrap">
                 <UnassignDialog
                   title="Reset all sections?"
-                  description="All students across every section will be returned to the unassigned pool."
+                  description="All students across every section will be returned to the unassigned pool. Use Randomly Assign to place them into groups again."
                   confirmText="Reset All"
                   onConfirm={handleReset}
                   trigger={
@@ -552,24 +556,6 @@ export default function CreateCoursePage() {
                     </Button>
                   }
                 />
-                <div className="flex items-center gap-2 border border-slate-200 rounded-lg px-2 py-1 bg-white">
-                  <span className="text-xs font-medium text-slate-500">Global group size</span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => setGlobalGroupSize(Math.max(1, globalGroupSize - 1))}
-                      className="h-7 w-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer font-medium text-sm rounded"
-                    >-
-                    </button>
-                    <span className="w-8 text-center text-sm font-semibold text-slate-800">{globalGroupSize}</span>
-                    <button
-                      type="button"
-                      onClick={() => setGlobalGroupSize(Math.min(20, globalGroupSize + 1))}
-                      className="h-7 w-7 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer font-medium text-sm rounded"
-                    >+
-                    </button>
-                  </div>
-                </div>
                 <Button
                   type="button"
                   size="sm"
@@ -602,78 +588,33 @@ export default function CreateCoursePage() {
             </CardHeader>
           </Card>
             
-          <div className="flex flex-col lg:flex-row gap-4 sticky top-28 z-0">
-            <div 
-              ref={scrollContainerRef}
-              onDragOver={handleContainerDragOver}
-              className="w-full lg:flex-1 max-h-[calc(100vh-8rem)] overflow-y-auto pb-4"
-            >
+          <div
+            className="flex flex-col gap-4 overflow-y-auto pb-4 sticky top-28 z-0"
+          >
               {sections.map((section, i) => (
                 <SectionCard
                   key={section.name}
                   section={section}
                   index={i + 1}
                   groups={sectionStates[section.name]?.groups ?? {}}
+                  onGroupCountChange={count => handleGroupCountChange(section.name, count)}
                   unassigned={unassignedStudents}
+                  onAssignStudent={handleAssignStudent}
+                  onUnassignStudent={handleUnassignStudent}
                   facultyMembers={facultyUsers}
                   groupFacultyLeads={sectionStates[section.name]?.groupFacultyLeads ?? {}}
                   onGroupFacultyLeadChange={handleGroupFacultyLeadChange}
-                  draggedStudent={draggedStudent}
-                  dragOverGroup={dragOverGroup}
                   onSectionChange={(field, value) => handleSectionDataChange(section.name, field, value)}
                   onUnassignAll={() => handleUnassignAll(section.name)}
                   onAddGroup={() => handleAddGroup(section.name)}
                   onRenameGroup={handleRenameGroup}
                   onDeleteGroup={handleDeleteGroup}
-                  onDragStart={handleDragStart}
-                  onDragEnd={handleDragEnd}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
                   availableSections={sections
                     .filter(s => s.name !== section.name)
                     .map(s => ({ id: s.name, label: s.name }))}
                   onMoveGroup={handleMoveGroup}
                 />
               ))}
-            </div>
-            
-            {/* Global Unassigned Students Sidebar */}
-            <div className="w-full lg:w-96" 
-                 onDragOver={(e) => { e.preventDefault() }} 
-                 onDrop={(e) => handleDrop(e, "__unassigned__", "__global__")}>
-              <div className="border-2 border-dashed rounded-lg p-3 bg-slate-50/80 shadow-sm border-slate-200">
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-700">Unassigned Students</p>
-                    <p className="text-xs text-slate-500">Drag into any section group</p>
-                  </div>
-                  <span className="text-xs font-semibold text-slate-700 bg-slate-200 px-2 py-1 rounded">
-                    {unassignedStudents.length}
-                  </span>
-                </div>
-
-                <div className="space-y-2 max-h-[calc(100vh-12rem)] overflow-y-auto pb-4">
-                  {unassignedStudents.length === 0 ? (
-                    <p className="text-xs text-slate-400 italic text-center py-4">All assigned!</p>
-                  ) : (
-                    [...unassignedStudents]
-                      .sort((a, b) => (a.full_name ?? "").localeCompare(b.full_name ?? ""))
-                      .map((student) => (
-                        <StudentBlock
-                          key={student.email}
-                          student={student}
-                          onDragStart={handleDragStart}
-                          onDragEnd={handleDragEnd}
-                          isDimmed={draggedStudent?.student.email === student.email}
-                          fromGroup="__unassigned__"
-                          fromSection="__global__"
-                        />
-                      ))
-                  )}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

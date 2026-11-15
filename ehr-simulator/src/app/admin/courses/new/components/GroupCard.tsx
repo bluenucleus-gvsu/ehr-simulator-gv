@@ -1,6 +1,6 @@
 "use client"
-import { useState } from "react"
-import { Pencil, Check, User, UserCog, X, ArrowUpDown, Trash2 } from "lucide-react"
+import { useMemo, useState } from "react"
+import { Pencil, Check, User, UserCog, X, ArrowUpDown, Trash2, UserMinus } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -29,13 +29,9 @@ interface GroupCardProps {
   facultyMembers: FacultyMember[]
   facultyLead: string
   onFacultyLeadChange: (sectionId: string, groupName: string, facultyId: string) => void
-  draggedStudent: { student: Student; fromGroup: string; fromSection: string } | null
-  dragOverGroup: string | null
-  onDragStart: (e: React.DragEvent, student: Student, fromGroup: string, fromSection: string) => void
-  onDragEnd: () => void
-  onDragOver: (e: React.DragEvent, sectionId: string, groupName: string) => void
-  onDragLeave: (e: React.DragEvent) => void
-  onDrop: (e: React.DragEvent, toGroup: string, toSection: string) => void
+  availableStudents: Student[]
+  onAssignStudent: (sectionId: string, groupName: string, student: Student) => void
+  onUnassignStudent: (sectionId: string, groupName: string, student: Student) => void
   onRenameGroup: (sectionId: string, oldName: string, newName: string) => void
   onDeleteGroup: (sectionId: string, groupName: string) => void
   /** Other sections this group can be moved to */
@@ -51,13 +47,9 @@ export const GroupCard = ({
   facultyMembers,
   facultyLead,
   onFacultyLeadChange,
-  draggedStudent,
-  dragOverGroup,
-  onDragStart,
-  onDragEnd,
-  onDragOver,
-  onDragLeave,
-  onDrop,
+  availableStudents,
+  onAssignStudent,
+  onUnassignStudent,
   onRenameGroup,
   onDeleteGroup,
   availableSections = [],
@@ -66,12 +58,16 @@ export const GroupCard = ({
   const [editing, setEditing] = useState(false)
   const [editValue, setEditValue] = useState("")
   const [movePopoverOpen, setMovePopoverOpen] = useState(false)
-
-  const dropKey = `${sectionId}::${groupName}`
-  const isOver =
-    dragOverGroup === dropKey &&
-    !(draggedStudent?.fromSection === sectionId && 
-    draggedStudent?.fromGroup === groupName)
+  const [studentSearch, setStudentSearch] = useState("")
+  const matchingStudents = useMemo(() => {
+    const query = studentSearch.trim().toLocaleLowerCase()
+    if (!query) return []
+    return availableStudents
+      .filter(student =>
+        `${student.full_name ?? ""} ${student.email ?? ""}`.toLocaleLowerCase().includes(query)
+      )
+      .slice(0, 8)
+  }, [availableStudents, studentSearch])
 
   const handleStartEdit = () => {
     setEditing(true)
@@ -95,15 +91,34 @@ export const GroupCard = ({
     setMovePopoverOpen(false)
   }
 
+  const handleAssignStudent = (student: Student) => {
+    onAssignStudent(sectionId, groupName, student)
+    setStudentSearch("")
+  }
+
+  const handleStudentSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter" && matchingStudents[0]) {
+      event.preventDefault()
+      handleAssignStudent(matchingStudents[0])
+      return
+    }
+
+    if (event.key === "Tab") {
+      const searchFields = Array.from(
+        document.querySelectorAll<HTMLInputElement>("[data-group-student-search]")
+      )
+      const currentIndex = searchFields.indexOf(event.currentTarget)
+      const nextIndex = currentIndex + (event.shiftKey ? -1 : 1)
+      if (searchFields[nextIndex]) {
+        event.preventDefault()
+        searchFields[nextIndex].focus()
+      }
+    }
+  }
+
   return (
     <div
-      onDragOver={(e) => onDragOver(e, sectionId, groupName)}
-      onDragLeave={onDragLeave}
-      onDrop={(e) => onDrop(e, groupName, sectionId)}
-      className={`bg-white border rounded-lg p-3 shadow-sm transition-all flex flex-col ${isOver
-        ? "ring-2 ring-blue-400 bg-blue-50 shadow-md"
-        : "border-slate-200 hover:shadow-md"
-        }`}
+      className="bg-white border border-slate-200 rounded-lg p-3 shadow-sm transition-all flex flex-col hover:shadow-md"
     >
       {/* Header */}
       <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-100 min-w-0">
@@ -223,22 +238,58 @@ export const GroupCard = ({
 
       {/* Students */}
       <div className="space-y-1.5 flex-1">
-        {students.length === 0 && (
-          <p className="text-xs text-slate-400 italic text-center py-3">Drop students here</p>
+        <Input
+          value={studentSearch}
+          onChange={event => setStudentSearch(event.target.value)}
+          onKeyDown={handleStudentSearchKeyDown}
+          data-group-student-search
+          placeholder="Search unassigned students..."
+          aria-label={`Search students to add to ${groupName}`}
+          className="h-8 text-xs"
+        />
+        {studentSearch.trim() && (
+          <div className="max-h-40 overflow-y-auto rounded border border-slate-200">
+            {matchingStudents.length === 0 ? (
+              <p className="px-3 py-2 text-xs text-slate-400">No matching unassigned students.</p>
+            ) : (
+              matchingStudents.map((student, index) => (
+                <button
+                  key={student.email ?? `${student.full_name ?? "student"}-${index}`}
+                  type="button"
+                  onClick={() => handleAssignStudent(student)}
+                  className="block w-full border-b border-slate-100 px-3 py-2 text-left last:border-0 hover:bg-slate-50"
+                >
+                  <span className="block truncate text-xs font-medium text-slate-800">
+                    {student.full_name ?? "Unknown"}
+                  </span>
+                  <span className="block truncate text-[11px] text-slate-500">
+                    {student.email ?? ""}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        )}
+        {students.length === 0 && !studentSearch.trim() && (
+          <p className="text-xs text-slate-400 italic text-center py-3">No students assigned.</p>
         )}
         {[...students]
           .sort((a, b) => (a.full_name ?? "").localeCompare(b.full_name ?? ""))
           .map((student) => (
-            <StudentBlock
-              key={student.email}
-              student={student}
-              draggable
-              onDragStart={(e) => onDragStart(e, student, groupName, sectionId)}
-              onDragEnd={onDragEnd}
-              className={draggedStudent?.student.email === student.email ? "opacity-40" : ""}
-              fromGroup={groupName}
-              fromSection={sectionId}
-            />
+            <div key={student.email ?? student.full_name} className="flex items-center gap-1">
+              <StudentBlock student={student} className="min-w-0 flex-1" />
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 flex-shrink-0 p-0 text-slate-500 hover:text-red-600"
+                aria-label={`Unassign ${student.full_name ?? student.email ?? "student"} from ${groupName}`}
+                title="Unassign student"
+                onClick={() => onUnassignStudent(sectionId, groupName, student)}
+              >
+                <UserMinus className="h-4 w-4" />
+              </Button>
+            </div>
           ))}
       </div>
     </div>

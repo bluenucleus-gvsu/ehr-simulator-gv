@@ -32,6 +32,8 @@ interface CourseDetailsProps {
     setCourseCode: Dispatch<SetStateAction<string>>
     semester: string
     setSemester: Dispatch<SetStateAction<string>>
+    sectionCount: number
+    setSectionCount: (count: number) => void
 }
 
 export default function CourseDetails ({
@@ -41,7 +43,9 @@ export default function CourseDetails ({
     courseCode,
     setCourseCode,
     semester, 
-    setSemester
+    setSemester,
+    sectionCount,
+    setSectionCount,
 }: CourseDetailsProps) {
 
     const [facultyOpen, setFacultyOpen] = useState(false)
@@ -92,6 +96,19 @@ export default function CourseDetails ({
                         <SelectItem key={s} value={s}>{s}</SelectItem>
                         ))}
                     </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label className="text-sm font-medium text-slate-600">Number of Sections</Label>
+                    <Select value={String(sectionCount)} onValueChange={value => setSectionCount(Number(value))}>
+                        <SelectTrigger className="w-full cursor-pointer">
+                        <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                        {Array.from({ length: Math.max(8, sectionCount) }, (_, index) => index + 1).map(count => (
+                            <SelectItem key={count} value={String(count)}>{count}</SelectItem>
+                        ))}
+                        </SelectContent>
                     </Select>
                 </div>
                 <div className="space-y-2">

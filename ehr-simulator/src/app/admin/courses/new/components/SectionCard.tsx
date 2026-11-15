@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,
@@ -130,22 +131,18 @@ interface SectionCardProps {
   /** 1-based display index, used to derive the section name ("Section 01", etc.) */
   index: number
   groups: SectionGroups
+  onGroupCountChange: (count: number) => void
   unassigned: Student[]
+  onAssignStudent: (sectionId: string, groupName: string, student: Student) => void
+  onUnassignStudent: (sectionId: string, groupName: string, student: Student) => void
   facultyMembers: FacultyMember[]
   groupFacultyLeads: Record<string, string>
   onGroupFacultyLeadChange: (sectionClientId: string, groupName: string, facultyId: string) => void
-  draggedStudent: { student: Student; fromGroup: string; fromSection: string } | null
-  dragOverGroup: string | null
   onSectionChange: (field: keyof SectionData, value: string | null) => void
   onUnassignAll: () => void
   onAddGroup: () => void
   onRenameGroup: (sectionClientId: string, oldName: string, newName: string) => void
   onDeleteGroup: (sectionClientId: string, groupName: string) => void
-  onDragStart: (e: React.DragEvent, student: Student, fromGroup?: string, fromSection?: string) => void
-  onDragEnd: () => void
-  onDragOver: (e: React.DragEvent, sectionClientId: string, groupName: string) => void
-  onDragLeave: (e: React.DragEvent) => void
-  onDrop: (e: React.DragEvent, toGroup: string, toSection: string) => void
   /** Other sections a group can be moved to (passed down to GroupCard) */
   availableSections?: { id: string; label: string }[]
   /** Called when user moves a group to another section */
@@ -161,22 +158,18 @@ export const SectionCard = ({
   section,
   index,
   groups,
+  onGroupCountChange,
   unassigned,
+  onAssignStudent,
+  onUnassignStudent,
   facultyMembers,
   groupFacultyLeads,
   onGroupFacultyLeadChange,
-  draggedStudent,
-  dragOverGroup,
   onSectionChange,
   onUnassignAll,
   onAddGroup,
   onRenameGroup,
   onDeleteGroup,
-  onDragStart,
-  onDragEnd,
-  onDragOver,
-  onDragLeave,
-  onDrop,
   availableSections = [],
   onMoveGroup,
 }: SectionCardProps) => {
@@ -212,6 +205,9 @@ export const SectionCard = ({
           <Badge variant="secondary" className="text-xs">
             {totalAssigned} assigned
           </Badge>
+          <Badge variant="outline" className="text-xs">
+            {Object.keys(groups).length} {Object.keys(groups).length === 1 ? "group" : "groups"}
+          </Badge>
         </div>
         {expanded
           ? <ChevronUp className="w-4 h-4 text-slate-500 flex-shrink-0" />
@@ -244,6 +240,22 @@ export const SectionCard = ({
 
           {/* Group controls */}
           <div className="flex items-center flex-wrap gap-2">
+            <div className="flex items-center gap-2 border border-slate-200 rounded-lg px-2 py-1 bg-white">
+              <Label className="text-xs font-medium text-slate-500">Number of groups</Label>
+              <Select
+                value={String(Object.keys(groups).length)}
+                onValueChange={value => onGroupCountChange(Number(value))}
+              >
+                <SelectTrigger className="h-7 w-20 cursor-pointer text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: Math.max(21, Object.keys(groups).length + 1) }, (_, groupIndex) => groupIndex).map(count => (
+                    <SelectItem key={count} value={String(count)}>{count}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             {/* Unassign Dialog with Button Trigger */}
             <UnassignDialog
               title={`Unassign all students in ${label}?`}
@@ -276,7 +288,7 @@ export const SectionCard = ({
               <div className="flex-1 min-w-0">
                 {Object.keys(groups).length === 0 ? (
                   <div className="flex items-center justify-center h-24 w-full border-2 border-dashed border-slate-200 rounded-lg">
-                    <p className="text-sm text-slate-400 text-center px-4">No groups yet — click "Randomly Assign" or "Add Group"</p>
+                    <p className="text-sm text-slate-400 text-center px-4">No groups yet — click Randomly Assign or Add Group</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-3">
@@ -291,13 +303,9 @@ export const SectionCard = ({
                           facultyMembers={facultyMembers}
                           facultyLead={groupFacultyLeads[groupName] ?? ""}
                           onFacultyLeadChange={onGroupFacultyLeadChange}
-                          draggedStudent={draggedStudent}
-                          dragOverGroup={dragOverGroup}
-                          onDragStart={onDragStart}
-                          onDragEnd={onDragEnd}
-                          onDragOver={onDragOver}
-                          onDragLeave={onDragLeave}
-                          onDrop={onDrop}
+                          availableStudents={unassigned}
+                          onAssignStudent={onAssignStudent}
+                          onUnassignStudent={onUnassignStudent}
                           onRenameGroup={onRenameGroup}
                           onDeleteGroup={onDeleteGroup}
                           availableSections={availableSections}
