@@ -3,13 +3,15 @@ import { medActionSelections, type AllMedicationTypes, type MedicationOrder } fr
 import MedAdminCardSelector from "./medAdminCardSelector";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { renderMedTitleRow, renderMedCardDetails, isSlidingScaleInsulin } from "./marHelpers";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, X } from "lucide-react";
 import { DecimalInput } from "./decimalInput";
 import { DatabaseMedAdministration, StudentMedicationAdministration } from "@/actions/simulation";
 import MedAdminCardTable, { insulinTable } from "./medAdminCardTable";
 import { HeparinBolusCalculator, HeparinInfusionCalculator } from "./heparinModule";
+import { isSlidingScaleInsulin } from "@/lib/medications";
+import { MedCardTitle } from "./medCardTitle";
+import { MedCardDetailRow } from "./medCardDetailRow";
 
 interface MedAdminCardProps {
   medication: AllMedicationTypes;
@@ -79,12 +81,12 @@ const MedAdminCard = ({
   const isOverdose = order.dose ? currentDose > order.dose : false;
   const useAdministrationInfusionRate = !order.infusionRate;
   return (
-    <div className="relative grid grid-cols-2 gap-6 border bg-white rounded-2xl w-full p-0 overflow-hidden flex-shrink-0 shadow">
+    <div className="relative grid grid-cols-2 gap-6 border bg-white rounded-2xl w-full p-0 overflow-hidden shrink-0 shadow">
       <div className=" flex flex-col justify-between py-3 pl-6 space-y-4">
         <div className="space-y-1">
-          {renderMedTitleRow(medication, order)}
+          {MedCardTitle(medication, order)}
           <div className="text-xs ml-2 tracking-tight pb-2 text-gray-500">
-            {renderMedCardDetails(medication, order)}
+            {MedCardDetailRow(medication, order)}
           </div>
         </div>
 

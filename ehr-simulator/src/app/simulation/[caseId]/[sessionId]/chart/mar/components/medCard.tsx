@@ -1,9 +1,10 @@
 import { addMinutes, format, isWithinInterval } from "date-fns";
-import type { MedCardColumn } from "./marHelpers";
-import type { AllMedicationTypes, MedicationOrder } from "./marData.jsx"
-// import { Checkbox } from "@/components/ui/checkbox";
-import { findLastAdminTime, renderMedCardDetails, renderMedTitleRow } from "./marHelpers";
+import type { AllMedicationTypes, MedicationOrder } from "./marData"
 import { DatabaseMedAdministration } from "@/actions/simulation";
+import { MedCardColumn } from "@/lib/medications";
+import { MedCardTitle } from "./medCardTitle";
+import { MedCardDetailRow } from "./medCardDetailRow";
+import { LastAdministrationTime } from "./lastAdministrationTime";
 
 interface MedCardProps {
   medication: AllMedicationTypes;
@@ -28,10 +29,6 @@ const MedCard = ({
 
   const simNow = addMinutes(sessionStart, elapsedSimMinutes);
 
-
-  // Administrations cascade from the parent med order (already gated by the
-  // MAR view) — the only per-admin filter here is Due-suppression after a
-  // successful student administration.
   const visibleAdministrations = administrations.filter(currentAdmin => {
     if (currentAdmin.status !== "Due") return true;
 
@@ -47,12 +44,10 @@ const MedCard = ({
     return !successfullAdministration;
   });
 
-  // using columns passed from main mar component, add relevant administration data (given, held, refused...)
   const processedColumns = columns.map(col => {
     const administrationsInColumn = visibleAdministrations.filter(admin => {
       const adminTime = addMinutes(sessionStart || 0, admin.time_offset ?? 0);
 
-      // Check if that time falls inside this column
       return isWithinInterval(adminTime, {
         start: col.startTime,
         end: col.endTime
@@ -71,11 +66,11 @@ const MedCard = ({
         <div >
           <div className="pl-2">
             <h4 className="font-bold text-slate-900 text-md xl:text-md pb-1">
-              {renderMedTitleRow(medication, order)}
+              {MedCardTitle(medication, order)}
             </h4>
           </div>
           <div className="text-[12px] text-slate-500 space-y-1 pl-4 mb-3 ml-2">
-            {renderMedCardDetails(medication, order)}
+            {MedCardDetailRow(medication, order)}
           </div>
           {order.instructions && (
             <div className="text-sm font-light bg-white text-slate-800 p-2 rounded border border-slate-200 mb-3">
@@ -84,7 +79,7 @@ const MedCard = ({
           )}
 
         </div>
-        {findLastAdminTime(administrations, sessionStart)}
+        {LastAdministrationTime(administrations, sessionStart)}
       </div>
 
       <div className="flex-1 grid grid-cols-6 divide-x divide-slate-100 overflow-x-auto">
@@ -94,7 +89,7 @@ const MedCard = ({
             isWithinInterval(simNow, { start: col.startTime, end: col.endTime });
 
           return (
-            <div key={colIndex} className={`flex flex-col min-w-[60px] ${isCurrentHourColumn ? 'bg-blue-50/30' : ''}`}>
+            <div key={colIndex} className={`flex flex-col min-w-15 ${isCurrentHourColumn ? 'bg-blue-50/30' : ''}`}>
               <div
                 key={col.colHeader}
                 className="medCard-pulse"
@@ -104,7 +99,7 @@ const MedCard = ({
                 </div>
               </div>
 
-              <div className="flex-1 p-2 space-y-2 flex flex-col items-center justify-center min-h-[80px]">
+              <div className="flex-1 p-2 space-y-2 flex flex-col items-center justify-center min-h-20">
                 {col.associatedAdministrations?.map((admin, index) => {
                   const adminTime = addMinutes(sessionStart, admin.time_offset ?? 0);
 

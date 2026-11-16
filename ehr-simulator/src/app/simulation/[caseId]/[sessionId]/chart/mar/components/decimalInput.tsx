@@ -38,7 +38,7 @@ export const DecimalInput = ({ value, onValueChange, isOverdose }: DoseInputProp
   return (
     <Input
       type="text"
-      className={`text-sm w-16 border px-3 py-2 rounded-r-none shadow-xs ${isOverdose ? "ring-2 ring-red-700 focus-visible:ring-red-700 focus-visible:ring-2" : "focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:border-gray-200"} `}
+      className={`text-sm w-18 border px-3 py-2 rounded-r-none shadow-xs ${isOverdose ? "ring-2 ring-red-700 focus-visible:ring-red-700 focus-visible:ring-2" : "focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:border-gray-200"} `}
       value={inputValue}
       onChange={handleChange}
       placeholder="0.0"

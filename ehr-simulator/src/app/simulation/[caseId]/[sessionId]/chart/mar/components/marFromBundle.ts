@@ -6,10 +6,8 @@ import type {
   MedicationOrder,
   OralMedication,
 } from "./marData";
-import { allMedications } from "./marData";
 
 type DbMedAdmin = {
-  medication_id?: string | null;
   medication_order_id?: string | null;
   administrator?: string | null;
   time_offset: number;
@@ -35,10 +33,6 @@ function normalizeAdminStatus(raw: string | null | undefined): AdministrationSta
   if (map[lower]) return map[lower];
   if (["Given", "Held", "Missed", "Refused", "Due"].includes(s)) return s as AdministrationStatus;
   return "Given";
-}
-
-function findCatalogMedicationByCatalogId(catalogId: string): AllMedicationTypes | undefined {
-  return allMedications.find((m) => m.id === catalogId);
 }
 
 function embeddedMedication(row: { medications?: unknown }): Record<string, unknown> | null {
@@ -163,9 +157,6 @@ export function buildMarFromCaseBundle(caseBundle: CaseBundle | null): {
   const medicationOrders: MedicationOrder[] = [];
   const orderIndex = new Map<string, MedicationOrder>();
 
-  /** When legacy administrations only store catalog id, map to structured order UUID if one exists. */
-  const catalogIdToOrderId = new Map<string, string>();
-
   for (const row of dbOrders) {
     const id = String(row.id ?? "");
     if (!id) continue;
@@ -177,7 +168,6 @@ export function buildMarFromCaseBundle(caseBundle: CaseBundle | null): {
 
     if (catalog) {
       medsById[catalog.id] = catalog;
-      catalogIdToOrderId.set(catalog.id, id);
     } else {
       medsById[medicationId] = placeholderMedication(medicationId, genericLabel);
     }
@@ -205,84 +195,16 @@ export function buildMarFromCaseBundle(caseBundle: CaseBundle | null): {
     orderIndex.set(id, mo);
   }
 
-  const extraCatalogIds = new Set<string>();
-
-  for (const a of dbAdmins) {
-    const oid = a.medication_order_id ? String(a.medication_order_id) : "";
-    const mid = (a.medication_id ?? "").trim();
-
-    if (oid && orderIndex.has(oid)) {
-      continue;
-    }
-    if (mid) {
-      if (catalogIdToOrderId.has(mid)) {
-        continue;
-      }
-      extraCatalogIds.add(mid);
-    }
-  }
-
-  for (const catalogId of extraCatalogIds) {
-    if (orderIndex.has(catalogId)) continue;
-
-    const catalog = findCatalogMedicationByCatalogId(catalogId);
-    if (!catalog) {
-      medsById[catalogId] = placeholderMedication(catalogId, catalogId);
-    } else {
-      medsById[catalog.id] = catalog;
-    }
-
-    const adminsFor = dbAdmins.filter((x) => {
-      const mid = (x.medication_id ?? "").trim();
-      if (mid !== catalogId) return false;
-      const oid = x.medication_order_id ? String(x.medication_order_id) : "";
-      if (oid && orderIndex.has(oid)) return false;
-      if (catalogIdToOrderId.has(mid)) return false;
-      return true;
-    });
-    const doses = adminsFor
-      .map((x) => Number(x.administered_dose ?? 0))
-      .filter((d) => Number.isFinite(d) && d > 0);
-    const fallbackDose = catalog?.strength ?? doses[doses.length - 1] ?? 0;
-
-    const mo: MedicationOrder = {
-      id: catalogId,
-      medicationId: catalog?.id ?? catalogId,
-      frequency: "",
-      priority: "",
-      indication: "",
-      orderingProvider: "",
-      dose: fallbackDose,
-      visibleInPresim: true,
-      phase: 1,
-    };
-    medicationOrders.push(mo);
-    orderIndex.set(catalogId, mo);
-  }
-
   const administrations: MedAdministrationInstance[] = [];
 
   dbAdmins.forEach((a, index) => {
     const oid = a.medication_order_id ? String(a.medication_order_id) : "";
-    const mid = (a.medication_id ?? "").trim();
 
-    let orderKey: string | null = null;
-    if (oid && orderIndex.has(oid)) {
-      orderKey = oid;
-    } else if (mid) {
-      const resolved = catalogIdToOrderId.get(mid);
-      if (resolved && orderIndex.has(resolved)) {
-        orderKey = resolved;
-      } else if (orderIndex.has(mid)) {
-        orderKey = mid;
-      }
-    }
-
-    if (!orderKey) return;
+    if (!oid || !orderIndex.has(oid)) return;
 
     administrations.push({
       id: a.created_at ? `${a.created_at}-${index}` : `mar-admin-${index}`,
-      medicationOrderId: orderKey,
+      medicationOrderId: oid,
       administratorId: a.administrator ?? "",
       adminTimeMinuteOffset: a.time_offset,
       status: normalizeAdminStatus(a.status),

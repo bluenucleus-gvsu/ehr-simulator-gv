@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { MedCardColumn } from "./marHelpers";
+import { displayColumnShifterDate, MedCardColumn } from "@/lib/medications";
 import { ChevronsLeft, ChevronsRight, Undo2 } from "lucide-react";
-import { displayColumnShifterDate } from "./marHelpers";
 
 interface ColumnShiftControlProps {
   columns: MedCardColumn[];
@@ -27,7 +26,7 @@ const ColumnShiftControl = ({ columns, onColumnShift, columnOffset }: ColumnShif
         >
           <ChevronsLeft size={16} />
         </Button>
-        <p className="text-xs font-medium font-mono text-slate-600 min-w-[100px] text-center whitespace-nowrap">
+        <p className="text-xs font-medium font-mono text-slate-600 min-w-25 text-center whitespace-nowrap">
           {columns[0].colHeader}
           <span className='mx-2'>–</span>
           {columns[5].colHeader}

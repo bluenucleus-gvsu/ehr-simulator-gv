@@ -26,7 +26,6 @@ import {
   AdministrationStatus,
   AllMedicationTypes,
 } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData"
-import { createColumns } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers"
 import MedAdministrationFormCard from "./components/medAdministrationFormCard"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useFormContext } from "@/context/FormContext"
@@ -35,6 +34,7 @@ import ColumnShiftControl from "@/app/simulation/[caseId]/[sessionId]/chart/mar/
 import { CaseSection } from "@/lib/caseSections"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
 import { caseBuilderPath } from "@/lib/caseBuilder/routes"
+import { createColumns } from "@/lib/medications"
 
 function getComboboxData(orders: MedicationOrder[], medications: AllMedicationTypes[]) {
   return orders.map(order => {
@@ -195,7 +195,7 @@ export default function MedicationAdministrationsForm() {
         <main className="flex-1 overflow-y-auto p-6 md:px-8 lg:px-12">
           <div className="max-w-6xl mx-auto space-y-8 pb-20">
             <Card className="border-slate-200 shadow-sm overflow-hidden py-0">
-              <CardHeader className="bg-slate-50/50 border-b border-slate-100 pt-4 !pb-2">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 pt-4 pb-2!">
                 <CardTitle className="text-lg flex items-center gap-2">
                   Add Medication Administrations
                 </CardTitle>

@@ -1,6 +1,6 @@
 import { AllMedicationTypes, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData"
-import { isSlidingScaleInsulin } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers"
 import { Separator } from "@/components/ui/separator"
+import { isSlidingScaleInsulin } from "@/lib/medications"
 
 export const renderMedFormTitle = (medication: AllMedicationTypes) => {
   const brandNameDisplay = `(${medication.brandName})`

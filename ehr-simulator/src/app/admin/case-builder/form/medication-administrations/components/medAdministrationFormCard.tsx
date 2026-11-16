@@ -1,7 +1,8 @@
 import { AllMedicationTypes, MedAdministrationInstance, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
-import { renderMedCardDetails, renderMedTitleRow } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers";
-import { MedCardColumn } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers";
+import { MedCardDetailRow } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/medCardDetailRow";
+import { MedCardTitle } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/medCardTitle";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { MedCardColumn } from "@/lib/medications";
 import { format } from "date-fns";
 import { Check, Trash2, X } from "lucide-react";
 
@@ -99,11 +100,11 @@ export default function MedAdministrationFormCard({
         <div>
           <div className="flex items-start justify-between mb-2">
             <h4 className="font-bold text-slate-900 leading-tight">
-              {renderMedTitleRow(medication, order)}
+              {MedCardTitle(medication, order)}
             </h4>
           </div>
           <div className="text-xs text-slate-500 space-y-1 mb-3">
-            {renderMedCardDetails(medication, order)}
+            {MedCardDetailRow(medication, order)}
           </div>
           {order.instructions && (
             <div className="text-xs  text-slate-800 p-2 rounded border border-slate-200 mb-3">
@@ -124,7 +125,7 @@ export default function MedAdministrationFormCard({
           const isCurrentHour = colIndex === 3;
 
           return (
-            <div key={colIndex} className={`flex flex-col min-w-[60px] ${isCurrentHour && isHighlightableColumn ? 'bg-blue-50/30' : ''}`}>
+            <div key={colIndex} className={`flex flex-col min-w-15 ${isCurrentHour && isHighlightableColumn ? 'bg-blue-50/30' : ''}`}>
               <div
                 key={col.colHeader}
                 className="medCard-pulse"
@@ -134,12 +135,11 @@ export default function MedAdministrationFormCard({
                 </div>
               </div>
 
-              <div className="flex-1 p-2 space-y-2 flex flex-col items-center justify-center min-h-[80px]">
+              <div className="flex-1 p-2 space-y-2 flex flex-col items-center justify-center min-h-20">
                 {col.associatedAdministrations?.map((admin, adminIdx) => {
                   const adminTime = new Date(sessionStartTime + admin.adminTimeMinuteOffset * 60 * 1000);
-                  const adminKey = `${order.id}-col${colIndex}-i${adminIdx}-${
-                    admin.id?.trim() ? admin.id : `t${admin.adminTimeMinuteOffset}`
-                  }`;
+                  const adminKey = `${order.id}-col${colIndex}-i${adminIdx}-${admin.id?.trim() ? admin.id : `t${admin.adminTimeMinuteOffset}`
+                    }`;
 
                   let statusStyle = "bg-slate-100 text-slate-600 border-slate-200";
                   if (admin.status === "Given") statusStyle = "bg-green-100 text-green-700 border-green-200";

@@ -15,8 +15,6 @@ import { Toggle } from '@/components/ui/toggle';
 import { MultiMedPopover } from './multiMedPopover';
 import { toast } from 'sonner';
 import WrongPatientAlert from './wrongPatientAlert';
-import { createColumns } from '@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marHelpers';
-import { PatientStatusBadge } from './marHelpers';
 import ColumnShiftControl from './columnShiftControl';
 import { DatabaseMedAdministration, StudentMedicationAdministration, submitMedicationAdministrations } from '@/actions/simulation';
 import { useSimSessionContext } from '@/context/SimSessionContext';
@@ -25,6 +23,8 @@ import { useStudentSimulationEditAccess } from '@/utils/studentSimulationEditAcc
 import { isVisibleInSim } from '@/lib/faculty/itemRelease';
 import { useSimulationScanner } from '@/hooks/useSimulationScanner';
 import ScanWristbandAlert from './scanWristbandAlert';
+import { createColumns } from '@/lib/medications';
+import { PatientStatusBadge } from './scannedStatusBadge';
 
 
 export interface NewAdministrationData {
@@ -135,7 +135,7 @@ export default function MarView({
     const associatedOrders = releasedMedicationOrders.filter(order => order.medicationId === symbol);
 
     if (associatedOrders.length === 0) {
-      toast.info(`No orders found with medication ID: ${symbol}`)
+      toast.info(`No order for the scanned medication exists for this patient.`)
       return
     }
 

@@ -1,7 +1,7 @@
 import { getMedicationAdministrations, getMedicationOrders } from "@/actions/simulation";
 import { AllMedicationTypes, MedicationOrder } from "./components/marData";
-import { mapDatabaseMedToFrontend } from "./components/marHelpers";
 import MarView from "./components/marView";
+import { mapDatabaseMedToFrontend } from "@/lib/medications";
 
 interface PageProps {
   params: Promise<{
