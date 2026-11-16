@@ -6,7 +6,7 @@ import {
   type ReleasedItemsMap,
 } from "@/lib/faculty/itemRelease";
 
-export type ReleaseUpdateSectionKey = "labs" | "notes" | "orders" | "mar";
+export type ReleaseUpdateSectionKey = "labs" | "notes" | "orders" | "mar" | "media";
 
 export interface ReleaseUpdateSection {
   key: ReleaseUpdateSectionKey;
@@ -28,6 +28,7 @@ const SECTION_BY_TYPE: Record<
   clinical_document: { sectionKey: "notes", sectionLabel: "Notes", typeLabel: "Note" },
   order: { sectionKey: "orders", sectionLabel: "Orders", typeLabel: "Clinical order" },
   medication_order: { sectionKey: "mar", sectionLabel: "MAR", typeLabel: "Med order" },
+  media: { sectionKey: "media", sectionLabel: "Media", typeLabel: "Media item" },
 };
 
 function pluralize(count: number, singular: string, plural = `${singular}s`) {
@@ -77,9 +78,12 @@ function resolveItemLabels(
       }
       break;
     }
+    case "media":
+      rows.push(...(caseBundle?.caseImages ?? []));
+      break;
   }
 
-  const labelById = new Map(rows.map((row) => [String(row.id), labelOf(type, row)]));
+  const labelById = new Map(rows.map((row) => [String(row.id), type === "media" ? null : labelOf(type, row)]));
 
   return itemIds.map((id, index) => {
     const label = labelById.get(id);

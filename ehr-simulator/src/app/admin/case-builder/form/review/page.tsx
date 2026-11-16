@@ -195,7 +195,14 @@ export default function FormReview() {
             <CardContent className="pt-4">
               {mediaData.length === 0 ? <p className="text-slate-500">No media.</p> : (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  {mediaData.map((image) => <img key={image.id} src={image.previewUrl} alt="Case media" className="aspect-square w-full rounded-lg border object-contain" />)}
+                  {mediaData.map((image) => (
+                    <div key={image.id}>
+                      <img src={image.previewUrl} alt="Case media" className="aspect-square w-full rounded-lg border object-contain" />
+                      <p className="mt-1 text-xs text-slate-500">
+                        Phase {image.phase}{image.isInPresim ? " · Pre-Sim" : ""}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               )}
             </CardContent>

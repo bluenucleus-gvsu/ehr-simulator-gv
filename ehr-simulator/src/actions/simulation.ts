@@ -6,7 +6,7 @@ import { ActionResponse, ExtractData } from "./cases";
 import { UUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { assertStudentActiveSessionWrite } from "@/actions/simulation/assertStudentActiveSessionWrite";
-import { PREVIEW_SESSION_ID } from "@/lib/faculty/itemRelease";
+import { isVisibleInSim, PREVIEW_SESSION_ID } from "@/lib/faculty/itemRelease";
 
 export type EditableStudentNoteUpsert = Database['public']['Tables']['editable_clinical_documents']['Insert'];
 export type EditableStudentNote = Database['public']['Tables']['editable_clinical_documents']['Row'];
@@ -285,31 +285,60 @@ export async function getMedicationAdministrations(caseId: string, sessionId: st
   }
 }
 
-export async function getMedia(caseId: string) {
+export async function getMedia(caseId: string, sessionId: string, isPresim: boolean) {
   const supabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
+  const { data: session, error: sessionError } = sessionId === PREVIEW_SESSION_ID
+    ? { data: null, error: null }
+    : await supabase
+      .from("case_sessions")
+      .select("case_id")
+      .eq("id", sessionId)
+      .maybeSingle();
+
+  if (sessionError) {
+    return { success: false, message: "Failed to verify simulation session.", error: sessionError };
+  }
+  if (sessionId !== PREVIEW_SESSION_ID && (!session || session.case_id !== caseId)) {
+    return { success: false, message: "Media is not available for this simulation session." };
+  }
+
   const { data, error } = await supabase
     .from('case_images')
-    .select('id, preview_url')
+    .select('id, preview_url, phase, is_in_presim')
     .eq('case_id', caseId)
 
-
-  if (!error) {
-    return {
-      success: true,
-      data: data ?? [],
-      message: 'Successfully retrieved media'
-    }
+  if (error) {
+    return { success: false, message: "Failed to retrieve media.", error };
   }
 
-  return {
-    success: false,
-    message: 'Failed to retrieve media',
-    error
+  const releases = sessionId === PREVIEW_SESSION_ID
+    ? null
+    : await supabase
+      .from("case_image_releases")
+      .select("item_id")
+      .eq("session_id", sessionId);
+
+  if (releases?.error) {
+    return { success: false, message: "Failed to retrieve media releases.", error: releases.error };
   }
+
+  const releasedIds = new Set(
+    releases?.data?.map((release) => release.item_id) ??
+      (data ?? []).filter((image) => image.phase > 1).map((image) => image.id),
+  );
+  const visible = (data ?? []).filter((image) =>
+    isVisibleInSim(
+      { id: image.id, phase: image.phase, isInPresim: image.is_in_presim },
+      isPresim,
+      releasedIds,
+    ),
+  );
+
+  return { success: true, data: visible, message: "Successfully retrieved media." };
 }
 
 type OrderAndMedicationType = ExtractData<typeof getMedicationOrders>;

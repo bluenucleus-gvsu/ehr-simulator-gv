@@ -202,6 +202,10 @@ export function assertValidSaveRequest(
         if (!image.previewUrl && !image.file && !image.storagePath) {
           fail(`media[${index}] must contain a URL, file, or storage path.`);
         }
+        const phase = assertPhase(image.phase, `media[${index}].phase`);
+        if (phase > 1 && image.isInPresim === true) {
+          fail(`media[${index}] cannot be in pre-sim when set for faculty-release.`);
+        }
       });
       return;
     default:
