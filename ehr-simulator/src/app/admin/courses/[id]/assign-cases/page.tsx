@@ -1,17 +1,16 @@
+import Link from "next/link";
 import { getCourseById } from "@/actions/courses";
 import { Button } from "@/components/ui/button";
 import { getSectionCaseAssignments } from "@/actions/cases";
 import { getCaseByCourseId } from "@/actions/cases";
-import { Database } from "../../../../../database.types";
-import CourseAssignmentsClient from "./components/CourseAssignmentsClient";
-
+import { Database } from "../../../../../../database.types";
+import CourseAssignmentsClient from "./components/courseAssignmentsClient";
 
 interface CoursePageProps {
   params: Promise<{ id: string }>;
 }
 
 export type Course = Database['public']['Tables']['courses']['Row'];
-
 
 export default async function CoursePage({ params }: CoursePageProps) {
   const resolvedParams = await params;
@@ -36,12 +35,16 @@ export default async function CoursePage({ params }: CoursePageProps) {
       <header className="bg-white border-b px-8 py-4 pb-4 sticky top-0 z-10">
         <div className="flex justify-between items-center">
           <div className="space-y-1">
-            <h1 className="text-5xl font-bold tracking-tight text-blue-900">
+            <h1 className="text-5xl font-bold tracking-tight ">
               {courseData.code}
             </h1>
             <p className="text-xs text-gray-500">Manage assigned for cases this course.</p>
           </div>
-          <Button>Edit Course</Button>
+          <div className="flex items-center gap-2">
+            <Link href={`/admin/courses/${coursedId}/edit`}>
+              <Button>Edit Course</Button>
+            </Link>
+          </div>
         </div>
       </header>
 

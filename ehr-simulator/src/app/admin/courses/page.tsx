@@ -1,8 +1,15 @@
 import { getAllCourses } from "@/actions/courses";
-import CoursesClient from "./components/CoursesClient";
+import CoursesClient from "@/app/admin/courses/components/coursesClient";
 
-export default async function CoursesPage() {
-  const courseResult = await getAllCourses();
+export default async function CoursesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string }>;
+}) {
+  const { view } = await searchParams;
+  const archived = view === "archived";
+
+  const courseResult = await getAllCourses({ archived });
 
   if (!courseResult.success || !courseResult.data) {
     return (
@@ -14,5 +21,5 @@ export default async function CoursesPage() {
 
   const courses = courseResult.data || [];
 
-  return <CoursesClient courses={courses} />;
+  return <CoursesClient courses={courses} archived={archived} />;
 }

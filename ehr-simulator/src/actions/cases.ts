@@ -4,6 +4,7 @@ import { createClient, PostgrestError } from "@supabase/supabase-js";
 import { Database } from "../../database.types";
 import { revalidatePath } from "next/cache";
 import { caseMeetsMinimumRequirements } from "@/lib/caseMinimumRequirements";
+import { createRoleGatedClient } from "./roleGatedClient";
 
 export type SectionAssignment = Database['public']['Tables']['section_assignments']['Row'];
 export type SectionAssignmentInsert = Database['public']['Tables']['section_assignments']['Insert'];
@@ -111,7 +112,6 @@ export async function getSectionCaseAssignments(courseId: string) {
     .select(`
       id,
       name,
-      meeting_time,
       section_assignments (
         id,
         sim_time,
@@ -130,7 +130,8 @@ export async function getSectionCaseAssignments(courseId: string) {
         )
       )
     `)
-    .eq('course_id', courseId);
+    .eq('course_id', courseId)
+    .eq('active', true);
 
   if (error) {
     const result = {
@@ -166,7 +167,6 @@ export async function getSectionCaseAssignments(courseId: string) {
       return {
         ...assignment,
         cases: _caseData,
-        session_id: selectedSession?.id ?? null,
         session_status: selectedSession?.status ?? null,
       };
     });
@@ -226,7 +226,7 @@ export async function createSectionCaseAssignment(payload: SectionAssignmentInse
     };
   }
 
-  revalidatePath('/courses');
+  revalidatePath('/admin/courses', 'layout');
 
   return {
     success: true,
@@ -235,32 +235,41 @@ export async function createSectionCaseAssignment(payload: SectionAssignmentInse
   };
 }
 
-export async function deleteSectionCaseAssignment(id: string): Promise<ActionResponse> {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
-  const { error } = await supabase
-    .from('section_assignments')
-    .delete()
-    .eq('id', id)
-
-  if (error) {
-    console.error("Delete Error:", error);
-    return {
-      success: false,
-      message: "Failed to delete assignment. Please try again.",
-      error
-    };
+export async function deleteSectionCaseAssignment(ids: string[]): Promise<ActionResponse> {
+  if (ids.length === 0) {
+    return { success: true, message: "Nothing to delete." };
   }
 
-  revalidatePath('/courses');
+  try {
+    const supabase = await createRoleGatedClient(["admin"]);
 
-  return {
-    success: true,
-    message: "Assignment deleted successfully."
-  };
+    const { error } = await supabase
+      .from('section_assignments')
+      .delete()
+      .in('id', ids)
+
+    if (error) {
+      console.error("Delete Error:", error);
+      return {
+        success: false,
+        message: "Failed to delete assignments. Please try again.",
+        error
+      };
+    }
+
+    revalidatePath('/admin/courses', 'layout');
+
+    return {
+      success: true,
+      message: "Assignments deleted successfully."
+    };
+  } catch (err) {
+    console.error("deleteSectionCaseAssignment authorization error:", err);
+    return {
+      success: false,
+      message: err instanceof Error ? err.message : "Failed to delete assignments. Please try again.",
+    };
+  }
 }
 
 export async function getCourseCaseAssignments() {

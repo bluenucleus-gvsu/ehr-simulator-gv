@@ -138,6 +138,39 @@ export type Database = {
           },
         ]
       }
+      case_session_participants: {
+        Row: {
+          case_session_id: string
+          created_at: string | null
+          student_id: string
+        }
+        Insert: {
+          case_session_id: string
+          created_at?: string | null
+          student_id: string
+        }
+        Update: {
+          case_session_id?: string
+          created_at?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_session_participants_case_session_id_fkey"
+            columns: ["case_session_id"]
+            isOneToOne: false
+            referencedRelation: "case_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_session_participants_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_sessions: {
         Row: {
           case_id: string | null
@@ -149,7 +182,6 @@ export type Database = {
           section_assignment_id: string | null
           started_at: string | null
           status: string | null
-          student_ids: string | null
         }
         Insert: {
           case_id?: string | null
@@ -161,7 +193,6 @@ export type Database = {
           section_assignment_id?: string | null
           started_at?: string | null
           status?: string | null
-          student_ids?: string | null
         }
         Update: {
           case_id?: string | null
@@ -173,7 +204,6 @@ export type Database = {
           section_assignment_id?: string | null
           started_at?: string | null
           status?: string | null
-          student_ids?: string | null
         }
         Relationships: [
           {
@@ -485,24 +515,33 @@ export type Database = {
           active: boolean | null
           code: string
           created_at: string | null
+          end_date: string | null
           id: string
           name: string
+          semester: string
+          start_date: string | null
           updated_at: string | null
         }
         Insert: {
           active?: boolean | null
           code: string
           created_at?: string | null
+          end_date?: string | null
           id?: string
           name: string
+          semester: string
+          start_date?: string | null
           updated_at?: string | null
         }
         Update: {
           active?: boolean | null
           code?: string
           created_at?: string | null
+          end_date?: string | null
           id?: string
           name?: string
+          semester?: string
+          start_date?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -1407,71 +1446,32 @@ export type Database = {
           },
         ]
       }
-      faculty_section: {
-        Row: {
-          active: boolean | null
-          created_at: string | null
-          faculty_id: string | null
-          id: string
-          section_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          active?: boolean | null
-          created_at?: string | null
-          faculty_id?: string | null
-          id?: string
-          section_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          active?: boolean | null
-          created_at?: string | null
-          faculty_id?: string | null
-          id?: string
-          section_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "faculty_section_faculty_id_fkey"
-            columns: ["faculty_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "faculty_section_section_id_fkey"
-            columns: ["section_id"]
-            isOneToOne: false
-            referencedRelation: "sections"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       group_members: {
         Row: {
           active: boolean | null
           created_at: string | null
+          ended_at: string | null
           group_id: string | null
           id: string
-          student_id: string | null
+          student_id: string
           updated_at: string | null
         }
         Insert: {
           active?: boolean | null
           created_at?: string | null
+          ended_at?: string | null
           group_id?: string | null
           id?: string
-          student_id?: string | null
+          student_id: string
           updated_at?: string | null
         }
         Update: {
           active?: boolean | null
           created_at?: string | null
+          ended_at?: string | null
           group_id?: string | null
           id?: string
-          student_id?: string | null
+          student_id?: string
           updated_at?: string | null
         }
         Relationships: [
@@ -1493,6 +1493,7 @@ export type Database = {
       }
       groups: {
         Row: {
+          active: boolean
           created_at: string | null
           id: string
           name: string
@@ -1500,6 +1501,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          active?: boolean
           created_at?: string | null
           id?: string
           name: string
@@ -1507,6 +1509,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          active?: boolean
           created_at?: string | null
           id?: string
           name?: string
@@ -2362,36 +2365,27 @@ export type Database = {
       }
       sections: {
         Row: {
+          active: boolean
           course_id: string | null
           created_at: string | null
-          end_date: string | null
           id: string
-          meeting_time: string | null
           name: string
-          semester: string | null
-          start_date: string | null
           updated_at: string | null
         }
         Insert: {
+          active?: boolean
           course_id?: string | null
           created_at?: string | null
-          end_date?: string | null
           id?: string
-          meeting_time?: string | null
           name: string
-          semester?: string | null
-          start_date?: string | null
           updated_at?: string | null
         }
         Update: {
+          active?: boolean
           course_id?: string | null
           created_at?: string | null
-          end_date?: string | null
           id?: string
-          meeting_time?: string | null
           name?: string
-          semester?: string | null
-          start_date?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -2725,6 +2719,7 @@ export type Database = {
         Returns: undefined
       }
       get_user_courses: { Args: { p_user_id: string }; Returns: Json }
+      save_course_edits: { Args: { p_diff: Json }; Returns: string }
     }
     Enums: {
       case_specialty_type: "med_surg" | "ob" | "mental_health" | "public_health"

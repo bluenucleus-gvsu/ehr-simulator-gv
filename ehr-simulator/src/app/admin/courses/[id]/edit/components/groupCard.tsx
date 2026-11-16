@@ -1,56 +1,39 @@
 "use client"
 import { useState } from "react"
-import { Pencil, Check, User, UserCog, X, ArrowUpDown, Trash2 } from "lucide-react"
+import { Pencil, Check, User, ArrowUpDown, Trash2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Student, FacultyMember } from "../types"
-import StudentBlock from "./StudentBlock"
-import UnassignDialog from "./UnassignDialog"
-
-export type { Student, FacultyMember }
+import { Student, GroupDraft } from "./courseForm"
+import StudentBlock from "./studentBlock"
+import UnassignDialog from "./unassignDialog"
 
 interface GroupCardProps {
-  groupName: string
-  students: Student[]
-  sectionId: string
-  facultyMembers: FacultyMember[]
-  facultyLead: string
-  onFacultyLeadChange: (sectionId: string, groupName: string, facultyId: string) => void
-  draggedStudent: { student: Student; fromGroup: string; fromSection: string } | null
+  group: GroupDraft
+  sectionKey: string
+  draggedStudent: { student: Student; fromGroupKey: string; fromSectionKey: string } | null
   dragOverGroup: string | null
-  onDragStart: (e: React.DragEvent, student: Student, fromGroup: string, fromSection: string) => void
+  onDragStart: (e: React.DragEvent, student: Student, fromGroupKey: string, fromSectionKey: string) => void
   onDragEnd: () => void
-  onDragOver: (e: React.DragEvent, sectionId: string, groupName: string) => void
+  onDragOver: (e: React.DragEvent, sectionKey: string, groupKey: string) => void
   onDragLeave: (e: React.DragEvent) => void
-  onDrop: (e: React.DragEvent, toGroup: string, toSection: string) => void
-  onRenameGroup: (sectionId: string, oldName: string, newName: string) => void
-  onDeleteGroup: (sectionId: string, groupName: string) => void
+  onDrop: (e: React.DragEvent, toGroupKey: string, toSectionKey: string) => void
+  onRenameGroup: (sectionKey: string, groupKey: string, newName: string) => void
+  onDeleteGroup: (sectionKey: string, groupKey: string) => void
   /** Other sections this group can be moved to */
   availableSections?: { id: string; label: string }[]
   /** Called when the user selects a target section */
-  onMoveGroup?: (fromSectionId: string, groupName: string, toSectionId: string) => void
+  onMoveGroup?: (fromSectionKey: string, groupKey: string, toSectionKey: string) => void
 }
 
 export const GroupCard = ({
-  groupName,
-  students,
-  sectionId,
-  facultyMembers,
-  facultyLead,
-  onFacultyLeadChange,
+  group,
+  sectionKey,
   draggedStudent,
   dragOverGroup,
   onDragStart,
@@ -67,20 +50,23 @@ export const GroupCard = ({
   const [editValue, setEditValue] = useState("")
   const [movePopoverOpen, setMovePopoverOpen] = useState(false)
 
-  const dropKey = `${sectionId}::${groupName}`
+  const groupKey = group.key
+  const students = group.members
+
+  const dropKey = `${sectionKey}::${groupKey}`
   const isOver =
     dragOverGroup === dropKey &&
-    !(draggedStudent?.fromSection === sectionId && 
-    draggedStudent?.fromGroup === groupName)
+    !(draggedStudent?.fromSectionKey === sectionKey &&
+      draggedStudent?.fromGroupKey === groupKey)
 
   const handleStartEdit = () => {
     setEditing(true)
-    setEditValue(groupName)
+    setEditValue(group.name)
   }
 
   const handleSaveEdit = () => {
-    if (editValue.trim() && editValue.trim() !== groupName) {
-      onRenameGroup(sectionId, groupName, editValue.trim())
+    if (editValue.trim() && editValue.trim() !== group.name) {
+      onRenameGroup(sectionKey, groupKey, editValue.trim())
     }
     setEditing(false)
   }
@@ -90,16 +76,16 @@ export const GroupCard = ({
     if (e.key === "Escape") setEditing(false)
   }
 
-  const handleMoveToSection = (toSectionId: string) => {
-    onMoveGroup?.(sectionId, groupName, toSectionId)
+  const handleMoveToSection = (toSectionKey: string) => {
+    onMoveGroup?.(sectionKey, groupKey, toSectionKey)
     setMovePopoverOpen(false)
   }
 
   return (
     <div
-      onDragOver={(e) => onDragOver(e, sectionId, groupName)}
+      onDragOver={(e) => onDragOver(e, sectionKey, groupKey)}
       onDragLeave={onDragLeave}
-      onDrop={(e) => onDrop(e, groupName, sectionId)}
+      onDrop={(e) => onDrop(e, groupKey, sectionKey)}
       className={`bg-white border rounded-lg p-3 shadow-sm transition-all flex flex-col ${isOver
         ? "ring-2 ring-blue-400 bg-blue-50 shadow-md"
         : "border-slate-200 hover:shadow-md"
@@ -117,20 +103,20 @@ export const GroupCard = ({
               autoFocus
               className="h-7 text-sm font-semibold min-w-0"
             />
-            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 flex-shrink-0" onClick={handleSaveEdit}>
+            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 shrink-0" onClick={handleSaveEdit}>
               <Check className="w-3.5 h-3.5 text-green-600" />
             </Button>
           </div>
         ) : (
           <div className="flex items-center gap-1 flex-1 min-w-0 overflow-hidden">
-            <span className="font-semibold text-slate-800 text-sm truncate">{groupName}</span>
+            <span className="font-semibold text-slate-800 text-sm truncate">{group.name}</span>
 
             {/* Rename */}
             <Button
               onClick={handleStartEdit}
               size="sm"
               variant="ghost"
-              className="cursor-pointer h-6 w-6 p-0 flex-shrink-0"
+              className="cursor-pointer h-6 w-6 p-0 shrink-0"
             >
               <Pencil className="w-3 h-3 text-slate-400" />
             </Button>
@@ -142,7 +128,7 @@ export const GroupCard = ({
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="cursor-pointer h-6 w-6 p-0 flex-shrink-0"
+                    className="cursor-pointer h-6 w-6 p-0 shrink-0"
                     title="Move to another section"
                   >
                     <ArrowUpDown className="w-3 h-3 text-slate-400" />
@@ -168,57 +154,21 @@ export const GroupCard = ({
 
             {/* Delete */}
             <UnassignDialog
-              title={`Delete Group ${groupName}?`}
+              title={`Delete Group ${group.name}?`}
+              description="Its students will be moved to the unassigned pool. Any simulation history is preserved."
               confirmText="Delete"
-              onConfirm={() => onDeleteGroup(sectionId, groupName)}
+              onConfirm={() => onDeleteGroup(sectionKey, groupKey)}
               trigger={
-                <Button size="sm" variant="ghost" className="cursor-pointer h-6 w-6 p-0 flex-shrink-0">
-                    <Trash2 className="w-3 h-3 text-red-400" />
+                <Button size="sm" variant="ghost" className="cursor-pointer h-6 w-6 p-0 shrink-0">
+                  <Trash2 className="w-3 h-3 text-red-400" />
                 </Button>
               }
             />
           </div>
         )}
-        <Badge variant="secondary" className="text-xs whitespace-nowrap flex-shrink-0">
+        <Badge variant="secondary" className="text-xs whitespace-nowrap shrink-0">
           {students.length} <User />
         </Badge>
-      </div>
-
-      {/* Faculty Lead */}
-      <div className="mb-2 pb-2 border-b border-slate-100">
-        <p className="text-xs font-semibold text-slate-500 mb-1.5">Faculty Lead</p>
-        <div className="flex items-left gap-1">
-          <Select
-            value={facultyLead}
-            onValueChange={(value) => onFacultyLeadChange(sectionId, groupName, value)}
-          >
-            <SelectTrigger className="h-7 text-xs flex-1 cursor-pointer text-slate-500 gap-1.5 justify-start [&>span]:flex-1 [&>span]:text-left">
-              <UserCog className="w-3 h-3 flex-shrink-0" />
-              <SelectValue placeholder="Assign faculty..." />
-            </SelectTrigger>
-            <SelectContent>
-              {facultyMembers.map((member) => (
-                <SelectItem key={member.id} value={member.id} className="text-xs cursor-pointer">
-                  <div className="flex flex-col">
-                    <span className="font-medium">{member.full_name ?? ""}</span>
-                    <span className="text-slate-400">{member.email ?? ""}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {facultyLead && (
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="h-7 w-7 p-0 flex-shrink-0 cursor-pointer"
-              onClick={() => onFacultyLeadChange(sectionId, groupName, "")}
-            >
-              <X className="w-3 h-3 text-slate-400" />
-            </Button>
-          )}
-        </div>
       </div>
 
       {/* Students */}
@@ -230,14 +180,14 @@ export const GroupCard = ({
           .sort((a, b) => (a.full_name ?? "").localeCompare(b.full_name ?? ""))
           .map((student) => (
             <StudentBlock
-              key={student.email}
+              key={student.id}
               student={student}
               draggable
-              onDragStart={(e) => onDragStart(e, student, groupName, sectionId)}
+              onDragStart={(e) => onDragStart(e, student, groupKey, sectionKey)}
               onDragEnd={onDragEnd}
-              className={draggedStudent?.student.email === student.email ? "opacity-40" : ""}
-              fromGroup={groupName}
-              fromSection={sectionId}
+              className={draggedStudent?.student.id === student.id ? "opacity-40" : ""}
+              fromGroup={groupKey}
+              fromSection={sectionKey}
             />
           ))}
       </div>

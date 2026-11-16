@@ -7,6 +7,7 @@ import { UUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { assertStudentActiveSessionWrite } from "@/actions/simulation/assertStudentActiveSessionWrite";
 import { PREVIEW_SESSION_ID } from "@/lib/faculty/itemRelease";
+import { createRoleGatedClient } from "./roleGatedClient";
 
 export type EditableStudentNoteUpsert = Database['public']['Tables']['editable_clinical_documents']['Insert'];
 export type EditableStudentNote = Database['public']['Tables']['editable_clinical_documents']['Row'];
@@ -393,7 +394,6 @@ export async function getAllDocumentationData(caseId: string, sessionId: string)
 
 }
 
-
 export async function upsertDocumentationRows(payload: StudentDatabaseDocumentation[]) {
   const sessionId = payload[0]?.case_session_id;
   if (sessionId) {
@@ -427,7 +427,7 @@ export async function markSessionInProgress(sessionId: string) {
   return startSession(sessionId);
 }
 
-type SessionStatus = "assigned" | "in progress" | "completed" | "unassigned" | "archived" | null;
+export type SessionStatus = "assigned" | "in progress" | "completed" | "archived";
 
 type SessionTransitionResult = {
   success: boolean;
@@ -492,69 +492,36 @@ export async function startSession(sessionId: string): Promise<SessionTransition
   }
 }
 
-export async function completeSession(sessionId: string): Promise<SessionTransitionResult> {
+export async function completeSessionAssignments(assignmentIds: string[]): Promise<SessionTransitionResult> {
   try {
-    const { supabase, session } = await getSessionTransitionContext(sessionId);
-    const currentStatus = session.status;
+    const supabase = await createRoleGatedClient(["admin"]);
+    const now = new Date().toISOString();
 
-    if (currentStatus === "archived") {
-      return {
-        success: false,
-        message: "Cannot complete an archived session.",
-      };
-    }
-
-    const updates: { status: SessionStatus; started_at?: string; completed_at?: string } = {
-      status: "completed",
-      completed_at: session.completed_at ?? new Date().toISOString(),
-    };
-
-    if (!session.started_at) {
-      updates.started_at = new Date().toISOString();
-    }
-
-    const { error } = await supabase
+    const { error: backfillError } = await supabase
       .from("case_sessions")
-      .update(updates)
-      .eq("id", sessionId);
+      .update({ started_at: now })
+      .in("section_assignment_id", assignmentIds)
+      .is("started_at", null)
+      .not("status", "in", "('completed','archived')");
 
-    if (error) throw error;
-
-    return { success: true };
-  } catch (error) {
-    console.error("Failed to complete session:", error);
-    return { success: false, error };
-  }
-}
-
-export async function expireSession(sessionId: string): Promise<SessionTransitionResult> {
-  try {
-    const { supabase, session } = await getSessionTransitionContext(sessionId);
-    const currentStatus = session.status;
-
-    if (currentStatus === "completed") {
-      return {
-        success: false,
-        message: "Cannot expire a completed session.",
-      };
-    }
-
-    if (currentStatus === "archived") {
-      return { success: true };
-    }
+    if (backfillError) throw backfillError;
 
     const { error } = await supabase
       .from("case_sessions")
       .update({
-        status: "archived",
+        status: "completed" satisfies SessionStatus,
+        completed_at: now,
       })
-      .eq("id", sessionId);
+      .in("section_assignment_id", assignmentIds)
+      .not("status", "in", "('completed','archived')");
 
     if (error) throw error;
 
+    revalidatePath("/admin/courses", "layout");
     return { success: true };
   } catch (error) {
-    console.error("Failed to expire session:", error);
+    console.error("Failed to complete sessions:", error);
     return { success: false, error };
   }
 }
+

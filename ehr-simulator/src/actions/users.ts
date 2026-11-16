@@ -18,22 +18,6 @@ export async function getAllUsers() {
   return data || [];
 }
 
-export async function getAllStudentUsers() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
-  const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("role", "student")
-    .ilike("email", "%@mail.gvsu.edu")
-  if (error) throw new Error(error.message);
-
-  return data || []
-}
-
 export async function getAllAdminUsers() {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -128,7 +112,7 @@ export async function getUsersGroupId(userId: string) {
     .select(`id,
       full_name,
       role,
-      group_members(group_id)
+      group_members(group_id, active)
       `)
     .eq('id', userId)
     .single();
@@ -141,7 +125,7 @@ export async function getUsersGroupId(userId: string) {
     };
     return response;
   }
-  const extractedGroupId = data.group_members[0]?.group_id
+  const extractedGroupId = data.group_members.find(m => m.active)?.group_id
 
   if (!extractedGroupId && data.role !== 'admin') {
     return {
@@ -163,19 +147,19 @@ export async function getUsersGroupId(userId: string) {
   }
 }
 
-export async function getUserRole(userId: string): Promise<string | null>{
+export async function getUserRole(userId: string): Promise<string | null> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  const { data: profile, error} = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", userId)
-      .single();
+  const { data: profile, error } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", userId)
+    .single();
 
-  if (error){
+  if (error) {
     return null
   }
 

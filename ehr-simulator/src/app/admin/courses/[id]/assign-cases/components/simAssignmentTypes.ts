@@ -1,9 +1,9 @@
-/** Shared row shape for course simulation assignment tables (admin course detail). */
+
 export interface SimAssignment {
   id: string;
   simTime: string;
   presimTime: string;
-  sessionId: string | null;
+  /** Representative status across the assignment's per-group sessions (in progress > assigned > unassigned > first). */
   sessionStatus: string | null;
   sectionName: string;
   sectionId: string;
