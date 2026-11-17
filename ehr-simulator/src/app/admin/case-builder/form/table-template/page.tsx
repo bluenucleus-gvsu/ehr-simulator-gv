@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { useFormContext } from "@/context/FormContext";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/caseSections";
-import { caseBuilderPath } from "@/lib/caseBuilder/routes";
+import { routes } from "@/lib/routes";
 import { FormShell } from "../../components/formShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FlexSheetSection } from "@/lib/flexSheet/flexSheetSections";
@@ -47,13 +47,13 @@ const TableTemplateForm = () => {
 
   const goBack = () => {
     onDataChange(CaseSection.TABLE_TEMPLATE, [...updatedTemplate]);
-    router.push(caseBuilderPath("/admin/case-builder/form/orders", caseId));
+    router.push(routes.admin.caseBuilder.form.getHref("orders", caseId));
   }
 
   const saveAndContinue = async () => {
     onDataChange(CaseSection.TABLE_TEMPLATE, [...updatedTemplate]);
     await saveCaseData({ payload: [...updatedTemplate], section: CaseSection.TABLE_TEMPLATE, caseId });
-    router.push(caseBuilderPath("/admin/case-builder/form/labs", caseId));
+    router.push(routes.admin.caseBuilder.form.getHref("labs", caseId));
   }
 
   return (

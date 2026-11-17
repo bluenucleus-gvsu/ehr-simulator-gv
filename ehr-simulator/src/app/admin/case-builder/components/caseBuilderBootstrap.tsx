@@ -9,8 +9,9 @@ import { getCaseBundle } from "@/actions/case_builder/getCase";
 import { Button } from "@/components/ui/button";
 import { useFormContext } from "@/context/FormContext";
 import { caseBundleToFormBlob } from "@/lib/caseBuilder/caseBundleToFormBlob";
+import { routes } from "@/lib/routes";
 
-const DEMOGRAPHICS_PATH = "/admin/case-builder/form/demographics";
+const DEMOGRAPHICS_PATH = routes.admin.caseBuilder.form.getHref("demographics");
 
 export function CaseBuilderBootstrap({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
@@ -66,7 +67,7 @@ export function CaseBuilderBootstrap({ children }: { children: React.ReactNode }
           <h1 className="text-xl font-semibold">Case could not be loaded</h1>
           <p className="text-sm text-slate-600">{loadError.message}</p>
           <Button asChild>
-            <Link href="/admin/cases">Return to cases</Link>
+            <Link href={routes.admin.cases.getHref()}>Return to cases</Link>
           </Button>
         </div>
       </main>

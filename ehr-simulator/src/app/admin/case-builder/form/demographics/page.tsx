@@ -32,7 +32,7 @@ import { FormShell } from "../../components/formShell";
 import { CaseSection } from "@/lib/caseSections";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 
-import { caseBuilderPath } from "@/lib/caseBuilder/routes";
+import { routes } from "@/lib/routes";
 import { toast } from "sonner";
 import { hasText } from "@/lib/caseMinimumRequirements";
 import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
@@ -50,7 +50,7 @@ export default function DemographicsForm() {
 
   const handleCancelConfirm = () => {
     setShowCancelAlert(false);
-    router.push("/admin/");
+    router.push(routes.admin.getHref());
   }
 
   const handleCancelDismiss = () => {
@@ -106,7 +106,7 @@ export default function DemographicsForm() {
     if (result?.id) {
       setCaseId(result.id)
     }
-    router.push(caseBuilderPath("/admin/case-builder/form/history", result?.id ?? caseId));
+    router.push(routes.admin.caseBuilder.form.getHref("history", result?.id ?? caseId));
   }
 
   const limits = {

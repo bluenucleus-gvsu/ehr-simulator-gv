@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createServerSupabase } from "@/utils/supabase/server";
+import { routes } from "@/lib/routes";
 
 export default async function ProfilePage() {
   const supabase = await createServerSupabase();
@@ -8,8 +9,8 @@ export default async function ProfilePage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/auth/login");
+    redirect(routes.auth.login.getHref());
   }
 
-  redirect(`/user/profile/${user.id}`);
+  redirect(routes.user.getHref(user.id));
 }

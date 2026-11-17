@@ -12,7 +12,7 @@ import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/caseSections";
 import type { MediaImageData } from "@/utils/form";
 import { toast } from "sonner";
-import { caseBuilderPath } from "@/lib/caseBuilder/routes";
+import { routes } from "@/lib/routes";
 
 const MediaForm = () => {
   const router = useRouter();
@@ -37,7 +37,7 @@ const MediaForm = () => {
         caseId,
       });
       if (result?.data) updateImages(result.data);
-      router.push(caseBuilderPath("/admin/case-builder/form/review", caseId));
+      router.push(routes.admin.caseBuilder.form.getHref("review", caseId));
     } catch (err) {
       console.error(err);
       toast.error("Failed to save Media.");
@@ -46,7 +46,7 @@ const MediaForm = () => {
 
   const goBack = () => {
     onDataChange(CaseSection.MEDIA, images);
-    router.push(caseBuilderPath("/admin/case-builder/form/medication-administrations", caseId));
+    router.push(routes.admin.caseBuilder.form.getHref("medication-administrations", caseId));
   };
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -6,6 +6,7 @@ import type { Session } from '@supabase/supabase-js'
 import { emailIsDevAdminAllowlist } from '@/lib/devAdminEmails'
 import { getUserRole } from '@/actions/users'
 import { createBrowserSupabase } from '@/utils/supabase/client'
+import { routes } from '@/lib/routes'
 
 export default function AuthCallbackPage() {
   const router = useRouter()
@@ -34,12 +35,11 @@ export default function AuthCallbackPage() {
       const devBypass = emailIsDevAdminAllowlist(session.user.email ?? undefined)
       const resolvedRole = devBypass ? 'admin' : role
 
-      const destination =
-        resolvedRole === 'admin'
-          ? '/admin'
-          : resolvedRole === 'faculty'
-            ? `/faculty/${session.user.id}`
-            : `/user/profile/${session.user.id}`
+      const destination = routes.home.forRole(
+        resolvedRole,
+        session.user.id,
+        routes.user.getHref(session.user.id)
+      );
 
       router.replace(destination)
     }

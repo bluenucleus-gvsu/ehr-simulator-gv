@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 
+import { routes } from "@/lib/routes"
 import { useFormContext } from "@/context/FormContext"
 
 export default function SuccessPage() {
@@ -41,13 +42,13 @@ export default function SuccessPage() {
             <Button
               className="cursor-pointer text-xl p-6"
               disabled={!caseId}
-              onClick={() => { if (caseId) router.push(`/simulation/${caseId}/preview/chart/overview`) }}
+              onClick={() => { if (caseId) router.push(routes.simulation.getHref(caseId, "preview")) }}
               variant={"outline"}>
               Open Case in EHR
             </Button>
             <Button
               className="cursor-pointer text-xl p-6"
-              onClick={() => { router.push("/admin/") }}
+              onClick={() => { router.push(routes.admin.getHref()) }}
               variant={"default"}>
               Return to Dashboard
             </Button>

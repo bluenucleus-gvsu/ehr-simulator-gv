@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { routes } from "@/lib/routes";
 import { authState, currentUserId } from "../../playwright/helpers/auth";
 
 test("unauthenticated users are redirected to the login page", async ({ page }) => {
@@ -25,7 +26,7 @@ test.describe("role sessions", () => {
 
     test("loads the app with the faculty role", async ({ page }) => {
       const userId = await currentUserId(page);
-      await page.goto(`/faculty/${userId}`);
+      await page.goto(routes.faculty.getHref(userId));
       await expect(page).not.toHaveURL(/\/auth\/login/);
       await expect(page.getByRole("heading", { name: "E2E Faculty" })).toBeVisible();
     });
@@ -35,7 +36,7 @@ test.describe("role sessions", () => {
     test.use({ storageState: authState("admin") });
 
     test("loads the app with the admin role", async ({ page }) => {
-      await page.goto("/admin");
+      await page.goto(routes.admin.getHref());
       await expect(page).not.toHaveURL(/\/auth\/login/);
       await expect(page.getByRole("heading", { name: "DASHBOARD" })).toBeVisible();
     });

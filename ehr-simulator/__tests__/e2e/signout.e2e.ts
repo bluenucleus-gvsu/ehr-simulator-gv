@@ -1,4 +1,5 @@
 import { test, expect, type Browser, type BrowserContext, type Page } from "@playwright/test";
+import { routes } from "@/lib/routes";
 import { BASE_URL, E2E_PASSWORD, ROLE_ACCOUNTS, currentUserId } from "../../playwright/helpers/auth";
 
 // get separate browser context - signing out would ruin other test's authentication
@@ -35,7 +36,7 @@ test.describe("sign out", () => {
     test("logs out from the sidebar", async ({ browser }) => {
       const { context, page } = await createBrowserContext(browser, "admin");
       try {
-        await page.goto("/admin");
+        await page.goto(routes.admin.getHref());
         await page.getByRole("button", { name: "Logout" }).click();
         await expectSignedOut(page);
       } finally {
@@ -49,7 +50,7 @@ test.describe("sign out", () => {
       const { context, page } = await createBrowserContext(browser, "faculty");
       try {
         const userId = await currentUserId(page);
-        await page.goto(`/faculty/${userId}`);
+        await page.goto(routes.faculty.getHref(userId));
         await page.getByRole("button", { name: "Logout" }).click();
         await expectSignedOut(page);
       } finally {
@@ -63,7 +64,7 @@ test.describe("sign out", () => {
       const { context, page } = await createBrowserContext(browser, "student");
       try {
         const userId = await currentUserId(page);
-        await page.goto(`/user/profile/${userId}`);
+        await page.goto(routes.user.getHref(userId));
         await page.getByRole("button", { name: "Logout" }).click();
         await expectSignedOut(page);
       } finally {

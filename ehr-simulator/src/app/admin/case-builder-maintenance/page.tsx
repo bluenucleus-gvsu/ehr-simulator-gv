@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { routes } from "@/lib/routes";
 
 export default function CaseBuilderMaintenancePage() {
   return (
@@ -20,7 +21,7 @@ export default function CaseBuilderMaintenancePage() {
           </p>
         </div>
 
-        <Link href="/admin/cases">
+        <Link href={routes.admin.cases.getHref()}>
           <Button>Back to Cases</Button>
         </Link>
       </div>
