@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { emailIsDevAdminAllowlist } from "@/lib/devAdminEmails";
+import { routes } from "@/lib/routes";
 import { createServerSupabase } from "@/utils/supabase/server";
 import Link from "next/link";
 
@@ -41,11 +42,11 @@ export default async function AdminLayout({
             <h1 className="text-2xl font-semibold">Not authorized</h1>
             <p className="text-sm text-muted-foreground">You do not have permission to access the admin area.</p>
             {role === "faculty" ? (
-              <Link href={`/faculty/${user.id}`} passHref>
+              <Link href={routes.faculty.getHref(user.id)} passHref>
                 <Button>My Profile</Button>
               </Link>
-            ) :(
-              <Link href={`/user/profile/${user.id}`} passHref>
+            ) : (
+              <Link href={routes.user.getHref(user.id)} passHref>
                 <Button>My Profile</Button>
               </Link>
             )}

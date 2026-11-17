@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, Settings, User, BookOpenText, Hospital, Presentation, LogOut, ScanBarcode } from "lucide-react";
+import { Home, UserIcon, BookOpenText, Hospital, Presentation, LogOut, ScanBarcode } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -18,29 +18,48 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { signOut } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
+import { routes } from "@/lib/routes";
+import { User } from "@supabase/supabase-js";
 
 const adminRoutes = [
   {
     title: "Admin Dashbord",
-    url: "/admin",
-    icom: Home,
+    url: routes.admin.getHref(),
+    icon: Home,
   },
   {
     title: "Courses",
-    url: "/admin/courses",
-    icom: BookOpenText,
+    url: routes.admin.courses.getHref(),
+    icon: BookOpenText,
   },
   {
     title: "Cases",
-    url: "/admin/cases",
-    icom: Hospital,
+    url: routes.admin.cases.getHref(),
+    icon: Hospital,
   },
   {
     title: "Barcode Printing",
-    url: "/admin/barcodes",
-    icom: ScanBarcode,
+    url: routes.admin.barcodes.getHref(),
+    icon: ScanBarcode,
   },
 ]
+
+const getDefaultRoutes = (user: User | null) => {
+  if (!user) return [];
+
+  return [
+    {
+      title: "Profile",
+      url: routes.user.getHref(user.id),
+      icon: UserIcon,
+    },
+    {
+      title: "Faculty Page",
+      url: routes.faculty.getHref(user.id),
+      icon: Presentation,
+    },
+  ];
+}
 
 export function AppSidebar() {
 
@@ -48,23 +67,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const isCurrentPath = (url: string) => pathname === url;
 
-  const defaultRoutes = [
-    {
-      title: "Profile",
-      url: user?.id ? `/user/profile/${user.id}` : "/user",
-      icom: User,
-    },
-    {
-      title: "Faculty Page",
-      url: user?.id ? `/faculty/${user.id}` : "/faculty",
-      icom: Presentation,
-    },
-    {
-      title: "Settings",
-      url: "/admin/settings",
-      icom: Settings,
-    },
-  ];
+  const defaultRoutes = getDefaultRoutes(user);
 
   if (loading) return null;
 
@@ -82,7 +85,7 @@ export function AppSidebar() {
                   asChild
                   className={`${isCurrentPath(route.url) && "bg-secondary"}`}>
                   <Link href={route.url}>
-                    <route.icom />
+                    <route.icon />
                     <span>{route.title}</span>
                   </Link>
                 </SidebarMenuButton>
@@ -100,7 +103,7 @@ export function AppSidebar() {
               <SidebarMenuItem key={route.url}>
                 <SidebarMenuButton asChild>
                   <Link href={route.url}>
-                    <route.icom />
+                    <route.icon />
                     <span>{route.title}</span>
                   </Link>
                 </SidebarMenuButton>

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation";
+import { routes } from "@/lib/routes";
 import CreateCaseButton from "./CreateCaseButton";
 
 export function AdminQuickActionsList() {
@@ -10,19 +11,19 @@ export function AdminQuickActionsList() {
     <div className="grid grid-cols-2 w-160 gap-2">
       <CreateCaseButton />
       <Button
-        onClick={() => { router.push("/admin/cases") }}
+        onClick={() => { router.push(routes.admin.cases.getHref()) }}
         className="cursor-pointer"
         variant="default">
         View All Cases
       </Button>
       <Button
-        onClick={() => { router.push("/admin/courses/new") }}
+        onClick={() => { router.push(routes.admin.courses.new.getHref()) }}
         className="cursor-pointer"
         variant="default">
         Create Course
       </Button>
       <Button
-        onClick={() => { router.push("/admin/courses") }}
+        onClick={() => { router.push(routes.admin.courses.getHref()) }}
         className="cursor-pointer"
         variant="default">
         View All Courses

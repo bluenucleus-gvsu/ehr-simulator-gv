@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useFormContext } from "@/context/FormContext";
-import { caseBuilderPath } from "@/lib/caseBuilder/routes";
+import { routes } from "@/lib/routes";
 import { FormShell } from "../../components/formShell";
 
 function displayList(values: string[]): string {
@@ -48,7 +48,7 @@ export default function FormReview() {
 
   const handleSubmit = async () => {
     if (!caseId) throw new Error("Complete demographics before finishing the case.");
-    router.push(caseBuilderPath("/admin/case-builder/form/success", caseId));
+    router.push(routes.admin.caseBuilder.form.getHref("success", caseId));
   };
 
   return (
@@ -57,7 +57,7 @@ export default function FormReview() {
       stepDescription="Confirm the saved case content before finishing the builder."
       icon={<ClipboardCheck className="text-slate-400" />}
       onSubmit={handleSubmit}
-      goBack={() => router.push(caseBuilderPath("/admin/case-builder/form/media", caseId))}
+      goBack={() => router.push(routes.admin.caseBuilder.form.getHref("media", caseId))}
       continueButtonText="Finish Case"
       backButtonText="Back"
       continueButtonTooltip="Finish editing this case"

@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { createServerSupabase } from "@/utils/supabase/server";
+import { routes } from "@/lib/routes";
 
 export default async function Home() {
-
   const supabase = await createServerSupabase();
 
   const {
@@ -14,10 +14,12 @@ export default async function Home() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center py-2">
-      <Link href={`/user/profile/${id}`} passHref className="p-4">
-        <Button>My Profile</Button>
-      </Link>
-      <Link href="/admin" passHref>
+      {id && (
+        <Link href={routes.user.getHref(id)} passHref className="p-4">
+          <Button>My Profile</Button>
+        </Link>
+      )}
+      <Link href={routes.admin.getHref()} passHref>
         <Button>Admin Portal</Button>
       </Link>
     </div>

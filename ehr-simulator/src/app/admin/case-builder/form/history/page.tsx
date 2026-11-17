@@ -29,7 +29,7 @@ import { HistoryFormData } from "@/utils/form";
 import { FormShell } from "../../components/formShell";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/caseSections";
-import { caseBuilderPath } from "@/lib/caseBuilder/routes";
+import { routes } from "@/lib/routes";
 
 const FormSection = ({
   icon: Icon,
@@ -107,19 +107,19 @@ const HistoryForm = () => {
       setShowUnsavedWarning(true);
     } else {
       onDataChange(CaseSection.HISTORY, newHistoryData);
-      router.push(caseBuilderPath("/admin/case-builder/form/demographics", caseId));
+      router.push(routes.admin.caseBuilder.form.getHref("demographics", caseId));
     }
   }
 
   const saveAndContinue = async () => {
     onDataChange(CaseSection.HISTORY, newHistoryData);
     await saveCaseData({ payload: newHistoryData, section: CaseSection.HISTORY, caseId });
-    router.push(caseBuilderPath("/admin/case-builder/form/notes", caseId));
+    router.push(routes.admin.caseBuilder.form.getHref("notes", caseId));
   }
 
   const saveAndGoBack = () => {
     onDataChange(CaseSection.HISTORY, newHistoryData);
-    router.push(caseBuilderPath("/admin/case-builder/form/demographics", caseId));
+    router.push(routes.admin.caseBuilder.form.getHref("demographics", caseId));
   }
 
   const handleSubmit = async () => {

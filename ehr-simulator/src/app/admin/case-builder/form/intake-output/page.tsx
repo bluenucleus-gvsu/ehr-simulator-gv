@@ -23,7 +23,7 @@ import { IntakeOutputFormData } from "@/utils/form";
 import { FormShell } from "../../components/formShell";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/caseSections";
-import { caseBuilderPath } from "@/lib/caseBuilder/routes";
+import { routes } from "@/lib/routes";
 
 const chartConfig = {
   intake: { label: "Intake", color: "hsl(var(--chart-6))" },
@@ -132,12 +132,12 @@ export default function IntakeOutputForm() {
 
   const goBack = async () => {
     await persistIo();
-    router.push(caseBuilderPath("/admin/case-builder/form/charting", caseId));
+    router.push(routes.admin.caseBuilder.form.getHref("charting", caseId));
   };
 
   const handleSubmit = async () => {
     await persistIo();
-    router.push(caseBuilderPath("/admin/case-builder/form/medications", caseId));
+    router.push(routes.admin.caseBuilder.form.getHref("medications", caseId));
   };
 
   return (
