@@ -1,26 +1,3 @@
-export interface ImagingData {
-  displayName: string;
-  technique: string;
-  findings: {
-    region: string,
-    description: string
-  }[];
-  impressions: string[];
-  isCritical: boolean | 'indeterminate';
-}
-
-export interface MicrobiologyReportData {
-  sampleType: string;
-  appearance: string;
-  microscopy: string;
-  location?: string;
-  cultureResults: string;
-  sensitivity: string;
-  comments: string;
-  reporter: string;
-  isCritical: boolean | 'indeterminate';
-}
-
 export const LabSeverityLevel = {
   NORMAL: 'normal',
   ABNORMAL: 'abnormal',
@@ -32,10 +9,9 @@ export type LabSeverityLevel = typeof LabSeverityLevel[keyof typeof LabSeverityL
 export type LabCellValue = string;
 type LabThreshold = { low: number, high: number }
 
-// dataset to be used by tanstack table
 export interface LabTableData {
   field: string;
-  rowType: "divider" | "results" | "imaging" | "microbiology";
+  rowType: "divider" | "results";
   unit?: string;
   normalRange?: LabThreshold;
   criticalRange?: LabThreshold;
