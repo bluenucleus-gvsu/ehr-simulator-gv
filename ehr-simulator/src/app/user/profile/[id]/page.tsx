@@ -3,6 +3,7 @@ import ProfileHeader from "@/app/user/components/ProfileHeader";
 import CompletedCaseCard from "@/app/user/components/CompletedCaseCard";
 import AssignedCaseCard from "@/app/user/components/AssignedCaseCard";
 import { createServerSupabase } from "@/utils/supabase/server";
+import { routes } from "@/lib/routes";
 import { getUserCourses } from "@/actions/getUserCourses";
 
 function compareSimTimesLatestFirst(a: string | null, b: string | null): number {
@@ -33,7 +34,7 @@ export default async function ProfilePage({ params }: Readonly<{ params: Promise
         .single();
 
       if (profile?.role && profile.role !== "student") {
-        redirect("/admin");
+        redirect(routes.admin.getHref());
       }
       return profile?.full_name || profile?.email || "Student";
     })();

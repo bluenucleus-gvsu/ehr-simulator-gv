@@ -17,7 +17,7 @@ import { LabColumnFormHeader } from "./components/labColumnFormHeader";
 import { FormTable } from "../../components/FormTable";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/caseSections";
-import { caseBuilderPath } from "@/lib/caseBuilder/routes";
+import { routes } from "@/lib/routes";
 import { LabTableInputCell } from "./components/labTableInputCell";
 
 const columnHelper = createColumnHelper<LabTableData>();
@@ -44,7 +44,7 @@ function LabForm() {
       data: labTableData,
       columns,
     });
-    router.push(caseBuilderPath("/admin/case-builder/form/table-template", caseId));
+    router.push(routes.admin.caseBuilder.form.getHref("table-template", caseId));
   }
 
   const handleSubmit = async () => {
@@ -62,7 +62,7 @@ function LabForm() {
       caseId: caseId
     })
 
-    router.push(caseBuilderPath('/admin/case-builder/form/charting', caseId))
+    router.push(routes.admin.caseBuilder.form.getHref("charting", caseId))
   }
   const columns_ = useMemo(
     () => [

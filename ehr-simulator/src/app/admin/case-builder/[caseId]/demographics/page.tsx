@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { routes } from "@/lib/routes";
 
 interface PageProps {
   params: Promise<{
@@ -8,5 +9,6 @@ interface PageProps {
 
 export default async function LegacyCaseBuilderDemographicsPage({ params }: PageProps) {
   const { caseId } = await params;
-  redirect(`/admin/case-builder/form/demographics?caseId=${caseId}`);
+
+  redirect(routes.admin.caseBuilder.form.getHref("demographics", caseId));
 }

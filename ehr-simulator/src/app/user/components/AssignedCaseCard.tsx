@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { markSessionInProgress } from "@/actions/simulation";
+import { routes } from "@/lib/routes";
 import { getAssignedSimulationLifecycle } from "@/utils/assignedSimulationLifecycle";
 
 type AssignedCaseCardProps = {
@@ -44,7 +45,7 @@ export default function AssignedCaseCard({
   const isPresimPhase = lifecycle.availability === "presim";
   const isCompletedPhase = lifecycle.availability === "completed";
 
-  const handleRoute = async (pathSuffix: string, isStartingSim: boolean = false) => {
+  const handleRoute = async (isStartingSim: boolean = false) => {
     if (!sessionId) {
       toast.error("Session is still being generated. Please try again later.");
       return;
@@ -60,7 +61,7 @@ export default function AssignedCaseCard({
     }
 
     // Navigate to the chart
-    router.push(`/simulation/${caseId}/${sessionId}/${pathSuffix}`);
+    router.push(routes.simulation.getHref(caseId, sessionId));
   };
 
   return (
@@ -92,7 +93,7 @@ export default function AssignedCaseCard({
         {isActivePhase ? (
           <button
             className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-            onClick={() => handleRoute('chart/overview', true)}
+            onClick={() => handleRoute(true)}
             disabled={isStarting || !canJoin}
             aria-label={`Start simulation ${name ?? id}`}
           >
@@ -101,8 +102,8 @@ export default function AssignedCaseCard({
         ) : isPresimPhase ? (
           <button
             className="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
-            onClick={() => handleRoute('chart/overview', false)}
             disabled={!canJoin}
+            onClick={() => handleRoute(false)}
             aria-label={`View pre-sim chart for ${name ?? id}`}
           >
             Enter Pre-Sim Mode
@@ -111,7 +112,7 @@ export default function AssignedCaseCard({
           <button
             type="button"
             className="px-3 py-1 text-sm bg-slate-600 text-white rounded hover:bg-slate-700"
-            onClick={() => handleRoute("chart/overview", false)}
+            onClick={() => handleRoute(false)}
             aria-label={`Open chart for ${name ?? id}`}
           >
             Open chart

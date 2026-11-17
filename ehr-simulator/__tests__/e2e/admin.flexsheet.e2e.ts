@@ -1,5 +1,6 @@
 import { test, expect, Page } from "@playwright/test";
 import { authState } from "@/../playwright/helpers/auth";
+import { routes } from "@/lib/routes";
 import { flexSheetSectionNameMap, specialtyDefaultSections } from "@/lib/caseBuilder/defaultTableTemplates";
 import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
 import { FlexSheetSection, flexSheetSections } from "@/lib/flexSheet/flexSheetSections";
@@ -35,13 +36,13 @@ async function expectFlexSheetSectionsVisible(page: Page, expected: FlexSheetSec
 test.use({ storageState: authState("admin") });
 
 test("FlexSheet Template Form renders correct defaults", async ({ page }) => {
-  await page.goto("/admin");
+  await page.goto(routes.admin.getHref());
   await expect(page.getByRole("heading", { name: "DASHBOARD" })).toBeVisible();
 
   await page.getByRole('button', { name: 'Create New Case' }).click();
 
   // Case-Builder Demographics
-  await expect(page).toHaveURL('/admin/case-builder/form/demographics');
+  await expect(page).toHaveURL(routes.admin.caseBuilder.form.getHref("demographics"));
   await page.locator('#summary').fill('Flexsheet Text Case Summary');
   await page.locator('#caseSpecialty').click();
   await page.getByRole('option', { name: 'OB' }).click();
@@ -91,6 +92,8 @@ test("FlexSheet Template Form renders correct defaults", async ({ page }) => {
   const urlObj = new URL(currentUrl);
   const caseId = urlObj.searchParams.get('caseId');
   expect(caseId).not.toBeNull()
+  // Narrow caseId to string after the assertion above; the routes builders require it.
+  const caseIdString = caseId as string;
   await expectTemplateCheckboxStates(page, specialtyDefaultSections[CaseSpecialty.OB]);
 
   for (const name of ['Vital Signs', 'Input Rows', 'Output Rows']) {
@@ -109,21 +112,23 @@ test("FlexSheet Template Form renders correct defaults", async ({ page }) => {
   await page.locator("#caseSpecialty").click();
   await page.getByRole('option', { name: 'OB' }).click();
   await expect(page.locator('#caseSpecialty')).toHaveText('OB');
-  await page.getByTestId(`button-${caseId}`).click()
+  await page.getByTestId(`button-${caseIdString}`).click()
   await expect(page).toHaveURL(/\/simulation\/[0-9a-f-]{36}\/preview\/chart\/overview/);
   await page.locator("#charting").click();
   await expectFlexSheetSectionsVisible(page, specialtyDefaultSections[CaseSpecialty.OB]);
 
   // Back to Case-Builder form to customize FlexSheet template
-  await page.goto('/admin');
+  await page.goto(routes.admin.getHref());
   await expect(page.getByRole("heading", { name: "DASHBOARD" })).toBeVisible();
   await page.getByRole('link', { name: 'Cases' }).click();
   await expect(page).toHaveURL(/\/admin\/cases/);
   await page.locator("#caseSpecialty").click();
   await page.getByRole('option', { name: 'OB' }).click();
-  await page.getByTestId(`edit-${caseId}`).click();
-  await expect(page).toHaveURL(new RegExp(`/admin/case-builder/form/demographics\\?caseId=${caseId}$`));
-  await page.goto(`/admin/case-builder/form/table-template?caseId=${caseId}`);
+  await page.getByTestId(`edit-${caseIdString}`).click();
+  await expect(page).toHaveURL(
+    new RegExp(`${routes.admin.caseBuilder.form.getHref("demographics", caseIdString).replace("?", "\\?")}$`),
+  );
+  await page.goto(routes.admin.caseBuilder.form.getHref("table-template", caseIdString));
   await expect(page.getByRole('checkbox', { name: 'Wound Assessment' })).toBeVisible();
 
   const customSections = specialtyDefaultSections[CaseSpecialty.OB].filter((s) => s !== FlexSheetSection.VITALS);
@@ -136,7 +141,7 @@ test("FlexSheet Template Form renders correct defaults", async ({ page }) => {
   await expect(page).toHaveURL(/\/admin\/case-builder\/form\/labs\?caseId=[0-9a-f-]{36}$/i);
 
   // Return to the EHR flexsheets and validate the custom selection
-  await page.goto(`/simulation/${caseId}/preview/chart/overview`);
+  await page.goto(routes.simulation.getHref(caseIdString, "preview"));
   await expect(page).toHaveURL(/\/simulation\/[0-9a-f-]{36}\/preview\/chart\/overview/);
   await page.locator("#charting").click();
   await expectFlexSheetSectionsVisible(page, customSections);

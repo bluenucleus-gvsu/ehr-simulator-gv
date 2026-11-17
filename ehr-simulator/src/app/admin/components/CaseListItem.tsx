@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { caseMeetsMinimumRequirements } from "@/lib/caseMinimumRequirements";
+import { routes } from "@/lib/routes";
 
 
 interface CaseListItemProps {
@@ -12,8 +13,8 @@ interface CaseListItemProps {
 export default function CaseListItem({ courseCaseAssignment }: CaseListItemProps) {
   const router = useRouter()
   const { id, name, description, admitting_diagnosis, created_at } = courseCaseAssignment;
-  const editUrl = `/admin/case-builder/form/demographics?caseId=${id}`
-  const previewUrl = `/simulation/${id}/preview/chart/overview`
+  const editUrl = routes.admin.caseBuilder.form.getHref("demographics", id)
+  const previewUrl = routes.simulation.getHref(id, "preview")
   const canUseCase = caseMeetsMinimumRequirements(courseCaseAssignment);
 
   return (

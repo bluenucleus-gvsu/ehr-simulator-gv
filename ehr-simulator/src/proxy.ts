@@ -1,16 +1,16 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/utils/supabase/middleware'
+import { routes } from '@/lib/routes'
 
-const CASE_BUILDER_MAINTENANCE_PATH = '/admin/case-builder-maintenance'
 const CASE_BUILDER_UNDER_MAINTENANCE = process.env.CASE_BUILDER_MAINTENANCE === 'true';
 
 export async function proxy(request: NextRequest) {
   if (
-    request.nextUrl.pathname.startsWith('/admin/case-builder') &&
-    request.nextUrl.pathname !== CASE_BUILDER_MAINTENANCE_PATH
+    request.nextUrl.pathname.startsWith(routes.admin.caseBuilder.root) &&
+    request.nextUrl.pathname !== routes.admin.caseBuilderMaintenance.getHref()
     && CASE_BUILDER_UNDER_MAINTENANCE
   ) {
-    return NextResponse.redirect(new URL(CASE_BUILDER_MAINTENANCE_PATH, request.url))
+    return NextResponse.redirect(new URL(routes.admin.caseBuilderMaintenance.getHref(), request.url))
   }
 
   return await updateSession(request)

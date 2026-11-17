@@ -16,8 +16,8 @@ import { FormTable } from "../../components/FormTable";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/caseSections";
 import CheckBoxList from "@/app/simulation/[caseId]/[sessionId]/chart/charting/components/checkBoxList";
-import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 import { resolveInitialSections } from "@/lib/caseBuilder/defaultTableTemplates";
+import { routes } from "@/lib/routes";
 import { mergeTemplateWithExistingRows } from "@/lib/flexSheet/flexSheetRowGenerator";
 import { buildTableTemplate } from "@/lib/flexSheet/flexSheetTemplate";
 import { getVisibleSubsetIds, isRowVisible } from "@/lib/flexSheet/flexSheetHelpers";
@@ -87,7 +87,7 @@ function ChartingForm() {
       timePoints: timePoints,
       timePointsInPreSim: timePointsInPresim
     })
-    router.push(caseBuilderPath("/admin/case-builder/form/labs", caseId));
+    router.push(routes.admin.caseBuilder.form.getHref("labs", caseId));
   }
 
   const handleSubmit = async () => {
@@ -107,7 +107,7 @@ function ChartingForm() {
       caseId: caseId
     })
 
-    router.push(caseBuilderPath('/admin/case-builder/form/intake-output', caseId))
+    router.push(routes.admin.caseBuilder.form.getHref("intake-output", caseId))
   }
   const handleSubsetSelection = (rowId: string, columnId: string, selectedIdsForField: string[]) => {
     setChartingData(prevData => prevData.map(row => {

@@ -16,7 +16,7 @@ import { FormShell } from "../../components/formShell"
 import { CaseSection } from "@/lib/caseSections"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
 import { toast } from "sonner"
-import { caseBuilderPath } from "@/lib/caseBuilder/routes"
+import { routes } from "@/lib/routes";
 import { filterAdministrationsForOrders } from "@/lib/caseBuilder/medicationPayload"
 
 function getComboboxData(medications: AllMedicationTypes[]) {
@@ -132,7 +132,7 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
       createdOrders: medOrders,
       selectedMeds: selectedMeds
     });
-    router.push(caseBuilderPath("/admin/case-builder/form/intake-output", caseId));
+    router.push(routes.admin.caseBuilder.form.getHref("intake-output", caseId));
   }
 
   const handleSubmit = async () => {
@@ -161,7 +161,7 @@ export default function MedicationOrderForm({ medications }: MedicationOrderForm
         caseId,
       })
     }
-    router.push(caseBuilderPath('/admin/case-builder/form/medication-administrations', caseId));
+    router.push(routes.admin.caseBuilder.form.getHref("medication-administrations", caseId));
   }
   return (
     <FormShell

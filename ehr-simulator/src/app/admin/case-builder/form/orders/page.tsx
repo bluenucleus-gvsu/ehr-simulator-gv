@@ -34,7 +34,7 @@ import { FormShell } from "../../components/formShell"
 import { Checkbox } from "@/components/ui/checkbox"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
 import { CaseSection } from "@/lib/caseSections"
-import { caseBuilderPath } from "@/lib/caseBuilder/routes"
+import { routes } from "@/lib/routes";
 
 const categories: OrderType["category"][] = ["Nursing", "Respiratory", "Laboratory", "Consult", "Diet", "Medication"]
 
@@ -109,7 +109,7 @@ export default function OrdersForm() {
 
   const goBack = () => {
     onDataChange(CaseSection.ORDERS, orders)
-    router.push(caseBuilderPath("/admin/case-builder/form/notes", caseId));
+    router.push(routes.admin.caseBuilder.form.getHref("notes", caseId));
   }
 
   const handleSubmit = async () => {
@@ -121,7 +121,7 @@ export default function OrdersForm() {
       caseId: caseId
     })
 
-    router.push(caseBuilderPath('/admin/case-builder/form/table-template', caseId))
+    router.push(routes.admin.caseBuilder.form.getHref("table-template", caseId))
   }
 
   const handlePresimCheckbox = (check: boolean) => {

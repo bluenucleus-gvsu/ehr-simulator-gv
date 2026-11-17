@@ -10,6 +10,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { caseSpecialtyLabels } from "@/utils/form";
+import { routes } from "@/lib/routes";
 
 interface CaseClientProps {
   cases: SimCase[];
@@ -46,7 +47,7 @@ export default function CasesClient({ cases }: CaseClientProps) {
 
             <p className="text-xs text-gray-500">Manage all simulation cases</p>
           </div>
-          <Link href='/admin/case-builder/form/demographics'>
+          <Link href={routes.admin.caseBuilder.form.getHref("demographics")}>
             <Button>Create Case</Button>
           </Link>
         </div>

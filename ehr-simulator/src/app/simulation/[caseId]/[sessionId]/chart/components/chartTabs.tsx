@@ -7,6 +7,7 @@ import { Clipboard, ImageIcon, NotebookText, Pill, TestTubeDiagonal } from "luci
 import { useParams, usePathname } from "next/navigation"
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { routes } from "@/lib/routes";
 import NavigationAlert from "./navigationAlert";
 
 
@@ -14,7 +15,9 @@ export default function ChartTabs() {
   const { hasUnsavedCharting } = useSimSessionContext()
   const params = useParams()
   const router = useRouter();
-  const { sessionId, caseId } = params
+  // String() matches the ToString coercion the inline template literals relied on.
+  const caseId = String(params.caseId);
+  const sessionId = String(params.sessionId);
   const [showWarning, setShowWarning] = useState(false);
   const [pendingPath, setPendingPath] = useState<string | null>(null);
   const pathname = usePathname();
@@ -43,45 +46,45 @@ export default function ChartTabs() {
     {
       name: "Overview",
       value: "overview",
-      path: `/simulation/${caseId}/${sessionId}/chart/overview`,
+      path: routes.simulation.chart.getHref(caseId, sessionId, "overview"),
       icon: null
     },
     {
       name: "Labs",
       value: "labs",
       icon: <TestTubeDiagonal className="size-4" />,
-      path: `/simulation/${caseId}/${sessionId}/chart/labs`,
+      path: routes.simulation.chart.getHref(caseId, sessionId, "labs"),
     },
     {
       name: "Orders",
       value: "orders",
       icon: <Clipboard className="size-4" />,
-      path: `/simulation/${caseId}/${sessionId}/chart/orders`,
+      path: routes.simulation.chart.getHref(caseId, sessionId, "orders"),
     },
     {
       name: "MAR",
       value: "mar",
       icon: <Pill className="size-4" />,
-      path: `/simulation/${caseId}/${sessionId}/chart/mar`,
+      path: routes.simulation.chart.getHref(caseId, sessionId, "mar"),
     },
     {
       name: "Notes",
       value: "notes",
       icon: <NotebookText className="size-4" />,
-      path: `/simulation/${caseId}/${sessionId}/chart/notes`,
+      path: routes.simulation.chart.getHref(caseId, sessionId, "notes"),
 
     },
     {
       name: "Media",
       value: "media",
       icon: <ImageIcon className="size-4" />,
-      path: `/simulation/${caseId}/${sessionId}/chart/media`,
+      path: routes.simulation.chart.getHref(caseId, sessionId, "media"),
     },
     {
       name: "FlexSheets",
       value: "charting",
       icon: null,
-      path: `/simulation/${caseId}/${sessionId}/chart/charting`,
+      path: routes.simulation.chart.getHref(caseId, sessionId, "charting"),
     },
   ];
   const currentTabValue = pathname?.split("/").pop() ?? tabs[0].value;

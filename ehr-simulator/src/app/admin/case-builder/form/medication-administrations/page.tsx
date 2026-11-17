@@ -33,8 +33,8 @@ import { FormShell } from "../../components/formShell"
 import ColumnShiftControl from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/columnShiftControl"
 import { CaseSection } from "@/lib/caseSections"
 import { saveCaseData } from "@/actions/case_builder/caseBuilder"
-import { caseBuilderPath } from "@/lib/caseBuilder/routes"
 import { createColumns } from "@/lib/medications"
+import { routes } from "@/lib/routes";
 
 function getComboboxData(orders: MedicationOrder[], medications: AllMedicationTypes[]) {
   return orders.map(order => {
@@ -148,7 +148,7 @@ export default function MedicationAdministrationsForm() {
 
   const goBack = () => {
     onDataChange(CaseSection.MEDICATION_ADMINISTRATIONS, medAdministrations)
-    router.push(caseBuilderPath("/admin/case-builder/form/medications", caseId));
+    router.push(routes.admin.caseBuilder.form.getHref("medications", caseId));
   }
 
   const handleSubmit = async () => {
@@ -163,7 +163,7 @@ export default function MedicationAdministrationsForm() {
       caseId: caseId,
     })
 
-    router.push(caseBuilderPath('/admin/case-builder/form/media', caseId))
+    router.push(routes.admin.caseBuilder.form.getHref("media", caseId))
   }
   const handleColumnShift = (offset: number | string) => {
     if (typeof offset === 'number') {

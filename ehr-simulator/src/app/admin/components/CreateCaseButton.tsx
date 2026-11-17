@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { routes } from "@/lib/routes";
 
 export default function CreateCaseButton() {
   const router = useRouter();
   const createCase = () => {
     // new case in db?
-    router.push('/admin/case-builder/form/demographics')
+    router.push(routes.admin.caseBuilder.form.getHref("demographics"))
   }
 
   return (

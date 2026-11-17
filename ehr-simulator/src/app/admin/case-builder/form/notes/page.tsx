@@ -29,7 +29,7 @@ import { soapTemplateNote } from "@/utils/form";
 import { FormShell } from "../../components/formShell";
 import { saveCaseData } from "@/actions/case_builder/caseBuilder";
 import { CaseSection } from "@/lib/caseSections";
-import { caseBuilderPath } from "@/lib/caseBuilder/routes";
+import { routes } from "@/lib/routes";
 
 export default function NotesForm() {
   const { onDataChange, noteData, demographicData, caseId } = useFormContext()
@@ -110,7 +110,7 @@ export default function NotesForm() {
 
   const goBack = () => {
     onDataChange(CaseSection.CLINICAL_DOCUMENTS, notes);
-    router.push(caseBuilderPath("/admin/case-builder/form/history", caseId));
+    router.push(routes.admin.caseBuilder.form.getHref("history", caseId));
   }
 
   const handleSubmit = async () => {
@@ -122,7 +122,7 @@ export default function NotesForm() {
       caseId: caseId
     })
 
-    router.push(caseBuilderPath("/admin/case-builder/form/orders", caseId));
+    router.push(routes.admin.caseBuilder.form.getHref("orders", caseId));
   }
 
   const sortedNotes = [...notes].sort((a, b) => (b.timeOffset ?? b.phase ?? 1) - (a.timeOffset ?? a.phase ?? 1))

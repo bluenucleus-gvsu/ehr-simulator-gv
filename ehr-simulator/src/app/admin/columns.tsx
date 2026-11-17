@@ -4,13 +4,14 @@ import { ColumnDef } from "@tanstack/react-table"
 import Link from "next/link"
 import { type ManagedUser } from "@/lib/userManagement"
 import { UserRoleEditor } from "./components/UserRoleEditor"
+import { routes } from "@/lib/routes"
 
 export const columns: ColumnDef<ManagedUser>[] = [
   {
     accessorKey: "full_name",
     header: "Full Name",
     cell: ({ row }) => row.original.role === "student" ? (
-      <Link href={`/user/profile/${row.original.id}`} className="text-blue-600 underline">
+      <Link href={routes.user.getHref(row.original.id)} className="text-blue-600 underline">
         {row.original.full_name || row.original.email || "Unnamed user"}
       </Link>
     ) : <span>{row.original.full_name || "Unnamed user"}</span>,

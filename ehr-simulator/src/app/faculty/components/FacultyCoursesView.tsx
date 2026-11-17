@@ -1,6 +1,7 @@
 "use client";
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
+import { routes } from "@/lib/routes";
 import { Simulation, Course} from "../lib/types";
 
 function isToday(dateStr: string) {
@@ -61,7 +62,7 @@ export default function FacultyCoursesView({ courses }: { courses: Course[] }) {
         <div className="ml-4 shrink-0">
           {today ? (
             <button
-              onClick={() => router.push(`/faculty/${user.id}/${sim.id}`)}
+              onClick={() => user && router.push(routes.faculty.section.getHref(user.id, sim.id))}
               className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 font-medium"
             >
               Enter Simulation
