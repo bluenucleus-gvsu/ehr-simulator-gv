@@ -3,11 +3,11 @@ import { buildTableTemplate } from "@/lib/flexSheet/flexSheetTemplate";
 import { buildAssessmentToolGuide } from "@/lib/flexSheet/assessmentToolGuides";
 import { CaseBundle } from "@/actions/case_builder/getCase";
 import { buildChartingRowsFromBundle } from "@/lib/flexSheet/flexSheetRowGenerator";
-import { DatabaseDocumentation } from "@/actions/simulation";
+import { DocumentationRow } from "@/actions/simulation/getAllDocumentationData";
 
 export function useFlexSheetInitialization(
   caseBundle: CaseBundle | null,
-  documentation: DatabaseDocumentation[]
+  documentation: DocumentationRow[]
 ) {
   const chartingSections = useMemo(() => {
     return caseBundle?.caseRow.flexsheet_sections ?? [];

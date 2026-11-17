@@ -8,6 +8,7 @@ export const FlexSheetSection = {
   VITALS_OVERVIEW: 'vitals_overview',
   INPUT: "input",
   OUTPUT: "output",
+  QBL: "quantified_blood_loss",
   BASE_PAIN: "base_pain",
   FACES_PAIN: "faces_pain",
   GENERAL_APPEARANCE: 'general_appearance',
@@ -21,6 +22,8 @@ export const FlexSheetSection = {
   GI: 'gi',
   MUSCULOSKELETAL: "musculoskeletal",
   GENTIOURINARY: "genitourinary",
+  REPRODUCTIVE: "reproductive",
+  FETAL: "fetal",
   IV_1: "iv_1",
   IV_2: "iv_2",
   NURSING_CARE: "nursing_care",
@@ -857,6 +860,118 @@ const musculoskeletalRows: readonly FlexSheetData[] = [
   }
 ];
 
+const reproductiveRows: readonly FlexSheetData[] = [
+  {
+    id: "reproductive_assessment",
+    field: "Reproductive Assessment",
+    componentType: "static",
+    rowType: "titleRow",
+  },
+  {
+    id: "membranes",
+    field: "Membranes",
+    componentType: "input",
+    hideable: false,
+  },
+  {
+    id: "rupture_of_membranes",
+    field: "Rupture of Membranes",
+    componentType: "input",
+    hideable: false,
+  },
+  {
+    id: "fluid_color",
+    field: "Fluid Color",
+    componentType: "input",
+    hideable: false,
+  },
+  {
+    id: "fundal_consistency",
+    field: "Fundal Consistency",
+    componentType: "input",
+    hideable: false,
+  },
+  {
+    id: "fundal_placement",
+    field: "Fundal Placement",
+    componentType: "input",
+    hideable: false,
+  },
+  {
+    id: "fundal_height",
+    field: "Fundal Height",
+    componentType: "input",
+    hideable: false,
+  },
+  {
+    id: "lochia",
+    field: "Lochia",
+    componentType: "input",
+    hideable: false,
+  },
+]
+
+const fetalRows: readonly FlexSheetData[] = [
+  {
+    id: "fetal_assessment",
+    field: "Fetal Assessment",
+    componentType: "static",
+    rowType: "titleRow",
+  },
+  {
+    id: "fhr_baseline",
+    field: "Baseline",
+    componentType: "input",
+    normalRange: { low: 110, high: 160 },
+    hideable: false,
+  },
+  {
+    id: "fhr_variability",
+    field: "Variability",
+    componentType: "input",
+    hideable: false,
+  },
+  {
+    id: "fhr_acceleration",
+    field: "Acceleration",
+    componentType: "input",
+    hideable: false,
+  },
+  {
+    id: "fhr_decelerations",
+    field: "Decelerations",
+    componentType: "input",
+    hideable: false,
+  },
+  {
+    id: "contraction_frequency",
+    field: "Contraction Frequency",
+    componentType: "input",
+    hideable: false,
+  },
+  {
+    id: "contraction_duration",
+    field: "Contraction Duration",
+    componentType: "input",
+    hideable: false,
+  },
+  {
+    id: "contraction_strength",
+    field: "Contraction Strength",
+    componentType: "input",
+    hideable: false,
+  },
+]
+
+const quantifiedBloodLossRow: readonly FlexSheetData[] = [
+  {
+    id: "quantified_blood_loss",
+    field: "QBL (mL)",
+    componentType: "input",
+    hideable: false,
+  },
+];
+
 const genitourinaryRows: readonly FlexSheetData[] = [
   {
     id: "genitourinaryAssessmentTitle",
@@ -1331,10 +1446,13 @@ export const flexSheetSections: FlexSheetSections = {
   [FlexSheetSection.VITALS_OVERVIEW]: vitalSignOverviewRows,
   [FlexSheetSection.INPUT]: inputRows,
   [FlexSheetSection.OUTPUT]: outputRows,
+  [FlexSheetSection.QBL]: quantifiedBloodLossRow,
   [FlexSheetSection.BASE_PAIN]: basePainRows,
   [FlexSheetSection.FACES_PAIN]: facesPainRows,
   [FlexSheetSection.GENERAL_APPEARANCE]: generalAppearanceRows,
   [FlexSheetSection.PSYCHOSOCIAL]: psychosocialRows,
+  [FlexSheetSection.REPRODUCTIVE]: reproductiveRows,
+  [FlexSheetSection.FETAL]: fetalRows,
   [FlexSheetSection.HEENT]: heentRows,
   [FlexSheetSection.NEURO]: neuroRows,
   [FlexSheetSection.INTEGUMENT]: integumentRows,
