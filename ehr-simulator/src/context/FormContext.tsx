@@ -1,9 +1,10 @@
 'use client';
 
 import { createContext, useCallback, useContext, useState } from 'react';
-import { CompleteFormType, defaultIoData, createDefaultLabColumn, defaultOrders, DemographicFormData, FormBlob, HistoryFormData, IntakeOutputFormData, LabTableFormData, MedOrderFormData, MediaImageData, TableFormData } from '@/utils/form';
+import { CompleteFormType, defaultIoData, createDefaultLabColumn, DemographicFormData, FormBlob, HistoryFormData, IntakeOutputFormData, LabTableFormData, MedOrderFormData, MediaImageData, TableFormData } from '@/utils/form';
 import { ClinicalNote } from '@/app/simulation/[caseId]/[sessionId]/chart/notes/components/notesData';
-import { OrderType } from '@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData';
+import { defaultOrders } from '@/lib/caseBuilder/defaultOrders';
+import { OrderFormRow } from '@/lib/orders';
 import { labTemplate } from '@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData';
 import { MedAdministrationInstance } from '@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData';
 import { buildTableTemplate, CaseSpecialty } from '@/lib/flexSheet/flexSheetTemplate';
@@ -15,7 +16,7 @@ interface FormContextType {
   demographicData: DemographicFormData;
   historyData: HistoryFormData;
   noteData: ClinicalNote[];
-  orderData: OrderType[];
+  orderData: OrderFormRow[];
   tableTemplateData: FlexSheetSection[];
   labData: LabTableFormData;
   chartingData: TableFormData<FlexSheetData>;
@@ -86,7 +87,7 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
   const [demographicData, setDemographicData] = useState<DemographicFormData>(defaultDemographicData);
   const [historyData, setHistoryData] = useState<HistoryFormData>(defaultHistoryData);
   const [noteData, setNoteData] = useState<ClinicalNote[]>([]);
-  const [orderData, setOrderData] = useState<OrderType[]>(defaultOrders);
+  const [orderData, setOrderData] = useState<OrderFormRow[]>(defaultOrders);
   const [tableTemplateData, setTableTemplateData] = useState<FlexSheetSection[]>([]);
   const [labData, setLabData] = useState<LabTableFormData>({
     data: labTemplate,
@@ -114,7 +115,7 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
         setNoteData(value as ClinicalNote[]);
         break;
       case CaseSection.ORDERS:
-        setOrderData(value as OrderType[]);
+        setOrderData(value as OrderFormRow[]);
         break;
       case CaseSection.TABLE_TEMPLATE:
         setTableTemplateData(value as FlexSheetSection[])

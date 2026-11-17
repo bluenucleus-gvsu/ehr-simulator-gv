@@ -111,13 +111,13 @@ export function caseBundleToFormBlob(bundle: CaseBundle): FormBlob {
     orders: (bundle.orders ?? []).map((order) => {
       const phase = Math.max(1, Number(order.phase ?? 1));
       return {
-        category: text(order, "category") as FormBlob["orders"][number]["category"],
-        title: text(order, "title"),
-        details: text(order, "details"),
-        status: text(order, "status") || "Active",
-        orderingProvider: text(order, "provider"),
-        important: Boolean(order.is_important),
-        visibleInPresim: phase > 1 ? false : Boolean(order.is_in_presim),
+        category: order.category,
+        title: order.title,
+        details: order.details,
+        status: order.status || "Active",
+        provider: order.provider,
+        is_important: order.is_important,
+        is_in_presim: phase > 1 ? false : order.is_in_presim,
         phase,
       };
     }),

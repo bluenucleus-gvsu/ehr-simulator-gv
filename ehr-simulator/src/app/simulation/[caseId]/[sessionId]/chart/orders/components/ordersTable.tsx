@@ -16,27 +16,27 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Dot } from "lucide-react"
+import { OrderTitleColumn, OrderTitleRow, statusColor } from "@/lib/orders"
 
-interface OrdersTableProps<T> {
-  columnNames: string[],
-  headerNames: T,
+interface OrdersTableProps {
+  columnNames: OrderTitleColumn[],
+  headerNames: Record<"title" | OrderTitleColumn, string>,
   color: string,
-  data: T[]
+  data: OrderTitleRow[]
 }
-const OrdersTable = <T extends Record<string, string | boolean | undefined>>({
+const OrdersTable = ({
   columnNames,
   headerNames,
   color,
   data
-}: OrdersTableProps<T>) => {
+}: OrdersTableProps) => {
 
-  const columnHelper = createColumnHelper<T>()
+  const columnHelper = createColumnHelper<OrderTitleRow>()
 
   const columns = useMemo(
     () => [
       // unique first column
-      columnHelper.accessor((row: T) => (row as { title?: string }).title ?? "", {
+      columnHelper.accessor("title", {
         id: "title",
         header: () => {
           return (
@@ -53,27 +53,26 @@ const OrdersTable = <T extends Record<string, string | boolean | undefined>>({
                     }}
                   ></span>
                   <span className="relative z-1">
-                    {typeof headerNames.title === 'string' ? headerNames.title.substring(0, 1) : ''}
+                    {headerNames.title ? headerNames.title.substring(0, 1) : ''}
                   </span>
                 </span>
-                <span className="-ml-3 relative z-1">{typeof headerNames.title === 'string' ? headerNames.title.substring(1) : ''}</span>
+                <span className="-ml-3 relative z-1">{headerNames.title ? headerNames.title.substring(1) : ''}</span>
               </h1>
             </div>
           )
         },
-        cell: info => {
-          const row = info.row.original as T & { title?: string; isImportant?: boolean };
+        cell: ({ getValue }) => {
           return (
             <div className="flex flex-col items-end gap-1 text-right">
-              <h1 className="text-xs font-medium text-wrap tracking-tight">{row.title}</h1>
+              <h1 className="text-xs font-medium text-wrap tracking-tight">{getValue()}</h1>
             </div>
           )
         }
       }),
 
-      // map out remaining columns  
+      // map out remaining columns
       ...columnNames.map(id =>
-        columnHelper.accessor((row: T) => row[id], {
+        columnHelper.accessor(row => row[id], {
           id: id,
           header: () => (
             <div className="h-full flex justify-left items-end ">
@@ -81,10 +80,11 @@ const OrdersTable = <T extends Record<string, string | boolean | undefined>>({
             </div>
           ),
           cell: ({ getValue }) => {
+
             return (
               <div className="flex justify-start items-center gap-2">
                 <p className="text-xs text-wrap text-gray-700 tracking-tight">{getValue()}</p>
-                {id === "status" && <Dot color="#7bc421" size={12} strokeWidth={16} />}
+                <span className={`w-2 h-2 rounded-full ring-2 ring-white shadow-sm ${statusColor(getValue())}`} />
               </div>
             )
           }

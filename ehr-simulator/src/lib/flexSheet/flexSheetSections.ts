@@ -31,6 +31,8 @@ export const FlexSheetSection = {
   CIWA: "ciwa",
   MORSE: "morse",
   PAINAD: "painad",
+  PHQ9: 'phq9',
+  CSSRS: 'cssrs'
 } as const;
 
 export type FlexSheetSections = Record<FlexSheetSection, readonly FlexSheetData[]>;
@@ -62,13 +64,13 @@ export const vitalSignOverviewRows: readonly FlexSheetData[] = [
     id: "temp",
     field: "Temp (°C)",
     componentType: "input",
-    normalRange: { low: 36.6, high: 38 }
+    normalRange: { low: 36, high: 38 }
   },
   {
     id: "spo2",
     field: "SpO2 (%)",
     componentType: "input",
-    normalRange: { low: 95, high: 100 }
+    normalRange: { low: 90, high: 100 }
   },
   {
     id: "weight_kg",
@@ -153,7 +155,7 @@ export const vitalSignRows: readonly FlexSheetData[] = [
     id: "temp",
     field: "Temp (°C)",
     componentType: "input",
-    normalRange: { low: 36.6, high: 38 }
+    normalRange: { low: 36, high: 38 }
   },
   {
     id: "temp_source",
@@ -173,7 +175,7 @@ export const vitalSignRows: readonly FlexSheetData[] = [
     id: "spo2",
     field: "SpO2 (%)",
     componentType: "input",
-    normalRange: { low: 95, high: 100 }
+    normalRange: { low: 90, high: 100 }
   },
   {
     id: "oxygen_device",
@@ -1070,6 +1072,45 @@ const nursingCareRows: readonly FlexSheetData[] = [
   }
 ];
 
+export const cssrsRows: FlexSheetData[] = [
+  {
+    id: "cssrs_assessment",
+    field: "C-SSRS",
+    componentType: "static",
+    rowType: "titleRow",
+  },
+  {
+    id: "cssrs_1",
+    field: "1. Suicidal thoughts",
+    componentType: "input",
+  },
+  {
+    id: "cssrs_2",
+    field: "2. Suicidal ideation",
+    componentType: "input",
+  },
+  {
+    id: "cssrs_3",
+    field: "3. Presence of plan",
+    componentType: "input",
+  },
+  {
+    id: "cssrs_4",
+    field: "4. Active ideation",
+    componentType: "input",
+  },
+  {
+    id: "cssrs_5",
+    field: "5. Active planning",
+    componentType: "input",
+  },
+  {
+    id: "cssrs_6",
+    field: "6. Active attempt",
+    componentType: "input",
+  },
+]
+
 export const ciwaAssessmentTool: FlexSheetData[] = [
   {
     id: "ciwaArSectionTitle",
@@ -1441,6 +1482,87 @@ export const painadAssessmentTool: FlexSheetData[] = [
   }
 ]
 
+const phq9Options =
+  [
+    { subsetId: "0", label: "0 - Not at all" },
+    { subsetId: "1", label: "1 - Several days" },
+    { subsetId: "2", label: "2 - More than half the days" },
+    { subsetId: "3", label: "3 - Nearly every day" },
+  ];
+
+export const phq9AssessmentTool: FlexSheetData[] = [
+  {
+    id: "phq9_tool",
+    field: "PHQ-9",
+    componentType: "static",
+    rowType: "titleRow",
+    toolId: FlexSheetSection.PHQ9
+  },
+  {
+    id: "phq9_1",
+    field: "1. Interest or Pleasure",
+    componentType: "assessmentselect",
+    chartingOptions: phq9Options,
+    toolId: FlexSheetSection.PHQ9
+  },
+  {
+    id: "phq9_2",
+    field: "2. Down or Depressed",
+    componentType: "assessmentselect",
+    chartingOptions: phq9Options,
+    toolId: FlexSheetSection.PHQ9
+  },
+  {
+    id: "phq9_3",
+    field: "3. Sleep",
+    componentType: "assessmentselect",
+    chartingOptions: phq9Options,
+    toolId: FlexSheetSection.PHQ9
+  },
+  {
+    id: "phq9_4",
+    field: "4. Tired",
+    componentType: "assessmentselect",
+    chartingOptions: phq9Options,
+    toolId: FlexSheetSection.PHQ9
+  },
+  {
+    id: "phq9_5",
+    field: "5. Appetite",
+    componentType: "assessmentselect",
+    chartingOptions: phq9Options,
+    toolId: FlexSheetSection.PHQ9
+  },
+  {
+    id: "phq9_6",
+    field: "6. Self-Perception",
+    componentType: "assessmentselect",
+    chartingOptions: phq9Options,
+    toolId: FlexSheetSection.PHQ9
+  },
+  {
+    id: "phq9_7",
+    field: "7. Concentration",
+    componentType: "assessmentselect",
+    chartingOptions: phq9Options,
+    toolId: FlexSheetSection.PHQ9
+  },
+  {
+    id: "phq9_8",
+    field: "8. Slow or restless",
+    componentType: "assessmentselect",
+    chartingOptions: phq9Options,
+    toolId: FlexSheetSection.PHQ9
+  },
+  {
+    id: "phq9_9",
+    field: "9. Suicidal ideation",
+    componentType: "assessmentselect",
+    chartingOptions: phq9Options,
+    toolId: FlexSheetSection.PHQ9
+  }
+];
+
 export const flexSheetSections: FlexSheetSections = {
   [FlexSheetSection.VITALS]: vitalSignRows,
   [FlexSheetSection.VITALS_OVERVIEW]: vitalSignOverviewRows,
@@ -1469,6 +1591,8 @@ export const flexSheetSections: FlexSheetSections = {
   [FlexSheetSection.CIWA]: ciwaAssessmentTool,
   [FlexSheetSection.MORSE]: morseAssessmentTool,
   [FlexSheetSection.PAINAD]: painadAssessmentTool,
+  [FlexSheetSection.PHQ9]: phq9AssessmentTool,
+  [FlexSheetSection.CSSRS]: cssrsRows,
 };
 
 export function addRows(section: FlexSheetSection): FlexSheetData[] {

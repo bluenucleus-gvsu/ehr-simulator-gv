@@ -37,6 +37,8 @@ export function buildTableTemplate(selections: Set<FlexSheetSection>) {
     FlexSheetSection.IV_1,
     FlexSheetSection.IV_2,
     FlexSheetSection.NURSING_CARE,
+    FlexSheetSection.PHQ9,
+    FlexSheetSection.CSSRS,
     FlexSheetSection.BRADEN,
     FlexSheetSection.CIWA,
     FlexSheetSection.MORSE,
