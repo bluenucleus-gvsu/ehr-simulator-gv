@@ -1,11 +1,30 @@
 import { getUserRole } from "@/actions/users";
 import { AppSidebar } from "@/components/app-sidebar";
+import NotAuthorized from "@/components/notAuthorized";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { emailIsDevAdminAllowlist } from "@/lib/devAdminEmails";
 import { routes } from "@/lib/routes";
 import { createServerSupabase } from "@/utils/supabase/server";
+import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
+
+
+function AccessError() {
+  return (
+    <div className="p-8 min-h-screen flex items-center justify-center">
+      <div className="max-w-xl w-full text-center bg-white rounded-lg shadow p-6 space-y-4">
+        <h1 className="text-2xl font-semibold">Something went wrong</h1>
+        <p className="text-sm text-muted-foreground">
+          We couldn&apos;t verify your access. This is usually temporary &mdash; please try again.
+        </p>
+        <Link href="/admin" passHref>
+          <Button>Try again</Button>
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 export default async function AdminLayout({
   children,
@@ -13,55 +32,45 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }>) {
   // Server-side check: ensure the current user is an admin before rendering admin UI
+  let user: User | null = null;
+  let role: string | null = null;
+  let lookupFailed = false;
+
   try {
     const supabase = await createServerSupabase();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    user = authUser;
 
-    // ensure we have an authenticated user
-    if (!user) {
-      return (
-        <main className="p-8 min-h-screen flex items-center justify-center">
-          <div className="max-w-xl w-full text-center bg-white rounded-lg shadow p-6">
-            <h1 className="text-2xl font-semibold mb-2">Not authorized</h1>
-            <p className="text-sm text-muted-foreground">You do not have permission to access the admin area.</p>
-          </div>
-        </main>
-      );
-    }
-
-    // Check role from the application's users table (public.users)
-    const role = await getUserRole(user.id)
-    const devBypass = emailIsDevAdminAllowlist(user.email ?? undefined);
-
-    if ((role !== "admin") && !devBypass) {
-      return (
-        <main className="p-8 min-h-screen flex items-center justify-center">
-          <div className="max-w-xl w-full text-center bg-white rounded-lg shadow p-6 space-y-4">
-            <h1 className="text-2xl font-semibold">Not authorized</h1>
-            <p className="text-sm text-muted-foreground">You do not have permission to access the admin area.</p>
-            {role === "faculty" ? (
-              <Link href={routes.faculty.getHref(user.id)} passHref>
-                <Button>My Profile</Button>
-              </Link>
-            ) : (
-              <Link href={routes.user.getHref(user.id)} passHref>
-                <Button>My Profile</Button>
-              </Link>
-            )}
-          </div>
-        </main>
-      );
+    if (user) {
+      role = await getUserRole(user.id);
     }
   } catch {
+    lookupFailed = true;
+  }
+
+  const devBypass = emailIsDevAdminAllowlist(user?.email ?? undefined);
+
+  if (lookupFailed && !devBypass) {
+    return <AccessError />;
+  }
+
+  if (!user) {
+    return <NotAuthorized />;
+  }
+
+  if (role !== "admin" && !devBypass) {
     return (
-      <main className="p-8 min-h-screen flex items-center justify-center">
-        <div className="max-w-xl w-full text-center bg-white rounded-lg shadow p-6">
-          <h1 className="text-2xl font-semibold mb-2">Not authorized</h1>
-          <p className="text-sm text-muted-foreground">You do not have permission to access the admin area.</p>
-        </div>
-      </main>
+      <NotAuthorized>
+        {role === "faculty" ? (
+          <Link href={routes.faculty.getHref(user.id)} passHref>
+            <Button>My Profile</Button>
+          </Link>
+        ) : (
+          <Link href={routes.user.getHref(user.id)} passHref>
+            <Button>My Profile</Button>
+          </Link>
+        )}
+      </NotAuthorized>
     );
   }
 

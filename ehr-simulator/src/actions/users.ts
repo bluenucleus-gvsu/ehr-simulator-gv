@@ -160,7 +160,12 @@ export async function getUserRole(userId: string): Promise<string | null> {
     .single();
 
   if (error) {
-    return null
+
+    // No profile row exists for this user yet (account not provisioned).
+    if ((error as { code?: string }).code === "PGRST116") {
+      return null;
+    }
+    throw new Error("Failed to retrieve user roles");
   }
 
   return profile?.role

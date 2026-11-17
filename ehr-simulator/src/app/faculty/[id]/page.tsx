@@ -7,6 +7,7 @@ import { getUserRole } from "@/actions/users";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
+import NotAuthorized from "@/components/notAuthorized";
 
 
 
@@ -27,18 +28,32 @@ export default async function FacultyPage({
     notFound();
   }
 
-  const role = await getUserRole(user.id)
-  if ((role !== "admin") && (role !== "faculty")) {
+  let role: string | null = null;
+  try {
+    role = await getUserRole(user.id)
+  } catch {
     return (
-      <main className="p-8 min-h-screen flex items-center justify-center">
+      <div className="p-8 min-h-screen flex items-center justify-center">
         <div className="max-w-xl w-full text-center bg-white rounded-lg shadow p-6 space-y-4">
-          <h1 className="text-2xl font-semibold">Not authorized</h1>
-          <p className="text-sm text-muted-foreground">You do not have permission to access the faculty area.</p>
-          <Link href={routes.user.getHref(id)} passHref>
-            <Button>My Profile</Button>
+          <h1 className="text-2xl font-semibold">Something went wrong</h1>
+          <p className="text-sm text-muted-foreground">
+            We couldn&apos;t verify your access. This is usually temporary &mdash; please try again.
+          </p>
+          <Link href={`/faculty/${id}`} passHref>
+            <Button>Try again</Button>
           </Link>
         </div>
-      </main>
+      </div>
+    );
+  }
+
+  if ((role !== "admin") && (role !== "faculty")) {
+    return (
+      <NotAuthorized>
+        <Link href={routes.user.getHref(id)} passHref>
+          <Button>My Profile</Button>
+        </Link>
+      </NotAuthorized>
     );
   }
 
@@ -67,13 +82,13 @@ export default async function FacultyPage({
   const courseCodes = courses.filter((c) => c.active).map((c) => c.code || c.name);
 
   return (
-    <main className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="p-6 max-w-6xl mx-auto space-y-6">
       <FacultyHeader
         name={facultyName}
         avatarUrl={avatarUrl}
         courses={courseCodes}
       />
       <FacultyCoursesView courses={courses} />
-    </main>
+    </div>
   );
 }
