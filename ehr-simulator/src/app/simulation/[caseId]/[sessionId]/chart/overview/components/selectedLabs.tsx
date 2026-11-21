@@ -11,7 +11,7 @@ import { buildLabRowsFromBundle } from "../../labs/components/labsFromBundle"
 import { toSimReleaseItem } from "@/lib/labTypes"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
 import { useSimSessionContext } from "@/context/SimSessionContext"
-import { isVisibleInSim, resolveDisplayOffset, displayOffsetFor } from "@/lib/faculty/itemRelease"
+import { isVisibleInSim, resolveDisplayOffset, displayOffsetFor } from "@/lib/item-release/itemRelease"
 
 const HIGHLIGHTED_LABS = [
   "sodium",

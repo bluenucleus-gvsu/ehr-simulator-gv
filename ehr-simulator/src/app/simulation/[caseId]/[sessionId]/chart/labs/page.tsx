@@ -18,7 +18,7 @@ import { type LabTableData, labTemplate, getResultStatus, LabSeverityLevel, } fr
 import { buildLabRowsFromBundle } from "./components/labsFromBundle";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
 import { useSimSessionContext } from "@/context/SimSessionContext";
-import { isVisibleInSim, resolveDisplayOffset, displayOffsetFor } from "@/lib/faculty/itemRelease";
+import { isVisibleInSim, resolveDisplayOffset, displayOffsetFor } from "@/lib/item-release/itemRelease";
 import { LabColumn, toSimReleaseItem } from "@/lib/labTypes";
 
 const columnHelper = createColumnHelper<LabTableData>();

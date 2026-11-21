@@ -31,26 +31,13 @@ async function expectSignedOut(page: Page) {
   await expect(page).toHaveURL(/\/auth\/login/);
 }
 
+// Admin and faculty share the same logout flow
 test.describe("sign out", () => {
   test.describe("admin", () => {
     test("logs out from the sidebar", async ({ browser }) => {
       const { context, page } = await createBrowserContext(browser, "admin");
       try {
         await page.goto(routes.admin.getHref());
-        await page.getByRole("button", { name: "Logout" }).click();
-        await expectSignedOut(page);
-      } finally {
-        await context.close();
-      }
-    });
-  });
-
-  test.describe("faculty", () => {
-    test("logs out from the faculty header", async ({ browser }) => {
-      const { context, page } = await createBrowserContext(browser, "faculty");
-      try {
-        const userId = await currentUserId(page);
-        await page.goto(routes.faculty.getHref(userId));
         await page.getByRole("button", { name: "Logout" }).click();
         await expectSignedOut(page);
       } finally {

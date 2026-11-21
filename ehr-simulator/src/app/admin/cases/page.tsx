@@ -1,7 +1,5 @@
 import { getAllSimCases } from "@/actions/cases";
-import CasesClient from "../components/casesClient";
-
-
+import CasesClient from "./components/casesClient";
 
 export default async function CasesPage() {
   const caseData = await getAllSimCases();
@@ -14,8 +12,6 @@ export default async function CasesPage() {
   const cases = caseData.data || [];
 
   return (
-    <CasesClient
-      cases={cases}
-    />
+    <CasesClient cases={cases} />
   );
 }

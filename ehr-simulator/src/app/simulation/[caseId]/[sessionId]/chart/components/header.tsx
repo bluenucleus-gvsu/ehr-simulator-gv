@@ -31,7 +31,7 @@ const Header = () => {
   }, [])
 
   const handleHomeClick = () => {
-    const destination = routes.home.forRole(userRole, userId ?? "", routes.home.getHref());
+    const destination = routes.home.forRole(userRole, userId ?? "");
     router.push(destination)
   }
 

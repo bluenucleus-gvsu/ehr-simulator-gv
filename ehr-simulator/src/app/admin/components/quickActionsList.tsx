@@ -3,25 +3,33 @@
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation";
 import { routes } from "@/lib/routes";
-import CreateCaseButton from "./CreateCaseButton";
+import CreateCaseButton from "../cases/components/CreateCaseButton";
+import { useUser } from "@/context/UserContext";
 
 export function AdminQuickActionsList() {
   const router = useRouter();
+  const { role } = useUser();
+
   return (
     <div className="grid grid-cols-2 w-160 gap-2">
-      <CreateCaseButton />
+      {role === "admin" &&
+        <>
+          <CreateCaseButton />
+          <Button
+            onClick={() => { router.push(routes.admin.courses.new.getHref()) }}
+            className="cursor-pointer"
+            variant="default">
+            Create Course
+          </Button>
+        </>
+      }
       <Button
         onClick={() => { router.push(routes.admin.cases.getHref()) }}
         className="cursor-pointer"
         variant="default">
         View All Cases
       </Button>
-      <Button
-        onClick={() => { router.push(routes.admin.courses.new.getHref()) }}
-        className="cursor-pointer"
-        variant="default">
-        Create Course
-      </Button>
+
       <Button
         onClick={() => { router.push(routes.admin.courses.getHref()) }}
         className="cursor-pointer"

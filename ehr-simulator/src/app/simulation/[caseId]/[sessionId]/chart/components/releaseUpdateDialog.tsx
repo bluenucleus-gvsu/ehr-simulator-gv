@@ -18,11 +18,11 @@ import { useSimulationCase } from "@/context/SimulationCaseContext";
 import {
   buildReleaseUpdateSummary,
   type ReleaseUpdateSectionKey,
-} from "@/lib/faculty/itemReleaseNotification";
+} from "@/lib/item-release/itemReleaseNotification";
 import {
   createEmptyReleasedItemsMap,
   type ReleasedItemsMap,
-} from "@/lib/faculty/itemRelease";
+} from "@/lib/item-release/itemRelease";
 
 const tabHrefByKey: Record<ReleaseUpdateSectionKey, string> = {
   labs: "labs",

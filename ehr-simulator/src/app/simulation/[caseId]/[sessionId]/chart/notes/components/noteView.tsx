@@ -16,7 +16,7 @@ import { useSimSessionContext } from "@/context/SimSessionContext";
 import { useStudentSimulationEditAccess } from "@/utils/studentSimulationEditAccess";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
-import { isVisibleInSim, resolveDisplayOffset, displayOffsetFor } from "@/lib/faculty/itemRelease";
+import { isVisibleInSim, resolveDisplayOffset, displayOffsetFor } from "@/lib/item-release/itemRelease";
 
 export interface NoteViewProps {
   isError: boolean;

@@ -20,7 +20,7 @@ import { DatabaseMedAdministration, StudentMedicationAdministration, submitMedic
 import { useSimSessionContext } from '@/context/SimSessionContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useStudentSimulationEditAccess } from '@/utils/studentSimulationEditAccess';
-import { isVisibleInSim } from '@/lib/faculty/itemRelease';
+import { isVisibleInSim } from '@/lib/item-release/itemRelease';
 import { useSimulationScanner } from '@/hooks/useSimulationScanner';
 import ScanWristbandAlert from './scanWristbandAlert';
 import { createColumns } from '@/lib/medications';

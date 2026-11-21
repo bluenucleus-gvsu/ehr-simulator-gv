@@ -18,10 +18,10 @@ import {
   type ReleasedItem,
   type ReleasePanelData,
   type ReleasePendingItem,
-} from "@/actions/faculty";
-import { type ReleasableItemType } from "@/lib/faculty/itemRelease";
+} from "@/actions/item-release";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
+import { ReleasableItemType } from "@/lib/item-release/itemRelease";
 
 interface ReleasePanelProps {
   open: boolean;
@@ -222,21 +222,21 @@ export default function ReleasePanelDialog({
                           <span className="text-sm text-slate-600 line-clamp-2">
                             {displayName}
                           </span>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        className="text-sm h-6 ml-2 shrink-0"
-                        data-testid={`release-item-${displayName}`}
-                        disabled={working !== null}
-                        onClick={() =>
-                          releaseItems(
-                            [item],
-                            `item-${item.id}`,
-                            `${displayName} released to ${groupName}.`,
-                          )
-                        }
-                      >
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="text-sm h-6 ml-2 shrink-0"
+                            data-testid={`release-item-${displayName}`}
+                            disabled={working !== null}
+                            onClick={() =>
+                              releaseItems(
+                                [item],
+                                `item-${item.id}`,
+                                `${displayName} released to ${groupName}.`,
+                              )
+                            }
+                          >
                             {working === `item-${item.id}` ? "Releasing…" : "Release"}
                           </Button>
                         </Fragment>

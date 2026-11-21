@@ -38,15 +38,9 @@ export default function AuthCallbackPage() {
       if (!isActive) return
 
       const resolvedRole = devBypass ? 'admin' : role
-
-      const destination = routes.home.forRole(
-        resolvedRole,
-        session.user.id,
-        routes.user.getHref(session.user.id)
-      );
+      const destination = routes.home.forRole(resolvedRole, session.user.id);
 
       router.replace(destination)
-
     }
 
     const scheduleRedirect = (session: Session | null) => {
@@ -97,8 +91,8 @@ export default function AuthCallbackPage() {
 
   return (
     <div className="flex min-h-screen justify-center items-center">
+      <LoaderCircle className="w-5 h-5 animate-spin mr-1" />
       <p>Signing you in…</p>
-      <LoaderCircle className="w-5 h-5 animate-spin" />
     </div>
   )
 }

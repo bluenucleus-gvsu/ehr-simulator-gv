@@ -1,10 +1,10 @@
 "use server"
 
-import { createVerifiedStaffClient } from "@/utils/supabase/staffAccess";
+import { createRoleGatedClient } from "@/actions/roleGatedClient";
 import { ActionResponse } from "./cases";
-import { PREVIEW_SESSION_ID, ReleasableItemType, RELEASABLE_ITEMS, SessionItemReleasesByTable } from "@/lib/faculty/itemRelease";
+import { PREVIEW_SESSION_ID, ReleasableItemType, RELEASABLE_ITEMS, SessionItemReleasesByTable } from "@/lib/item-release/itemRelease";
 import { Database } from "../../database.types";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 export type ReleasableItem = {
   type: ReleasableItemType;
@@ -47,12 +47,90 @@ async function resolveSessionCaseId(
   return data?.case_id ?? null;
 }
 
+
+const normalizeLabel = (label: unknown): string | null =>
+  typeof label === "string" && label.trim() ? label : null;
+
+async function fetchReleasedLabels(
+  supabase: SupabaseClient<Database>,
+  type: ReleasableItemType,
+  releasedIds: string[],
+): Promise<Map<string, string | null>> {
+  const labels = new Map<string, string | null>();
+
+  if (type === "order") {
+    const { data, error } = await supabase
+      .from("orders")
+      .select("id, title")
+      .in("id", releasedIds);
+
+    if (error) {
+      throw new Error(`Failed to load released item labels: ${error.message}`);
+    }
+    for (const row of data ?? []) {
+      labels.set(row.id, normalizeLabel(row.title));
+    }
+  } else {
+    // lab_result, clinical_document, medication_order: all three tables have a `label` column.
+    const target = RELEASABLE_ITEMS[type];
+    const { data, error } = await supabase
+      .from(target.itemTable)
+      .select("id, label")
+      .in("id", releasedIds);
+    if (error) {
+      throw new Error(`Failed to load released item labels: ${error.message}`);
+    }
+    for (const row of data ?? []) {
+      labels.set(row.id, normalizeLabel(row.label));
+    }
+  }
+
+  return labels;
+}
+
+async function fetchPendingRows(
+  supabase: SupabaseClient<Database>,
+  type: ReleasableItemType,
+  caseId: string,
+): Promise<Array<{ id: string; phase: number; label: string | null }>> {
+  if (type === "order") {
+    const { data, error } = await supabase
+      .from("orders")
+      .select("id, phase, title")
+      .eq("case_id", caseId)
+      .gt("phase", 1);
+    if (error) {
+      throw new Error(`Failed to load pending items: ${error.message}`);
+    }
+    return (data ?? []).map((row) => ({
+      id: row.id,
+      phase: Math.max(1, Number(row.phase ?? 1)),
+      label: normalizeLabel(row.title),
+    }));
+  }
+
+  const target = RELEASABLE_ITEMS[type];
+  const { data, error } = await supabase
+    .from(target.itemTable)
+    .select("id, phase, label")
+    .eq("case_id", caseId)
+    .gt("phase", 1);
+  if (error) {
+    throw new Error(`Failed to load pending items: ${error.message}`);
+  }
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    phase: Math.max(1, Number(row.phase ?? 1)),
+    label: normalizeLabel(row.label),
+  }));
+}
+
 export async function releaseSessionItems(
   sessionId: string,
   items: ReleasableItem[]
 ): Promise<ActionResponse<number>> {
   try {
-    const { supabase, userId } = await createVerifiedStaffClient();
+    const { supabase, userId } = await createRoleGatedClient(["admin", "faculty"]);
 
     if (items.length === 0) {
       return { success: false, message: "No items were specified." };
@@ -140,7 +218,7 @@ export async function unreleaseSessionItems(
   items: ReleasableItem[]
 ): Promise<ActionResponse<number>> {
   try {
-    const { supabase } = await createVerifiedStaffClient();
+    const { supabase } = await createRoleGatedClient(["admin", "faculty"]);
 
     if (items.length === 0) {
       return { success: false, message: "No items were specified." };
@@ -194,7 +272,7 @@ export async function getReleasePanelData(
   sessionId: string
 ): Promise<ActionResponse<ReleasePanelData>> {
   try {
-    const { supabase } = await createVerifiedStaffClient();
+    const { supabase } = await createRoleGatedClient(["admin", "faculty"]);
     const caseId = await resolveSessionCaseId(supabase, sessionId);
     if (!caseId) {
       return { success: false, message: "Simulation session has no linked case." };
@@ -211,9 +289,6 @@ export async function getReleasePanelData(
 
     const releasesByTable = releasedResult.data;
 
-    const normalizeLabel = (label: unknown): string | null =>
-      typeof label === "string" && label.trim() ? label : null;
-
     const pending: ReleasePendingItem[] = [];
     const released: ReleasedItem[] = [];
 
@@ -223,27 +298,7 @@ export async function getReleasePanelData(
       const releasedIds = new Set(releases.map((entry) => entry.itemId));
 
       if (releasedIds.size > 0) {
-        const labelSelect =
-          target.labelColumn === "title" ? "id, title" : "id, label";
-        const { data: itemRows, error: itemError } = await supabase
-          .from(target.itemTable)
-          .select(labelSelect)
-          .in("id", [...releasedIds]);
-
-        if (itemError) {
-          return {
-            success: false,
-            message: `Failed to load released item labels (${itemError.message})`,
-            error: itemError,
-          };
-        }
-
-        const labelById = new Map(
-          (itemRows ?? []).map((row) => [
-            row.id,
-            normalizeLabel((row as Record<string, unknown>)[target.labelColumn]),
-          ]),
-        );
+        const labelById = await fetchReleasedLabels(supabase, type, [...releasedIds]);
         releases.forEach((entry) => {
           released.push({
             type,
@@ -254,30 +309,14 @@ export async function getReleasePanelData(
         });
       }
 
-      const pendingSelect =
-        target.labelColumn === "title" ? "id, phase, title" : "id, phase, label";
-      const { data: pendingRows, error: pendingError } = await supabase
-        .from(target.itemTable)
-        .select(pendingSelect)
-        .eq("case_id", caseId)
-        .gt("phase", 1);
-
-      if (pendingError) {
-        return {
-          success: false,
-          message: `Failed to load pending items (${pendingError.message})`,
-          error: pendingError,
-        };
-      }
-
-      (pendingRows ?? []).forEach((rawRow) => {
-        const row = rawRow as Record<string, unknown>;
-        if (releasedIds.has(String(row.id))) return;
+      const pendingRows = await fetchPendingRows(supabase, type, caseId);
+      pendingRows.forEach((row) => {
+        if (releasedIds.has(row.id)) return;
         pending.push({
           type,
-          id: String(row.id),
-          phase: Math.max(1, Number(row.phase ?? 1)),
-          label: normalizeLabel(row[target.labelColumn]),
+          id: row.id,
+          phase: row.phase,
+          label: row.label,
         });
       });
     }

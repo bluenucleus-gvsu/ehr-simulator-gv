@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, UserIcon, BookOpenText, Hospital, Presentation, LogOut, ScanBarcode } from "lucide-react";
+import { Home, UserIcon, BookOpenText, Hospital, LogOut, ScanBarcode, Radio, LucideIcon } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -20,10 +20,18 @@ import { signOut } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { routes } from "@/lib/routes";
 import { User } from "@supabase/supabase-js";
+import { UserRole } from "@/lib/userManagement";
 
-const adminRoutes = [
+type SidebarRoute = {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+  roles?: UserRole[];
+};
+
+const sidebarRoutes: SidebarRoute[] = [
   {
-    title: "Admin Dashbord",
+    title: "Dashboard",
     url: routes.admin.getHref(),
     icon: Home,
   },
@@ -31,11 +39,17 @@ const adminRoutes = [
     title: "Courses",
     url: routes.admin.courses.getHref(),
     icon: BookOpenText,
+    roles: ["admin"]
   },
   {
     title: "Cases",
     url: routes.admin.cases.getHref(),
     icon: Hospital,
+  },
+  {
+    title: "Live Sim Management",
+    url: routes.admin["sim-management"].getHref(),
+    icon: Radio,
   },
   {
     title: "Barcode Printing",
@@ -53,33 +67,27 @@ const getDefaultRoutes = (user: User | null) => {
       url: routes.user.getHref(user.id),
       icon: UserIcon,
     },
-    {
-      title: "Faculty Page",
-      url: routes.faculty.getHref(user.id),
-      icon: Presentation,
-    },
   ];
 }
 
 export function AppSidebar() {
-
-  const { loading, user } = useUser();
+  const { user, role } = useUser();
   const pathname = usePathname();
   const isCurrentPath = (url: string) => pathname === url;
-
   const defaultRoutes = getDefaultRoutes(user);
-
-  if (loading) return null;
+  const visibleRoutes = sidebarRoutes.filter(
+    (route) => !route.roles || (role && route.roles.includes(role))
+  );
 
   return (
     <Sidebar>
       <SidebarHeader />
       <SidebarContent>
         <SidebarGroup />
-        <SidebarGroupLabel>Admin</SidebarGroupLabel>
+        <SidebarGroupLabel>Menu</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
-            {adminRoutes.map((route) => (
+            {visibleRoutes.map((route) => (
               <SidebarMenuItem key={route.url}>
                 <SidebarMenuButton
                   asChild
@@ -96,7 +104,7 @@ export function AppSidebar() {
         <SidebarGroup />
 
         <SidebarGroup />
-        <SidebarGroupLabel>Menu</SidebarGroupLabel>
+        <SidebarGroupLabel>Student View</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             {defaultRoutes.map((route) => (

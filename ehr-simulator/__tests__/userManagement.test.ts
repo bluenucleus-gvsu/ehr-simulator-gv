@@ -38,8 +38,8 @@ beforeEach(() => {
 });
 
 describe("user management authorization", () => {
-  it.each(["student", "faculty"])("rejects role changes from %s users", async role => {
-    mocks.profile.mockResolvedValue({ data: { role }, error: null });
+  it("rejects role changes from student users", async () => {
+    mocks.profile.mockResolvedValue({ data: { role: 'student' }, error: null });
     expect((await updateUserRole("target", "admin")).success).toBe(false);
     expect(mocks.createClient).not.toHaveBeenCalled();
     await expect(getManagedUsers()).rejects.toThrow("permission");

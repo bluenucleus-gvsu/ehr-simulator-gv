@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getAllDocumentationData } from "@/actions/simulation/getAllDocumentationData";
 import { createClient } from "@supabase/supabase-js";
-import { PREVIEW_SESSION_ID } from "@/lib/faculty/itemRelease";
+import { PREVIEW_SESSION_ID } from "@/lib/item-release/itemRelease";
 
 vi.mock("@supabase/supabase-js", () => ({
   createClient: vi.fn(),

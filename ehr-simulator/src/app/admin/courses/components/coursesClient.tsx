@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import CourseListItem from "@/app/admin/courses/components/courseListItem";
 import { unarchiveCourse } from "@/actions/courses";
 import { Course } from "@/actions/courses";
+import { routes } from "@/lib/routes";
 
 interface CoursesClientProps {
   courses: Course[];
@@ -41,7 +42,7 @@ export default function CoursesClient({ courses, archived = false }: CoursesClie
           <div className="flex items-center gap-4">
             <div className="flex rounded-lg bg-gray-100 p-1 text-sm font-medium">
               <Link
-                href="/admin/courses"
+                href={routes.admin.courses.getHref()}
                 className={`rounded-md px-3 py-1.5 transition ${archived ? "text-gray-500 hover:text-gray-800" : "bg-white text-gray-900 shadow-sm"}`}
               >
                 Active

@@ -11,6 +11,7 @@ import { CaseSpecialty } from "@/lib/flexSheet/flexSheetTemplate";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { caseSpecialtyLabels } from "@/utils/form";
 import { routes } from "@/lib/routes";
+import { useUser } from "@/context/UserContext";
 
 interface CaseClientProps {
   cases: SimCase[];
@@ -32,6 +33,7 @@ function filterCases(
 export default function CasesClient({ cases }: CaseClientProps) {
   const [filterText, setFilterText] = useState('');
   const [specialty, setSpecialty] = useState<CaseSpecialty | ''>('');
+  const { role } = useUser();
 
   const handleFilterTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilterText(e.target.value);
@@ -47,9 +49,11 @@ export default function CasesClient({ cases }: CaseClientProps) {
 
             <p className="text-xs text-gray-500">Manage all simulation cases</p>
           </div>
-          <Link href={routes.admin.caseBuilder.form.getHref("demographics")}>
-            <Button>Create Case</Button>
-          </Link>
+          {role === "admin" &&
+            <Link href={routes.admin.caseBuilder.form.getHref("demographics")}>
+              <Button>Create Case</Button>
+            </Link>
+          }
         </div>
       </header>
 
@@ -87,8 +91,13 @@ export default function CasesClient({ cases }: CaseClientProps) {
       <div className="flex flex-col gap-4 p-4">
         {
           filteredAssignments.length > 0 ? (
-            filteredAssignments.map((simCase) => <CaseListItem key={simCase.id} courseCaseAssignment={simCase} />)
-
+            filteredAssignments.map((simCase) =>
+              <CaseListItem
+                key={simCase.id}
+                courseCaseAssignment={simCase}
+                role={role}
+              />
+            )
           ) : (
             <div className="flex justify-center items-center border border-dashed border-gray-300 rounded-md h-20">
               <p className=" font-semibold text-gray-300">No cases match your filters.</p>

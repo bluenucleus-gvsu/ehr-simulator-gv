@@ -11,7 +11,7 @@ import {
   resolveDisplayOffset,
   toReleasedItemsMap,
   type SessionItemReleasesByTable,
-} from "@/lib/faculty/itemRelease";
+} from "@/lib/item-release/itemRelease";
 
 const SIM_START = Date.parse("2026-01-01T10:00:00Z");
 

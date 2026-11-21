@@ -185,10 +185,7 @@ export async function getSectionCaseAssignments(courseId: string) {
 }
 
 export async function createSectionCaseAssignment(payload: SectionAssignmentInsert): Promise<ActionResponse<SectionAssignment>> {
-  const supabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const { supabase } = await createRoleGatedClient(["admin"]);
 
   if (!payload.case_id) {
     return {
@@ -241,7 +238,7 @@ export async function deleteSectionCaseAssignment(ids: string[]): Promise<Action
   }
 
   try {
-    const supabase = await createRoleGatedClient(["admin"]);
+    const { supabase } = await createRoleGatedClient(["admin"]);
 
     const { error } = await supabase
       .from('section_assignments')
@@ -346,32 +343,6 @@ export async function getCourseCaseAssignments() {
     success: true,
     message: 'Successfully retrieved sim cases.',
     data: assignments,
-  };
-}
-
-export async function updateCaseSession(session: CaseSessionUpsert) {
-  const supabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
-  const { error } = await supabase
-    .from('case_sessions')
-    .upsert(session);
-
-  if (error) {
-    return {
-      success: false,
-      message: 'Failed to update session data.',
-      error,
-      data: null
-    };
-  }
-
-  return {
-    success: true,
-    message: 'Session data updated.',
-    data: session,
   };
 }
 

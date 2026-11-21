@@ -7,8 +7,9 @@ import { UUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { routes } from "@/lib/routes";
 import { assertStudentActiveSessionWrite } from "@/actions/simulation/assertStudentActiveSessionWrite";
+
 import { createRoleGatedClient } from "./roleGatedClient";
-import { resolvePreviewSessionId } from "@/lib/faculty/itemRelease";
+import { resolvePreviewSessionId } from "@/lib/item-release/itemRelease";
 
 export type EditableStudentNoteUpsert = Database['public']['Tables']['editable_clinical_documents']['Insert'];
 export type EditableStudentNote = Database['public']['Tables']['editable_clinical_documents']['Row'];
@@ -459,7 +460,7 @@ export async function startSession(sessionId: string): Promise<SessionTransition
 
 export async function completeSessionAssignments(assignmentIds: string[]): Promise<SessionTransitionResult> {
   try {
-    const supabase = await createRoleGatedClient(["admin"]);
+    const { supabase } = await createRoleGatedClient(["admin"]);
     const now = new Date().toISOString();
 
     const { error: backfillError } = await supabase

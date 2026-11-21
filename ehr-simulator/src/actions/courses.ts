@@ -151,7 +151,7 @@ export type CourseFull = NonNullable<Awaited<ReturnType<typeof getCourseFull>>>;
 
 export async function saveCourseEdits(courseId: string | null, payload: CourseDraft): Promise<ActionResponse<string | null>> {
   try {
-    const supabase = await createRoleGatedClient(["admin"]);
+    const { supabase } = await createRoleGatedClient(["admin"]);
 
     const state = courseId ? await getCourseEditState(supabase, courseId) : { sections: [] };
 
@@ -182,7 +182,7 @@ async function setCourseActive(
   failureMessage: string
 ): Promise<ActionResponse<null>> {
   try {
-    const supabase = await createRoleGatedClient(["admin"]);
+    const { supabase } = await createRoleGatedClient(["admin"]);
 
     const { error } = await supabase
       .from("courses")
@@ -215,7 +215,7 @@ export async function unarchiveCourse(courseId: string): Promise<ActionResponse<
 
 export async function deleteCourse(courseId: string): Promise<ActionResponse<null>> {
   try {
-    const supabase = await createRoleGatedClient(["admin"]);
+    const { supabase } = await createRoleGatedClient(["admin"]);
 
     const { error } = await supabase
       .from("courses")

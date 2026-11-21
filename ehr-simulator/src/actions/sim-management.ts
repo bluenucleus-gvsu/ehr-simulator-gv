@@ -1,22 +1,14 @@
 import { createServerSupabase } from "@/utils/supabase/server";
-import { Course, Simulation, Group, Section } from "./types";
+import { Course, Simulation, Group, Section } from "@/lib/sim-management";
+import { User } from "@/actions/courses";
 
-type CourseRelation = {
-  id: Course["id"];
-  code: Course["code"];
-  name: Course["name"];
-  active: Course["active"];
-};
-
-// Helper Function for getFacultyCourses
-const getStudentName = (student: any) => {
+const getStudentName = (student: User) => {
   if (!student) return "Unknown Student";
   if (student.full_name) return student.full_name;
   return student.email || "Unknown Student";
 };
 
-// Get data from Supabase (May place this somewhere else or use SQL function)
-export async function getFacultyCourses(): Promise<Course[]> {
+export async function getActiveCourses(): Promise<Course[]> {
   const supabase = await createServerSupabase();
 
   const { data, error } = await supabase
@@ -24,7 +16,7 @@ export async function getFacultyCourses(): Promise<Course[]> {
     .select(`
       id,
       name,
-      course:courses (id, code, name, active),
+      course:courses (*),
       section_assignments (
         id,
         sim_time,
@@ -59,16 +51,13 @@ export async function getFacultyCourses(): Promise<Course[]> {
   for (const section of sections) {
     const course = (
       Array.isArray(section.course) ? section.course[0] : section.course
-    ) as CourseRelation | null | undefined;
+    ) as Course;
     if (!course?.id) continue;
 
-    // Lookup table so each group's name/members can be matched by id below
     const groupById = new Map<string, any>(
       (section.groups ?? []).map((group: any) => [group.id, group])
     );
 
-    // One Simulation per section_assignment; its groups are scoped to THAT
-    // assignment's case_sessions, not the whole section's group list
     const simulationRows: Simulation[] = (section.section_assignments ?? []).map((assignment: any) => {
       const caseRecord = assignment.cases;
       const caseName =
@@ -76,9 +65,6 @@ export async function getFacultyCourses(): Promise<Course[]> {
         [caseRecord?.first_name, caseRecord?.last_name].filter(Boolean).join(" ") ||
         "Untitled Simulation";
 
-      // A group only belongs to this simulation if it has a case_session under
-      // this assignment. Sessions whose group is soft-deleted are absent from
-      // the active-group list (groupById) and are skipped here.
       const groupRows: Group[] = (assignment.case_sessions ?? [])
         .filter((session: any) => session.group_id && session.id)
         .flatMap((session: any) => {
@@ -119,11 +105,8 @@ export async function getFacultyCourses(): Promise<Course[]> {
       existingCourse.sections.push(sectionPayload);
     } else {
       courseMap.set(course.id, {
-        id: course.id,
-        code: course.code,
-        name: course.name,
-        active: course.active ?? false,
-        sections: [sectionPayload],
+        ...course,
+        sections: [sectionPayload]
       });
     }
   }
@@ -175,7 +158,7 @@ export async function getSectionSimulationDetails(sectionAssignmentId: string) {
     .single();
 
   if (error || !data) {
-    console.error("Failed to fetch faculty section data:", error);
+    console.error("Failed to fetch section data:", error);
     return null;
   }
 

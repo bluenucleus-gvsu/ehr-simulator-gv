@@ -3,7 +3,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "../../../database.types";
 import { ActionResponse } from "../cases";
-import { resolvePreviewSessionId } from "@/lib/faculty/itemRelease";
+import { resolvePreviewSessionId } from "@/lib/item-release/itemRelease";
 
 type CaseDocumentationRow = Database['public']['Tables']['documentation_results']['Row'];
 type StudentDocumentationRow = Database['public']['Tables']['editable_documentation_results']['Row'];

@@ -4,13 +4,15 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { caseMeetsMinimumRequirements } from "@/lib/caseMinimumRequirements";
 import { routes } from "@/lib/routes";
+import { UserRole } from "@/lib/userManagement";
 
 
 interface CaseListItemProps {
   courseCaseAssignment: SimCase;
+  role: UserRole | null;
 }
 
-export default function CaseListItem({ courseCaseAssignment }: CaseListItemProps) {
+export default function CaseListItem({ courseCaseAssignment, role }: CaseListItemProps) {
   const router = useRouter()
   const { id, name, description, admitting_diagnosis, created_at } = courseCaseAssignment;
   const editUrl = routes.admin.caseBuilder.form.getHref("demographics", id)
@@ -37,13 +39,14 @@ export default function CaseListItem({ courseCaseAssignment }: CaseListItemProps
           >
             Preview Case
           </Button>
-          <Button
-            data-testid={`edit-${id}`}
-            onClick={() => router.push(editUrl)}
-            variant="outline"
-          >
-            Edit Case
-          </Button>
+          {role === "admin" &&
+            <Button
+              data-testid={`edit-${id}`}
+              onClick={() => router.push(editUrl)}
+              variant="outline"
+            >
+              Edit Case
+            </Button>}
         </div>
       </div>
       <p className="text-sm text-gray-400 mt-2 line-clamp-2">{description}</p>

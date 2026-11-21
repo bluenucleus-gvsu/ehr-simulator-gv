@@ -4,7 +4,7 @@ import {
   type ReleasableItemType,
   type ReleaseTable,
   type ReleasedItemsMap,
-} from "@/lib/faculty/itemRelease";
+} from "@/lib/item-release/itemRelease";
 
 export type ReleaseUpdateSectionKey = "labs" | "notes" | "orders" | "mar";
 

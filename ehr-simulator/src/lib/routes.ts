@@ -5,12 +5,11 @@ export const routes = {
     forRole: (
       role: string | null | undefined,
       userId: string,
-      fallback: string
     ): string => {
       if (role === "admin") return routes.admin.getHref();
-      if (role === "faculty" && userId) return routes.faculty.getHref(userId);
+      if (role === "faculty") return routes.admin.getHref();
       if (role === "student" && userId) return routes.user.getHref(userId);
-      return fallback;
+      return routes.auth.unprovisioned.getHref();
     },
   },
 
@@ -18,6 +17,7 @@ export const routes = {
     e2e: { getHref: () => "/auth/e2e-login" },
     login: { getHref: () => "/auth/login" },
     callback: { getHref: () => "/auth/callback" },
+    unprovisioned: { getHref: () => "/auth/unprovisioned" }
   },
 
   admin: {
@@ -40,13 +40,12 @@ export const routes = {
       new: { getHref: () => "/admin/courses/new" },
       id: { getHref: (courseId: string) => `/admin/courses/${courseId}` },
     },
-  },
-
-  faculty: {
-    getHref: (userId: string) => `/faculty/${userId}`,
-    section: {
-      getHref: (userId: string, sectionAssignmentId: string) =>
-        `/faculty/${userId}/${sectionAssignmentId}`,
+    "sim-management": {
+      getHref: () => `/admin/sim-management`,
+      section: {
+        getHref: (sectionAssignmentId: string) =>
+          `/admin/sim-management/${sectionAssignmentId}`,
+      },
     },
   },
 

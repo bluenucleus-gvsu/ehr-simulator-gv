@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import StyledTitle from "./styledTitle";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
 import { useSimSessionContext } from "@/context/SimSessionContext";
-import { isVisibleInSim } from "@/lib/faculty/itemRelease";
+import { isVisibleInSim } from "@/lib/item-release/itemRelease";
 import {
   buildMarFromCaseBundle,
   countDueAdministrations,

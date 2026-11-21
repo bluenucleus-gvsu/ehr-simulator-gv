@@ -6,9 +6,9 @@ import Link from 'next/link'
 import { getUserRole } from '@/actions/users'
 import { useUser } from '@/context/UserContext'
 import { emailIsDevAdminAllowlist } from '@/lib/devAdminEmails'
-import { homeRouteForRole } from '@/lib/homeRoute'
 import { Button } from '@/components/ui/button'
 import { LoaderCircle } from 'lucide-react'
+import { routes } from '@/lib/routes'
 
 export function PageNotFoundButton() {
   const router = useRouter()
@@ -24,7 +24,7 @@ export function PageNotFoundButton() {
     try {
       const devBypass = emailIsDevAdminAllowlist(user.email ?? undefined)
       const role = devBypass ? 'admin' : await getUserRole(user.id)
-      router.replace(homeRouteForRole(role, user.id))
+      router.replace(routes.home.forRole(role, user.id))
     } catch {
       setFailed(true)
       setResolving(false)
@@ -33,7 +33,7 @@ export function PageNotFoundButton() {
 
   if (!user) {
     return (
-      <Link href="/auth/login" passHref>
+      <Link href={routes.auth.login.getHref()} passHref>
         <Button>Sign in</Button>
       </Link>
     )

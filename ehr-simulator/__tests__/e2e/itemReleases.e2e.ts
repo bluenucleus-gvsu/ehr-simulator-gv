@@ -125,7 +125,7 @@ test.beforeAll(async () => {
   ).section_assignments;
   const assignment = Array.isArray(embedded) ? embedded[0] : embedded;
   if (!assignment) throw new Error("section assignment join missing on session");
-  facultyUrl = routes.faculty.section.getHref(facultyUser.id, assignment.id);
+  facultyUrl = routes.admin["sim-management"].section.getHref(assignment.id);
 });
 
 test.afterAll(async () => {
