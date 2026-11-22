@@ -25,7 +25,7 @@ test.describe("role sessions", () => {
     test.use({ storageState: authState("faculty") });
 
     test("loads the app with the faculty role", async ({ page }) => {
-      await page.goto(routes.admin.getHref());
+      await page.goto(routes.workspace.getHref());
       await expect(page).not.toHaveURL(/\/auth\/login/);
       await expect(page.getByRole("heading", { name: "DASHBOARD" })).toBeVisible();
     });
@@ -35,7 +35,7 @@ test.describe("role sessions", () => {
     test.use({ storageState: authState("admin") });
 
     test("loads the app with the admin role", async ({ page }) => {
-      await page.goto(routes.admin.getHref());
+      await page.goto(routes.workspace.getHref());
       await expect(page).not.toHaveURL(/\/auth\/login/);
       await expect(page.getByRole("heading", { name: "DASHBOARD" })).toBeVisible();
     });

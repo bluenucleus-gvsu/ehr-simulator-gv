@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { toast } from "sonner";
 
-import { useLabColumns } from "@/app/admin/case-builder/components/useFormTableOffsets";
+import { useLabColumns } from "@/app/workspace/case-builder/components/useFormTableOffsets";
 import { type LabColumn } from "@/lib/labTypes";
 
 vi.mock("sonner", () => ({

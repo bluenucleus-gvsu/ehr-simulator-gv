@@ -81,7 +81,7 @@ export default function AuthCallbackPage() {
           <p className="text-sm text-muted-foreground">
             We couldn&apos;t verify your account role. Please try signing in again.
           </p>
-          <Link href="/auth/login" passHref>
+          <Link href={routes.auth.login.getHref()} passHref>
             <Button>Back to sign in</Button>
           </Link>
         </div>

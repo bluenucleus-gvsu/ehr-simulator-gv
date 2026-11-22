@@ -483,7 +483,7 @@ export async function completeSessionAssignments(assignmentIds: string[]): Promi
 
     if (error) throw error;
 
-    revalidatePath("/admin/courses", "layout");
+    revalidatePath(routes.workspace.courses.getHref(), "layout");
     return { success: true };
   } catch (error) {
     console.error("Failed to complete sessions:", error);

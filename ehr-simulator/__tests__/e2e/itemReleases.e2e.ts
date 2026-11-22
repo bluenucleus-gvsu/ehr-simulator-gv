@@ -125,7 +125,7 @@ test.beforeAll(async () => {
   ).section_assignments;
   const assignment = Array.isArray(embedded) ? embedded[0] : embedded;
   if (!assignment) throw new Error("section assignment join missing on session");
-  facultyUrl = routes.admin["sim-management"].section.getHref(assignment.id);
+  facultyUrl = routes.workspace["sim-management"].section.getHref(assignment.id);
 });
 
 test.afterAll(async () => {
@@ -250,7 +250,7 @@ test.describe("item release notification in student EHR", () => {
 test.describe("case-builder case creation round trip", () => {
   test("admin edits course, faculty see new lab items", async ({ browser }) => {
     const admin = await newRolePage(browser, "admin");
-    const labsFormUrl = routes.admin.caseBuilder.form.getHref("labs", CASE_ID);
+    const labsFormUrl = routes.workspace.caseBuilder.form.getHref("labs", CASE_ID);
 
     await admin.page.goto(labsFormUrl);
 

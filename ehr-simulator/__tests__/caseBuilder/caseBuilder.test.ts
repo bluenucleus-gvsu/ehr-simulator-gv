@@ -20,14 +20,14 @@ const medicationId = "33333333-3333-4333-8333-333333333333";
 
 describe("case-builder routes", () => {
   it("keeps a case ID on every wizard route", () => {
-    expect(routes.admin.caseBuilder.form.getHref("history", caseId)).toBe(
-      `/admin/case-builder/form/history?caseId=${caseId}`,
+    expect(routes.workspace.caseBuilder.form.getHref("history", caseId)).toBe(
+      `/workspace/case-builder/form/history?caseId=${caseId}`,
     );
   });
 
   it("does not add an empty query parameter for a new case", () => {
-    expect(routes.admin.caseBuilder.form.getHref("demographics")).toBe(
-      "/admin/case-builder/form/demographics",
+    expect(routes.workspace.caseBuilder.form.getHref("demographics")).toBe(
+      "/workspace/case-builder/form/demographics",
     );
   });
 });

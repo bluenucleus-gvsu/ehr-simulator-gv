@@ -19,7 +19,7 @@ export default async function Home() {
           <Button>My Profile</Button>
         </Link>
       )}
-      <Link href={routes.admin.getHref()} passHref>
+      <Link href={routes.workspace.getHref()} passHref>
         <Button>Admin Portal</Button>
       </Link>
     </div>

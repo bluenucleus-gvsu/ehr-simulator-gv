@@ -6,11 +6,11 @@ const CASE_BUILDER_UNDER_MAINTENANCE = process.env.CASE_BUILDER_MAINTENANCE === 
 
 export async function proxy(request: NextRequest) {
   if (
-    request.nextUrl.pathname.startsWith(routes.admin.caseBuilder.root) &&
-    request.nextUrl.pathname !== routes.admin.caseBuilderMaintenance.getHref()
+    request.nextUrl.pathname.startsWith(routes.workspace.caseBuilder.root) &&
+    request.nextUrl.pathname !== routes.workspace.caseBuilderMaintenance.getHref()
     && CASE_BUILDER_UNDER_MAINTENANCE
   ) {
-    return NextResponse.redirect(new URL(routes.admin.caseBuilderMaintenance.getHref(), request.url))
+    return NextResponse.redirect(new URL(routes.workspace.caseBuilderMaintenance.getHref(), request.url))
   }
 
   return await updateSession(request)

@@ -37,7 +37,7 @@ test.describe("sign out", () => {
     test("logs out from the sidebar", async ({ browser }) => {
       const { context, page } = await createBrowserContext(browser, "admin");
       try {
-        await page.goto(routes.admin.getHref());
+        await page.goto(routes.workspace.getHref());
         await page.getByRole("button", { name: "Logout" }).click();
         await expectSignedOut(page);
       } finally {

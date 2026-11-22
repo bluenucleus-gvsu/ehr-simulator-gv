@@ -32,28 +32,28 @@ type SidebarRoute = {
 const sidebarRoutes: SidebarRoute[] = [
   {
     title: "Dashboard",
-    url: routes.admin.getHref(),
+    url: routes.workspace.getHref(),
     icon: Home,
   },
   {
     title: "Courses",
-    url: routes.admin.courses.getHref(),
+    url: routes.workspace.courses.getHref(),
     icon: BookOpenText,
     roles: ["admin"]
   },
   {
     title: "Cases",
-    url: routes.admin.cases.getHref(),
+    url: routes.workspace.cases.getHref(),
     icon: Hospital,
   },
   {
     title: "Live Sim Management",
-    url: routes.admin["sim-management"].getHref(),
+    url: routes.workspace["sim-management"].getHref(),
     icon: Radio,
   },
   {
     title: "Barcode Printing",
-    url: routes.admin.barcodes.getHref(),
+    url: routes.workspace.barcodes.getHref(),
     icon: ScanBarcode,
   },
 ]

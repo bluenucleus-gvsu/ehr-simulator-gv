@@ -4,6 +4,7 @@ import { createClient, PostgrestError } from "@supabase/supabase-js";
 import { Database } from "../../database.types";
 import { revalidatePath } from "next/cache";
 import { caseMeetsMinimumRequirements } from "@/lib/caseMinimumRequirements";
+import { routes } from "@/lib/routes";
 import { createRoleGatedClient } from "./roleGatedClient";
 
 export type SectionAssignment = Database['public']['Tables']['section_assignments']['Row'];
@@ -223,7 +224,7 @@ export async function createSectionCaseAssignment(payload: SectionAssignmentInse
     };
   }
 
-  revalidatePath('/admin/courses', 'layout');
+  revalidatePath(routes.workspace.courses.getHref(), 'layout');
 
   return {
     success: true,
@@ -254,7 +255,7 @@ export async function deleteSectionCaseAssignment(ids: string[]): Promise<Action
       };
     }
 
-    revalidatePath('/admin/courses', 'layout');
+    revalidatePath(routes.workspace.courses.getHref(), 'layout');
 
     return {
       success: true,

@@ -34,7 +34,7 @@ export default async function ProfilePage({ params }: Readonly<{ params: Promise
         .single();
 
       if (profile?.role && profile.role !== "student") {
-        redirect(routes.admin.getHref());
+        redirect(routes.workspace.getHref());
       }
       return profile?.full_name || profile?.email || "Student";
     })();

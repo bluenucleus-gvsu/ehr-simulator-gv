@@ -10,8 +10,18 @@ test.describe("RBAC", () => {
   test.describe("student", () => {
     test.use({ storageState: authState("student") });
 
-    test("cannot access /admin", async ({ page }) => {
-      await page.goto(routes.admin.getHref());
+    test("cannot access /workspace", async ({ page }) => {
+      await page.goto(routes.workspace.getHref());
+      await expectNotAuthorized(page);
+    });
+
+    test("cannot access /workspace/courses", async ({ page }) => {
+      await page.goto(routes.workspace.courses.getHref());
+      await expectNotAuthorized(page);
+    });
+
+    test("cannot access /workspace/case-builder", async ({ page }) => {
+      await page.goto(routes.workspace.caseBuilder.form.getHref("demographics"));
       await expectNotAuthorized(page);
     });
   });
@@ -19,23 +29,27 @@ test.describe("RBAC", () => {
   test.describe("faculty", () => {
     test.use({ storageState: authState("faculty") });
 
-    test("cannot access /admin", async ({ page }) => {
-      await page.goto(routes.admin.getHref());
+    test("can access /workspace", async ({ page }) => {
+      await page.goto(routes.workspace.getHref());
       await expect(page.getByRole("heading", { name: "DASHBOARD" })).toBeVisible();
     });
 
-    // test("can access /faculty/:id", async ({ page }) => {
-    //   const userId = await currentUserId(page);
-    //   await page.goto(routes.faculty.getHref(userId));
-    //   await expect(page.getByRole("heading", { name: "E2E Faculty" })).toBeVisible();
-    // });
+    test("cannot access /workspace/courses", async ({ page }) => {
+      await page.goto(routes.workspace.courses.getHref());
+      await expectNotAuthorized(page);
+    });
+
+    test("cannot access /workspace/case-builder", async ({ page }) => {
+      await page.goto(routes.workspace.caseBuilder.form.getHref("demographics"));
+      await expectNotAuthorized(page);
+    });
   });
 
   test.describe("admin", () => {
     test.use({ storageState: authState("admin") });
 
-    test("can access /admin", async ({ page }) => {
-      await page.goto(routes.admin.getHref());
+    test("can access /workspace", async ({ page }) => {
+      await page.goto(routes.workspace.getHref());
       await expect(page.getByRole("heading", { name: "DASHBOARD" })).toBeVisible();
     });
 
