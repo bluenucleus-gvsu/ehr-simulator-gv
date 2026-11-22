@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, UserIcon, BookOpenText, Hospital, LogOut, ScanBarcode, Radio, LucideIcon } from "lucide-react";
+import { Home, UserIcon, BookOpenText, Hospital, LogOut, ScanBarcode, Radio, LucideIcon, Settings } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -55,6 +55,11 @@ const sidebarRoutes: SidebarRoute[] = [
     title: "Barcode Printing",
     url: routes.workspace.barcodes.getHref(),
     icon: ScanBarcode,
+  },
+  {
+    title: "Settings",
+    url: routes.workspace.settings.getHref(),
+    icon: Settings,
   },
 ]
 

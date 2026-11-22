@@ -16,11 +16,11 @@ export default async function Home() {
     <div className="flex min-h-screen flex-col items-center justify-center py-2">
       {id && (
         <Link href={routes.user.getHref(id)} passHref className="p-4">
-          <Button>My Profile</Button>
+          <Button>Student Profile</Button>
         </Link>
       )}
       <Link href={routes.workspace.getHref()} passHref>
-        <Button>Admin Portal</Button>
+        <Button>Staff Workspace</Button>
       </Link>
     </div>
   );

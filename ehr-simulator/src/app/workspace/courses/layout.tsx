@@ -1,9 +1,8 @@
-import { getUserRole } from "@/actions/users";
 import NotAuthorized from "@/components/notAuthorized";
+import AccessError from "@/components/accessError";
 import { Button } from "@/components/ui/button";
-import { emailIsDevAdminAllowlist } from "@/lib/devAdminEmails";
 import { routes } from "@/lib/routes";
-import { createServerSupabase } from "@/utils/supabase/server";
+import { getAuthUser } from "@/lib/userAccess";
 import Link from "next/link";
 
 export default async function CourseLayout({
@@ -11,14 +10,13 @@ export default async function CourseLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await createServerSupabase();
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const authUser = await getAuthUser();
 
-  if (error) {
-    throw new Error(`Failed find user: ${error.message}`);
+  if (authUser.lookupFailed && !authUser.isDevAdmin) {
+    return <AccessError />;
   }
 
-  if (!user) {
+  if (!authUser.user) {
     return (
       <NotAuthorized>
         <Link href={routes.auth.login.getHref()} passHref>
@@ -28,14 +26,11 @@ export default async function CourseLayout({
     )
   }
 
-  const role = await getUserRole(user.id);
-  const devBypass = emailIsDevAdminAllowlist(user?.email ?? undefined);
-
-  if (role !== "admin" && !devBypass) {
+  if (authUser.role !== "admin" && !authUser.isDevAdmin) {
     return (
       <NotAuthorized>
-        <Link href={routes.home.forRole(role, user.id)} passHref>
-          <Button>My Profile</Button>
+        <Link href={routes.home.forRole(authUser.role, authUser.user.id)} passHref>
+          <Button>Go to my homepage</Button>
         </Link>
       </NotAuthorized>
     );

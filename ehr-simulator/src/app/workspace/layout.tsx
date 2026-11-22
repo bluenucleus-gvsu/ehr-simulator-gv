@@ -1,27 +1,24 @@
-import { getUserRole } from "@/actions/users";
 import { AppSidebar } from "@/components/app-sidebar";
 import NotAuthorized from "@/components/notAuthorized";
+import AccessError from "@/components/accessError";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { emailIsDevAdminAllowlist } from "@/lib/devAdminEmails";
 import { routes } from "@/lib/routes";
-import { createServerSupabase } from "@/utils/supabase/server";
+import { getAuthUser } from "@/lib/userAccess";
 import Link from "next/link";
 
-export default async function AdminLayout({
+export default async function WorkspaceLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Server-side check: ensure the current user is an admin before rendering admin UI
-  const supabase = await createServerSupabase();
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const authUser = await getAuthUser();
 
-  if (error) {
-    throw new Error(`Failed find user: ${error.message}`);
+  if (authUser.lookupFailed && !authUser.isDevAdmin) {
+    return <AccessError />;
   }
 
-  if (!user) {
+  if (!authUser.user) {
     return (
       <NotAuthorized>
         <Link href={routes.auth.login.getHref()} passHref>
@@ -31,13 +28,10 @@ export default async function AdminLayout({
     )
   }
 
-  const role = await getUserRole(user.id);
-  const devBypass = emailIsDevAdminAllowlist(user?.email ?? undefined);
-
-  if (role !== "admin" && role !== "faculty" && !devBypass) {
+  if (authUser.role !== "admin" && authUser.role !== "faculty" && !authUser.isDevAdmin) {
     return (
       <NotAuthorized>
-        <Link href={routes.user.getHref(user.id)} passHref>
+        <Link href={routes.user.getHref(authUser.user.id)} passHref>
           <Button>My Profile</Button>
         </Link>
       </NotAuthorized>

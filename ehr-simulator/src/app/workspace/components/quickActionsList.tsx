@@ -21,6 +21,12 @@ export function AdminQuickActionsList() {
             variant="default">
             Create Course
           </Button>
+          <Button
+            onClick={() => { router.push(routes.workspace.courses.getHref()) }}
+            className="cursor-pointer"
+            variant="default">
+            View All Courses
+          </Button>
         </>
       }
       <Button
@@ -28,13 +34,6 @@ export function AdminQuickActionsList() {
         className="cursor-pointer"
         variant="default">
         View All Cases
-      </Button>
-
-      <Button
-        onClick={() => { router.push(routes.workspace.courses.getHref()) }}
-        className="cursor-pointer"
-        variant="default">
-        View All Courses
       </Button>
     </div>
   );

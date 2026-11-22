@@ -88,6 +88,7 @@ const Header = () => {
             variant='secondary'
             className="p-0 size-7 hover:text-blue-600 hover:ring-2"
             onClick={handleHomeClick}
+            disabled={loading}
           >
             <Home />
           </Button>

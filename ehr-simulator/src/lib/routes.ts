@@ -26,6 +26,7 @@ export const routes = {
     cases: { getHref: () => "/workspace/cases" },
     barcodes: { getHref: () => "/workspace/barcodes" },
     caseBuilderMaintenance: { getHref: () => "/workspace/case-builder-maintenance" },
+    settings: { getHref: () => "/workspace/settings" },
     caseBuilder: {
       root: "/workspace/case-builder", // intentionally a string for proxy.ts
       form: {

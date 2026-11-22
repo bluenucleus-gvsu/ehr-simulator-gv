@@ -1,9 +1,7 @@
 import { getCourseFull } from "@/actions/courses";
-import { getUserRole } from "@/actions/users";
 import { notFound } from "next/navigation";
-import { createServerSupabase } from "@/utils/supabase/server";
-import { emailIsDevAdminAllowlist } from "@/lib/devAdminEmails";
 import CourseForm from "./components/courseForm";
+import { getAuthUser } from "@/lib/userAccess";
 
 interface EditCoursePageProps {
   params: Promise<{ id: string }>;
@@ -16,11 +14,8 @@ export default async function EditCoursePage({ params }: EditCoursePageProps) {
   if (!course) {
     notFound();
   }
-
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-  const role = user ? await getUserRole(user.id) : null;
-  const isAdmin = role === "admin" || (user ? emailIsDevAdminAllowlist(user.email ?? undefined) : false);
+  const { role, isDevAdmin } = await getAuthUser();
+  const isAdmin = role === "admin" || isDevAdmin
 
   return (
     <CourseForm
