@@ -1,6 +1,6 @@
 import { test, expect, type Browser, type BrowserContext, type Page } from "@playwright/test";
 import { routes } from "@/lib/routes";
-import { BASE_URL, E2E_PASSWORD, ROLE_ACCOUNTS, currentUserId } from "../../playwright/helpers/auth";
+import { BASE_URL, E2E_PASSWORD, ROLE_ACCOUNTS } from "../../playwright/helpers/auth";
 
 // get separate browser context - signing out would ruin other test's authentication
 async function createBrowserContext(
@@ -50,7 +50,12 @@ test.describe("sign out", () => {
     test("logs out from the profile header", async ({ browser }) => {
       const { context, page } = await createBrowserContext(browser, "student");
       try {
-        const userId = await currentUserId(page);
+        await page.goto("/");
+        const href = await page.getByRole("link", { name: "Student Profile" }).getAttribute("href");
+        const match = href?.match(/\/user\/profile\/([0-9a-f-]{36})/);
+
+        expect(match).toBeDefined()
+        const userId = match ? match[1] : "";
         await page.goto(routes.user.getHref(userId));
         await page.getByRole("button", { name: "Logout" }).click();
         await expectSignedOut(page);

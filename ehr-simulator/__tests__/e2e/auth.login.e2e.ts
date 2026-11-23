@@ -17,7 +17,7 @@ test.describe("role sessions", () => {
     test("loads the app with the student role", async ({ page }) => {
       await page.goto("/");
       await expect(page).not.toHaveURL(/\/auth\/login/);
-      await expect(page.getByRole("link", { name: "My Profile" })).toBeVisible();
+      await expect(page.getByRole("link", { name: "Student Profile" })).toBeVisible();
     });
   });
 

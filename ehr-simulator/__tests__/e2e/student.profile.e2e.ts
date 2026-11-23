@@ -5,9 +5,9 @@ test.use({ storageState: authState("student") });
 
 test("student can open their own profile", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("link", { name: "My Profile" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Student Profile" })).toBeVisible();
 
-  await page.getByRole("link", { name: "My Profile" }).click();
+  await page.getByRole("link", { name: "Student Profile" }).click();
 
   await expect(page).toHaveURL(/\/user\/profile\/[0-9a-f-]{36}/);
 });
