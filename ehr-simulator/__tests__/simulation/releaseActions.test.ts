@@ -5,12 +5,12 @@ import {
   unreleaseSessionItems,
   getReleasePanelData,
   type ReleasableItem,
-} from "@/actions/faculty";
-import { createVerifiedStaffClient } from "@/utils/supabase/staffAccess";
+} from "@/actions/item-release";
 import { createClient } from "@supabase/supabase-js";
+import { createRoleGatedClient } from "@/actions/roleGatedClient";
 
-vi.mock("@/utils/supabase/staffAccess", () => ({
-  createVerifiedStaffClient: vi.fn(),
+vi.mock("@/actions/roleGatedClient", () => ({
+  createRoleGatedClient: vi.fn(),
 }));
 
 vi.mock("@supabase/supabase-js", () => ({
@@ -55,7 +55,7 @@ function createSupabaseMock(handlers: FromHandlers = {}) {
 }
 
 const mockStaff = (supabase: ReturnType<typeof createSupabaseMock>) => {
-  vi.mocked(createVerifiedStaffClient).mockResolvedValue({
+  vi.mocked(createRoleGatedClient).mockResolvedValue({
     supabase: supabase as never,
     userId: USER_ID,
     role: "faculty",
@@ -63,7 +63,7 @@ const mockStaff = (supabase: ReturnType<typeof createSupabaseMock>) => {
 };
 
 beforeEach(() => {
-  vi.mocked(createVerifiedStaffClient).mockReset();
+  vi.mocked(createRoleGatedClient).mockReset();
 });
 
 describe("releaseSessionItems", () => {

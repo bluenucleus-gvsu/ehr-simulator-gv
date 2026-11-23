@@ -63,7 +63,7 @@ export type ImagingReportRow = CaseBundleRow & { is_critical?: boolean | null };
 export type MicrobiologyReportRow = CaseBundleRow & { is_critical?: boolean | string | null };
 
 export async function getCaseBuilderMedications() {
-  const supabase = await createRoleGatedClient(["admin"]);
+  const { supabase } = await createRoleGatedClient(["admin"]);
   const { data, error } = await supabase
     .from("medications")
     .select("*, dispense_units(name)")

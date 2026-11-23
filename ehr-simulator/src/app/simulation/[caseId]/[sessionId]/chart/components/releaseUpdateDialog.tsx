@@ -13,15 +13,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useSimSessionContext } from "@/context/SimSessionContext";
+import { routes } from "@/lib/routes";
 import { useSimulationCase } from "@/context/SimulationCaseContext";
 import {
   buildReleaseUpdateSummary,
   type ReleaseUpdateSectionKey,
-} from "@/lib/faculty/itemReleaseNotification";
+} from "@/lib/item-release/itemReleaseNotification";
 import {
   createEmptyReleasedItemsMap,
   type ReleasedItemsMap,
-} from "@/lib/faculty/itemRelease";
+} from "@/lib/item-release/itemRelease";
 
 const tabHrefByKey: Record<ReleaseUpdateSectionKey, string> = {
   labs: "labs",
@@ -55,8 +56,6 @@ export default function ReleaseUpdateDialog() {
   );
   const hasNewData = summary.hasAnyNewData;
 
-  const routeBase = `/simulation/${params.caseId}/${params.sessionId}/chart`;
-
   useEffect(() => {
     if (loading || (isPresim ?? true) || !hasNewData) return;
     const timer = setTimeout(() => setIsOpen(true), NOTIFY_DEBOUNCE_MS);
@@ -64,9 +63,8 @@ export default function ReleaseUpdateDialog() {
   }, [loading, isPresim, hasNewData]);
 
   const handleNavigate = (section: ReleaseUpdateSectionKey) => {
-    if (!routeBase) return;
     dismiss();
-    router.push(`${routeBase}/${tabHrefByKey[section]}`);
+    router.push(routes.simulation.chart.getHref(String(params.caseId), String(params.sessionId), tabHrefByKey[section]));
   };
 
   const dismiss = () => {

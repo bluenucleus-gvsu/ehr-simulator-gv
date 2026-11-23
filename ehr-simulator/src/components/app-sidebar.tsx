@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, Settings, User, BookOpenText, Hospital, Presentation, LogOut, ScanBarcode } from "lucide-react";
+import { Home, UserIcon, BookOpenText, Hospital, LogOut, ScanBarcode, Radio, LucideIcon, Settings } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -18,71 +18,87 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { signOut } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
+import { routes } from "@/lib/routes";
+import { User } from "@supabase/supabase-js";
+import { UserRole } from "@/lib/userManagement";
 
-const adminRoutes = [
+type SidebarRoute = {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+  roles?: UserRole[];
+};
+
+const sidebarRoutes: SidebarRoute[] = [
   {
-    title: "Admin Dashbord",
-    url: "/admin",
-    icom: Home,
+    title: "Dashboard",
+    url: routes.workspace.getHref(),
+    icon: Home,
   },
   {
     title: "Courses",
-    url: "/admin/courses",
-    icom: BookOpenText,
+    url: routes.workspace.courses.getHref(),
+    icon: BookOpenText,
+    roles: ["admin"]
   },
   {
     title: "Cases",
-    url: "/admin/cases",
-    icom: Hospital,
+    url: routes.workspace.cases.getHref(),
+    icon: Hospital,
+  },
+  {
+    title: "Live Sim Management",
+    url: routes.workspace["sim-management"].getHref(),
+    icon: Radio,
   },
   {
     title: "Barcode Printing",
-    url: "/admin/barcodes",
-    icom: ScanBarcode,
+    url: routes.workspace.barcodes.getHref(),
+    icon: ScanBarcode,
+  },
+  {
+    title: "Settings",
+    url: routes.workspace.settings.getHref(),
+    icon: Settings,
   },
 ]
 
-export function AppSidebar() {
+const getDefaultRoutes = (user: User | null) => {
+  if (!user) return [];
 
-  const { loading, user } = useUser();
-  const pathname = usePathname();
-  const isCurrentPath = (url: string) => pathname === url;
-
-  const defaultRoutes = [
+  return [
     {
       title: "Profile",
-      url: user?.id ? `/user/profile/${user.id}` : "/user",
-      icom: User,
-    },
-    {
-      title: "Faculty Page",
-      url: user?.id ? `/faculty/${user.id}` : "/faculty",
-      icom: Presentation,
-    },
-    {
-      title: "Settings",
-      url: "/admin/settings",
-      icom: Settings,
+      url: routes.user.getHref(user.id),
+      icon: UserIcon,
     },
   ];
+}
 
-  if (loading) return null;
+export function AppSidebar() {
+  const { user, role } = useUser();
+  const pathname = usePathname();
+  const isCurrentPath = (url: string) => pathname === url;
+  const defaultRoutes = getDefaultRoutes(user);
+  const visibleRoutes = sidebarRoutes.filter(
+    (route) => !route.roles || (role && route.roles.includes(role))
+  );
 
   return (
     <Sidebar>
       <SidebarHeader />
       <SidebarContent>
         <SidebarGroup />
-        <SidebarGroupLabel>Admin</SidebarGroupLabel>
+        <SidebarGroupLabel>Menu</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
-            {adminRoutes.map((route) => (
+            {visibleRoutes.map((route) => (
               <SidebarMenuItem key={route.url}>
                 <SidebarMenuButton
                   asChild
                   className={`${isCurrentPath(route.url) && "bg-secondary"}`}>
                   <Link href={route.url}>
-                    <route.icom />
+                    <route.icon />
                     <span>{route.title}</span>
                   </Link>
                 </SidebarMenuButton>
@@ -93,14 +109,14 @@ export function AppSidebar() {
         <SidebarGroup />
 
         <SidebarGroup />
-        <SidebarGroupLabel>Menu</SidebarGroupLabel>
+        <SidebarGroupLabel>Student View</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             {defaultRoutes.map((route) => (
               <SidebarMenuItem key={route.url}>
                 <SidebarMenuButton asChild>
                   <Link href={route.url}>
-                    <route.icom />
+                    <route.icon />
                     <span>{route.title}</span>
                   </Link>
                 </SidebarMenuButton>

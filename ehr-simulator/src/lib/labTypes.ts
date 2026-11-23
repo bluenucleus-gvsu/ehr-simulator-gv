@@ -1,7 +1,7 @@
 import { LabTableData } from '@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData';
 import { Database } from "../../database.types";
 import { LabResultsRow } from '@/actions/case_builder/getCase';
-import { type SimReleaseItem } from '@/lib/faculty/itemRelease';
+import { SimReleaseItem } from './item-release/itemRelease';
 
 export type LabResultInsert = Database['public']['Tables']['lab_results']['Insert'];
 

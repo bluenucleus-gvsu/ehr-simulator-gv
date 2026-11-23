@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import OrdersTable from "./components/ordersTable"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
 import { useSimSessionContext } from "@/context/SimSessionContext"
-import { isVisibleInSim } from "@/lib/faculty/itemRelease"
+import { isVisibleInSim } from "@/lib/item-release/itemRelease"
 
 type DbOrder = {
   id?: string | null;

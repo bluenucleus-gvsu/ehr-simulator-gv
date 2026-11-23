@@ -4,6 +4,7 @@ import { createClient, PostgrestError } from "@supabase/supabase-js";
 import { Database } from "../../database.types";
 import { revalidatePath } from "next/cache";
 import { caseMeetsMinimumRequirements } from "@/lib/caseMinimumRequirements";
+import { routes } from "@/lib/routes";
 import { createRoleGatedClient } from "./roleGatedClient";
 
 export type SectionAssignment = Database['public']['Tables']['section_assignments']['Row'];
@@ -185,10 +186,7 @@ export async function getSectionCaseAssignments(courseId: string) {
 }
 
 export async function createSectionCaseAssignment(payload: SectionAssignmentInsert): Promise<ActionResponse<SectionAssignment>> {
-  const supabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  const { supabase } = await createRoleGatedClient(["admin"]);
 
   if (!payload.case_id) {
     return {
@@ -226,7 +224,7 @@ export async function createSectionCaseAssignment(payload: SectionAssignmentInse
     };
   }
 
-  revalidatePath('/admin/courses', 'layout');
+  revalidatePath(routes.workspace.courses.getHref(), 'layout');
 
   return {
     success: true,
@@ -241,7 +239,7 @@ export async function deleteSectionCaseAssignment(ids: string[]): Promise<Action
   }
 
   try {
-    const supabase = await createRoleGatedClient(["admin"]);
+    const { supabase } = await createRoleGatedClient(["admin"]);
 
     const { error } = await supabase
       .from('section_assignments')
@@ -257,7 +255,7 @@ export async function deleteSectionCaseAssignment(ids: string[]): Promise<Action
       };
     }
 
-    revalidatePath('/admin/courses', 'layout');
+    revalidatePath(routes.workspace.courses.getHref(), 'layout');
 
     return {
       success: true,
@@ -270,109 +268,6 @@ export async function deleteSectionCaseAssignment(ids: string[]): Promise<Action
       message: err instanceof Error ? err.message : "Failed to delete assignments. Please try again.",
     };
   }
-}
-
-export async function getCourseCaseAssignments() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
-  const { data, error } = await supabase
-    .from('cases')
-    .select(`
-      id,
-      name,
-      description, 
-      admitting_diagnosis,
-      first_name,
-      last_name,
-      age,
-      course_cases (
-        id,
-        course_id,
-        courses (
-          id,
-          name,
-          code
-        )
-      )
-    `);
-
-  if (error) {
-    return {
-      success: false,
-      message: 'Failed to retrieve sim cases.',
-      error,
-      data: null
-    };
-  }
-
-  const assignments = data?.filter(caseMeetsMinimumRequirements).flatMap((caseItem) => {
-    // Handle unassigned cases (Left Join equivalent)
-    if (!caseItem.course_cases || caseItem.course_cases.length === 0) {
-      return [{
-        id: null, // No assignment ID because it's not in course_cases
-        courseId: null,
-        caseId: caseItem.id,
-        courseName: null,
-        courseCode: null,
-        caseName: caseItem.name,
-        description: caseItem.description,
-        diagnosis: caseItem.admitting_diagnosis
-      }];
-    }
-
-    // Handle cases assigned to one or more courses
-    return caseItem.course_cases.map((assignment) => {
-      const course = Array.isArray(assignment.courses)
-        ? assignment.courses[0]
-        : assignment.courses;
-
-      return {
-        id: assignment.id, // The course_cases ID
-        courseId: assignment.course_id,
-        caseId: caseItem.id,
-        courseName: course?.name,
-        courseCode: course?.code,
-        caseName: caseItem.name,
-        description: caseItem.description,
-        diagnosis: caseItem.admitting_diagnosis
-      };
-    });
-  }) ?? [];
-
-  return {
-    success: true,
-    message: 'Successfully retrieved sim cases.',
-    data: assignments,
-  };
-}
-
-export async function updateCaseSession(session: CaseSessionUpsert) {
-  const supabase = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
-  const { error } = await supabase
-    .from('case_sessions')
-    .upsert(session);
-
-  if (error) {
-    return {
-      success: false,
-      message: 'Failed to update session data.',
-      error,
-      data: null
-    };
-  }
-
-  return {
-    success: true,
-    message: 'Session data updated.',
-    data: session,
-  };
 }
 
 // extracts type of data from ActionResponse for use in frontend

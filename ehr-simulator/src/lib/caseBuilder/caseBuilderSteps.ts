@@ -1,4 +1,4 @@
-export const CASE_BUILDER_BASE = "/admin/case-builder/form";
+import { routes } from "@/lib/routes";
 
 export type CaseBuilderStep = {
   path: string;
@@ -6,16 +6,16 @@ export type CaseBuilderStep = {
 };
 
 export const CASE_BUILDER_STEPS: CaseBuilderStep[] = [
-  { path: `${CASE_BUILDER_BASE}/demographics`, label: "Demographics" },
-  { path: `${CASE_BUILDER_BASE}/history`, label: "History" },
-  { path: `${CASE_BUILDER_BASE}/notes`, label: "Notes" },
-  { path: `${CASE_BUILDER_BASE}/orders`, label: "Orders" },
-  { path: `${CASE_BUILDER_BASE}/table-template`, label: "FlexSheet Template" },
-  { path: `${CASE_BUILDER_BASE}/labs`, label: "Labs" },
-  { path: `${CASE_BUILDER_BASE}/charting`, label: "Charting" },
-  { path: `${CASE_BUILDER_BASE}/intake-output`, label: "I/O" },
-  { path: `${CASE_BUILDER_BASE}/medications`, label: "Med orders" },
-  { path: `${CASE_BUILDER_BASE}/medication-administrations`, label: "MAR" },
-  { path: `${CASE_BUILDER_BASE}/media`, label: "Media" },
-  { path: `${CASE_BUILDER_BASE}/review`, label: "Review" },
+  { path: routes.workspace.caseBuilder.form.getHref("demographics"), label: "Demographics" },
+  { path: routes.workspace.caseBuilder.form.getHref("history"), label: "History" },
+  { path: routes.workspace.caseBuilder.form.getHref("notes"), label: "Notes" },
+  { path: routes.workspace.caseBuilder.form.getHref("orders"), label: "Orders" },
+  { path: routes.workspace.caseBuilder.form.getHref("table-template"), label: "FlexSheet Template" },
+  { path: routes.workspace.caseBuilder.form.getHref("labs"), label: "Labs" },
+  { path: routes.workspace.caseBuilder.form.getHref("charting"), label: "Charting" },
+  { path: routes.workspace.caseBuilder.form.getHref("intake-output"), label: "I/O" },
+  { path: routes.workspace.caseBuilder.form.getHref("medications"), label: "Med orders" },
+  { path: routes.workspace.caseBuilder.form.getHref("medication-administrations"), label: "MAR" },
+  { path: routes.workspace.caseBuilder.form.getHref("media"), label: "Media" },
+  { path: routes.workspace.caseBuilder.form.getHref("review"), label: "Review" },
 ];

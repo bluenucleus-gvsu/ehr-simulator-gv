@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useSimSessionContext } from "@/context/SimSessionContext";
+import { routes } from "@/lib/routes";
 import InfoTooltip from "@/components/helpTooltip";
 import AdminSimControl from "@/app/simulation/[caseId]/[sessionId]/chart/components/adminSimControl";
 import ChartTabs from "./chartTabs";
@@ -30,16 +31,7 @@ const Header = () => {
   }, [])
 
   const handleHomeClick = () => {
-    let destination = '/'
-    if (userRole === 'student' && userId) {
-      destination = `/user/profile/${userId}`
-    } else if (userRole === 'admin') {
-      destination = '/admin'
-    } else if (userRole === 'faculty' && userId) {
-      destination = `/faculty/${userId}`
-    } else {
-      destination = '/'
-    }
+    const destination = routes.home.forRole(userRole, userId ?? "");
     router.push(destination)
   }
 
@@ -96,6 +88,7 @@ const Header = () => {
             variant='secondary'
             className="p-0 size-7 hover:text-blue-600 hover:ring-2"
             onClick={handleHomeClick}
+            disabled={loading}
           >
             <Home />
           </Button>

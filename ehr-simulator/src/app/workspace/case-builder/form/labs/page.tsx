@@ -1,0 +1,246 @@
+'use client'
+
+import { type LabTableData } from "@/app/simulation/[caseId]/[sessionId]/chart/labs/components/labsData"
+import { useReactTable, getCoreRowModel, createColumnHelper } from "@tanstack/react-table";
+import { useMemo, useState } from "react";
+import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipContent } from "@radix-ui/react-tooltip";
+import { TooltipPortal } from "@radix-ui/react-tooltip";
+import { Radio, TestTube2 } from "lucide-react";
+import { AddTableColumn } from "./components/addTimeCol";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { useFormContext } from "@/context/FormContext";
+import { useLabColumns } from "../../components/useFormTableOffsets";
+import { FormShell } from "../../components/formShell";
+import { LabColumnFormHeader } from "./components/labColumnFormHeader";
+import { FormTable } from "../../components/FormTable";
+import { saveCaseData } from "@/actions/case_builder/caseBuilder";
+import { CaseSection } from "@/lib/caseSections";
+import { routes } from "@/lib/routes";
+import { LabTableInputCell } from "./components/labTableInputCell";
+
+const columnHelper = createColumnHelper<LabTableData>();
+
+function LabForm() {
+  const { onDataChange, labData, caseId, demographicData } = useFormContext()
+  const [labTableData, setLabTableData] = useState<LabTableData[]>(labData.data);
+  const phaseCount = Math.max(1, Number(demographicData.phaseCount ?? 1));
+
+  const {
+    columns,
+    addTimeOffsetColumn,
+    addFacultyReleaseColumn,
+    removeColumn,
+    togglePresim,
+    setPhase,
+    setLabel
+  } = useLabColumns(labData.columns, phaseCount)
+
+  const router = useRouter()
+
+  const goBack = () => {
+    onDataChange(CaseSection.LABS, {
+      data: labTableData,
+      columns,
+    });
+    router.push(routes.workspace.caseBuilder.form.getHref("table-template", caseId));
+  }
+
+  const handleSubmit = async () => {
+    onDataChange(CaseSection.LABS, {
+      data: labTableData,
+      columns,
+    });
+
+    await saveCaseData({
+      payload: {
+        data: labTableData,
+        columns,
+      },
+      section: CaseSection.LABS,
+      caseId: caseId
+    })
+
+    router.push(routes.workspace.caseBuilder.form.getHref("charting", caseId))
+  }
+  const columns_ = useMemo(
+    () => [
+      // first column has unique formatting
+      columnHelper.accessor("field", {
+        id: 'pinned',
+        minSize: 200,
+        maxSize: 400,
+        header: () => <p></p>,
+        cell: info => {
+          const rowType = info.row.original.rowType;
+          const field = info.row.original.field
+          if (rowType === "divider") {
+            return (
+              <p className="w-full text-left text-xs py-0 px-2 font-medium text-blue-900">
+                {field}
+              </p>
+            );
+          }
+          else {
+            const labRange = info.row.original?.normalRange;
+            if (labRange) {
+              const unit = info.row.original?.unit || ''
+              return (
+                <Tooltip>
+                  <TooltipTrigger className="w-full font-normal text-xs text-gray-700 shadow-none rounded-none">
+                    <div className="flex justify-end w-full ">
+                      <p className="text-right font-normal px-2 text-xs text-gray-700 text-wrap">{field}</p>
+                      {unit && <p className="text-right font-normal pr-2 text-xs tracking-tight text-gray-400">{unit}</p>}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipPortal>
+                    <TooltipContent className="bg-white shadow border border-gray-300 rounded-xl ml-4 p-2 z-10">
+                      <h1 className="text-md font-semibold">{field}</h1>
+                      <div className="space-y-2">
+                        <div className="text-xs">
+                          <p className="pl-2 text-gray-800 text-xs font-medium">
+                            <span className="font-normal">Low: </span>
+                            &#60;{labRange.low}
+                          </p>
+                          <p className="pl-2 text-gray-800 text-xs font-medium">
+                            <span className="font-normal">High: </span>
+                            &#62;{labRange.high}</p>
+                        </div>
+                      </div>
+                    </TooltipContent>
+                  </TooltipPortal>
+                </Tooltip>
+              );
+            }
+            return (
+              <p className="w-full text-right font-normal py-0! px-2 text-xs text-gray-700 text-wrap">
+                {field}
+              </p>
+            );
+          }
+        }
+      },
+      ),
+
+      // map out remaining columns
+      ...columns.map(column => {
+        return (
+          columnHelper.accessor(row => row[column.id], {
+            id: column.id,
+            header: () => {
+              return (
+                <LabColumnFormHeader
+                  column={column}
+                  phaseCount={phaseCount}
+                  onRemove={removeColumn}
+                  onTogglePresim={togglePresim}
+                  onPhaseChange={setPhase}
+                  onLabelChange={setLabel}
+                />
+              )
+            },
+            cell: ({ row, column: cellColumn, getValue, table }) => {
+              const rowType = row.original.rowType
+              switch (rowType) {
+                case 'results':
+                  return (
+                    <LabTableInputCell
+                      row={row}
+                      getValue={getValue}
+                      column={cellColumn}
+                      table={table}
+                      visibleInPresim={column.is_in_presim}
+                    />
+                  );
+              }
+            }
+          }))
+      }
+      )
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [columns, phaseCount]
+  );
+
+  const ptTable = useReactTable({
+    data: labTableData,
+    columns: columns_,
+    enablePinning: true,
+    initialState: {
+      columnPinning: {
+        left: ['pinned']
+      },
+    },
+    meta: {
+      updateData: (rowIndex, columnId, value) => {
+        if (typeof value !== 'string') return;
+        setLabTableData(old =>
+          old.map((row, index) => {
+            if (index === rowIndex) {
+              return {
+                ...old[rowIndex]!,
+                [columnId]: value,
+              };
+            }
+            return row
+          })
+        )
+      },
+    },
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  return (
+    <FormShell
+      title="Lab Results"
+      stepDescription="Enter laboratory and imaging results"
+      icon={<TestTube2 className="text-slate-400" />}
+      onSubmit={handleSubmit}
+      goBack={goBack}
+      continueButtonText="Continue"
+      backButtonText="Back"
+      continueButtonTooltip="Proceed to Next Page"
+      backButtonTooltip="Return to Previous Page"
+    >
+      <div className="bg-slate-50/50 flex-1 flex flex-col min-h-0 px-6 pt-4">
+        <div className="h-12 px-4 w-full flex justify-start gap-12 mb-3 items-end">
+          <AddTableColumn handleColumnAdd={addTimeOffsetColumn} />
+          <Button
+            type="button"
+            variant="outline"
+            className="text-sm"
+            onClick={() => addFacultyReleaseColumn()}
+          >
+            <Radio />
+            Add Faculty-Released Column
+          </Button>
+          <div className="flex items-end gap-2">
+            <div className="space-y-1.5">
+              <p className="w-fit items-center  px-1.5 py-0.5 rounded text-[10px] font-bold bg-yellow-50 text-yellow-600 border border-yellow-300 uppercase tracking-wide">
+                Not included in Pre-Sim
+              </p>
+              <p className="w-fit items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-lime-50 text-lime-600 border border-lime-300 uppercase tracking-wide">
+                Included in Pre-Sim
+              </p>
+            </div>
+          </div>
+        </div >
+        <div className="flex flex-col overflow-hidden flex-1 w-full border border-gray-300 rounded-t-lg bg-white shadow-sm relative">
+          <FormTable
+            table={ptTable}
+            getCellClassName={(row) => {
+              const baseClass = "min-w-40";
+              const colorClass = row.rowType === "divider"
+                ? "bg-blue-50"
+                : "bg-white border-r last:border-r-0";
+              return `${baseClass} ${colorClass}`;
+            }}
+          />
+        </div>
+      </div >
+    </FormShell >
+  );
+}
+
+export default LabForm

@@ -1,5 +1,6 @@
 import { test, expect, type Browser, type BrowserContext, type Page } from "@playwright/test";
-import { BASE_URL, E2E_PASSWORD, ROLE_ACCOUNTS, currentUserId } from "../../playwright/helpers/auth";
+import { routes } from "@/lib/routes";
+import { BASE_URL, E2E_PASSWORD, ROLE_ACCOUNTS } from "../../playwright/helpers/auth";
 
 // get separate browser context - signing out would ruin other test's authentication
 async function createBrowserContext(
@@ -30,26 +31,13 @@ async function expectSignedOut(page: Page) {
   await expect(page).toHaveURL(/\/auth\/login/);
 }
 
+// Admin and faculty share the same logout flow
 test.describe("sign out", () => {
   test.describe("admin", () => {
     test("logs out from the sidebar", async ({ browser }) => {
       const { context, page } = await createBrowserContext(browser, "admin");
       try {
-        await page.goto("/admin");
-        await page.getByRole("button", { name: "Logout" }).click();
-        await expectSignedOut(page);
-      } finally {
-        await context.close();
-      }
-    });
-  });
-
-  test.describe("faculty", () => {
-    test("logs out from the faculty header", async ({ browser }) => {
-      const { context, page } = await createBrowserContext(browser, "faculty");
-      try {
-        const userId = await currentUserId(page);
-        await page.goto(`/faculty/${userId}`);
+        await page.goto(routes.workspace.getHref());
         await page.getByRole("button", { name: "Logout" }).click();
         await expectSignedOut(page);
       } finally {
@@ -62,8 +50,13 @@ test.describe("sign out", () => {
     test("logs out from the profile header", async ({ browser }) => {
       const { context, page } = await createBrowserContext(browser, "student");
       try {
-        const userId = await currentUserId(page);
-        await page.goto(`/user/profile/${userId}`);
+        await page.goto("/");
+        const href = await page.getByRole("link", { name: "Student Profile" }).getAttribute("href");
+        const match = href?.match(/\/user\/profile\/([0-9a-f-]{36})/);
+
+        expect(match).toBeDefined()
+        const userId = match ? match[1] : "";
+        await page.goto(routes.user.getHref(userId));
         await page.getByRole("button", { name: "Logout" }).click();
         await expectSignedOut(page);
       } finally {

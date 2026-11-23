@@ -5,9 +5,11 @@ import { Database } from "../../database.types";
 import { ActionResponse, ExtractData } from "./cases";
 import { UUID } from "crypto";
 import { revalidatePath } from "next/cache";
+import { routes } from "@/lib/routes";
 import { assertStudentActiveSessionWrite } from "@/actions/simulation/assertStudentActiveSessionWrite";
+
 import { createRoleGatedClient } from "./roleGatedClient";
-import { resolvePreviewSessionId } from "@/lib/faculty/itemRelease";
+import { resolvePreviewSessionId } from "@/lib/item-release/itemRelease";
 
 export type EditableStudentNoteUpsert = Database['public']['Tables']['editable_clinical_documents']['Insert'];
 export type EditableStudentNote = Database['public']['Tables']['editable_clinical_documents']['Row'];
@@ -67,7 +69,7 @@ export async function submitStudentNote(note: EditableStudentNoteUpsert): Promis
       .single();
 
     if (!fallbackError) {
-      revalidatePath(`/simulation/${note.case_id}/${note.case_session_id}/chart/notes`);
+      revalidatePath(routes.simulation.chart.getHref(note.case_id, note.case_session_id, "notes"));
       return {
         success: true,
         data: fallbackData,
@@ -89,7 +91,7 @@ export async function submitStudentNote(note: EditableStudentNoteUpsert): Promis
       error: error
     };
   }
-  revalidatePath(`/simulation/${note.case_id}/${note.case_session_id}/chart/notes`);
+  revalidatePath(routes.simulation.chart.getHref(note.case_id, note.case_session_id, "notes"));
 
   return {
     success: true,
@@ -348,7 +350,7 @@ export async function submitMedicationAdministrations(
     }
   }
 
-  revalidatePath(`/simulation/${caseId}/${sessionId}/chart/mar`);
+  revalidatePath(routes.simulation.chart.getHref(caseId, sessionId, "mar"));
 
   return {
     success: true,
@@ -458,7 +460,7 @@ export async function startSession(sessionId: string): Promise<SessionTransition
 
 export async function completeSessionAssignments(assignmentIds: string[]): Promise<SessionTransitionResult> {
   try {
-    const supabase = await createRoleGatedClient(["admin"]);
+    const { supabase } = await createRoleGatedClient(["admin"]);
     const now = new Date().toISOString();
 
     const { error: backfillError } = await supabase
@@ -481,7 +483,7 @@ export async function completeSessionAssignments(assignmentIds: string[]): Promi
 
     if (error) throw error;
 
-    revalidatePath("/admin/courses", "layout");
+    revalidatePath(routes.workspace.courses.getHref(), "layout");
     return { success: true };
   } catch (error) {
     console.error("Failed to complete sessions:", error);

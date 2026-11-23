@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { createEmptyReleasedItemsMap, type ReleasedItemsMap } from "@/lib/faculty/itemRelease";
+import { createEmptyReleasedItemsMap, type ReleasedItemsMap } from "@/lib/item-release/itemRelease";
 import {
   buildReleaseUpdateSummary,
   diffReleasedItems,
-} from "@/lib/faculty/itemReleaseNotification";
+} from "@/lib/item-release/itemReleaseNotification";
 import type { CaseBundle } from "@/actions/case_builder/getCase";
 
 function makeMap(

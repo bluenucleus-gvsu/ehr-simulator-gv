@@ -46,6 +46,8 @@ export async function getUserCourses(userId: string): Promise<UserCoursesData> {
       console.error("RPC get_user_courses error:", error);
       return { activeCourses: [], inactiveCourses: [] };
     }
+    const result = (data ?? null) as UserCoursesData | null;
+
     const normalize = (courses: Course[]): Course[] =>
       courses.map((c) => ({
         ...c,
@@ -54,8 +56,8 @@ export async function getUserCourses(userId: string): Promise<UserCoursesData> {
       }));
 
     return {
-      activeCourses: normalize((data?.activeCourses ?? []) as Course[]),
-      inactiveCourses: normalize((data?.inactiveCourses ?? []) as Course[]),
+      activeCourses: normalize((result?.activeCourses ?? []) as Course[]),
+      inactiveCourses: normalize((result?.inactiveCourses ?? []) as Course[]),
     };
   } catch (err) {
     console.error("Error fetching user courses:", err);

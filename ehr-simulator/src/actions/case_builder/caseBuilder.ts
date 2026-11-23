@@ -46,7 +46,7 @@ type TableSavePayload<T> = {
 
 export async function saveCaseData({ payload, section, caseId }: SaveCaseArgs) {
   assertValidSaveRequest(section, payload, caseId);
-  const supabase = await createRoleGatedClient(["admin"]);
+  const { supabase } = await createRoleGatedClient(["admin"]);
 
   if (section === CaseSection.DEMOGRAPHICS) {
     return await upsertCaseDemographics(supabase, payload, caseId)

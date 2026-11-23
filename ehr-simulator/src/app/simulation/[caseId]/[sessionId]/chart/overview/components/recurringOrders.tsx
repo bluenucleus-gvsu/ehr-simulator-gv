@@ -9,7 +9,7 @@ import { TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui
 import StyledTitle from "./styledTitle"
 import { useSimulationCase } from "@/context/SimulationCaseContext"
 import { useSimSessionContext } from "@/context/SimSessionContext"
-import { isVisibleInSim } from "@/lib/faculty/itemRelease"
+import { isVisibleInSim } from "@/lib/item-release/itemRelease"
 import { DatabaseOrder } from "@/actions/case_builder/getCase"
 import { OrderType } from "../../orders/components/orderData"
 

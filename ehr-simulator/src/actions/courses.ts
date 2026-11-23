@@ -9,6 +9,7 @@ import {
   resolveDraftIds,
   type CourseDraft,
 } from "@/lib/courses/courseDiff";
+import { routes } from "@/lib/routes";
 import { ActionResponse } from "./cases";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -151,7 +152,7 @@ export type CourseFull = NonNullable<Awaited<ReturnType<typeof getCourseFull>>>;
 
 export async function saveCourseEdits(courseId: string | null, payload: CourseDraft): Promise<ActionResponse<string | null>> {
   try {
-    const supabase = await createRoleGatedClient(["admin"]);
+    const { supabase } = await createRoleGatedClient(["admin"]);
 
     const state = courseId ? await getCourseEditState(supabase, courseId) : { sections: [] };
 
@@ -165,7 +166,7 @@ export async function saveCourseEdits(courseId: string | null, payload: CourseDr
       return { success: false, message: "Failed to save the course. Please try again.", error };
     }
 
-    revalidatePath('/admin/courses', 'layout');
+    revalidatePath(routes.workspace.courses.getHref(), 'layout');
     return { success: true, message: "Course saved successfully.", data: savedCourseId };
   } catch (err) {
     return {
@@ -182,7 +183,7 @@ async function setCourseActive(
   failureMessage: string
 ): Promise<ActionResponse<null>> {
   try {
-    const supabase = await createRoleGatedClient(["admin"]);
+    const { supabase } = await createRoleGatedClient(["admin"]);
 
     const { error } = await supabase
       .from("courses")
@@ -194,7 +195,7 @@ async function setCourseActive(
       return { success: false, message: failureMessage, error };
     }
 
-    revalidatePath("/admin/courses");
+    revalidatePath(routes.workspace.courses.getHref());
     return { success: true, message: successMessage, data: null };
   } catch (err) {
     console.error(`setCourseActive(${active}) authorization error:`, err);
@@ -215,7 +216,7 @@ export async function unarchiveCourse(courseId: string): Promise<ActionResponse<
 
 export async function deleteCourse(courseId: string): Promise<ActionResponse<null>> {
   try {
-    const supabase = await createRoleGatedClient(["admin"]);
+    const { supabase } = await createRoleGatedClient(["admin"]);
 
     const { error } = await supabase
       .from("courses")
@@ -227,7 +228,7 @@ export async function deleteCourse(courseId: string): Promise<ActionResponse<nul
       return { success: false, message: "Failed to delete the course. Please try again.", error };
     }
 
-    revalidatePath("/admin/courses");
+    revalidatePath(routes.workspace.courses.getHref());
   } catch (err) {
     console.error("deleteCourse authorization error:", err);
     return {
@@ -236,7 +237,7 @@ export async function deleteCourse(courseId: string): Promise<ActionResponse<nul
     };
   }
 
-  redirect("/admin/courses");
+  redirect(routes.workspace.courses.getHref());
 }
 
 export async function getCourseEditState(

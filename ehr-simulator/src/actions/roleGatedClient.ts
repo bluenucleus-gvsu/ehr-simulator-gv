@@ -1,12 +1,20 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { emailIsDevAdminAllowlist } from "@/lib/devAdminEmails";
 import { createServerSupabase } from "@/utils/supabase/server";
+import { Database } from "../../database.types";
+import { UserRole } from "@/lib/userManagement";
 
 export type PrivilegedRole = "admin" | "faculty";
 
+export type RoleGateClient = {
+  supabase: SupabaseClient<Database>;
+  userId: string;
+  role: UserRole;
+};
+
 export async function createRoleGatedClient(
   allowedRoles: readonly PrivilegedRole[],
-): Promise<SupabaseClient> {
+): Promise<RoleGateClient> {
   const sessionClient = await createServerSupabase();
   const { data: { user }, error: userError } = await sessionClient.auth.getUser();
 
@@ -25,7 +33,7 @@ export async function createRoleGatedClient(
     !!profile?.role &&
     (allowedRoles as readonly string[]).includes(profile.role);
 
-  if (!hasRole && !emailIsDevAdminAllowlist(user.email ?? undefined)) {
+  if (!profile || (!hasRole && !emailIsDevAdminAllowlist(user.email ?? undefined))) {
     throw new Error("You do not have permission to perform this action.");
   }
 
@@ -35,7 +43,12 @@ export async function createRoleGatedClient(
     throw new Error("Database credentials are not configured.");
   }
 
-  return createClient(url, serviceRoleKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  return {
+    supabase: createClient(url, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    }),
+    userId: user.id,
+    role: profile.role
+  }
 }
+

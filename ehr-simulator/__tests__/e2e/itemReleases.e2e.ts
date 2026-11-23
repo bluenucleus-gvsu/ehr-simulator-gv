@@ -1,4 +1,5 @@
 import { test, expect, type Browser, type Page } from "@playwright/test";
+import { routes } from "@/lib/routes";
 
 import { authState, createServiceClient } from "../../playwright/helpers/auth";
 
@@ -23,7 +24,7 @@ const BASELINE_SODIUM = ["138", "136"];
 const PHASE_2_SODIUM = ["134", "131", "133", "132"];
 const PHASE_3_SODIUM = ["129", "128", "127"];
 
-const chartUrl = (tab: string) => `/simulation/${CASE_ID}/${sessionId}/chart/${tab}`;
+const chartUrl = (tab: string) => routes.simulation.chart.getHref(CASE_ID, sessionId, tab);
 
 let facultyUrl: string;
 
@@ -124,7 +125,7 @@ test.beforeAll(async () => {
   ).section_assignments;
   const assignment = Array.isArray(embedded) ? embedded[0] : embedded;
   if (!assignment) throw new Error("section assignment join missing on session");
-  facultyUrl = `/faculty/${facultyUser.id}/${assignment.id}`;
+  facultyUrl = routes.workspace["sim-management"].section.getHref(assignment.id);
 });
 
 test.afterAll(async () => {
@@ -249,7 +250,7 @@ test.describe("item release notification in student EHR", () => {
 test.describe("case-builder case creation round trip", () => {
   test("admin edits course, faculty see new lab items", async ({ browser }) => {
     const admin = await newRolePage(browser, "admin");
-    const labsFormUrl = `/admin/case-builder/form/labs?caseId=${CASE_ID}`;
+    const labsFormUrl = routes.workspace.caseBuilder.form.getHref("labs", CASE_ID);
 
     await admin.page.goto(labsFormUrl);
 

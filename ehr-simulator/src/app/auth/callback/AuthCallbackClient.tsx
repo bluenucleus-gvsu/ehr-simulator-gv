@@ -1,14 +1,19 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import type { Session } from '@supabase/supabase-js'
 import { emailIsDevAdminAllowlist } from '@/lib/devAdminEmails'
 import { getUserRole } from '@/actions/users'
 import { createBrowserSupabase } from '@/utils/supabase/client'
+import { routes } from '@/lib/routes'
+import { Button } from '@/components/ui/button'
+import { LoaderCircle } from 'lucide-react'
 
 export default function AuthCallbackPage() {
   const router = useRouter()
+  const [hadError, setHadError] = useState(false)
 
   useEffect(() => {
     const supabase = createBrowserSupabase()
@@ -17,29 +22,23 @@ export default function AuthCallbackPage() {
     let redirectScheduled = false
     let redirectTimer: ReturnType<typeof setTimeout> | null = null
 
-    const getRoleForUser = async (userId: string): Promise<string | undefined> => {
-      try {
-        const role = await getUserRole(userId)
-        if (role) return role
-      } catch {
-      }
-      return undefined
-    }
-
     const redirectForSession = async (session: Session) => {
-      const role = await getRoleForUser(session.user.id)
+      const devBypass = emailIsDevAdminAllowlist(session.user.email ?? undefined)
+
+      let role: string | null = null
+      if (!devBypass) {
+        try {
+          role = await getUserRole(session.user.id)
+        } catch {
+          if (isActive) setHadError(true)
+          return
+        }
+      }
 
       if (!isActive) return
 
-      const devBypass = emailIsDevAdminAllowlist(session.user.email ?? undefined)
       const resolvedRole = devBypass ? 'admin' : role
-
-      const destination =
-        resolvedRole === 'admin'
-          ? '/admin'
-          : resolvedRole === 'faculty'
-            ? `/faculty/${session.user.id}`
-            : `/user/profile/${session.user.id}`
+      const destination = routes.home.forRole(resolvedRole, session.user.id);
 
       router.replace(destination)
     }
@@ -74,5 +73,26 @@ export default function AuthCallbackPage() {
     }
   }, [router])
 
-  return <p>Signing you in…</p>
+  if (hadError) {
+    return (
+      <div className="p-8 min-h-screen flex items-center justify-center">
+        <div className="max-w-xl w-full text-center bg-white rounded-lg shadow p-6 space-y-4">
+          <h1 className="text-2xl font-semibold">Something went wrong</h1>
+          <p className="text-sm text-muted-foreground">
+            We couldn&apos;t verify your account role. Please try signing in again.
+          </p>
+          <Link href={routes.auth.login.getHref()} passHref>
+            <Button>Back to sign in</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex min-h-screen justify-center items-center">
+      <LoaderCircle className="w-5 h-5 animate-spin mr-1" />
+      <p>Signing you in…</p>
+    </div>
+  )
 }

@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { getUsersGroupId } from '@/actions/users';
-import { getSessionItemReleases } from '@/actions/faculty';
+import { getSessionItemReleases } from '@/actions/item-release';
 import {
   PREVIEW_SESSION_ID,
   RELEASABLE_ITEMS,
@@ -13,7 +13,7 @@ import {
   createEmptyReleasedItemsMap,
   toReleasedItemsMap,
   type ReleasedItemsMap,
-} from '@/lib/faculty/itemRelease';
+} from '@/lib/item-release/itemRelease';
 import { useParams } from 'next/navigation';
 import { useSimulationCase } from '@/context/SimulationCaseContext';
 import { Database } from '../../database.types';
