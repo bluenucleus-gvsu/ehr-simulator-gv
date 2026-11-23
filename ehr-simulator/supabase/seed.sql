@@ -176,6 +176,18 @@ VALUES
     29,
     'med_surg',
     1
+  ),
+  (
+    'f1d0a110-4e1a-4a11-8110-000000000001',
+    'Media Release Test',
+    'Use this three-phase case to test staged media previews, release, session isolation, and live un-release. Add an image in the case-builder media step and assign it to phase 2 or 3.',
+    'Taylor',
+    'Media',
+    'Full',
+    'Media release workflow test',
+    45,
+    'med_surg',
+    3
   );
 
 INSERT INTO public.section_assignments (section_id, case_id, sim_time, presim_time) 
@@ -210,6 +222,66 @@ VALUES  ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c6a', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e
         ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c6a', 'e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d'),
         ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5e', 'e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d'),
         ('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5e', 'e5f6a7b8-c9d0-4e5f-9c1f-4c5d6e7f8a9d');
+
+INSERT INTO public.course_cases (course_id, case_id)
+VALUES (
+  'a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d',
+  'f1d0a110-4e1a-4a11-8110-000000000001'
+)
+ON CONFLICT (course_id, case_id) DO NOTHING;
+
+INSERT INTO public.faculty_section (faculty_id, section_id)
+SELECT
+  'f6a7b8c9-d0e1-4f5a-3b4c-5d6e7f8a9b0c',
+  'b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e'
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM public.faculty_section
+  WHERE faculty_id = 'f6a7b8c9-d0e1-4f5a-3b4c-5d6e7f8a9b0c'
+    AND section_id = 'b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e'
+);
+
+INSERT INTO public.section_assignments (id, section_id, case_id, sim_time, presim_time)
+VALUES (
+  'f1d0a110-4e1a-4a11-8110-000000000002',
+  'b2c3d4e5-f6a7-4b5c-9d0e-1f2a3b4c5d6e',
+  'f1d0a110-4e1a-4a11-8110-000000000001',
+  now() + interval '1 day',
+  now()
+)
+ON CONFLICT (id) DO UPDATE SET
+  case_id = EXCLUDED.case_id,
+  sim_time = EXCLUDED.sim_time,
+  presim_time = EXCLUDED.presim_time;
+
+INSERT INTO public.case_sessions (
+  id, case_id, group_id, section_assignment_id, status, started_at, current_phase
+)
+VALUES
+  (
+    'f1d0a110-4e1a-4a11-8110-000000000003',
+    'f1d0a110-4e1a-4a11-8110-000000000001',
+    'c3d4e5f6-a7b8-4c5d-0e1f-2a3b4c5d6e7f',
+    'f1d0a110-4e1a-4a11-8110-000000000002',
+    'in progress',
+    now(),
+    1
+  ),
+  (
+    'f1d0a110-4e1a-4a11-8110-000000000004',
+    'f1d0a110-4e1a-4a11-8110-000000000001',
+    'd4e5f6a7-b8c9-4d5e-1f2a-3b4c5d6e7f8a',
+    'f1d0a110-4e1a-4a11-8110-000000000002',
+    'in progress',
+    now(),
+    1
+  )
+ON CONFLICT (section_assignment_id, group_id) DO UPDATE SET
+  id = EXCLUDED.id,
+  case_id = EXCLUDED.case_id,
+  status = EXCLUDED.status,
+  started_at = EXCLUDED.started_at,
+  current_phase = EXCLUDED.current_phase;
 
 INSERT INTO public.case_sessions (id, case_id, group_id) VALUES ('a5f6a7b8-c9d0-4e5f-4b1a-4c5d6e7f8a9a', 'e5f6a7b8-c9d0-4e5f-9b1a-4c5d6e7f8a9d', 'c3d4e5f6-a7b8-4c5d-0e1f-2a3b4c5d6e7f');
 
@@ -835,6 +907,4 @@ UPDATE public.cases
     'psychosocial', 'heent', 'neuro', 'integument', 'cardiac', 'respiratory', 'wound',
     'gi', 'musculoskeletal', 'genitourinary', 'iv_1', 'nursing_care', 'ciwa'
   ]::public.flexsheet_section_type[];
-
-
 

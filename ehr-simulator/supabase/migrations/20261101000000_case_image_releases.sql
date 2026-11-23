@@ -1,6 +1,10 @@
 ALTER TABLE public.case_images
   ADD COLUMN phase integer NOT NULL DEFAULT 1,
-  ADD COLUMN is_in_presim boolean NOT NULL DEFAULT true;
+  ADD COLUMN is_in_presim boolean NOT NULL DEFAULT true,
+  ADD COLUMN title text,
+  ADD COLUMN description text,
+  ADD COLUMN time_offset integer,
+  ADD COLUMN department text;
 
 CREATE TABLE public.case_image_releases (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -42,12 +46,19 @@ BEGIN
   PERFORM 1 FROM public.cases WHERE id = p_case_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Case % was not found', p_case_id; END IF;
   DELETE FROM public.case_images WHERE case_id = p_case_id;
-  INSERT INTO public.case_images(case_id, preview_url, file_path, phase, is_in_presim)
+  INSERT INTO public.case_images(
+    case_id, preview_url, file_path, phase, is_in_presim,
+    title, description, time_offset, department
+  )
   SELECT p_case_id,
          item->>'preview_url',
          item->>'file_path',
          COALESCE((item->>'phase')::integer, 1),
-         COALESCE((item->>'is_in_presim')::boolean, true)
+         COALESCE((item->>'is_in_presim')::boolean, true),
+         NULLIF(item->>'title', ''),
+         NULLIF(item->>'description', ''),
+         NULLIF(item->>'time_offset', '')::integer,
+         NULLIF(item->>'department', '')
   FROM jsonb_array_elements(COALESCE(p_rows, '[]'::jsonb)) item;
   UPDATE public.cases SET updated_at = now() WHERE id = p_case_id;
 END;

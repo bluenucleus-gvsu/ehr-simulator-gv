@@ -44,6 +44,13 @@ describe("isVisibleInSim", () => {
     ).toBe(false);
   });
 
+  it("uses media presimulation metadata and session release state", () => {
+    const stagedMedia = { id: "image", phase: 2, isInPresim: false };
+    expect(isVisibleInSim(stagedMedia, true, new Set(["image"]))).toBe(false);
+    expect(isVisibleInSim(stagedMedia, false, new Set())).toBe(false);
+    expect(isVisibleInSim(stagedMedia, false, new Set(["image"]))).toBe(true);
+  });
+
   it("shows phase 1 items in active sim without a release", () => {
     expect(
       isVisibleInSim({ id: "a", phase: 1, isInPresim: true }, false, new Set())
@@ -96,12 +103,16 @@ describe("release map helpers", () => {
       clinical_document_releases: [
         { itemId: "n1", releasedAt: "2026-01-01T10:07:00Z" },
       ],
+      case_image_releases: [
+        { itemId: "image1", releasedAt: "2026-01-01T10:09:00Z" },
+      ],
     }));
 
     expect(map.lab_result_releases.get("a")).toBe("2026-01-01T10:05:00Z");
     expect(map.lab_result_releases.get("b")).toBe("2026-01-01T10:06:00Z");
     expect(map.lab_result_releases.size).toBe(2);
     expect(map.clinical_document_releases.get("n1")).toBe("2026-01-01T10:07:00Z");
+    expect(map.case_image_releases.get("image1")).toBe("2026-01-01T10:09:00Z");
   });
 });
 
@@ -125,9 +136,13 @@ describe("buildPreviewReleasedItems", () => {
       { id: "med-baseline", phase: 1 },
       { id: "med-p2", phase: 2 },
     ],
+    caseImages: [
+      { id: "image-baseline", phase: 1 },
+      { id: "image-p2", phase: 2 },
+    ],
   };
 
-  it("releases every staged (phase > 1) item across all four tables", () => {
+  it("releases every staged (phase > 1) item across all tables", () => {
     const map = buildPreviewReleasedItems(bundle, SIM_START);
 
     expect([...map.lab_result_releases.keys()].sort()).toEqual(["lab-p2", "lab-p3"]);
@@ -135,6 +150,7 @@ describe("buildPreviewReleasedItems", () => {
     expect(map.clinical_document_releases.has("note-baseline")).toBe(false);
     expect([...map.order_releases.keys()]).toEqual(["order-p3"]);
     expect([...map.medication_order_releases.keys()]).toEqual(["med-p2"]);
+    expect([...map.case_image_releases.keys()]).toEqual(["image-p2"]);
   });
 
   it("scales fabricated release stamps by phase so staged content sorts after baseline in phase order", () => {
@@ -174,9 +190,9 @@ describe("realtime reducers", () => {
 
   it("insert works for the non-lab release tables", () => {
     const initial = createEmptyReleasedItemsMap();
-    const next = applyReleaseInsert(initial, "medication_order_releases", "mo1", "t1");
+    const next = applyReleaseInsert(initial, "case_image_releases", "image1", "t1");
 
-    expect(next.medication_order_releases.get("mo1")).toBe("t1");
+    expect(next.case_image_releases.get("image1")).toBe("t1");
     expect(next.lab_result_releases.size).toBe(0);
   });
 
@@ -198,5 +214,16 @@ describe("realtime reducers", () => {
 
     expect(next).not.toBe(initial);
     expect(next.lab_result_releases.get("a")).toBe("t1");
+  });
+
+  it("removes a released media item on realtime delete", () => {
+    const initial = applyReleaseInsert(
+      createEmptyReleasedItemsMap(),
+      "case_image_releases",
+      "image1",
+      "t1",
+    );
+    const next = applyReleaseDelete(initial, "case_image_releases", "image1");
+    expect(next.case_image_releases.has("image1")).toBe(false);
   });
 });

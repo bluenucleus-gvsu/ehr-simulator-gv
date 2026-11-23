@@ -74,7 +74,7 @@ export default function CasesClient({ cases }: CaseClientProps) {
             <ChevronDown />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem key={'none'} value=''>All Specialties</SelectItem>
+            <SelectItem key={'none'} value='all'>All Specialties</SelectItem>
             {Object.entries(caseSpecialtyLabels).map(([value, label], i) => {
               return (
                 <SelectItem key={i} value={value}>{label}</SelectItem>

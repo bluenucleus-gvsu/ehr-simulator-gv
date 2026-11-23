@@ -206,6 +206,20 @@ export function assertValidSaveRequest(
         if (phase > 1 && image.isInPresim === true) {
           fail(`media[${index}] cannot be in pre-sim when set for faculty-release.`);
         }
+        if (image.title !== undefined && image.title !== null && typeof image.title !== "string") {
+          fail(`media[${index}].title must be text.`);
+        }
+        if (image.description !== undefined && image.description !== null && typeof image.description !== "string") {
+          fail(`media[${index}].description must be text.`);
+        }
+        if (image.department !== undefined && image.department !== null && typeof image.department !== "string") {
+          fail(`media[${index}].department must be text.`);
+        }
+        if (image.timeOffset !== undefined && image.timeOffset !== null) {
+          const timeOffset = finiteNumber(image.timeOffset, `media[${index}].timeOffset`);
+          if (!Number.isInteger(timeOffset)) fail(`media[${index}].timeOffset must be a whole number.`);
+          if (phase > 1) fail(`media[${index}] is faculty-released (phase > 1) and cannot have a time offset.`);
+        }
       });
       return;
     default:

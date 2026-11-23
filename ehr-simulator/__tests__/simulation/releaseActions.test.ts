@@ -132,6 +132,26 @@ describe("releaseSessionItems", () => {
     expect(response.message).toBe("Some items do not belong to this session's case.");
   });
 
+  it("rejects media items belonging to a different case", async () => {
+    const sessions = createBuilderMock({ data: { case_id: CASE_ID }, error: null });
+    const images = createBuilderMock({
+      data: [{ id: "22222222-2222-4222-8222-222222222222", case_id: "99999999-9999-4999-8999-999999999999" }],
+      error: null,
+    });
+    const supabase = createSupabaseMock({
+      case_sessions: () => sessions,
+      case_images: () => images,
+    });
+    mockStaff(supabase);
+
+    const response = await releaseSessionItems(SESSION_ID, [
+      { type: "media", id: "22222222-2222-4222-8222-222222222222" },
+    ]);
+
+    expect(response.success).toBe(false);
+    expect(response.message).toBe("Some items do not belong to this session's case.");
+  });
+
   it("upserts one release row per item with staff identity and the composite conflict target", async () => {
     const sessions = createBuilderMock({ data: { case_id: CASE_ID }, error: null });
     const labItems = createBuilderMock({
@@ -325,6 +345,42 @@ describe("getReleasePanelData", () => {
         label: "Cardiology consult",
       },
     ]);
+  });
+
+  it("includes media preview URLs and phases for pending and released items", async () => {
+    const releasedImageId = "88888888-8888-4888-8888-888888888888";
+    const pendingImageId = "99999999-9999-4999-8999-999999999999";
+    const sessions = createBuilderMock({ data: { case_id: CASE_ID }, error: null });
+    const mediaRows = [
+      createBuilderMock({ data: [{ id: releasedImageId, preview_url: "https://example.test/released.png" }], error: null }),
+      createBuilderMock({ data: [{ id: pendingImageId, phase: 3, preview_url: "https://example.test/pending.png" }], error: null }),
+    ];
+    const supabase = createSupabaseMock({
+      case_sessions: () => sessions,
+      case_images: () => mediaRows.shift()!,
+    });
+    mockStaff(supabase);
+    stubSessionReleases({
+      case_image_releases: [{ item_id: releasedImageId, released_at: "2026-01-01T10:05:00Z" }],
+    });
+
+    const response = await getReleasePanelData(SESSION_ID);
+
+    expect(response.success).toBe(true);
+    expect(response.data?.pending).toContainEqual({
+      type: "media",
+      id: pendingImageId,
+      phase: 3,
+      label: null,
+      previewUrl: "https://example.test/pending.png",
+    });
+    expect(response.data?.released).toContainEqual({
+      type: "media",
+      id: releasedImageId,
+      releasedAt: "2026-01-01T10:05:00Z",
+      label: null,
+      previewUrl: "https://example.test/released.png",
+    });
   });
 
   it("normalizes blank labels to null and floors the pending phase at 1", async () => {

@@ -131,6 +131,21 @@ describe("buildReleaseUpdateSummary", () => {
     });
   });
 
+  it("maps media releases to the Media section with a stable fallback label", () => {
+    const summary = buildReleaseUpdateSummary(
+      makeMap({}, "case_image_releases"),
+      makeMap({ image1: "t1" }, "case_image_releases"),
+      { caseImages: [{ id: "image1", preview_url: "https://example.test/image.png" }] } as unknown as CaseBundle,
+    );
+
+    expect(summary.sections[0]).toMatchObject({
+      key: "media",
+      label: "Media",
+      items: ["Media item 1"],
+      summary: "New 1 media item available.",
+    });
+  });
+
   it("maps medication_order releases to the MAR section, falling back to the medication name", () => {
     const bundle = {
       medicationOrders: [

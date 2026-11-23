@@ -147,6 +147,10 @@ export function caseBundleToFormBlob(bundle: CaseBundle): FormBlob {
     media: (bundle.caseImages ?? []).map((image) => ({
       id: text(image, "id"),
       previewUrl: text(image, "preview_url"),
+      title: text(image, "title") || "Untitled media",
+      description: text(image, "description"),
+      timeOffset: image.time_offset == null ? null : Number(image.time_offset),
+      department: text(image, "department"),
       phase: Math.max(1, Number(image.phase ?? 1)),
       isInPresim: Boolean(image.is_in_presim ?? true),
       storagePath: text(image, "file_path") || undefined,

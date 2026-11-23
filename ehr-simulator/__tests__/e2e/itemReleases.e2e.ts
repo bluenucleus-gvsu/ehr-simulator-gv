@@ -17,6 +17,7 @@ const RELEASE_TABLES = [
   "clinical_document_releases",
   "order_releases",
   "medication_order_releases",
+  "case_image_releases",
 ] as const;
 
 const BASELINE_SODIUM = ["138", "136"];

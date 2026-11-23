@@ -1,8 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { addMedia } from "@/actions/case_builder/updateMedia";
 import { updateMedications } from "@/actions/case_builder/updateMedications";
+import { updateMedia } from "@/actions/case_builder/updateMedia";
 import { caseBuilderPath } from "@/lib/caseBuilder/routes";
 import { assertValidSaveRequest } from "@/lib/caseBuilder/validation";
+import { caseBundleToFormBlob } from "@/lib/caseBuilder/caseBundleToFormBlob";
 import { CaseSection } from "@/lib/caseSections";
 import type { CaseBundle } from "@/actions/case_builder/getCase";
 import { medOrderFormStateFromCaseBundle } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marFromBundle";
@@ -12,6 +15,11 @@ import {
 } from "@/lib/caseBuilder/medicationPayload";
 import type { MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
 import { caseMeetsMinimumRequirements } from "@/lib/caseMinimumRequirements";
+import {
+  formatTimeOffset,
+  timeOffsetMinutesFromParts,
+  timeOffsetPartsFromMinutes,
+} from "@/utils/form";
 
 const caseId = "11111111-1111-4111-8111-111111111111";
 const orderId = "22222222-2222-4222-8222-222222222222";
@@ -175,6 +183,174 @@ describe("case-builder runtime validation", () => {
 
   it("allows an empty media array so all media can be removed", () => {
     expect(() => assertValidSaveRequest(CaseSection.MEDIA, [], caseId)).not.toThrow();
+  });
+
+  it("validates staged media metadata", () => {
+    expect(() => assertValidSaveRequest(CaseSection.MEDIA, [{
+      id: "image",
+      previewUrl: "https://example.test/image.png",
+      phase: 2,
+      isInPresim: false,
+    }], caseId)).not.toThrow();
+    expect(() => assertValidSaveRequest(CaseSection.MEDIA, [{
+      id: "image",
+      previewUrl: "https://example.test/image.png",
+      phase: 2,
+      isInPresim: true,
+    }], caseId)).toThrow(/cannot be in pre-sim/);
+  });
+});
+
+describe("media metadata persistence", () => {
+  const media = {
+    id: "image",
+    previewUrl: "https://example.test/image.png",
+    title: "Test scan",
+    description: "Test findings",
+    timeOffset: null,
+    department: "Imaging",
+    storagePath: "case/image.png",
+    phase: 3,
+    isInPresim: false,
+  };
+
+  it("hydrates phase and pre-simulation metadata from the case bundle", () => {
+    const form = caseBundleToFormBlob({
+      caseRow: {},
+      caseImages: [{
+        id: "image",
+        preview_url: media.previewUrl,
+        file_path: media.storagePath,
+        title: media.title,
+        description: media.description,
+        time_offset: media.timeOffset,
+        department: media.department,
+        phase: media.phase,
+        is_in_presim: media.isInPresim,
+      }],
+    } as never);
+
+    expect(form.media).toEqual([media]);
+  });
+
+  it("saves media metadata, phase, and pre-simulation state through the media RPC", async () => {
+    const rpc = vi.fn().mockResolvedValue({ error: null });
+    const query = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      then: (resolve: (value: { data: unknown[]; error: null }) => unknown) =>
+        Promise.resolve({ data: [], error: null }).then(resolve),
+    };
+    const supabase = {
+      from: vi.fn(() => query),
+      rpc,
+    };
+
+    const result = await updateMedia(supabase as never, [media], caseId);
+
+    expect(rpc).toHaveBeenCalledWith("case_builder_replace_media", {
+      p_case_id: caseId,
+      p_rows: [{
+        preview_url: media.previewUrl,
+        file_path: media.storagePath,
+        title: media.title,
+        description: media.description,
+        time_offset: media.timeOffset,
+        department: media.department,
+        phase: 3,
+        is_in_presim: false,
+      }],
+    });
+    expect(result.data).toEqual([{
+      id: media.storagePath,
+      previewUrl: media.previewUrl,
+      title: media.title,
+      description: media.description,
+      timeOffset: media.timeOffset,
+      department: media.department,
+      phase: media.phase,
+      isInPresim: media.isInPresim,
+      storagePath: media.storagePath,
+    }]);
+  });
+
+  it("appends newly added media without replacing existing case media", async () => {
+    const item = {
+      ...media,
+      id: "55555555-5555-4555-8555-555555555555",
+    };
+    const insert = vi.fn().mockResolvedValue({ error: null });
+    const supabase = {
+      from: vi.fn(() => ({ insert })),
+    };
+
+    const result = await addMedia(supabase as never, [item], caseId);
+
+    expect(supabase.from).toHaveBeenCalledWith("case_images");
+    expect(insert).toHaveBeenCalledWith([{
+      id: item.id,
+      preview_url: item.previewUrl,
+      file_path: item.storagePath,
+      title: item.title,
+      description: item.description,
+      time_offset: null,
+      department: item.department,
+      phase: item.phase,
+      is_in_presim: item.isInPresim,
+    }]);
+    expect(result.data?.[0].id).toBe(item.id);
+  });
+
+  it("validates optional media metadata and phase-specific offsets", () => {
+    expect(() => assertValidSaveRequest(CaseSection.MEDIA, [{
+      ...media,
+      timeOffset: 15,
+      phase: 1,
+    }], caseId)).not.toThrow();
+    expect(() => assertValidSaveRequest(CaseSection.MEDIA, [{
+      ...media,
+      timeOffset: 15,
+      phase: 2,
+    }], caseId)).toThrow(/cannot have a time offset/);
+    expect(() => assertValidSaveRequest(CaseSection.MEDIA, [{
+      ...media,
+      timeOffset: 1.5,
+      phase: 1,
+    }], caseId)).toThrow(/must be a whole number/);
+  });
+});
+
+describe("case-builder time offsets", () => {
+  it("converts day, hour, and minute parts to minutes before simulation", () => {
+    expect(timeOffsetMinutesFromParts({
+      days: 1,
+      hours: 2,
+      minutes: 30,
+    }, "before")).toBe(-1590);
+  });
+
+  it("splits a saved offset into positive duration fields", () => {
+    expect(timeOffsetPartsFromMinutes(-1590)).toEqual({
+      days: 1,
+      hours: 2,
+      minutes: 30,
+    });
+  });
+
+  it("formats negative offsets into signed day, hour, and minute parts", () => {
+    expect(formatTimeOffset(-1590)).toEqual({
+      days: -1,
+      hours: -2,
+      minutes: -30,
+    });
+  });
+
+  it("returns empty fields for an unset offset", () => {
+    expect(timeOffsetPartsFromMinutes(null)).toEqual({
+      days: "",
+      hours: "",
+      minutes: "",
+    });
   });
 });
 

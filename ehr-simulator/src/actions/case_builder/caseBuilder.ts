@@ -8,7 +8,7 @@ import { updateOrders } from "@/actions/case_builder/updateOrders";
 import { updateLabs, type LabSavePayload } from "@/actions/case_builder/updateLabs";
 import { updateDocumentationResults } from "@/actions/case_builder/updateDocumentationResults";
 import { updateMedications } from "@/actions/case_builder/updateMedications";
-import { updateMedia } from "@/actions/case_builder/updateMedia"
+import { addMedia, updateMedia } from "@/actions/case_builder/updateMedia"
 import { updateCaseIntakeOutput } from "@/actions/case_builder/updateCaseIntakeOutput";
 
 import { MedAdministrationInstance, MedicationOrder } from "@/app/simulation/[caseId]/[sessionId]/chart/mar/components/marData";
@@ -22,7 +22,7 @@ import type { ClinicalNote } from "@/app/simulation/[caseId]/[sessionId]/chart/n
 import type { OrderType } from "@/app/simulation/[caseId]/[sessionId]/chart/orders/components/orderData";
 import { FlexSheetData } from "@/lib/flexSheet/flexSheetTypes";
 import { createCaseBuilderAdminClient } from "@/actions/case_builder/adminClient";
-import { assertValidSaveRequest } from "@/lib/caseBuilder/validation";
+import { assertUuid, assertValidSaveRequest } from "@/lib/caseBuilder/validation";
 import { FlexSheetSection } from "@/lib/flexSheet/flexSheetSections";
 import { updateTableTemplate } from "./updateTableTemplate";
 
@@ -74,4 +74,11 @@ export async function saveCaseData({ payload, section, caseId }: SaveCaseArgs) {
     case CaseSection.MEDIA:
       return await updateMedia(supabase, payload, caseId);
   }
+}
+
+export async function addCaseMedia(payload: MediaImageData[], caseId?: string | null) {
+  assertValidSaveRequest(CaseSection.MEDIA, payload, caseId);
+  payload.forEach((media, index) => assertUuid(media.id, `media[${index}].id`));
+  const supabase = await createCaseBuilderAdminClient();
+  return addMedia(supabase, payload, caseId);
 }

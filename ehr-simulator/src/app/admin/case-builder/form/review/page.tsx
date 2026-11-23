@@ -198,6 +198,18 @@ export default function FormReview() {
                   {mediaData.map((image) => (
                     <div key={image.id}>
                       <img src={image.previewUrl} alt="Case media" className="aspect-square w-full rounded-lg border object-contain" />
+                      <p className="mt-1 text-sm font-medium">{image.title || "Untitled media"}</p>
+                      <p className="text-xs text-slate-500">
+                        {image.department ? `${image.department} · ` : ""}
+                        {image.timeOffset == null
+                          ? "Release live"
+                          : image.timeOffset === 0
+                            ? "at sim start"
+                            : `${image.timeOffset} min`}
+                      </p>
+                      {image.description && (
+                        <p className="mt-1 text-xs text-slate-600">{image.description}</p>
+                      )}
                       <p className="mt-1 text-xs text-slate-500">
                         Phase {image.phase}{image.isInPresim ? " · Pre-Sim" : ""}
                       </p>

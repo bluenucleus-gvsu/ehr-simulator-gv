@@ -81,6 +81,10 @@ export interface MedOrderFormData {
 export interface MediaImageData {
   id: string;
   previewUrl: string;
+  title: string;
+  description: string;
+  timeOffset: number | null;
+  department: string;
   phase: number;
   isInPresim: boolean;
   file?: File;
@@ -104,15 +108,36 @@ export interface FormBlob {
 export type CompleteFormType = DemographicFormData | HistoryFormData | ClinicalNote[] | OrderType[] | TableFormData<FlexSheetData> | LabTableFormData | IntakeOutputFormData[] | FlexSheetSection[] | MedOrderFormData | MedAdministrationInstance[] | MediaImageData[]
 
 export const formatTimeOffset = (minuteOffset: number) => {
-  const minutesInDay = 1440;
-  const minutesInHour = 60;
-
-  const days = Math.ceil(minuteOffset / minutesInDay);
-  const remainingMinutesAfterDays = minuteOffset % minutesInDay;
-  const hours = Math.ceil(remainingMinutesAfterDays / minutesInHour);
-  const minutes = remainingMinutesAfterDays % minutesInHour;
+  const sign = minuteOffset < 0 ? -1 : 1;
+  const absoluteMinutes = Math.abs(minuteOffset);
+  const days = Math.floor(absoluteMinutes / 1440) * sign;
+  const hours = Math.floor((absoluteMinutes % 1440) / 60) * sign;
+  const minutes = (absoluteMinutes % 60) * sign;
 
   return { days, hours, minutes };
+}
+
+export type TimeOffsetParts = {
+  days: number | '';
+  hours: number | '';
+  minutes: number | '';
+}
+
+export function timeOffsetPartsFromMinutes(minuteOffset: number | null): TimeOffsetParts {
+  if (minuteOffset === null) {
+    return { days: '', hours: '', minutes: '' };
+  }
+  return formatTimeOffset(Math.abs(minuteOffset));
+}
+
+export function timeOffsetMinutesFromParts(
+  parts: TimeOffsetParts,
+  direction: 'before' | 'after',
+): number {
+  const minutes = (Number(parts.days) || 0) * 1440
+    + (Number(parts.hours) || 0) * 60
+    + (Number(parts.minutes) || 0);
+  return direction === 'before' ? -minutes : minutes;
 }
 
 export function createDefaultLabColumn(phase = 1): LabColumn {
